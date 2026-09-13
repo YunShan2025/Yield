@@ -1,0 +1,23 @@
+/* Screenshot QA fixes — must remain the final override layer. */
+.reminders-context {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 0 4px;
+  color: #758096;
+  font-size: 12px;
+}
+
+.reminders-context > i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #b5bdcb;
+}
+
+.reminders-context > small {
+  margin-left: auto;
+  color: #a0a8b7;
+  font-size: 11px;
+}

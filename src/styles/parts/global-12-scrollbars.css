@@ -1,0 +1,10 @@
+/* 全局隐藏滚动条:只去掉视觉上的拖动条,滚轮/触摸/键盘滚动能力不变。
+   两条渲染路径都要盖住:标准 scrollbar-width 管 WebView2 Fluent 悬浮条,
+   ::-webkit-scrollbar 管常驻条;!important 压过 global-05/polish-01 里按容器设置的 thin。 */
+* {
+  scrollbar-width: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+}

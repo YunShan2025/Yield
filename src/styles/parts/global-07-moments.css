@@ -1,0 +1,59 @@
+/* 有秋:纪念日页头与工作区通用样式(页头已统一为 workspace-top) */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+}
+
+.chart-bars span {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  opacity: 0.85;
+}
+
+.danger {
+  color: var(--text-overdue);
+}
+
+.streak-pop {
+  animation: pop 400ms ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  /* 窄屏下抽屉覆盖层收窄到 min(400px, 100%),其余布局沿用全局规则。 */
+  .app-body.detail-open .detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(400px, 100%);
+    z-index: 30;
+  }
+}

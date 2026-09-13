@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" width="720" height="220" fill="none">
+  <!-- 有秋横版字标:麦穗 + 有秋 + Yield。字体走系统衬线,发布前可转曲。 -->
+  <g transform="translate(18 30) scale(0.156)">
+    <ellipse cx="372" cy="706" rx="150" ry="44" transform="rotate(30 372 706)" fill="#2F6FED"/>
+    <path d="M512 830V400" stroke="#2F6FED" stroke-width="52" stroke-linecap="round"/>
+    <ellipse cx="390" cy="478" rx="150" ry="74" transform="rotate(52 390 478)" fill="#F4B942"/>
+    <ellipse cx="634" cy="478" rx="150" ry="74" transform="rotate(-52 634 478)" fill="#F4B942"/>
+    <ellipse cx="400" cy="598" rx="140" ry="70" transform="rotate(52 400 598)" fill="#F4B942"/>
+    <ellipse cx="624" cy="598" rx="140" ry="70" transform="rotate(-52 624 598)" fill="#F4B942"/>
+    <ellipse cx="412" cy="712" rx="128" ry="64" transform="rotate(52 412 712)" fill="#F4B942"/>
+    <ellipse cx="612" cy="712" rx="128" ry="64" transform="rotate(-52 612 712)" fill="#F4B942"/>
+    <ellipse cx="512" cy="330" rx="86" ry="138" fill="#F7C65B"/>
+  </g>
+  <text x="212" y="122" font-family="'Source Han Serif SC','Noto Serif SC','SimSun','Songti SC',serif" font-size="100" font-weight="700" fill="#1F2937" letter-spacing="12">有秋</text>
+  <text x="218" y="164" font-family="'Segoe UI','Microsoft YaHei',sans-serif" font-size="21" letter-spacing="13" fill="#94A3B8">YIELD</text>
+  <text x="212" y="200" font-family="'Source Han Serif SC','Noto Serif SC','SimSun',serif" font-size="19" fill="#B08A3E">服田力穑，乃亦有秋 —— 《尚书·盘庚》</text>
+</svg>

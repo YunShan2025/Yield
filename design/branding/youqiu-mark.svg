@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="90 140 844 760" fill="none">
+  <!-- 有秋品牌标(独立麦穗,透明底)。金色=收成,蓝色=日耕。 -->
+  <defs>
+    <linearGradient id="gold" x1="380" y1="200" x2="660" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD267"/>
+      <stop offset="1" stop-color="#F4B942"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="512" y1="380" x2="512" y2="830" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4385F5"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="372" cy="706" rx="150" ry="44" transform="rotate(30 372 706)" fill="url(#blue)"/>
+  <path d="M512 830V400" stroke="url(#blue)" stroke-width="52" stroke-linecap="round"/>
+  <ellipse cx="390" cy="478" rx="150" ry="74" transform="rotate(52 390 478)" fill="url(#gold)"/>
+  <ellipse cx="634" cy="478" rx="150" ry="74" transform="rotate(-52 634 478)" fill="url(#gold)"/>
+  <ellipse cx="400" cy="598" rx="140" ry="70" transform="rotate(52 400 598)" fill="url(#gold)"/>
+  <ellipse cx="624" cy="598" rx="140" ry="70" transform="rotate(-52 624 598)" fill="url(#gold)"/>
+  <ellipse cx="412" cy="712" rx="128" ry="64" transform="rotate(52 412 712)" fill="url(#gold)"/>
+  <ellipse cx="612" cy="712" rx="128" ry="64" transform="rotate(-52 612 712)" fill="url(#gold)"/>
+  <ellipse cx="512" cy="330" rx="86" ry="138" fill="url(#gold)"/>
+</svg>

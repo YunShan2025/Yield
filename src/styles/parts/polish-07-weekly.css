@@ -1,0 +1,377 @@
+/* Weekly checklist */
+.weekly-checklist {
+  overflow: auto;
+  padding-bottom: 28px;
+}
+
+.weekly-checklist-top {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* 引导框与 workspace-top / weekly-goals 同宽对齐(28px)。 */
+.weekly-checklist .guide-hero {
+  margin: 0 28px;
+}
+
+.weekly-checklist-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 两个板块统一节奏:与页头 28px 内边距对齐,板块间距 24px。
+   当周概览自成 section(单卡,无 h3)。 */
+.weekly-goals,
+.weekly-days {
+  margin: 24px 28px 0;
+}
+
+/* 当周日历以自身容器宽度决定列数(替代视口断点):
+   正文工作区 862px、容器 ≥780px 时七列单行(每列 ≥101px)。 */
+.weekly-days {
+  container-type: inline-size;
+}
+
+.weekly-goals h3,
+.weekly-days h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.weekly-goal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.weekly-goal-card {
+  --goal-accent: #7d9be8;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: grid;
+  gap: 8px;
+}
+
+.weekly-goal-card header,
+.weekly-day-col header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.weekly-goal-card header span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.weekly-day-col header span {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.weekly-goal-card p {
+  margin: 0;
+  min-height: 40px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.weekly-goal-bar,
+.weekly-day-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--goal-accent, var(--accent)) 18%, transparent);
+  overflow: hidden;
+}
+
+.weekly-goal-bar > i,
+.weekly-day-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--goal-accent, var(--accent));
+}
+
+.weekly-goal-card footer {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.weekly-day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.weekly-day-col {
+  min-height: 220px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  min-width: 0;
+}
+
+/* 七列窄栏下表头单行:星期与计数一行,日期与进度条独占下一行 */
+.weekly-day-col header strong {
+  white-space: nowrap;
+}
+
+.weekly-day-meta {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.weekly-day-meta em {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.weekly-day-meta .weekly-day-bar {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* 进度条行独占,避免在 flex 行内被挤压成 0 宽。 */
+.weekly-day-col header {
+  flex-wrap: wrap;
+}
+
+.weekly-day-col.is-today {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.weekly-day-bar {
+  margin-top: 8px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.weekly-day-bar > i {
+  background: var(--accent);
+}
+
+.weekly-day-col ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.weekly-day-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.weekly-day-task {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  gap: 6px;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-app) 70%, transparent);
+  color: var(--text-primary);
+  text-align: left;
+  padding: 6px 7px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 当周日历已完成任务:与时间轴/当日事项同一套「成就式」金色认可。
+   不置灰、不划线、不降透明:完成是成就感,不是退场。 */
+.weekly-day-task.is-done {
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.28);
+}
+
+.weekly-day-task.is-done:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(217, 119, 6, 0.55),
+    0 6px 16px rgba(217, 119, 6, 0.16);
+}
+
+.weekly-day-task.is-done .weekly-day-title {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.weekly-day-task.is-done .weekly-day-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.35);
+}
+
+:root[data-theme="dark"] .weekly-day-task.is-done {
+  background: rgba(245, 158, 11, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.4);
+}
+
+:root[data-theme="dark"] .weekly-day-task.is-done .weekly-day-title {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+:root[data-theme="dark"] .weekly-day-task.is-done .weekly-day-check {
+  color: #fff;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.weekly-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+}
+
+.weekly-day-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weekly-day-check {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* 当周概览:单卡四列(标签在上、数值在下,发丝线分隔),
+   底部一条完成率细条收口,呼应复盘页指标行的设计语言。 */
+.weekly-stat-strip {
+  display: grid;
+  gap: 12px;
+  margin: 24px 28px 0;
+  padding: 13px 18px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+}
+
+.weekly-stat-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+}
+
+.weekly-stat-item {
+  display: grid;
+  gap: 7px;
+  align-content: end;
+  min-width: 0;
+}
+
+.weekly-stat-item + .weekly-stat-item {
+  padding-left: 26px;
+  border-left: 1px solid var(--border);
+}
+
+.weekly-stat-label {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.weekly-stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.weekly-stat-num {
+  font: 700 21px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.weekly-stat-num.is-accent {
+  color: var(--accent);
+}
+
+.weekly-stat-note {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.weekly-stat-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.weekly-stat-progress {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  overflow: hidden;
+}
+
+.weekly-stat-progress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--transition);
+}
+
+.weekly-stat-pct {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1100px) {
+  .weekly-goal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 当周日历列数跟随容器宽度:≥780 七列单行,≥480 两列,更窄单列 */
+@container (max-width: 779px) {
+  .weekly-day-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 479px) {
+  .weekly-day-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .weekly-goal-grid {
+    grid-template-columns: 1fr;
+  }
+  .weekly-stat-track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 18px;
+  }
+  .weekly-stat-item + .weekly-stat-item {
+    padding-left: 0;
+    border-left: 0;
+  }
+}

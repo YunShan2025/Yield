@@ -1,0 +1,236 @@
+/* 观流/纪念日工作区:与侧栏导航共用的排版与组件样式。 */
+
+.moments-page {
+  --moment-warm: #bd6b3d;
+  --moment-warm-soft: #fff3e9;
+  --moment-blue: #2f6fed;
+  --moment-blue-soft: #edf4ff;
+  min-width: 0;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 88% 4%, color-mix(in srgb, var(--moment-blue) 11%, transparent), transparent 27%),
+    radial-gradient(circle at 58% 86%, color-mix(in srgb, var(--moment-warm) 7%, transparent), transparent 25%),
+    var(--bg-main);
+}
+
+/* 内容统一 28px 边距,与「今日」一致。 */
+.moments-body { padding: 0 28px 28px; }
+
+/* 引导框与 workspace-top / 内容区同宽对齐(28px)。 */
+.moments-page .guide-hero { margin: 0 28px 18px; }
+
+.anni-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-panel);
+}
+
+.anniversaries-page > .modal-backdrop { width: auto; margin: 0; }
+.anni-composer-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; padding: 24px; border-radius: 22px; box-shadow: 0 28px 80px rgba(28,39,61,.24); }
+.anni-composer-dialog > header,
+.anni-detail-dialog > header { display: flex; align-items: start; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.anni-composer-dialog > header span,
+.anni-detail-dialog > header span { color: var(--moment-warm); font-size: 11px; font-weight: 800; letter-spacing: .13em; }
+.anni-composer-dialog > header h2,
+.anni-detail-dialog > header h2 { margin: 5px 0 0; font: 750 26px/1.2 var(--font-display); }
+.anni-composer-dialog > header > button,
+.anni-detail-dialog > header > button { width: 34px; height: 34px; padding: 0; border-radius: 50%; color: var(--text-muted); background: var(--bg-soft); }
+
+.anni-composer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.anni-cal-seg {
+  flex: 0 0 auto;
+}
+
+.anni-lunar-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.anni-lunar-pickers .field[type="number"] {
+  width: 88px;
+}
+
+.anni-lunar-pickers .select-btn {
+  width: auto;
+  min-width: 88px;
+}
+
+.anni-lunar-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.anni-composer-row .field[type="date"] {
+  width: auto;
+  min-width: 160px;
+}
+
+.anni-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.anni-upcoming {
+  margin: 18px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-panel);
+}
+
+.anni-upcoming h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.anni-upcoming-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.anni-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-panel));
+  min-width: 140px;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.anni-chip:hover { border-color: color-mix(in srgb, var(--moment-warm) 35%, var(--border)); transform: translateY(-1px); }
+
+.anni-chip strong { font-size: 14px; }
+.anni-chip span { font-size: 12px; color: var(--text-muted); }
+
+.anni-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.anni-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.anni-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--moment-warm) 28%, var(--border)); box-shadow: 0 12px 30px rgba(40,53,77,.08); }
+.anni-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.anni-card.is-today {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.anni-card-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.anni-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.anni-meta,
+.anni-note { margin: 0; font-size: 13px; color: var(--text-muted); }
+.anni-note { margin-top: 6px; color: var(--text-secondary); }
+
+.anni-countdown { text-align: right; min-width: 110px; }
+.anni-countdown strong {
+  display: block;
+  font-size: 1.6rem;
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+.anni-countdown span { font-size: 12px; color: var(--text-muted); }
+
+.anni-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.anni-empty { min-height: 300px; display: grid; place-items: center; align-content: center; gap: 9px; text-align: center; }
+.anni-empty strong { font: 700 22px/1.3 var(--font-display); }
+.anni-empty p { margin: 0 0 8px; color: var(--text-muted); }
+.anni-empty .btn-primary { width: auto; }
+
+.anni-detail-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; padding: 25px; border: 1px solid var(--border); border-radius: 24px; background: var(--bg-panel); box-shadow: 0 30px 90px rgba(26,37,58,.28); }
+.anni-detail-count { display: grid; justify-items: center; gap: 5px; margin: 6px 0 22px; padding: 26px; border: 1px solid color-mix(in srgb, var(--moment-warm) 22%, var(--border)); border-radius: 18px; background: color-mix(in srgb, var(--moment-warm) 8%, var(--bg-panel)); }
+.anni-detail-count strong { color: var(--moment-warm); font: 780 clamp(42px,9vw,68px)/1 var(--font-display); letter-spacing: -.06em; }
+.anni-detail-count span { color: var(--text-secondary); font-size: 13px; }
+.anni-detail-dialog dl { display: grid; gap: 0; margin: 0; }
+.anni-detail-dialog dl > div { display: grid; grid-template-columns: 90px 1fr; gap: 15px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
+.anni-detail-dialog dt { color: var(--text-muted); font-size: 12px; }
+.anni-detail-dialog dd { margin: 0; color: var(--text-primary); font-size: 13px; text-align: right; }
+.anni-detail-dialog > section { margin-top: 20px; padding: 17px 18px; border-left: 4px solid var(--moment-warm); background: var(--bg-soft); }
+.anni-detail-dialog > section span { color: var(--text-muted); font-size: 11px; font-weight: 750; }
+.anni-detail-dialog > section p { margin: 8px 0 0; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+.anni-detail-dialog > footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+
+@media (max-width: 640px) {
+  .anni-card-main { align-items: stretch; flex-direction: column; }
+  .anni-countdown { text-align: left; }
+}
+
+.dash-anni { opacity: 0.92; }
+
+.moments-loading {
+  display: grid;
+  min-height: 55vh;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+:where(button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 48%, transparent);
+  outline-offset: 2px;
+}
+
+:where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: .56; }
+
+:root[data-theme="dark"] .moments-page {
+  --moment-warm: #f0a26d;
+  --moment-warm-soft: #31271f;
+  --moment-blue: #7ca5ff;
+  --moment-blue-soft: #1d2b46;
+}
+
+@media (max-width: 680px) {
+  .moments-page { padding: 22px 16px 100px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

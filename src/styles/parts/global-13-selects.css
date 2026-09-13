@@ -1,0 +1,119 @@
+/* 自绘下拉组件(SelectMenu)样式:原生 <select> 展开后的选项列表是系统级弹层,
+   CSS 无法定制,故全应用的 select 已替换为该组件,收起态与展开态在此统一定制,
+   与输入框共用同一套边框/悬停/焦点语言。箭头用变量区分亮暗底色。 */
+:root {
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237c86a0' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"],
+:root[data-theme="glass"] {
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a9b4cc' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a9b4cc' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+.select-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 30px 7px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input) var(--select-arrow) no-repeat right 11px center;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition), background-color var(--transition), box-shadow var(--transition);
+}
+
+.select-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* 与输入框同一套「边框变色 + 3px 外扩环」焦点语言,不用外挂 outline。 */
+.select-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.select-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.select-menu {
+  position: fixed;
+  z-index: 120;
+  min-width: 140px;
+  max-width: 360px;
+  max-height: 264px;
+  overflow: auto;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-soft);
+  animation: select-menu-in 0.14s ease-out;
+}
+
+@keyframes select-menu-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.select-option:hover,
+.select-option.is-active {
+  background: var(--bg-hover);
+}
+
+.select-option.is-selected {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.select-option > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select-check {
+  flex: none;
+  font-size: 12px;
+}
+
+/* 容器级配套:原来按 select 元素设置的尺寸规则,改为按 .select-btn 匹配。 */
+.ledger-drawer .select-btn {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 7px;
+}
+
+.ledger-form-row .select-btn {
+  padding: 10px 30px 10px 11px;
+}

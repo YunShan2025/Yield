@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- 有秋系统图标源:麦穗 —— 服田力穑,乃亦有秋(《尚书·盘庚》)。
+       正式产物由 scripts/generate-app-icon.py 绘制并经 npx tauri icon 生成,本文件为设计参照。 -->
+  <defs>
+    <linearGradient id="gold" x1="380" y1="200" x2="660" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD267"/>
+      <stop offset="1" stop-color="#F4B942"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="512" y1="380" x2="512" y2="830" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4385F5"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="52" y="52" width="920" height="920" rx="226" fill="#F8FBFF"/>
+  <rect x="62" y="62" width="900" height="900" rx="216" fill="none" stroke="#DCE8F7" stroke-width="20"/>
+  <ellipse cx="372" cy="706" rx="150" ry="44" transform="rotate(30 372 706)" fill="url(#blue)"/>
+  <path d="M512 830V400" stroke="url(#blue)" stroke-width="52" stroke-linecap="round"/>
+  <ellipse cx="390" cy="478" rx="150" ry="74" transform="rotate(52 390 478)" fill="url(#gold)"/>
+  <ellipse cx="634" cy="478" rx="150" ry="74" transform="rotate(-52 634 478)" fill="url(#gold)"/>
+  <ellipse cx="400" cy="598" rx="140" ry="70" transform="rotate(52 400 598)" fill="url(#gold)"/>
+  <ellipse cx="624" cy="598" rx="140" ry="70" transform="rotate(-52 624 598)" fill="url(#gold)"/>
+  <ellipse cx="412" cy="712" rx="128" ry="64" transform="rotate(52 412 712)" fill="url(#gold)"/>
+  <ellipse cx="612" cy="712" rx="128" ry="64" transform="rotate(-52 612 712)" fill="url(#gold)"/>
+  <ellipse cx="512" cy="330" rx="86" ry="138" fill="url(#gold)"/>
+</svg>

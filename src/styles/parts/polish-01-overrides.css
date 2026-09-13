@@ -1,0 +1,1069 @@
+/* Final UI polish. Loaded after global.css to isolate legacy cascade. */
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--accent-strong);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  background: var(--accent-faint);
+  box-shadow: none;
+}
+
+.main-workspace {
+  background: var(--bg-root);
+}
+
+.today-eyebrow {
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+}
+
+.today-hero-note {
+  margin: 8px 0 0;
+  max-width: 36em;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+/* 「今日」与「成长/习惯/提醒/项目」共用同一套暖色引导框(is-deadline / guide-hero)。 */
+.today-hero.is-deadline,
+.today-hero.guide-hero {
+  border-color: color-mix(in srgb, #c9844a 24%, var(--border));
+  background:
+    radial-gradient(circle at 12% 18%, rgba(232, 161, 108, 0.2), transparent 34%),
+    radial-gradient(circle at 94% 88%, rgba(180, 87, 77, 0.08), transparent 28%),
+    linear-gradient(120deg, #f6f1e8 0%, #fbf8f3 68%, #ffffff 100%);
+}
+
+.today-hero.is-deadline::after,
+.today-hero.guide-hero::after {
+  border-color: color-mix(in srgb, #c9844a 18%, transparent);
+  box-shadow:
+    0 0 0 22px color-mix(in srgb, #c9844a 5%, transparent),
+    0 0 0 48px color-mix(in srgb, #c9844a 3%, transparent);
+}
+
+.today-hero.is-deadline .today-eyebrow,
+.today-hero.guide-hero .today-eyebrow {
+  color: #9a5b2c;
+}
+
+:root[data-theme="dark"] .today-hero.is-deadline,
+:root[data-theme="dark"] .today-hero.guide-hero,
+:root[data-theme="glass"] .today-hero.is-deadline,
+:root[data-theme="glass"] .today-hero.guide-hero {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(232, 161, 108, 0.16), transparent 34%),
+    radial-gradient(circle at 94% 88%, rgba(180, 87, 77, 0.1), transparent 28%),
+    linear-gradient(120deg, #2a221c 0%, #1c1f27 72%, #182130 100%);
+}
+
+:root[data-theme="dark"] .today-hero.is-deadline .today-eyebrow,
+:root[data-theme="dark"] .today-hero.guide-hero .today-eyebrow,
+:root[data-theme="glass"] .today-hero.is-deadline .today-eyebrow,
+:root[data-theme="glass"] .today-hero.guide-hero .today-eyebrow,
+:root[data-theme="dawn"] .today-hero.is-deadline .today-eyebrow,
+:root[data-theme="dawn"] .today-hero.guide-hero .today-eyebrow {
+  color: #e0b089;
+}
+
+:root[data-theme="dawn"] .today-hero.is-deadline,
+:root[data-theme="dawn"] .today-hero.guide-hero {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(232, 161, 108, 0.22), transparent 34%),
+    linear-gradient(120deg, #f3e6d4 0%, #f7efe4 70%, #fffaf3 100%);
+}
+
+.today-progress-ring {
+  --progress: 0;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  color: var(--accent-strong);
+  background:
+    radial-gradient(circle, #f8fbff 57%, transparent 58%),
+    conic-gradient(var(--accent) calc(var(--progress) * 1%), rgba(47, 111, 237, 0.12) 0);
+  box-shadow: none;
+  border-radius: 50%;
+}
+
+.today-progress-ring > div {
+  display: grid;
+  text-align: center;
+}
+
+.today-progress-ring strong {
+  font-size: 21px;
+  line-height: 1.05;
+}
+
+.today-progress-ring span {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.scope-card,
+.expand-task {
+  border-color: var(--border);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-primary,
+.primary-btn {
+  color: var(--text-on-accent);
+  background: var(--accent);
+  box-shadow: 0 8px 20px rgba(47, 111, 237, 0.18);
+}
+
+.btn-primary:hover,
+.primary-btn:hover {
+  background: var(--accent-hover);
+}
+
+.scope-nav {
+  color: var(--text-secondary);
+}
+
+.scope-nav > strong {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+.scope-nav .btn-ghost {
+  color: var(--text-secondary);
+}
+
+.scope-summary {
+  gap: 10px;
+}
+
+.scope-summary .scope-card {
+  min-height: 72px;
+  padding: 15px 18px;
+  box-shadow: none;
+}
+
+.scope-summary .scope-card span {
+  color: var(--text-muted);
+}
+
+.scope-summary .scope-card strong {
+  color: var(--accent);
+}
+
+.reminders-context {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 0 4px;
+  color: #758096;
+  font-size: 12px;
+}
+
+.reminders-context > i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #b5bdcb;
+}
+
+.reminders-context > small {
+  margin-left: auto;
+  color: #a0a8b7;
+  font-size: 11px;
+}
+
+.today-timeline {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid #e2e6ef;
+  border-radius: 20px;
+  background: var(--bg-panel);
+  box-shadow: 0 18px 52px rgba(57, 68, 94, 0.15);
+}
+
+.today-timeline .timeline-dock-body {
+  flex: none;
+}
+
+.today-timeline .timeline-h-scroll {
+  max-height: 480px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(135, 145, 165, 0.38) transparent;
+}
+
+.today-timeline .timeline-h-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.today-timeline .timeline-h-scroll::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background: rgba(135, 145, 165, 0.38);
+  background-clip: padding-box;
+}
+
+.today-timeline .timeline-h-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(135, 145, 165, 0.55);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+}
+
+.today-timeline .timeline-h-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 今日/待办箱页面级滚动条:与周清单一样清晰可拖。 */
+/* 注意:不能加 scrollbar-width/scrollbar-color 标准属性——WebView2 的 Fluent
+   悬浮滚动条会接管渲染成自动隐藏的悬浮条;仅用 ::-webkit-scrollbar 才是常驻条。 */
+.scope-board::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scope-board::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(135, 145, 165, 0.42);
+}
+
+.scope-board::-webkit-scrollbar-thumb:hover {
+  background: rgba(135, 145, 165, 0.6);
+}
+
+/* 任务抽屉内容区:子项禁止被 flex 压缩,超高时由容器整体滚动,
+   避免「计划信息」等区块在内容溢出时被挤到只剩边框(2px 不可见)。 */
+.detail-body > * {
+  flex: none;
+}
+
+/* 任务抽屉滚动区:显式滚动条,保证长内容可拖动查看(仅 webkit,理由同上)。 */
+.detail-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.detail-body::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(135, 145, 165, 0.42);
+}
+
+.detail-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(135, 145, 165, 0.6);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-undo {
+  padding: 4px 8px;
+  border-radius: 7px;
+  color: #dbe4ff;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.toast-undo:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.desktop-notification-stack { position: fixed; z-index: 120; top: 54px; right: 24px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 11px; pointer-events: none; }
+.desktop-notification-card { position: relative; display: grid; grid-template-columns: 5px 1fr; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border)); border-radius: 18px; color: var(--text-primary); background: color-mix(in srgb, var(--bg-panel) 94%, transparent); box-shadow: 0 22px 60px rgba(29,41,64,.2), inset 0 1px rgba(255,255,255,.42); backdrop-filter: blur(22px) saturate(135%); pointer-events: auto; animation: desktop-notification-enter 260ms cubic-bezier(.2,.8,.2,1) both; }
+.desktop-notification-mark { background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 45%, #8ed7c1)); }
+.desktop-notification-mark span { display: block; width: 5px; height: 32%; margin-top: 20px; background: rgba(255,255,255,.5); }
+.desktop-notification-content { min-width: 0; padding: 15px 16px 14px; }
+.desktop-notification-content > header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.desktop-notification-content > header span { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.desktop-notification-content > header button { width: 27px; height: 27px; padding: 0; border: 0; border-radius: 50%; color: var(--text-muted); background: transparent; }
+.desktop-notification-content > header button:hover { color: var(--text-primary); background: var(--bg-soft); }
+.desktop-notification-copy { width: 100%; display: grid; gap: 5px; padding: 2px 0 11px; border: 0; color: inherit; background: transparent; text-align: left; }
+.desktop-notification-copy strong { overflow: hidden; font: 720 16px/1.35 var(--font-display); text-overflow: ellipsis; white-space: nowrap; }
+.desktop-notification-copy p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.desktop-notification-content > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 11px; border-top: 1px solid var(--border); }
+.desktop-notification-content > footer time { color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.desktop-notification-content > footer div { display: flex; gap: 6px; }
+.desktop-notification-content > footer button { min-height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); background: var(--bg-soft); font-size: 11px; }
+.desktop-notification-content > footer button.is-primary { border-color: transparent; color: #fff; background: var(--accent); }
+@keyframes desktop-notification-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .desktop-notification-card { animation: none; } }
+
+.version-update-notice { position: fixed; z-index: 80; right: 24px; top: 54px; width: min(390px, calc(100vw - 32px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 17px; border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius: 20px; color: var(--text-primary); background: color-mix(in srgb, var(--bg-panel) 94%, transparent); box-shadow: 0 24px 70px rgba(28, 38, 62, .24); backdrop-filter: blur(24px) saturate(140%); animation: desktop-notification-enter 260ms cubic-bezier(.2,.8,.2,1) both; }
+.version-update-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: var(--accent); background: var(--accent-soft); }
+.version-update-copy > span { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.version-update-copy h3 { margin: 3px 0 6px; font: 700 18px/1.25 var(--font-display); }
+.version-update-copy p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.version-update-copy small { display: block; margin-top: 7px; color: var(--text-muted); font-size: 10px; }
+.version-update-close { width: 28px; height: 28px; border: 0; border-radius: 8px; color: var(--text-muted); background: transparent; cursor: pointer; }
+.version-update-close:hover { color: var(--text-primary); background: var(--bg-hover); }
+.version-update-actions { grid-column: 2 / -1; display: flex; justify-content: flex-end; gap: 7px; margin-top: 2px; }
+.version-update-actions button { min-height: 32px; padding: 0 12px; border: 0; border-radius: 9px; color: var(--text-secondary); background: var(--bg-hover); cursor: pointer; }
+.version-update-actions button.is-primary { color: var(--text-on-accent); background: var(--accent); font-weight: 700; }
+
+.settings-version-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.settings-version-card span { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.settings-version-card h3 { margin: 4px 0; }
+.settings-version-card p { margin: 0; color: var(--text-muted); font-size: 12px; }
+.settings-version-card > button { flex: 0 0 auto; }
+@media (max-width: 640px) { .desktop-notification-stack { top: 44px; right: 16px; } }
+
+.batch-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 7px 10px 7px 14px;
+  border: 1px solid #dfe5f1;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  background: #f5f7fc;
+  font-size: 12px;
+}
+
+.batch-toolbar > span {
+  margin-right: auto;
+}
+
+/* 工具条挂在「今日事项」标题行下、批量管理按钮正下方(右对齐),不再挤占页面顶部。 */
+.day-agenda .batch-toolbar {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 10px auto;
+  flex-wrap: wrap;
+}
+
+.day-agenda .batch-toolbar > span {
+  margin-right: 0;
+}
+
+.batch-check {
+  display: grid;
+  place-items: center;
+  /* 与被替换的 .task-check 完成钮同尺寸:批量模式下行内容零位移。 */
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border: 1.5px solid #cbd4e8;
+  border-radius: 5px;
+  color: #fff;
+  background: #fff;
+  font-size: 11px;
+}
+
+.batch-check.is-selected {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* 行级删除按钮:与「详情」同层级,字号对齐详情按钮。 */
+.expand-task-row > .expand-delete {
+  font-size: 12px;
+}
+
+.estimate-chip,
+.reminder-chip {
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #667dbb;
+  background: #eef3ff;
+}
+
+.plan-warning {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #a85d43;
+  background: #fff0e9;
+  font-size: 11px;
+}
+
+.conflict-chip {
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #b4574d;
+  background: #fff0ef;
+}
+
+.estimate-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.estimate-presets .btn-ghost {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+
+/* 页头右上角的主按钮按内容收窄,不随全局 width:100% 拉通。 */
+.workspace-top .btn-primary {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.workspace-subtitle {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.projects-scroll {
+  display: grid;
+  gap: 26px;
+  padding: 0 28px 28px;
+  overflow: auto;
+}
+
+.section-title-row,
+.project-card-head {
+  display: flex;
+  align-items: center;
+}
+
+.section-title-row {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-title-row h3 {
+  margin: 0;
+}
+
+.section-title-row > span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.project-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.project-card-head {
+  gap: 8px;
+}
+
+.project-card-head > span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.project-card-head > strong {
+  flex: 1;
+}
+
+.project-card p {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.project-task-links {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.project-task-links button {
+  overflow: hidden;
+  color: var(--text-secondary);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: start center;
+  padding-top: min(14vh, 110px);
+  background: rgba(35, 41, 54, 0.22);
+  backdrop-filter: blur(3px);
+}
+
+.command-palette {
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(620px, 72vh);
+  overflow: auto;
+  border: 1px solid #dfe4ef;
+  border-radius: 18px;
+  background: var(--bg-panel);
+  box-shadow: 0 26px 70px rgba(42, 50, 70, 0.22);
+}
+
+.command-search {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 17px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.command-search input {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 16px;
+}
+
+.command-search kbd {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-root);
+  font-size: 10px;
+}
+
+.command-label {
+  margin: 14px 17px 7px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.command-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 17px 4px;
+}
+
+.command-grid button {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  background: var(--bg-root);
+}
+
+.command-results {
+  display: grid;
+  gap: 3px;
+  padding: 0 8px 10px;
+}
+
+.command-results button {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 9px;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.command-results button:hover {
+  background: var(--bg-hover);
+}
+
+.command-results strong {
+  color: var(--text-primary);
+}
+
+.command-results small {
+  color: var(--text-muted);
+}
+
+.lifecycle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.toggle-row input {
+  width: auto;
+}
+
+.detail-section {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--bg-panel);
+}
+
+.detail-section summary {
+  padding: 12px 14px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.detail-section[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-section-body {
+  display: grid;
+  gap: 13px;
+  padding: 13px;
+}
+
+.detail-complete-action {
+  color: var(--accent) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.batch-date-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.batch-date-action .field {
+  width: 138px;
+  padding: 6px 8px;
+}
+
+.task-quick-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.task-quick-actions .btn-ghost {
+  padding: 5px 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1080px) {
+  .task-quick-actions {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .batch-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+:root[data-theme="dark"] .nav-side,
+:root[data-theme="dark"] .main-workspace {
+  border-color: var(--border);
+  background: var(--bg-root);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .scope-card,
+:root[data-theme="dark"] .expand-task,
+:root[data-theme="dark"] .project-card {
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong);
+  background: var(--bg-panel);
+}
+
+:root[data-theme="dark"] .today-eyebrow,
+:root[data-theme="dark"] .today-progress-ring,
+:root[data-theme="dark"] .today-progress-ring span {
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .today-progress-ring span {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .today-progress-ring {
+  background:
+    radial-gradient(circle, var(--bg-panel) 57%, transparent 58%),
+    conic-gradient(var(--accent) calc(var(--progress) * 1%), rgba(128, 151, 255, 0.15) 0);
+}
+
+:root[data-theme="dark"] .field {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  background: var(--bg-input);
+}
+
+:root[data-theme="dark"] .field::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .nav-side,
+  :root[data-theme="system"] .main-workspace {
+    border-color: var(--border);
+    background: var(--bg-root);
+    color: var(--text-primary);
+  }
+
+  :root[data-theme="system"] .scope-card,
+  :root[data-theme="system"] .expand-task,
+  :root[data-theme="system"] .project-card {
+    color: var(--text-primary) !important;
+    border-color: var(--border-strong);
+    background: var(--bg-panel);
+  }
+
+  :root[data-theme="system"] .today-eyebrow,
+  :root[data-theme="system"] .today-progress-ring {
+    color: var(--text-primary);
+  }
+
+  :root[data-theme="system"] .today-progress-ring span {
+    color: var(--text-secondary);
+  }
+
+  :root[data-theme="system"] .today-progress-ring {
+    background:
+      radial-gradient(circle, var(--bg-panel) 57%, transparent 58%),
+      conic-gradient(var(--accent) calc(var(--progress) * 1%), rgba(128, 151, 255, 0.15) 0);
+  }
+}
+
+.project-goal {
+  color: var(--text-secondary) !important;
+  line-height: 1.5;
+}
+
+.project-inline-action {
+  padding: 4px 0;
+  color: var(--accent);
+  font-size: 11px;
+  text-align: left;
+}
+
+.milestone-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+}
+
+.milestone-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.milestone-item { display: flex; align-items: center; gap: 8px; }
+.milestone-item > label { min-width: 0; flex: 1; }
+.milestone-item label span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.milestone-item label small { margin-left: auto; color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.milestone-edit-trigger { width: 28px; height: 28px; display: grid; flex: 0 0 auto; place-items: center; padding: 0; border: 0; border-radius: 8px; color: var(--text-muted); background: transparent; opacity: .45; }
+.milestone-item:hover .milestone-edit-trigger,
+.milestone-edit-trigger:focus-visible { opacity: 1; color: var(--accent); background: var(--accent-soft); }
+.milestone-edit { display: grid; grid-template-columns: minmax(150px,1fr) auto auto; gap: 8px; align-items: center; padding: 8px; border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border)); border-radius: 12px; background: var(--bg-soft); }
+.milestone-edit > .field { min-width: 0; }
+.milestone-edit > input[type="date"] { width: 145px; }
+.milestone-edit > div { display: flex; gap: 6px; }
+.milestone-edit .btn-primary,
+.milestone-edit .btn-ghost { width: auto; min-height: 34px; padding: 0 10px; }
+@media (max-width: 720px) { .milestone-edit { grid-template-columns: 1fr; } .milestone-edit > input[type="date"] { width: 100%; } .milestone-edit > div { justify-content: flex-end; } }
+
+.milestone-list input {
+  width: auto;
+}
+
+.milestone-compose {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.milestone-list .milestone-compose input {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 12px;
+}
+
+.milestone-compose .btn-primary {
+  width: auto;
+  min-width: 52px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.onboarding-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(38, 45, 60, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.onboarding-card {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  padding: 27px;
+  border: 1px solid #dce3f0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(42, 51, 72, 0.23);
+  pointer-events: auto;
+}
+
+.onboarding-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  color: #647dbd;
+  background: #edf3ff;
+}
+
+.onboarding-step {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.onboarding-card h2 {
+  margin: 20px 0 8px;
+}
+
+.onboarding-card > p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.onboarding-hint {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #6076af;
+  background: #f3f6fd;
+  font-size: 12px;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: 20px;
+}
+
+.onboarding-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: #dce1eb;
+}
+
+.onboarding-dots span.active {
+  width: 19px;
+  background: var(--accent);
+}
+
+.onboarding-card footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.onboarding-card footer .btn-ghost,
+.onboarding-card footer .btn-primary {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.onboarding-card footer .btn-primary {
+  width: auto;
+  min-width: 148px;
+}
+
+/* ---- App confirm dialog (replaces window.confirm) ---- */
+.app-confirm-modal {
+  width: min(420px, calc(100vw - 48px));
+}
+.app-confirm-modal .modal-head {
+  margin-bottom: 4px;
+}
+.app-confirm-modal .modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.app-confirm-description {
+  white-space: pre-line;
+}
+.app-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.btn-primary.danger {
+  background: var(--text-overdue, #c0392b);
+}
+
+/* ---- Today agenda: row "more" menu ---- */
+.row-more-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* 按钮文字一律横排:按钮在窄容器里被压缩时,禁止逐字竖排换行(如记账抽屉「取消」、习惯页「添加」)。 */
+.btn-primary,
+.primary-btn,
+.btn-ghost {
+  white-space: nowrap;
+}
+
+/* 与同行「详情/删除」(高 31px)对齐,避免 ⋯ 按钮偏矮。 */
+.row-more {
+  min-height: 31px;
+}
+
+.row-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 200px;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+  background: #ffffff; /* 纯白不透明,不随主题表面色变化 */
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+}
+.row-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.row-menu button:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.row-menu .row-menu-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.row-menu .row-menu-date .field {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.row-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: transparent;
+  border: 0;
+  cursor: default;
+}
+
+/* ---- Timeline: all-day lane ---- */
+.timeline-h-allday {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0 4px;
+  border-bottom: 1px dashed var(--border);
+}
+.timeline-h-allday-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+}
+.timeline-h-allday-chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.timeline-h-allday-chip:hover {
+  border-color: var(--accent);
+}
+
+/* ---- 今日事项标题行:标题居左,右侧动作(批量管理)居右 ---- */
+.scope-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.scope-section-head .scope-section-title {
+  margin: 0;
+}
+.scope-section-head .btn-ghost {
+  flex: 0 0 auto;
+}

@@ -1,0 +1,164 @@
+/* Final theme layer: kept last intentionally so legacy module styles inherit it. */
+.nav-side {
+  background: color-mix(in srgb, var(--bg-panel) 94%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.nav-side-scroll {
+  padding: 20px 16px;
+  gap: 9px;
+}
+
+/* 分区容器:标签 + 其下的导航项,行距比全局 gap 更紧凑。 */
+.nav-section {
+  display: grid;
+  gap: 5px;
+}
+
+.nav-section-label {
+  margin: 2px 4px 0;
+}
+
+/* 侧栏与主区的可拖拽边界。 */
+.nav-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 20;
+}
+
+.nav-resize-handle:hover,
+body.nav-resizing .nav-resize-handle {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+body.nav-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.brand-row {
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.brand-lockup,
+.nav-item-label {
+  display: flex;
+  align-items: center;
+}
+
+.brand-lockup {
+  gap: 10px;
+  min-width: 0;
+}
+
+.nav-item-label {
+  gap: 9px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #6f93e8, #3f6fd6);
+  box-shadow: 0 6px 16px rgba(55, 95, 180, 0.22);
+}
+
+.brand-caption {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.nav-item {
+  min-height: 34px;
+  border-radius: 10px;
+}
+
+.nav-item.active {
+  position: relative;
+  background: linear-gradient(90deg, var(--accent-soft), rgba(98, 99, 168, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(98, 99, 168, 0.07);
+}
+
+.nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 17px;
+  border-radius: 0 5px 5px 0;
+  background: var(--accent);
+}
+
+.btn-primary,
+.primary-btn {
+  background: linear-gradient(135deg, #82a0df, var(--accent));
+  box-shadow: 0 8px 20px rgba(98, 99, 168, 0.19);
+}
+
+.main-workspace {
+  background:
+    radial-gradient(circle at 92% 0%, rgba(229, 154, 107, 0.09), transparent 25%),
+    var(--bg-root);
+}
+
+.workspace-top {
+  padding: 25px 28px 13px;
+}
+
+.workspace-top h2 {
+  font-size: 1.72rem;
+  font-weight: 720;
+  letter-spacing: -0.035em;
+}
+
+.scope-board {
+  gap: 14px;
+  padding: 0 28px 28px;
+}
+
+.scope-card,
+.expand-task {
+  border-color: var(--border);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.expand-task {
+  margin-bottom: 9px;
+  border-radius: 14px;
+}
+
+.expand-task:hover {
+  border-color: rgba(98, 99, 168, 0.17);
+  box-shadow: 0 10px 27px rgba(45, 43, 67, 0.09);
+  transform: translateY(-1px);
+}
+
+.task-check {
+  border-radius: 50%;
+  border-color: rgba(98, 99, 168, 0.36);
+}
+
+.detail-panel {
+  background:
+    linear-gradient(180deg, rgba(98, 99, 168, 0.04), transparent 150px),
+    var(--bg-panel);
+  box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
+}
+
+.detail-meta {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-root);
+}
