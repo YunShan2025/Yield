@@ -8,7 +8,10 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::{Arc, Condvar, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        {Arc, Condvar, Mutex},
+    },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -758,6 +761,7 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 
     let mut builder = TrayIconBuilder::new()
         .menu(&menu)
+        .menu_on_left_click(false)
         .tooltip("有秋 · Yield");
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
@@ -858,20 +862,25 @@ pub fn run() {
                 let _ = main.set_title("有秋 · Yield");
                 let _ = main.set_focus();
                 let app_handle = app.handle().clone();
+                let closed_to_tray = Arc::new(AtomicBool::new(false));
+                let closed_flag = Arc::clone(&closed_to_tray);
                 main.on_window_event(move |event| {
                     if let WindowEvent::CloseRequested { api, .. } = event {
                         api.prevent_close();
+                        closed_flag.store(true, Ordering::Relaxed);
                         if let Some(w) = app_handle.get_webview_window("main") {
                             let _ = w.hide();
                             let _ = app_handle.emit("main:hidden-to-tray", ());
                         }
                     }
                 });
-                // 前端未成功调起显示时的兜底，避免窗口一直不可见。
+                // 前端未成功调起显示时的兜底；用户已主动关闭进托盘时不再唤起。
                 let fallback_window = main.clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_secs(5));
-                    if matches!(fallback_window.is_visible(), Ok(false)) {
+                    if !closed_to_tray.load(Ordering::Relaxed)
+                        && matches!(fallback_window.is_visible(), Ok(false))
+                    {
                         let _ = fallback_window.show();
                         let _ = fallback_window.set_focus();
                     }

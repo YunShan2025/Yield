@@ -1,5 +1,6 @@
 import { StrictMode, Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { detectDesktopPlatform } from "@/lib/platform";
@@ -13,6 +14,14 @@ function revealWindow() {
   const current = getCurrentWindow();
   void current.show();
   void current.setFocus();
+}
+
+// 等 DOM 提交且首帧绘制完成后再显示；rAF 被挂起时由定时器兜底。
+function revealWhenPainted() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(revealWindow);
+  });
+  window.setTimeout(revealWindow, 250);
 }
 
 function BootError({ message }: { message: string }) {
@@ -94,20 +103,24 @@ const root = createRoot(document.getElementById("root")!);
 
 void import("@/app/MainApp")
   .then(({ MainApp }) => {
-    root.render(
-      <StrictMode>
-        <ErrorBoundary>
-          <MainApp />
-        </ErrorBoundary>
-      </StrictMode>,
-    );
-    revealWindow();
+    flushSync(() => {
+      root.render(
+        <StrictMode>
+          <ErrorBoundary>
+            <MainApp />
+          </ErrorBoundary>
+        </StrictMode>,
+      );
+    });
+    revealWhenPainted();
   })
   .catch((error: unknown) => {
     const message =
       error instanceof Error
         ? error.message || String(error)
         : String(error ?? "未知错误");
-    root.render(<BootError message={message} />);
+    flushSync(() => {
+      root.render(<BootError message={message} />);
+    });
     revealWindow();
   });
