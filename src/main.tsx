@@ -1,8 +1,19 @@
 import { StrictMode, Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { detectDesktopPlatform } from "@/lib/platform";
 import "@/styles/index.css";
+
+// 窗口在配置中默认隐藏，前端内容就绪后再显示，避免启动时闪现未完成的界面。
+let windowRevealed = false;
+function revealWindow() {
+  if (windowRevealed) return;
+  windowRevealed = true;
+  const current = getCurrentWindow();
+  void current.show();
+  void current.setFocus();
+}
 
 function BootError({ message }: { message: string }) {
   const restart = async () => {
@@ -90,6 +101,7 @@ void import("@/app/MainApp")
         </ErrorBoundary>
       </StrictMode>,
     );
+    revealWindow();
   })
   .catch((error: unknown) => {
     const message =
@@ -97,4 +109,5 @@ void import("@/app/MainApp")
         ? error.message || String(error)
         : String(error ?? "未知错误");
     root.render(<BootError message={message} />);
+    revealWindow();
   });

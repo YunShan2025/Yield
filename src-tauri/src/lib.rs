@@ -805,6 +805,13 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 pub fn run() {
     tauri::Builder::default()
         .manage(Arc::new(ReminderScheduler::default()))
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(main) = app.get_webview_window("main") {
+                let _ = main.unminimize();
+                let _ = main.show();
+                let _ = main.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri::plugin::Builder::<tauri::Wry>::new("app-data")
@@ -858,6 +865,15 @@ pub fn run() {
                             let _ = w.hide();
                             let _ = app_handle.emit("main:hidden-to-tray", ());
                         }
+                    }
+                });
+                // 前端未成功调起显示时的兜底，避免窗口一直不可见。
+                let fallback_window = main.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_secs(5));
+                    if matches!(fallback_window.is_visible(), Ok(false)) {
+                        let _ = fallback_window.show();
+                        let _ = fallback_window.set_focus();
                     }
                 });
             }

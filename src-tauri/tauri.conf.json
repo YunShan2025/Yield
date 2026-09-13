@@ -1,6 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Yield",
+  "mainBinaryName": "有秋",
   "version": "1.0.0",
   "identifier": "com.yunshan.yield",
   "build": {
@@ -27,7 +28,7 @@
           0
         ],
         "titleBarStyle": "Overlay",
-        "visible": true,
+        "visible": false,
         "focus": true,
         "center": true
       }
@@ -50,7 +51,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "shortDescription": "本地优先的个人成长与行动工具",
     "longDescription": "有秋（Yield）— 名取《尚书·盘庚》「若农服田力穑，乃亦有秋」：本地优先的个人成长与行动工具，让每一天的付出都有收成。",
     "copyright": "Copyright © 2026 有秋",
