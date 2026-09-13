@@ -16,12 +16,17 @@ function revealWindow() {
   void current.setFocus();
 }
 
-// 等 DOM 提交且首帧绘制完成后再显示；rAF 被挂起时由定时器兜底。
-function revealWhenPainted() {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(revealWindow);
-  });
-  window.setTimeout(revealWindow, 250);
+// 等首屏数据（store.bootstrap）就绪并完成首帧绘制后再显示窗口；
+// bootstrap 卡住时由 2 秒定时器兜底，避免窗口一直不出现。
+function revealWhenReady() {
+  const finish = () => {
+    window.clearTimeout(fallback);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(revealWindow);
+    });
+  };
+  const fallback = window.setTimeout(finish, 2000);
+  window.addEventListener("youqiu:ready", finish, { once: true });
 }
 
 function BootError({ message }: { message: string }) {
@@ -112,7 +117,7 @@ void import("@/app/MainApp")
         </StrictMode>,
       );
     });
-    revealWhenPainted();
+    revealWhenReady();
   })
   .catch((error: unknown) => {
     const message =

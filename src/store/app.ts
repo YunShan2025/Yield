@@ -220,6 +220,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           ? { toast: `已清理 ${staleFocusClosed} 条过期未结束的专注` }
           : {}),
       });
+      window.dispatchEvent(new Event("youqiu:ready"));
     } catch (e) {
       const detail = errorMessage(e, "初始化失败");
       const diskHint =
@@ -232,6 +233,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         ready: true,
         error: `${detail}${diskHint}`,
       });
+      window.dispatchEvent(new Event("youqiu:ready"));
     }
   },
 
