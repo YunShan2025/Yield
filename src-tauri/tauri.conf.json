@@ -73,7 +73,8 @@
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico",
-        "startMenuFolder": "有秋"
+        "startMenuFolder": "有秋",
+        "installerHooks": "./windows/installer-hooks.nsh"
       }
     },
     "macOS": {

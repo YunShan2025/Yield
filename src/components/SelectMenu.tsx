@@ -62,7 +62,12 @@ export function SelectMenu({
       if (event.target.closest(".select-menu")) return;
       setOpen(false);
     };
-    const close = () => setOpen(false);
+    const close = (event: Event) => {
+      // 菜单自身的滚动（scrollIntoView 初始定位、列表内滚轮翻页）不算页面滚动，
+      // 否则农历日期这类超出一屏的列表一打开就被自己的滚动事件收起。
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
     document.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("scroll", close, true);
     window.addEventListener("resize", close);
@@ -75,7 +80,18 @@ export function SelectMenu({
 
   useEffect(() => {
     if (!open) return;
-    menuRef.current?.querySelector(".is-active")?.scrollIntoView({ block: "nearest" });
+    // 等价于 scrollIntoView({ block: "nearest" })，但只滚菜单自身，
+    // 不会波及弹窗/窗口等可滚动祖先（那会产生外部滚动事件并连带收起菜单）。
+    const menu = menuRef.current;
+    const active = menu?.querySelector<HTMLElement>(".is-active");
+    if (!menu || !active) return;
+    const top = active.offsetTop;
+    const bottom = top + active.offsetHeight;
+    if (top < menu.scrollTop) {
+      menu.scrollTop = top;
+    } else if (bottom > menu.scrollTop + menu.clientHeight) {
+      menu.scrollTop = bottom - menu.clientHeight;
+    }
   }, [open, activeIndex]);
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
