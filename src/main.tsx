@@ -6,7 +6,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { detectDesktopPlatform } from "@/lib/platform";
 import "@/styles/index.css";
 
-// 窗口在配置中默认隐藏，前端内容就绪后再显示，避免启动时闪现未完成的界面。
+// 窗口在配置中默认隐藏，首帧（启动卡）绘制完成后再显示，避免闪现未成形界面。
 let windowRevealed = false;
 function revealWindow() {
   if (windowRevealed) return;
@@ -16,18 +16,22 @@ function revealWindow() {
   void current.setFocus();
 }
 
-// 等首屏数据（store.bootstrap）就绪并完成首帧绘制后再显示窗口；
-// bootstrap 卡住时由 2 秒定时器兜底，避免窗口一直不出现。
-function revealWhenReady() {
-  const finish = () => {
-    window.clearTimeout(fallback);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(revealWindow);
-    });
-  };
-  const fallback = window.setTimeout(finish, 2000);
-  window.addEventListener("youqiu:ready", finish, { once: true });
+// 双 rAF 确保启动卡完成绘制；rAF 被挂起时由 300ms 定时器兜底。
+function revealWhenPainted() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(revealWindow);
+  });
+  window.setTimeout(revealWindow, 300);
 }
+
+// 首屏数据就绪后淡出并移除启动卡。
+function dismissBootSplash() {
+  const el = document.getElementById("boot-splash");
+  if (!el) return;
+  el.classList.add("boot-hide");
+  window.setTimeout(() => el.remove(), 300);
+}
+window.addEventListener("youqiu:ready", dismissBootSplash, { once: true });
 
 function BootError({ message }: { message: string }) {
   const restart = async () => {
@@ -117,7 +121,7 @@ void import("@/app/MainApp")
         </StrictMode>,
       );
     });
-    revealWhenReady();
+    revealWhenPainted();
   })
   .catch((error: unknown) => {
     const message =
@@ -127,5 +131,6 @@ void import("@/app/MainApp")
     flushSync(() => {
       root.render(<BootError message={message} />);
     });
+    document.getElementById("boot-splash")?.remove();
     revealWindow();
   });

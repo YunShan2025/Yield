@@ -4,9 +4,73 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>有秋 · Yield</title>
+    <style>
+      /* 启动卡：纯静态内联，窗口首次绘制即呈现，数据就绪后由 main.tsx 淡出移除。 */
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #f7f3ea;
+        font-family: "Kaiti SC", "KaiTi", "STKaiti", "SimSun", serif;
+        transition: opacity 0.26s ease;
+        user-select: none;
+      }
+      #boot-splash.boot-hide { opacity: 0; }
+      #boot-splash svg { width: 84px; height: 76px; animation: boot-breathe 1.8s ease-in-out infinite; }
+      .boot-name { font-size: 30px; font-weight: 600; letter-spacing: 14px; text-indent: 14px; color: #3d3325; }
+      .boot-tagline { font-size: 12px; letter-spacing: 2px; color: #9b917d; }
+      .boot-dots { display: flex; gap: 6px; margin-top: 4px; }
+      .boot-dots i { width: 5px; height: 5px; border-radius: 50%; background: #d8b45e; animation: boot-blink 1.2s ease-in-out infinite; }
+      .boot-dots i:nth-child(2) { animation-delay: 0.2s; }
+      .boot-dots i:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes boot-breathe {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.85; }
+      }
+      @keyframes boot-blink {
+        0%, 100% { opacity: 0.25; }
+        50% { opacity: 1; }
+      }
+      @media (prefers-color-scheme: dark) {
+        #boot-splash { background: #20242e; }
+        .boot-name { color: #ecdfc8; }
+        .boot-tagline { color: #8a91a0; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="boot-splash" aria-hidden="true">
+      <svg viewBox="90 140 844 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="boot-gold" x1="380" y1="200" x2="660" y2="820" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFD267"/>
+            <stop offset="1" stop-color="#F4B942"/>
+          </linearGradient>
+          <linearGradient id="boot-blue" x1="512" y1="380" x2="512" y2="830" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4385F5"/>
+            <stop offset="1" stop-color="#2563EB"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="372" cy="706" rx="150" ry="44" transform="rotate(30 372 706)" fill="url(#boot-blue)"/>
+        <path d="M512 830V400" stroke="url(#boot-blue)" stroke-width="52" stroke-linecap="round"/>
+        <ellipse cx="390" cy="478" rx="150" ry="74" transform="rotate(52 390 478)" fill="url(#boot-gold)"/>
+        <ellipse cx="634" cy="478" rx="150" ry="74" transform="rotate(-52 634 478)" fill="url(#boot-gold)"/>
+        <ellipse cx="400" cy="598" rx="140" ry="70" transform="rotate(52 400 598)" fill="url(#boot-gold)"/>
+        <ellipse cx="624" cy="598" rx="140" ry="70" transform="rotate(-52 624 598)" fill="url(#boot-gold)"/>
+        <ellipse cx="412" cy="712" rx="128" ry="64" transform="rotate(52 412 712)" fill="url(#boot-gold)"/>
+        <ellipse cx="612" cy="712" rx="128" ry="64" transform="rotate(-52 612 712)" fill="url(#boot-gold)"/>
+        <ellipse cx="512" cy="330" rx="86" ry="138" fill="url(#boot-gold)"/>
+      </svg>
+      <div class="boot-name">有秋</div>
+      <div class="boot-tagline">若农服田力穑 · 乃亦有秋</div>
+      <div class="boot-dots"><i></i><i></i><i></i></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

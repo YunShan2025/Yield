@@ -117,7 +117,7 @@ src-tauri/
 
 - **调试**：`npm run tauri dev`（vite:1420 + `cargo run`，产物 `target/debug/youqiu.exe`，不可分发）。
 - **发布**：`npm run tauri build` → 用户可见二进制为 `有秋.exe`（`mainBinaryName` 配置，crate 名仍为 youqiu）+ `bundle/nsis/Yield_1.0.0_x64-setup.exe`（NSIS 安装向导，唯一发布物）。MSI 目标已关闭：WiX 无法处理中文二进制名。
-- **窗口与单实例**：主窗口配置为 `visible: false`，前端等 `store.bootstrap()` 完成后（`youqiu:ready` 事件，2 秒兜底）再显示窗口，避免启动闪现未加载数据的空壳；`tauri-plugin-single-instance` 保证重复启动只唤起已有窗口（Rust 侧另有 5 秒兜底显示，用户已主动关闭进托盘时跳过）。
+- **窗口与单实例**：主窗口配置为 `visible: false`，首帧绘制后显示——`index.html` 内联品牌启动卡（纯静态 HTML/CSS，零 JS），`store.bootstrap()` 完成后派发 `youqiu:ready`，`main.tsx` 据此淡出启动卡切换到应用；`tauri-plugin-single-instance` 保证重复启动只唤起已有窗口（Rust 侧另有 5 秒兜底显示，用户已主动关闭进托盘时跳过）。
 - **版本号三处同步**：`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`；发布前必跑 `npm run release:check`。
 - **发布渠道**：GitHub 单仓库 `YunShan2025/Yield`。流程：版本记录按 `#### v{版本号}` 标题追加 → 打包 → 创建 Release（标签与版本一致）并上传安装包 → 应用内「检查更新」即开始工作。
 
