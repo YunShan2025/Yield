@@ -4,6 +4,7 @@ import { exportBackup, importBackup, summarizeBackupRestore } from "@/lib/db";
 import type { BackupPayload } from "@/types";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { isMobileShell } from "@/lib/platform";
 import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { themeMeta, type VisualTheme } from "@/lib/themes";
@@ -69,9 +70,27 @@ export function SettingsView() {
     await invoke("restart_app");
   };
 
+  // Android 没有「另存为」对话框：导出直接落盘应用数据目录 backups/，
+  // 与桌面 save() 对话框互斥。
+  const writeBackupToAppDir = async (name: string, contents: string) => {
+    const { appDataDir, join } = await import("@tauri-apps/api/path");
+    const { mkdir, writeTextFile } = await import("@tauri-apps/plugin-fs");
+    const dir = await join(await appDataDir(), "backups");
+    await mkdir(dir, { recursive: true }).catch(() => undefined);
+    const path = await join(dir, name);
+    await writeTextFile(path, contents);
+    return path;
+  };
+
   const exportJson = async () => {
     try {
       const payload = await exportBackup();
+      if (isMobileShell()) {
+        const name = `youqiu-backup-${Date.now()}.json`;
+        await writeBackupToAppDir(name, JSON.stringify(payload, null, 2));
+        setToast(`已导出到应用数据目录 backups/${name}`);
+        return;
+      }
       const path = await save({
         defaultPath: `youqiu-backup-${Date.now()}.json`,
         filters: [{ name: "JSON", extensions: ["json"] }],
@@ -105,6 +124,12 @@ export function SettingsView() {
           ].join(","),
         )
         .join("\n");
+      if (isMobileShell()) {
+        const name = `youqiu-tasks-${Date.now()}.csv`;
+        await writeBackupToAppDir(name, header + rows);
+        setToast(`已导出到应用数据目录 backups/${name}`);
+        return;
+      }
       const path = await save({
         defaultPath: `youqiu-tasks-${Date.now()}.csv`,
         filters: [{ name: "CSV", extensions: ["csv"] }],
@@ -118,10 +143,17 @@ export function SettingsView() {
   };
 
   const importJson = async () => {
-    const path = await open({
-      multiple: false,
-      filters: [{ name: "JSON", extensions: ["json"] }],
-    });
+    let path: string | string[] | null;
+    try {
+      path = await open({
+        multiple: false,
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+    } catch (error) {
+      // Android 文件选择器可能不支持扩展名过滤或被系统拦截，给出明确出路。
+      setToast(`无法打开文件选择器：${String(error)}`);
+      return;
+    }
     if (!path || Array.isArray(path)) return;
     let payload: BackupPayload;
     try {
@@ -247,20 +279,28 @@ export function SettingsView() {
         <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "6px 0 0" }}>
           单个任务可在任务详情里单独设置提前量；不单独设置时使用这里的默认值。
         </p>
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.autostart}
-            onChange={() => void toggleAutostart()}
-          />
-          <span>
-            <strong>开机自动启动</strong>
-            <small>登录 Windows 后自动启动有秋</small>
-          </span>
-        </label>
-        <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
-          关闭主窗口会收到托盘，不会退出；彻底退出请用托盘「退出应用」。
-        </p>
+        {!isMobileShell() ? (
+          <>
+            <label className="settings-toggle">
+              <input
+                type="checkbox"
+                checked={settings.autostart}
+                onChange={() => void toggleAutostart()}
+              />
+              <span>
+                <strong>开机自动启动</strong>
+                <small>登录 Windows 后自动启动有秋</small>
+              </span>
+            </label>
+            <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+              关闭主窗口会收到托盘，不会退出；彻底退出请用托盘「退出应用」。
+            </p>
+          </>
+        ) : (
+          <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            Android 端提醒由系统计划通知送达；把有秋加入电池优化白名单可避免提醒被延迟。
+          </p>
+        )}
         <ReminderSyncStatusCard />
       </section>
 
@@ -328,9 +368,11 @@ export function SettingsView() {
           <button type="button" className="btn-ghost" onClick={() => void importJson()}>
             导入恢复
           </button>
-          <button type="button" className="btn-ghost" onClick={() => void invoke("open_data_directory")}>
-            打开数据目录
-          </button>
+          {!isMobileShell() ? (
+            <button type="button" className="btn-ghost" onClick={() => void invoke("open_data_directory")}>
+              打开数据目录
+            </button>
+          ) : null}
         </div>
 
         <div className="data-health-panel">
@@ -374,13 +416,15 @@ export function SettingsView() {
                     {new Date(backup.createdAt * 1000).toLocaleString()}
                     <small>{Math.max(1, Math.round(backup.size / 1024))} KB</small>
                   </span>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => void restoreDatabaseBackup(backup)}
-                  >
-                    恢复此版本
-                  </button>
+                  {!isMobileShell() ? (
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => void restoreDatabaseBackup(backup)}
+                    >
+                      恢复此版本
+                    </button>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -422,8 +466,9 @@ function ReminderSyncStatusCard() {
         </span>
       </div>
       <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "6px 0 0" }}>
-        完全退出后，最近 {OS_REMINDER_LIMIT} 条、90 天内的提醒仍会由系统准时弹出，其余等应用再次运行时补发
-        {sync.truncated ? "；当前已超出上限，队列每 6 小时自动补入" : ""}。
+        {isMobileShell()
+          ? "Android 端由系统计划通知（闹钟）准时送达；未授予精确闹钟时可能延迟数分钟，被系统强停后需重新打开应用补发。"
+          : `完全退出后，最近 ${OS_REMINDER_LIMIT} 条、90 天内的提醒仍会由系统准时弹出，其余等应用再次运行时补发${sync.truncated ? "；当前已超出上限，队列每 6 小时自动补入" : ""}。`}
       </p>
       <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "4px 0 0" }}>
         最近一次同步：
@@ -444,7 +489,7 @@ function ReminderSyncStatusCard() {
         >
           立即重新同步
         </button>
-        {sync.permissionGranted === false ? (
+        {sync.permissionGranted === false && !isMobileShell() ? (
           <button
             type="button"
             className="btn-ghost"

@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
+  cancel,
   isPermissionGranted,
   requestPermission,
+  Schedule,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 import { DesktopNotificationCards } from "@/components/DesktopNotificationCards";
@@ -193,6 +195,40 @@ export function MainApp() {
         lastOsHostRef.current = EMPTY_OS_HOST;
         setReminderSync(status);
         return EMPTY_OS_HOST;
+      }
+      if (isMobileShell()) {
+        // Android 替代实现：os_reminders.rs 仅支持 win/mac，这里把窗口内提醒
+        // 交给通知插件的计划通知（AlarmManager），杀进程后仍由系统送达。
+        // 每次全量同步先清空再重排，任务改动后自然收敛；不进 Rust 进程内调度器。
+        const osWindow = selectOsReminderWindow(scheduled);
+        // 插件 2.3.3 的 cancelAll() 在 Android 上以无参调用 cancel，Kotlin 侧
+        // CancelArgs.notifications 是 lateinit，无参解析直接抛异常；改为显式
+        // cancel 全量 id 槽位（schedule 同 id 自动覆盖旧闹钟，槽位清空保证
+        // 缩量后不残留过期提醒）。
+        await cancel(Array.from({ length: OS_REMINDER_LIMIT }, (_, index) => index + 1));
+        osWindow.windowed.forEach((plan, index) => {
+          sendNotification({
+            id: index + 1,
+            title: plan.title,
+            body: plan.body,
+            schedule: Schedule.at(new Date(plan.fireAtMs), false, true),
+          });
+        });
+        status.osAvailable = true;
+        status.scheduledCount = osWindow.windowed.length;
+        status.overflowCount = osWindow.overflow.length;
+        status.truncated = osWindow.truncated;
+        status.lastOkAt = Date.now();
+        status.lastError = osWindow.truncated
+          ? `系统计划通知按 ${OS_REMINDER_LIMIT} 条 / 90 天登记，其余在应用运行时补发`
+          : null;
+        const host: OsHostState = {
+          osOk: true,
+          hostedIds: new Set(osWindow.windowed.map((item) => item.reminderId)),
+        };
+        lastOsHostRef.current = host;
+        setReminderSync(status);
+        return host;
       }
       const result = await invoke<OsReminderSyncResult>("sync_native_notifications", {
         reminders: scheduled,
