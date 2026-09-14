@@ -10,7 +10,13 @@ class MainActivity : TauriActivity() {
       WebView.setWebContentsDebuggingEnabled(true)
     }
     // 不开 edge-to-edge：WebView 停留在状态栏下方，避免 Chrome 83 安全区 env() 缺失导致内容被状态栏遮挡；
-    // 键盘伸缩沿用默认 adjustResize。深色状态栏等外观定制留待 M3。
+    // 键盘伸缩沿用默认 adjustResize。深色状态栏等外观定制留待 M5。
     super.onCreate(savedInstanceState)
+  }
+
+  override fun onBackPressed() {
+    // 返回键退到后台而非销毁 Activity：进程内提醒调度继续走，
+    // 计划通知（AlarmManager）也不受影响；符合「返回=收起应用」的移动直觉。
+    moveTaskToBack(true)
   }
 }
