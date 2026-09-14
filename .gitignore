@@ -15,6 +15,7 @@ scripts/vs_BuildTools.exe
 # Local build output and non-project working documents
 dist-setup/
 docs/ui-drafts/
+docs/local/
 *推广文案*.md
 *小红书*.md
 resume*_render/
