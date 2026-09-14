@@ -1,6 +1,6 @@
 import Database from "@tauri-apps/plugin-sql";
 import type { Task } from "@/types";
-import { DB_URL } from "@/lib/dates";
+import { DB_URL, nowIso } from "@/lib/dates";
 
 let dbPromise: Promise<Database> | null = null;
 export const TASK_SELECT = `SELECT tasks.*,
@@ -101,12 +101,18 @@ export async function saveTaskPlanningMetadata(task: Task): Promise<void> {
   const db = await getDb();
   await db.execute(
     `INSERT INTO task_planning_metadata
-     (task_id, reminder_minutes_json, estimated_minutes)
-     VALUES ($1,$2,$3)
+     (task_id, reminder_minutes_json, estimated_minutes, updated_at)
+     VALUES ($1,$2,$3,$4)
      ON CONFLICT(task_id) DO UPDATE SET
        reminder_minutes_json=excluded.reminder_minutes_json,
-       estimated_minutes=excluded.estimated_minutes`,
-    [task.id, JSON.stringify(task.reminder_minutes ?? []), task.estimated_minutes ?? null],
+       estimated_minutes=excluded.estimated_minutes,
+       updated_at=excluded.updated_at`,
+    [
+      task.id,
+      JSON.stringify(task.reminder_minutes ?? []),
+      task.estimated_minutes ?? null,
+      task.updated_at || nowIso(),
+    ],
   );
 }
 

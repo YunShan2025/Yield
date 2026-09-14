@@ -277,6 +277,7 @@ describe("backup pure helpers", () => {
           name: "work",
           color: "#000",
           created_at: "2026-08-01T00:00:00.000Z",
+          updated_at: "2026-08-01T00:00:00.000Z",
         },
       ],
       taskTags: [

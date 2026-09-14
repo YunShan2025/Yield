@@ -86,8 +86,8 @@ describe("weeklyChecklist", () => {
 
   it("resolves category from tag aliases", () => {
     const tags: Tag[] = [
-      { id: "t1", name: "工作", color: "#f00", created_at: "" },
-      { id: "t2", name: "health", color: "#0f0", created_at: "" },
+      { id: "t1", name: "工作", color: "#f00", created_at: "", updated_at: "" },
+      { id: "t2", name: "health", color: "#0f0", created_at: "", updated_at: "" },
     ];
     expect(resolveCategoryId("a", { a: ["t1"] }, tags)).toBe("work");
     expect(resolveCategoryId("b", { b: ["t2"] }, tags)).toBe("health");
@@ -96,7 +96,7 @@ describe("weeklyChecklist", () => {
 
   it("aggregates week buckets and stats", () => {
     const tags: Tag[] = [
-      { id: "tw", name: "工作", color: "#f00", created_at: "" },
+      { id: "tw", name: "工作", color: "#f00", created_at: "", updated_at: "" },
     ];
     const week = mondayWeekDates("2026-08-12");
     const { categories, stats } = buildWeekBuckets(

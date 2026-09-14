@@ -36,8 +36,8 @@ export async function exportBackup(): Promise<BackupPayload> {
   const db = await getDb();
   const tasks = await fetchTasks(true);
   const tags = await fetchTags();
-  const taskTags = await db.select<{ task_id: string; tag_id: string }[]>(
-    "SELECT task_id, tag_id FROM task_tags",
+  const taskTags = await db.select<{ task_id: string; tag_id: string; updated_at: string }[]>(
+    "SELECT task_id, tag_id, updated_at FROM task_tags",
   );
   const attachments = await fetchAllAttachments();
   const habits = await fetchHabits();
@@ -139,10 +139,10 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     if (has("projects")) await db.execute("DELETE FROM projects");
 
   for (const category of payload.ledgerCategories ?? []) {
-    await db.execute(`INSERT INTO ledger_categories(id,kind,name,icon,color,sort_order,is_builtin,is_enabled,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [category.id,category.kind,category.name,category.icon,category.color,category.sort_order,category.is_builtin,category.is_enabled,category.created_at]);
+    await db.execute(`INSERT INTO ledger_categories(id,kind,name,icon,color,sort_order,is_builtin,is_enabled,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, [category.id,category.kind,category.name,category.icon,category.color,category.sort_order,category.is_builtin,category.is_enabled,category.created_at,category.updated_at ?? category.created_at]);
   }
   for (const account of payload.ledgerAccounts ?? []) {
-    await db.execute(`INSERT INTO ledger_accounts(id,name,kind,color,sort_order,is_enabled,created_at) VALUES($1,$2,$3,$4,$5,$6,$7)`, [account.id,account.name,account.kind,account.color,account.sort_order,account.is_enabled,account.created_at]);
+    await db.execute(`INSERT INTO ledger_accounts(id,name,kind,color,sort_order,is_enabled,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, [account.id,account.name,account.kind,account.color,account.sort_order,account.is_enabled,account.created_at,account.updated_at ?? account.created_at]);
   }
   for (const budget of payload.ledgerBudgets ?? []) {
     await db.execute(`INSERT INTO ledger_budgets(id,month,amount_cents,created_at,updated_at) VALUES($1,$2,$3,$4,$5)`, [budget.id,budget.month,budget.amount_cents,budget.created_at,budget.updated_at]);
@@ -197,14 +197,14 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
 
   for (const tag of payload.tags) {
     await db.execute(
-      "INSERT INTO tags (id, name, color, created_at) VALUES ($1,$2,$3,$4)",
-      [tag.id, tag.name, tag.color, tag.created_at],
+      "INSERT INTO tags (id, name, color, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)",
+      [tag.id, tag.name, tag.color, tag.created_at, tag.updated_at ?? tag.created_at],
     );
   }
   for (const tt of payload.taskTags) {
     await db.execute(
-      "INSERT OR IGNORE INTO task_tags (task_id, tag_id) VALUES ($1,$2)",
-      [tt.task_id, tt.tag_id],
+      "INSERT OR IGNORE INTO task_tags (task_id, tag_id, updated_at) VALUES ($1,$2,$3)",
+      [tt.task_id, tt.tag_id, tt.updated_at ?? ""],
     );
   }
   for (const a of payload.attachments) {
@@ -215,8 +215,8 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   }
   for (const h of payload.habits) {
     await db.execute(
-      "INSERT INTO habits (id, title, target_per_week, created_at, goal_id, goal_contribution) VALUES ($1,$2,$3,$4,$5,$6)",
-      [h.id, h.title, h.target_per_week, h.created_at, h.goal_id ?? null, h.goal_contribution ?? 1],
+      "INSERT INTO habits (id, title, target_per_week, created_at, updated_at, goal_id, goal_contribution) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+      [h.id, h.title, h.target_per_week, h.created_at, h.updated_at ?? h.created_at, h.goal_id ?? null, h.goal_contribution ?? 1],
     );
   }
   for (const c of payload.habitChecks) {
@@ -310,8 +310,8 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   }
   for (const milestone of payload.milestones ?? []) {
     await db.execute(
-      `INSERT INTO milestones (id, project_id, title, due_date, completed, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6)`,
+      `INSERT INTO milestones (id, project_id, title, due_date, completed, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         milestone.id,
         milestone.project_id,
@@ -319,6 +319,7 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         milestone.due_date,
         milestone.completed,
         milestone.created_at,
+        milestone.updated_at ?? milestone.created_at,
       ],
     );
   }
@@ -339,19 +340,20 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   for (const entry of payload.goalEntries ?? []) {
     await db.execute(
       `INSERT INTO goal_entries
-       (id,goal_id,entry_date,value,source_type,source_id,note,created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+       (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [entry.id,entry.goal_id,entry.entry_date,entry.value,entry.source_type,
-       entry.source_id,entry.note,entry.created_at],
+       entry.source_id,entry.note,entry.created_at,entry.updated_at ?? entry.created_at],
     );
   }
   for (const milestone of payload.goalMilestones ?? []) {
     await db.execute(
       `INSERT INTO goal_milestones
-       (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+       (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [milestone.id,milestone.goal_id,milestone.title,milestone.target_value,
-       milestone.target_date,milestone.completed_at,milestone.sort_order,milestone.created_at],
+       milestone.target_date,milestone.completed_at,milestone.sort_order,milestone.created_at,
+       milestone.updated_at ?? milestone.created_at],
     );
   }
   for (const achievement of payload.achievements ?? []) {

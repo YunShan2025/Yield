@@ -599,6 +599,43 @@ INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_contract', '1');
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 2,
+            description: "sync_metadata_updated_at",
+            // 为数据同步补齐 9 张可编辑小表的 updated_at。ALTER TABLE 只能带
+            // 常量默认值，旧行时间戳随后按来源回填：有 created_at 的表取自身，
+            // task_planning_metadata 取宿主任务的时间，纯关联表 task_tags 留空。
+            sql: r#"
+ALTER TABLE habits ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE habits SET updated_at = created_at WHERE updated_at = '';
+
+ALTER TABLE tags ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE tags SET updated_at = created_at WHERE updated_at = '';
+
+ALTER TABLE task_tags ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE task_planning_metadata ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE task_planning_metadata SET updated_at =
+  COALESCE((SELECT tasks.updated_at FROM tasks WHERE tasks.id = task_planning_metadata.task_id), '')
+  WHERE updated_at = '';
+
+ALTER TABLE milestones ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE milestones SET updated_at = created_at WHERE updated_at = '';
+
+ALTER TABLE goal_entries ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE goal_entries SET updated_at = created_at WHERE updated_at = '';
+
+ALTER TABLE goal_milestones ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE goal_milestones SET updated_at = created_at WHERE updated_at = '';
+
+ALTER TABLE ledger_categories ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE ledger_categories SET updated_at = created_at WHERE updated_at = '';
+
+ALTER TABLE ledger_accounts ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';
+UPDATE ledger_accounts SET updated_at = created_at WHERE updated_at = '';
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

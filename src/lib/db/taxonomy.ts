@@ -28,14 +28,10 @@ export async function ensureDefaultTags(): Promise<void> {
   const names = new Set(existing.map((row) => row.name));
   for (const [index, tag] of DEFAULT_TAGS.entries()) {
     if (names.has(tag.name)) continue;
+    const createdAt = new Date(Date.now() + index).toISOString();
     await db.execute(
-      "INSERT INTO tags (id, name, color, created_at) VALUES ($1,$2,$3,$4)",
-      [
-        createId(),
-        tag.name,
-        tag.color,
-        new Date(Date.now() + index).toISOString(),
-      ],
+      "INSERT INTO tags (id, name, color, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)",
+      [createId(), tag.name, tag.color, createdAt, createdAt],
     );
   }
 }
@@ -52,10 +48,11 @@ export async function createTag(name: string, color = "#5B8FF9"): Promise<Tag> {
     name: name.trim(),
     color,
     created_at: nowIso(),
+    updated_at: nowIso(),
   };
   await db.execute(
-    "INSERT INTO tags (id, name, color, created_at) VALUES ($1,$2,$3,$4)",
-    [tag.id, tag.name, tag.color, tag.created_at],
+    "INSERT INTO tags (id, name, color, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)",
+    [tag.id, tag.name, tag.color, tag.created_at, tag.updated_at],
   );
   return tag;
 }
@@ -68,9 +65,10 @@ export async function updateTag(
   const rows = await db.select<Tag[]>("SELECT * FROM tags WHERE id=$1", [id]);
   if (!rows[0]) return;
   const next = { ...rows[0], ...updates };
-  await db.execute("UPDATE tags SET name=$1, color=$2 WHERE id=$3", [
+  await db.execute("UPDATE tags SET name=$1, color=$2, updated_at=$3 WHERE id=$4", [
     next.name,
     next.color,
+    nowIso(),
     id,
   ]);
 }
@@ -96,8 +94,8 @@ export async function fetchTaskTagMap(): Promise<Record<string, string[]>> {
 export async function linkTag(taskId: string, tagId: string): Promise<void> {
   const db = await getDb();
   await db.execute(
-    "INSERT OR IGNORE INTO task_tags (task_id, tag_id) VALUES ($1,$2)",
-    [taskId, tagId],
+    "INSERT OR IGNORE INTO task_tags (task_id, tag_id, updated_at) VALUES ($1,$2,$3)",
+    [taskId, tagId, nowIso()],
   );
 }
 
@@ -170,12 +168,13 @@ export async function createHabit(
     title: title.trim(),
     target_per_week: targetPerWeek,
     created_at: nowIso(),
+    updated_at: nowIso(),
     goal_id: null,
     goal_contribution: 1,
   };
   await db.execute(
-    "INSERT INTO habits (id, title, target_per_week, created_at) VALUES ($1,$2,$3,$4)",
-    [habit.id, habit.title, habit.target_per_week, habit.created_at],
+    "INSERT INTO habits (id, title, target_per_week, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)",
+    [habit.id, habit.title, habit.target_per_week, habit.created_at, habit.updated_at],
   );
   return habit;
 }
@@ -256,8 +255,8 @@ export async function updateHabitGoal(
     }
   }
   await db.execute(
-    "UPDATE habits SET goal_id=$1, goal_contribution=$2 WHERE id=$3",
-    [goalId, contribution, habitId],
+    "UPDATE habits SET goal_id=$1, goal_contribution=$2, updated_at=$3 WHERE id=$4",
+    [goalId, contribution, nowIso(), habitId],
   );
   if (goalId) {
     for (const check of checks) {

@@ -81,6 +81,7 @@ export interface Tag {
   name: string;
   color: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Attachment {
@@ -97,6 +98,7 @@ export interface Habit {
   title: string;
   target_per_week: number;
   created_at: string;
+  updated_at: string;
   goal_id: string | null;
   goal_contribution: number;
 }
@@ -272,6 +274,7 @@ export interface Milestone {
   due_date: string | null;
   completed: number;
   created_at: string;
+  updated_at: string;
 }
 
 export type GoalType =
@@ -319,6 +322,7 @@ export interface GoalEntry {
   source_id: string | null;
   note: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface GoalMilestone {
@@ -330,6 +334,7 @@ export interface GoalMilestone {
   completed_at: string | null;
   sort_order: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Achievement {
@@ -362,7 +367,7 @@ export interface BackupPayload {
   exportedAt: string;
   tasks: Task[];
   tags: Tag[];
-  taskTags: { task_id: string; tag_id: string }[];
+  taskTags: { task_id: string; tag_id: string; updated_at?: string }[];
   attachments: Attachment[];
   habits: Habit[];
   habitChecks: HabitCheck[];

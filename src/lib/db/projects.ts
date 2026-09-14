@@ -101,9 +101,9 @@ export async function createMilestone(
   const db = await getDb();
   await db.execute(
     `INSERT INTO milestones
-     (id, project_id, title, due_date, completed, created_at)
-     VALUES ($1,$2,$3,$4,$5,$6)`,
-    [createId(), projectId, title.trim(), null, 0, nowIso()],
+     (id, project_id, title, due_date, completed, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [createId(), projectId, title.trim(), null, 0, nowIso(), nowIso()],
   );
 }
 
@@ -113,8 +113,8 @@ export async function toggleMilestone(
 ): Promise<void> {
   const db = await getDb();
   await db.execute(
-    "UPDATE milestones SET completed = $1 WHERE id = $2",
-    [completed ? 1 : 0, id],
+    "UPDATE milestones SET completed = $1, updated_at = $2 WHERE id = $3",
+    [completed ? 1 : 0, nowIso(), id],
   );
 }
 
@@ -129,7 +129,10 @@ export async function updateMilestone(
   const title = patch.title === undefined ? current.title : patch.title.trim();
   if (!title) return;
   const dueDate = patch.due_date === undefined ? current.due_date : patch.due_date;
-  await db.execute("UPDATE milestones SET title = $1, due_date = $2 WHERE id = $3", [title, dueDate || null, id]);
+  await db.execute(
+    "UPDATE milestones SET title = $1, due_date = $2, updated_at = $3 WHERE id = $4",
+    [title, dueDate || null, nowIso(), id],
+  );
 }
 
 export async function fetchNotifications(): Promise<AppNotification[]> {

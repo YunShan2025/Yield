@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
 describe("database migration declarations", () => {
-  it("keeps a single clean v1 baseline with the current workflow tables", () => {
+  it("keeps a clean v1 baseline with the current workflow tables", () => {
     const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
       /\r\n/g,
       "\n",
@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1]);
+    expect(versions).toEqual([1, 2]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -36,8 +36,10 @@ describe("database migration declarations", () => {
     ]) {
       expect(source).not.toContain(legacy);
     }
+    const baselineEnd = source.indexOf("version: 2");
     const baseline = source.slice(
       source.indexOf('description: "youqiu_baseline"'),
+      baselineEnd === -1 ? undefined : baselineEnd,
     );
     for (const table of [
       "tasks",
@@ -67,10 +69,52 @@ describe("database migration declarations", () => {
     ]) {
       expect(source).toContain(`CREATE TABLE IF NOT EXISTS ${table}`);
     }
-    // 全量建表基线：不允许再出现增量补列。
-    expect(source).not.toContain("ALTER TABLE");
+    // v1 基线保持全量建表；增量补列只允许出现在后续 migration（v2+）。
+    expect(baseline).not.toContain("ALTER TABLE");
     expect(source).not.toContain("INSERT OR REPLACE INTO task_planning_metadata");
     expect(baseline).toContain("schedule_locked INTEGER NOT NULL DEFAULT 0");
+  });
+
+  it("adds sync metadata via migration v2", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*2,\s*description:\s*"sync_metadata_updated_at",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    // 9 张同步缺口表全部补列。
+    for (const table of [
+      "habits",
+      "tags",
+      "task_tags",
+      "task_planning_metadata",
+      "milestones",
+      "goal_entries",
+      "goal_milestones",
+      "ledger_categories",
+      "ledger_accounts",
+    ]) {
+      expect(match?.[1]).toContain(
+        `ALTER TABLE ${table} ADD COLUMN updated_at TEXT NOT NULL DEFAULT '';`,
+      );
+    }
+    // 旧行按来源回填，不留空串时间戳。
+    for (const table of [
+      "habits",
+      "tags",
+      "milestones",
+      "goal_entries",
+      "goal_milestones",
+      "ledger_categories",
+      "ledger_accounts",
+    ]) {
+      expect(match?.[1]).toContain(
+        `UPDATE ${table} SET updated_at = created_at WHERE updated_at = '';`,
+      );
+    }
+    expect(match?.[1]).toContain("WHERE tasks.id = task_planning_metadata.task_id");
   });
 
   it("keeps the v1 baseline schema canonical", () => {

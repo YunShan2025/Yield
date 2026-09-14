@@ -173,7 +173,10 @@ export async function refreshGoalProgress(goalId: string): Promise<void> {
       (ascending ? current < milestone.target_value : current > milestone.target_value),
   );
   for (const milestone of reverted) {
-    await db.execute("UPDATE goal_milestones SET completed_at=NULL WHERE id=$1", [milestone.id]);
+    await db.execute(
+      "UPDATE goal_milestones SET completed_at=NULL, updated_at=$1 WHERE id=$2",
+      [nowIso(), milestone.id],
+    );
     await db.execute(
       "DELETE FROM achievements WHERE source_type='milestone' AND source_id=$1",
       [milestone.id],
@@ -186,8 +189,8 @@ export async function refreshGoalProgress(goalId: string): Promise<void> {
   for (const milestone of milestones) {
     const stamp = nowIso();
     await db.execute(
-      "UPDATE goal_milestones SET completed_at=$1 WHERE id=$2",
-      [stamp, milestone.id],
+      "UPDATE goal_milestones SET completed_at=$1, updated_at=$2 WHERE id=$3",
+      [stamp, stamp, milestone.id],
     );
     await createAchievement({
       goal_id: goalId,
@@ -225,11 +228,11 @@ export async function addGoalEntry(
   if (!goal || !goalAcceptsSource(goal, input.source_type)) return false;
   const result = await db.execute(
     `INSERT OR IGNORE INTO goal_entries
-     (id,goal_id,entry_date,value,source_type,source_id,note,created_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+     (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
     [
       createId(), input.goal_id, input.entry_date, Number(input.value),
-      input.source_type, input.source_id ?? null, input.note?.trim() ?? "", nowIso(),
+      input.source_type, input.source_id ?? null, input.note?.trim() ?? "", nowIso(), nowIso(),
     ],
   );
   await refreshGoalProgress(input.goal_id);
@@ -291,9 +294,9 @@ export async function createGoalMilestone(
   const db = await getDb();
   await db.execute(
     `INSERT INTO goal_milestones
-     (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at)
-     VALUES ($1,$2,$3,$4,$5,NULL,$6,$7)`,
-    [createId(), goalId, title.trim(), targetValue, targetDate, Date.now(), nowIso()],
+     (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at,updated_at)
+     VALUES ($1,$2,$3,$4,$5,NULL,$6,$7,$8)`,
+    [createId(), goalId, title.trim(), targetValue, targetDate, Date.now(), nowIso(), nowIso()],
   );
   await refreshGoalProgress(goalId);
 }
