@@ -19,7 +19,9 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_"],
   build: {
-    target: "es2021",
+    // Android 用系统 WebView（老旧设备可能停在 Chrome 83 一带），语法目标必须下探；
+    // 桌面端 WebView2 永久更新，维持 es2021 产物更小更快。
+    target: process.env.TAURI_ENV_PLATFORM === "android" ? "chrome83" : "es2021",
     minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_DEBUG,
     rollupOptions: {
