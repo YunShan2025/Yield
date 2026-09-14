@@ -1,4 +1,4 @@
-package com.yunshan.yield
+package com.yunshan.youqiu
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge

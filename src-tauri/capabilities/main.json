@@ -38,9 +38,6 @@
     "sql:allow-select",
     "sql:allow-close",
     "notification:default",
-    "autostart:allow-enable",
-    "autostart:allow-disable",
-    "autostart:allow-is-enabled",
     "dialog:default",
     "fs:default",
     {
