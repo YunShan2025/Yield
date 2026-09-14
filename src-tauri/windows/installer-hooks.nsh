@@ -5,12 +5,18 @@
 ;   2) 桌面（静默/被动安装）：也在主安装段内、钩子之前创建 → 钩子直接改名；
 ;   3) 桌面（GUI 安装）：完成页「创建桌面快捷方式」勾选后、点击「完成」时才创建，
 ;      晚于一切安装钩子 → 用 .onGUIEnd（模板未定义该回调）在安装器窗口关闭时改名。
-; 另：MUI2 开始菜单页的「不要创建快捷方式」勾选后，$AppStartMenuFolder 会带 ">"
-; 前缀（MUI2 约定，模板不检查），模板会误建 ">有秋" 文件夹——钩子负责清理并尊重该选择。
+; 另：开始菜单页原本还有「不要创建快捷方式」勾选框，勾选后 $AppStartMenuFolder 会带
+; ">" 前缀（MUI2 约定，模板不检查），会误建 ">有秋" 文件夹。现以 !define MUI_STARTMENUPAGE_NODISABLE
+; 直接隐藏该勾选框（见下），开始菜单快捷方式固定创建，唯一的「不创建」开关是完成页的桌面勾选。
 ; 卸载前补删改名版——模板卸载逻辑只认 ${PRODUCTNAME}.lnk 名字，不处理会留残留。
 ; ⚠ 本文件必须是 UTF-8 with BOM：.onGUIEnd 函数体在模板 define 之前编译，
 ;   无法用 ${PRODUCTNAME}/${MAINBINARYNAME}（会留成字面量），只能写字面量文件名。
 ;   若更改 productName / mainBinaryName，必须同步修改 .onGUIEnd 中的两处文件名。
+
+; 隐藏 MUI2 开始菜单页的「不要创建快捷方式(N)」勾选框：StartMenu 插件不再收到
+; /checknoshortcuts 参数，$AppStartMenuFolder 也就不会出现 ">" 前缀。
+; （钩子文件在模板声明各页面之前被 include，此 define 到页面声明时仍然生效。）
+!define MUI_STARTMENUPAGE_NODISABLE
 
 !macro NSIS_HOOK_POSTINSTALL
   ; 桌面：清理指向本程序但叫 ${PRODUCTNAME}.lnk 的旧快捷方式（旧版安装残留）。
@@ -28,13 +34,9 @@
     !insertmacro SetLnkAppUserModelId "$DESKTOP\${MAINBINARYNAME}.lnk"
   ${EndIf}
 
-  ; 开始菜单：统一命名；勾选「不要创建快捷方式」时（">" 前缀）清理模板误建项且不创建
-  StrCpy $R9 "$AppStartMenuFolder" 1
-  ${If} $R9 == ">"
-    Delete "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk"
-    RMDir "$SMPROGRAMS\$AppStartMenuFolder"
-    Delete "$SMPROGRAMS\${PRODUCTNAME}.lnk"
-  ${ElseIf} $AppStartMenuFolder == ""
+  ; 开始菜单：统一命名。勾选框已隐藏（见文件头），$AppStartMenuFolder 只会是
+  ; 「有秋」或用户自填的文件夹名；为空表示直接放在开始菜单根目录。
+  ${If} $AppStartMenuFolder == ""
     CreateShortcut "$SMPROGRAMS\${MAINBINARYNAME}.lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
     !insertmacro SetLnkAppUserModelId "$SMPROGRAMS\${MAINBINARYNAME}.lnk"
   ${Else}
