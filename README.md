@@ -98,7 +98,7 @@
 
 ## 下载与安装
 
-当前版本 **v1.0.0**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
+当前版本 **v1.0.1**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
@@ -161,6 +161,13 @@ npm run release:check
 - 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；需求方向与产品边界的取舍记录见 [产品需求与决策记录](docs/PRODUCT_DECISIONS.md)，修改档案见 [修改记录](docs/CHANGES.md)
 
 ## 版本记录
+
+#### v1.0.1 安装器快捷方式修复
+
+- 修复交互式安装产生重复桌面快捷方式的问题
+- 安装器开始菜单页移除「不要创建快捷方式」勾选框，开始菜单快捷方式固定创建为「有秋」
+- 桌面快捷方式统一由完成页「创建桌面快捷方式」开关控制：勾选则创建、不勾选则不创建
+- 应用功能无变化，可直接覆盖安装
 
 #### v1.0.0 首个版本
 
