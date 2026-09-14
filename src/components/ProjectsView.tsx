@@ -35,6 +35,9 @@ export function ProjectsView() {
   const [editMilestoneTitle, setEditMilestoneTitle] = useState("");
   const [editMilestoneDate, setEditMilestoneDate] = useState("");
   const milestoneInputRef = useRef<HTMLInputElement>(null);
+  const [goalProject, setGoalProject] = useState<Project | null>(null);
+  const [goalDraft, setGoalDraft] = useState("");
+  const [savingGoal, setSavingGoal] = useState(false);
   const refreshMilestones = async () => setMilestones(await fetchMilestones());
 
   const beginAddMilestone = (projectId: string) => {
@@ -85,6 +88,34 @@ export function ProjectsView() {
       setSavingMilestone(false);
     }
   };
+  const beginAddGoal = (project: Project) => {
+    setGoalProject(project);
+    setGoalDraft("");
+  };
+
+  const cancelAddGoal = () => {
+    if (savingGoal) return;
+    setGoalProject(null);
+    setGoalDraft("");
+  };
+
+  const saveGoal = async () => {
+    const goal = goalDraft.trim();
+    if (!goalProject || !goal || savingGoal) return;
+    setSavingGoal(true);
+    try {
+      await updateProject(goalProject.id, { goal });
+      await useAppStore.getState().refreshAll();
+      setGoalProject(null);
+      setGoalDraft("");
+      useAppStore.getState().setToast("项目成果已保存");
+    } catch {
+      useAppStore.getState().setToast("保存项目成果失败");
+    } finally {
+      setSavingGoal(false);
+    }
+  };
+
   const createProject = async () => {
     const projectName = name.trim();
     if (!projectName) {
@@ -206,14 +237,7 @@ export function ProjectsView() {
                     <button
                       type="button"
                       className="project-inline-action"
-                      onClick={() => {
-                        const goal = window.prompt("项目成果");
-                        if (goal?.trim()) {
-                          void updateProject(project.id, {
-                            goal: goal.trim(),
-                          }).then(() => useAppStore.getState().refreshAll());
-                        }
-                      }}
+                      onClick={() => beginAddGoal(project)}
                     >
                       ＋ 添加项目成果
                     </button>
@@ -263,6 +287,14 @@ export function ProjectsView() {
                             }
                           }}
                         />
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={savingMilestone}
+                          onClick={cancelAddMilestone}
+                        >
+                          取消
+                        </button>
                         <button
                           type="submit"
                           className="btn-primary"
@@ -334,6 +366,47 @@ export function ProjectsView() {
             <div className="project-edit-actions">
               <button type="button" className="btn-ghost" onClick={() => setEditingProject(null)}>取消</button>
               <button type="submit" className="btn-primary">保存修改</button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {goalProject ? (
+        <div className="modal-backdrop" onMouseDown={() => cancelAddGoal()}>
+          <form
+            className="project-edit-modal"
+            onMouseDown={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveGoal();
+            }}
+          >
+            <div className="modal-head">
+              <div>
+                <span>{goalProject.name}</span>
+                <h3>添加项目成果</h3>
+              </div>
+              <button type="button" onClick={() => cancelAddGoal()}>×</button>
+            </div>
+            <label>
+              项目成果
+              <textarea
+                autoFocus
+                value={goalDraft}
+                placeholder="这个项目最终要交付什么成果？"
+                onChange={(event) => setGoalDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    cancelAddGoal();
+                  }
+                }}
+              />
+            </label>
+            <div className="project-edit-actions">
+              <button type="button" className="btn-ghost" onClick={() => cancelAddGoal()}>取消</button>
+              <button type="submit" className="btn-primary" disabled={savingGoal || !goalDraft.trim()}>保存</button>
             </div>
           </form>
         </div>

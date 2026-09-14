@@ -824,7 +824,8 @@
   font-size: 12px;
 }
 
-.milestone-compose .btn-primary {
+.milestone-compose .btn-primary,
+.milestone-compose .btn-ghost {
   width: auto;
   min-width: 52px;
   height: 32px;
