@@ -98,7 +98,7 @@
 
 ## 下载与安装
 
-当前版本 **v1.0.1**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
+当前版本 **v1.0.2**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
@@ -161,6 +161,13 @@ npm run release:check
 - 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；需求方向与产品边界的取舍记录见 [产品需求与决策记录](docs/PRODUCT_DECISIONS.md)，修改档案见 [修改记录](docs/CHANGES.md)
 
 ## 版本记录
+
+#### v1.0.2 界面交互修复
+
+- 项目页「添加项目成果」由系统提示框改为与应用主题一致的弹窗
+- 项目页添加里程碑表单补充「取消」按钮
+- 修复记账抽屉账户下拉无法选择的问题：点选账户不再收起整个记账面板
+- 修复任务详情抽屉中下拉选择会连带关闭抽屉的同类问题
 
 #### v1.0.1 安装器快捷方式修复
 
