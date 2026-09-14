@@ -1,7 +1,9 @@
 mod os_reminders;
 
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
+#[cfg(desktop)]
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+#[cfg(desktop)]
 use tauri::menu::{Menu, MenuItem};
 use tauri_plugin_notification::NotificationExt;
 use serde::{Deserialize, Serialize};
@@ -790,6 +792,7 @@ fn sync_native_notifications(
     })
 }
 
+#[cfg(desktop)]
 fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let quit = MenuItem::with_id(app, "quit", "退出应用", true, None::<&str>)?;
     let show = MenuItem::with_id(app, "show", "打开主窗口", true, None::<&str>)?;
@@ -844,16 +847,25 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .manage(Arc::new(ReminderScheduler::default()))
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            if let Some(main) = app.get_webview_window("main") {
-                let _ = main.unminimize();
-                let _ = main.show();
-                let _ = main.set_focus();
-            }
-        }))
-        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_opener::init());
+    #[cfg(desktop)]
+    {
+        builder = builder
+            .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+                if let Some(main) = app.get_webview_window("main") {
+                    let _ = main.unminimize();
+                    let _ = main.show();
+                    let _ = main.set_focus();
+                }
+            }))
+            .plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                Some(vec![]),
+            ));
+    }
+    builder
         .plugin(
             tauri::plugin::Builder::<tauri::Wry>::new("app-data")
                 .setup(|app, _api| {
@@ -871,10 +883,6 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec![]),
-        ))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_http::init())
@@ -894,6 +902,7 @@ pub fn run() {
         .setup(|app| {
             let scheduler = Arc::clone(app.state::<Arc<ReminderScheduler>>().inner());
             start_notification_scheduler(app.handle().clone(), scheduler);
+            #[cfg(desktop)]
             setup_tray(app.handle())?;
             if let Some(main) = app.get_webview_window("main") {
                 let _ = main.set_title("有秋 · Yield");
