@@ -13,6 +13,19 @@ export function isInboxTask(task: Task, today: string): boolean {
   );
 }
 
+/** 导航入口的徽标计数:今日(截止在今天)与待办箱(非今日的活跃任务),只统计根任务。 */
+export function computeNavCounts(
+  tasks: Task[],
+  today: string,
+): { today: number; inbox: number } {
+  const roots = tasks.filter((task) => !task.parent_id && !task.deleted_at);
+  return {
+    today: roots.filter((task) => isActiveTask(task) && task.due_date === today)
+      .length,
+    inbox: roots.filter((task) => isInboxTask(task, today)).length,
+  };
+}
+
 /** Project progress is made of finite deliverables, not recurring routines. */
 export function projectTasks(tasks: Task[], projectId: string): Task[] {
   return tasks.filter(

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
-import { isInboxTask, isActiveTask } from "@/lib/tasks";
+import { computeNavCounts } from "@/lib/tasks";
 import type { NavId } from "@/types";
 
 type NavSidebarProps = {
@@ -23,16 +23,10 @@ export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSideb
   const setNav = useAppStore((s) => s.setNav);
   const tasks = useAppStore((s) => s.tasks);
 
-  const counts = useMemo(() => {
-    const today = todayDateString();
-    const roots = tasks.filter((t) => !t.parent_id);
-    return {
-      today: roots.filter(
-        (t) => isActiveTask(t) && t.due_date === today,
-      ).length,
-      inbox: roots.filter((t) => isInboxTask(t, today)).length,
-    };
-  }, [tasks]);
+  const counts = useMemo(
+    () => computeNavCounts(tasks, todayDateString()),
+    [tasks],
+  );
 
   const sections: { label: string; note?: string; items: NavEntry[] }[] = [
     {
