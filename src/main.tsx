@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { detectDesktopPlatform } from "@/lib/platform";
+import { detectDesktopPlatform, isMobileShell } from "@/lib/platform";
 import "@/styles/index.css";
 
 // 窗口在配置中默认隐藏，首帧（启动卡）绘制完成后再显示，避免闪现未成形界面。
@@ -107,6 +107,10 @@ class ErrorBoundary extends Component<
 
 document.documentElement.dataset.theme ||= "system";
 document.documentElement.dataset.platform = detectDesktopPlatform();
+// 移动端壳在 CSS 里走另一套布局（底部导航、全屏抽屉），首帧前标记好。
+if (isMobileShell()) {
+  document.documentElement.dataset.shell = "mobile";
+}
 
 const root = createRoot(document.getElementById("root")!);
 

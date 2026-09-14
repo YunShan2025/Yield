@@ -1,0 +1,302 @@
+/* ============================================================
+   M2 移动端适配（Android 壳 + 通用窄屏降级）
+
+   三个层次，按序生效：
+   1) Chrome 83 垫片 —— 模拟器/老旧 WebView 缺 inset、aspect-ratio、dvh、
+      flex gap，这里补长手等价写法（对新浏览器是同值重复声明，无副作用）；
+   2) html[data-shell="mobile"] —— Android 壳专属：底部导航、触控目标、
+      悬停操作改为常显、抽屉全屏；
+   3) @media (max-width: 700px) —— 通用窄屏布局（桌面窗口拉窄同样受益）。
+   ============================================================ */
+
+/* ---------- 1) Chrome 83 垫片 ---------- */
+
+/* inset 简写在 Chrome 87 才支持，全部补长手；新浏览器下与原值相同。 */
+.modal-backdrop,
+.row-menu-backdrop,
+.command-backdrop,
+.onboarding-backdrop {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.ledger-donut::after {
+  top: 28px;
+  right: 28px;
+  bottom: 28px;
+  left: 28px;
+}
+
+.task-check::before {
+  top: -8px;
+  right: -8px;
+  bottom: -8px;
+  left: -8px;
+}
+
+/* aspect-ratio 是 Chrome 88+；圆环宽度固定，直接补高度。 */
+.ledger-donut {
+  height: 142px;
+}
+
+/* 100dvh 是 Chrome 108+；老旧 WebView 用 vh 兜底（adjustResize 下两者一致）。 */
+html[data-shell="mobile"] .create-task-modal,
+html[data-shell="mobile"] .modal {
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+html[data-shell="mobile"] {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- 2) Android 壳专属 ---------- */
+
+/* 移动壳没有侧栏:单列布局,主区占满全宽(桌面侧 --side-w 网格不适用)。 */
+html[data-shell="mobile"] .app-body {
+  grid-template-columns: 1fr;
+}
+
+/* 底部导航条：flex 子项（非覆盖层），主区自动让出高度。
+   注意：不能给它 z-index——Chrome 83 里 flex 子项的 z-index 会在层叠比较中
+   意外压过 position:fixed + z-index:30 的记账抽屉/详情抽屉，遮住其底部按钮；
+   靠 DOM 顺序（nav 在 app-body 之后）即可盖住普通内容。 */
+.mobile-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  flex: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 56px;
+  padding: 6px 4px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-item.active {
+  color: var(--accent);
+  font-weight: 650;
+}
+
+.mobile-nav-icon {
+  position: relative;
+  display: inline-flex;
+}
+
+.mobile-nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -12px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* 触控目标：主要按钮垫到 44px 上下，避免误触。 */
+html[data-shell="mobile"] .btn-ghost,
+html[data-shell="mobile"] .btn-primary,
+html[data-shell="mobile"] .primary-btn {
+  min-height: 40px;
+}
+
+html[data-shell="mobile"] .seg button {
+  min-height: 38px;
+}
+
+html[data-shell="mobile"] .task-check {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+}
+
+/* 悬停交互在触摸屏上不存在：详情按钮常显，卡片不做悬浮位移。 */
+html[data-shell="mobile"] .expand-detail {
+  opacity: 1;
+}
+
+html[data-shell="mobile"] .expand-task:hover {
+  transform: none;
+}
+
+/* 「更多」页：全屏面板收纳次级导航。 */
+.mobile-more {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  background: var(--bg-root);
+  animation: fadeUp 180ms ease;
+}
+
+.mobile-more-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 4px;
+}
+
+.mobile-more-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.mobile-more-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 14px 20px 28px;
+}
+
+.mobile-more-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 76px;
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mobile-more-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+/* 弹窗与遮罩在小屏留边更少。 */
+html[data-shell="mobile"] .modal-backdrop {
+  padding: 12px;
+}
+
+/* 应用内通知卡叠层：窄屏改为顶部横贯。 */
+html[data-shell="mobile"] .desktop-notification-stack {
+  top: 12px;
+  right: 12px;
+  left: 12px;
+}
+
+/* ---------- 3) 通用窄屏布局（≤700px） ---------- */
+
+@media (max-width: 700px) {
+  /* 页头：标题与操作区允许换行，避免 393px 下横向溢出。 */
+  .workspace-top {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 16px 8px;
+  }
+
+  .workspace-top h2 {
+    font-size: 1.28rem;
+  }
+
+  .top-controls {
+    flex-wrap: wrap;
+  }
+
+  .workspace-subtitle {
+    font-size: 11px;
+  }
+
+  /* 滚动容器统一收窄左右留白。 */
+  .scope-board,
+  .board,
+  .ledger-body,
+  .tags-body,
+  .projects-scroll,
+  .trash-list {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .today-hero {
+    min-height: 0;
+    padding: 16px 18px;
+  }
+
+  .today-hero-copy {
+    max-width: 100%;
+  }
+
+  /* 三列看板改单列，纵向滚动。 */
+  .board {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .board-col {
+    min-height: 0;
+  }
+
+  /* 月历 7 列保留，压缩格子高度。 */
+  .cal-cell {
+    min-height: 64px;
+    padding: 4px;
+  }
+
+  .cal-task {
+    font-size: 10px;
+  }
+
+  /* 周历横向滚动容器保持可滑。 */
+  .week-board {
+    min-height: 320px;
+    max-height: 70vh;
+  }
+
+  /* 任务行：窄屏隐藏行级删除（详情面板里有），保住标题宽度。 */
+  .expand-task-row {
+    padding: 10px 12px;
+  }
+
+  .expand-task-row > .expand-delete {
+    display: none;
+  }
+
+  /* 详情抽屉与记账面板占满屏宽。 */
+  .app-body.detail-open .detail-panel {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .ledger-drawer {
+    width: 100vw;
+  }
+
+  .scope-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

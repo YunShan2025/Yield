@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import {
   DndContext,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -14,6 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useAppStore } from "@/store/app";
+import { isMobileShell } from "@/lib/platform";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { buildTaskDeferredUpdate } from "@/lib/planning";
 import { addDays, formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
@@ -245,8 +247,14 @@ export function TodayAgenda({
   onToggleSelect: (id: string) => void;
   onReorder: (ids: string[]) => void;
 }) {
+  // 移动端用 TouchSensor 长按启动拖拽:短触/滑动仍归滚动,长按才进入排序,互不干扰。
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(
+      isMobileShell() ? TouchSensor : PointerSensor,
+      isMobileShell()
+        ? { activationConstraint: { delay: 180, tolerance: 8 } }
+        : { activationConstraint: { distance: 8 } },
+    ),
   );
 
   const onDragEnd = (event: DragEndEvent) => {

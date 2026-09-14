@@ -23,6 +23,7 @@ import {
   type LedgerTransaction,
 } from "@/lib/db";
 import { SelectMenu } from "@/components/SelectMenu";
+import { useAppStore } from "@/store/app";
 
 const ICONS: Record<string, string> = {
   food: "餐", car: "行", bag: "购", home: "住", play: "娱", medical: "医",
@@ -92,6 +93,16 @@ export function LedgerView() {
   }, [month]);
 
   useEffect(() => { void load(); }, [load]);
+  // 底部导航「记一笔」意图:等分类/账户载入后再打开快速录入面板并消费掉,只生效一次。
+  const ledgerQuickAdd = useAppStore((s) => s.ledgerQuickAdd);
+  const clearLedgerQuickAdd = useAppStore((s) => s.clearLedgerQuickAdd);
+  useEffect(() => {
+    if (!ledgerQuickAdd || loading) return;
+    clearLedgerQuickAdd();
+    openDrawer();
+    // openDrawer 内部自带 50ms 聚焦;分类缺省回退在 openDrawer 内处理。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ledgerQuickAdd, loading, clearLedgerQuickAdd]);
   useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(null), 6000);

@@ -17,6 +17,9 @@ import { AppConfirmHost } from "@/components/AppConfirm";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { GlassTitlebar } from "@/components/GlassTitlebar";
 import { VersionUpdateNotice } from "@/components/VersionUpdateNotice";
+import { MobileNav } from "@/components/mobile/MobileNav";
+import { MobileMoreSheet } from "@/components/mobile/MobileMoreSheet";
+import { isMobileShell } from "@/lib/platform";
 import { nextRunningTimerDueAt } from "@/lib/timers";
 import {
   createNotificationRecord,
@@ -104,6 +107,9 @@ export function MainApp() {
       return false;
     }
   });
+
+  // 移动端「更多」页开关(仅 Android 壳使用)。
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // 侧栏宽度:拖动侧栏与主区边界调整,持久化到 localStorage(不进数据库)。
   const [navWidth, setNavWidth] = useState<number>(() => {
@@ -653,38 +659,8 @@ export function MainApp() {
   const detailOpen = Boolean(selectedTaskId);
   const toggleNav = () => setNavCollapsed((v) => !v);
 
-  return (
-    <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
-      <GlassTitlebar />
-      <div
-        className={`app-body ${detailOpen ? "detail-open" : ""} ${navCollapsed ? "nav-collapsed" : ""}`}
-      >
-        <NavSidebar
-          onCollapse={() => setNavCollapsed(true)}
-          onResizeStart={navCollapsed ? undefined : onNavResizePointerDown}
-          onResetWidth={() => setNavWidth(NAV_WIDTH_DEFAULT)}
-        />
-        <MainWorkspace />
-        {detailOpen ? <DetailDrawer /> : null}
-        {navCollapsed ? (
-          <button
-            type="button"
-            className="nav-edge-expand"
-            title="展开侧栏"
-            aria-label="展开侧栏"
-            onClick={toggleNav}
-          >
-            ▸
-          </button>
-        ) : null}
-      </div>
-      <CommandPalette />
-      {createTaskOpen ? <CreateTaskDialog /> : null}
-      <FocusRecoveryDialog />
-      <AppConfirmHost />
-      <OnboardingGuide />
-      <DesktopNotificationCards />
-      <VersionUpdateNotice />
+  const toastLayer = (
+    <>
       {toast ? (
         <div className="toast" role="status" aria-live="polite">
           <span>{toast}</span>
@@ -717,6 +693,63 @@ export function MainApp() {
           </button>
         </div>
       ) : null}
+    </>
+  );
+
+  // 移动端壳:无侧栏/标题栏/命令面板,底部导航承载页面切换;其余浮层复用桌面组件。
+  if (isMobileShell()) {
+    return (
+      <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
+        <div className={`app-body ${detailOpen ? "detail-open" : ""}`}>
+          <MainWorkspace />
+          {detailOpen ? <DetailDrawer /> : null}
+        </div>
+        <MobileNav onMore={() => setMoreOpen(true)} />
+        {moreOpen ? <MobileMoreSheet onClose={() => setMoreOpen(false)} /> : null}
+        {createTaskOpen ? <CreateTaskDialog /> : null}
+        <FocusRecoveryDialog />
+        <AppConfirmHost />
+        <OnboardingGuide />
+        <DesktopNotificationCards />
+        {toastLayer}
+        <span style={{ display: "none" }}>{todayDateString()}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
+      <GlassTitlebar />
+      <div
+        className={`app-body ${detailOpen ? "detail-open" : ""} ${navCollapsed ? "nav-collapsed" : ""}`}
+      >
+        <NavSidebar
+          onCollapse={() => setNavCollapsed(true)}
+          onResizeStart={navCollapsed ? undefined : onNavResizePointerDown}
+          onResetWidth={() => setNavWidth(NAV_WIDTH_DEFAULT)}
+        />
+        <MainWorkspace />
+        {detailOpen ? <DetailDrawer /> : null}
+        {navCollapsed ? (
+          <button
+            type="button"
+            className="nav-edge-expand"
+            title="展开侧栏"
+            aria-label="展开侧栏"
+            onClick={toggleNav}
+          >
+            ▸
+          </button>
+        ) : null}
+      </div>
+      <CommandPalette />
+      {createTaskOpen ? <CreateTaskDialog /> : null}
+      <FocusRecoveryDialog />
+      <AppConfirmHost />
+      <OnboardingGuide />
+      <DesktopNotificationCards />
+      <VersionUpdateNotice />
+      {toastLayer}
       <span style={{ display: "none" }}>{todayDateString()}</span>
     </div>
   );

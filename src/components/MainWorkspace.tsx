@@ -3,6 +3,7 @@ import {
   DndContext,
   type DragEndEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -11,6 +12,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useAppStore } from "@/store/app";
+import { isMobileShell } from "@/lib/platform";
 import {
   boardColumns,
   filterTasksByView,
@@ -80,7 +82,15 @@ const LedgerView = lazy(() =>
 function BoardView({ tasks }: { tasks: Task[] }) {
   const cols = boardColumns(tasks);
   const saveTask = useAppStore((s) => s.saveTask);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  // 移动端用 TouchSensor 长按启动拖拽,避免触摸滑动被拖拽劫持;桌面维持位移阈值。
+  const sensors = useSensors(
+    useSensor(
+      isMobileShell() ? TouchSensor : PointerSensor,
+      isMobileShell()
+        ? { activationConstraint: { delay: 180, tolerance: 8 } }
+        : { activationConstraint: { distance: 6 } },
+    ),
+  );
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

@@ -48,6 +48,8 @@ interface AppStore {
   projects: Project[];
   settings: AppSettings;
   nav: NavId;
+  /** 移动端底部导航「记一笔」意图:进入账本页后由 LedgerView 消费并打开快速录入。 */
+  ledgerQuickAdd: boolean;
   viewMode: ViewMode;
   dateScope: DateScope;
   calendarCursor: string;
@@ -71,6 +73,8 @@ interface AppStore {
   bootstrap: () => Promise<void>;
   refreshAll: () => Promise<void>;
   setNav: (nav: NavId) => void;
+  openLedgerQuickAdd: () => void;
+  clearLedgerQuickAdd: () => void;
   setViewMode: (mode: ViewMode) => void;
   setDateScope: (scope: DateScope) => void;
   setCalendarCursor: (date: string) => void;
@@ -168,6 +172,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     onboardingComplete: false,
   },
   nav: "today",
+  ledgerQuickAdd: false,
   viewMode: "board",
   dateScope: "day",
   calendarCursor: todayDateString(),
@@ -283,6 +288,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({
       nav,
       selectedTaskId: null,
+      // 离开账本页时撤销尚未消费的「记一笔」意图,避免下次进入误弹面板。
+      ledgerQuickAdd: false,
       dateScope:
         nav === "today" || nav === "inbox"
           ? "day"
@@ -301,6 +308,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
             : get().viewMode,
     });
   },
+  // 底部导航「记一笔」:切到账本并要求打开快速录入面板(LedgerView 消费后自清)。
+  openLedgerQuickAdd: () => {
+    if (get().nav === "ledger") {
+      set({ ledgerQuickAdd: true });
+      return;
+    }
+    set({ nav: "ledger", selectedTaskId: null, ledgerQuickAdd: true });
+  },
+  clearLedgerQuickAdd: () => set({ ledgerQuickAdd: false }),
   setViewMode: (viewMode) => set({ viewMode }),
   setDateScope: (dateScope) => set({ dateScope }),
   setCalendarCursor: (calendarCursor) => set({ calendarCursor }),
