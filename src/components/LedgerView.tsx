@@ -98,12 +98,14 @@ export function LedgerView() {
     return () => window.clearTimeout(timer);
   }, [notice]);
   // 与任务详情抽屉一致:点击抽屉以外区域或按 Esc 收起(应用级浮层除外)。
+  // SelectMenu 的选项列表经 portal 挂在 body 上,不属于抽屉内部,
+  // 要一并豁免,否则点选账户选项会被当成"点了外面"而整块收起、选择丢失。
   useEffect(() => {
     if (!drawer) return;
     const onPointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
       if (event.target.closest(".ledger-drawer")) return;
-      if (event.target.closest(".modal-backdrop, .row-menu, .row-menu-backdrop")) return;
+      if (event.target.closest(".modal-backdrop, .row-menu, .row-menu-backdrop, .select-menu")) return;
       setDrawer(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
