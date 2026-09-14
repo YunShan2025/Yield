@@ -17,6 +17,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useAppStore } from "@/store/app";
 import { isMobileShell } from "@/lib/platform";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
+import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { buildTaskDeferredUpdate } from "@/lib/planning";
 import { addDays, formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
 import { confirmAction } from "@/components/AppConfirm";
@@ -127,6 +128,10 @@ function RowMenu({ task, cursor }: { task: Task; cursor: string }) {
   );
 }
 
+/** 触摸屏长按行弹出操作面板的时长。移动端拖拽改由独立手柄启动,
+ * 因此行内长按不会与拖拽冲突,只归操作面板。 */
+const LONG_PRESS_MS = 480;
+
 function DayTaskRow({
   task,
   cursor,
@@ -147,6 +152,67 @@ function DayTaskRow({
     id: task.id,
     disabled: selecting || task.status === "completed",
   });
+  const mobile = isMobileShell();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const pressRef = useRef({
+    timer: undefined as number | undefined,
+    x: 0,
+    y: 0,
+    fired: false,
+  });
+
+  const endPress = () => {
+    const press = pressRef.current;
+    if (press.timer !== undefined) {
+      window.clearTimeout(press.timer);
+      press.timer = undefined;
+    }
+  };
+
+  const onTouchStart = (event: React.TouchEvent) => {
+    if (!mobile || selecting || !isActiveTask(task)) return;
+    // 只在行主体（标题/元信息）启动长按；按钮、勾选框与拖拽手柄不弹操作面板
+    // （手柄触摸会冒泡 touchstart，长按拖拽时不能误触面板）。
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.closest(
+        "button, input, textarea, select, a, .task-quick-actions, .row-menu",
+      )
+    ) {
+      return;
+    }
+    const touch = event.touches[0];
+    const press = pressRef.current;
+    press.x = touch.clientX;
+    press.y = touch.clientY;
+    press.fired = false;
+    press.timer = window.setTimeout(() => {
+      press.timer = undefined;
+      press.fired = true;
+      setSheetOpen(true);
+    }, LONG_PRESS_MS);
+  };
+
+  const onTouchMove = (event: React.TouchEvent) => {
+    const press = pressRef.current;
+    if (press.timer === undefined) return;
+    const touch = event.touches[0];
+    if (
+      Math.hypot(touch.clientX - press.x, touch.clientY - press.y) > 12
+    ) {
+      endPress();
+    }
+  };
+
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const press = pressRef.current;
+    endPress();
+    if (press.fired) {
+      press.fired = false;
+      // 阻止长按后的合成 click,避免操作面板打开时又弹出详情抽屉。
+      event.preventDefault();
+    }
+  };
 
   const onDelete = async () => {
     const ok = await confirmAction({
@@ -165,8 +231,15 @@ function DayTaskRow({
         transform: CSS.Transform.toString(sortable.transform),
         transition: sortable.transition,
       }}
-      {...sortable.attributes}
-      {...sortable.listeners}
+      {...(mobile ? null : sortable.attributes)}
+      {...(mobile ? null : sortable.listeners)}
+      onTouchStart={mobile ? onTouchStart : undefined}
+      onTouchMove={mobile ? onTouchMove : undefined}
+      onTouchEnd={mobile ? onTouchEnd : undefined}
+      onTouchCancel={mobile ? endPress : undefined}
+      onContextMenu={(event) => {
+        if (mobile) event.preventDefault();
+      }}
     >
       <ExpandableTaskItem
         task={task}
@@ -207,10 +280,28 @@ function DayTaskRow({
         }
         actions={
           !selecting && isActiveTask(task) ? (
-            <RowMenu task={task} cursor={cursor} />
+            <>
+              {mobile ? (
+                <button
+                  type="button"
+                  className="btn-ghost drag-handle"
+                  title="拖动排序"
+                  aria-label="拖动排序"
+                  onClick={(e) => e.stopPropagation()}
+                  {...sortable.attributes}
+                  {...sortable.listeners}
+                >
+                  ⋮⋮
+                </button>
+              ) : null}
+              <RowMenu task={task} cursor={cursor} />
+            </>
           ) : null
         }
       />
+      {sheetOpen ? (
+        <TaskActionSheet task={task} cursor={cursor} onClose={() => setSheetOpen(false)} />
+      ) : null}
     </div>
   );
 }

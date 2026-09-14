@@ -140,6 +140,125 @@ html[data-shell="mobile"] .expand-task:hover {
   transform: none;
 }
 
+/* ≤1080px 时桌面样式把行快捷区（⋯ 菜单）整块隐藏——触摸屏没有 hover,
+ * 必须重新常显,顺延/改期才可达。 */
+html[data-shell="mobile"] .task-quick-actions {
+  display: flex;
+}
+
+/* 长按弹操作面板:屏蔽 WebView 原生长按选择/呼出菜单。 */
+html[data-shell="mobile"] .expand-task-row {
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* 拖拽手柄:移动端拖拽只从这里启动,行内长按留给操作面板。 */
+html[data-shell="mobile"] .drag-handle {
+  min-width: 34px;
+  min-height: 40px;
+  padding: 5px 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+  letter-spacing: -3px;
+  touch-action: none;
+}
+
+/* 长按操作面板（底部动作面板,替代悬停菜单/右键菜单）。 */
+.action-sheet-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 62;
+  border: 0;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.action-sheet {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 63;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-panel);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.24);
+  animation: fadeUp 160ms ease;
+}
+
+.action-sheet-title {
+  margin: 0 0 10px;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.action-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.action-sheet-grid button,
+.action-sheet-priority button,
+.action-sheet-danger,
+.action-sheet-cancel {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-root);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.action-sheet-grid button.active,
+.action-sheet-priority button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 650;
+  background: var(--accent-soft);
+}
+
+.action-sheet-priority {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.action-sheet-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.action-sheet-date .field {
+  flex: 1;
+}
+
+.action-sheet-danger {
+  width: 100%;
+  margin-top: 10px;
+  color: var(--text-overdue, #c0392b);
+}
+
+.action-sheet-cancel {
+  width: 100%;
+  margin-top: 8px;
+  color: var(--text-secondary);
+}
+
 /* 「更多」页：全屏面板收纳次级导航。 */
 .mobile-more {
   position: fixed;
@@ -202,10 +321,12 @@ html[data-shell="mobile"] .modal-backdrop {
   padding: 12px;
 }
 
-/* 应用内通知卡叠层：窄屏改为顶部横贯。 */
+/* 应用内通知卡叠层：窄屏锚定在底部导航上方——顶部悬浮会盖住
+   日/周/月切换器与「新建任务」按钮（实测发现）。 */
 html[data-shell="mobile"] .desktop-notification-stack {
-  top: 12px;
+  top: auto;
   right: 12px;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
   left: 12px;
 }
 
@@ -271,10 +392,16 @@ html[data-shell="mobile"] .desktop-notification-stack {
     font-size: 10px;
   }
 
-  /* 周历横向滚动容器保持可滑。 */
+  /* 周历横向滚动容器保持可滑；竖屏收窄列与时间轴，减少横滑距离。 */
   .week-board {
     min-height: 320px;
     max-height: 70vh;
+  }
+
+  .week-head,
+  .week-body,
+  .week-allday {
+    grid-template-columns: 44px repeat(7, minmax(76px, 1fr));
   }
 
   /* 任务行：窄屏隐藏行级删除（详情面板里有），保住标题宽度。 */
