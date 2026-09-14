@@ -10,6 +10,7 @@
 
 - 单人维护，日常改动直接提交 main，不强制开分支。
 - 较大功能或试验性改动开短生命周期分支（`feat/xxx`、`fix/xxx`），完成并验证后合并回 main，随即删除；合并方式不限（个人项目 fast-forward 即可），以历史清晰为准。
+- 长周期 feature 分支（如 Android 版开发）应**定期合并 main**，把桌面端修复持续带进开发线；合并间隔越长冲突越大，建议每个开发小阶段收尾时合并一次。
 - 不设 develop / release 等常驻分支；将来多人协作时再启用 Pull Request + 分支保护。
 
 ## 2. 提交信息
@@ -34,6 +35,8 @@
 | build | 构建系统 / 依赖变更 |
 | ci | 持续集成配置 |
 | chore | 杂项（版本发布用 `chore(release)`） |
+
+**scope 词汇（双端开发时代）**：按受影响端或领域取用——`desktop`（桌面端）、`android`（移动端）、`sync`（数据同步）；双端共用改动不写 scope，或写领域名（如 `db`、`schema`、`ui`）。
 
 1. **原子提交**：一次提交只做一件事，方便回退和定位。
 2. 描述用一行、现在时、不加句号；详细动机写在正文（空一行后）。
@@ -110,6 +113,8 @@ gh release create vX.Y.Z "src-tauri/target/release/bundle/nsis/Yield_X.Y.Z_x64-s
 ```
 
 Release 说明面向使用者：一段摘要 + 修复/新增列表，不写实现细节。
+
+> **Android 版上线后（计划 M5）扩展**：同版本号下执行 `npm run tauri android build` 产出 APK/AAB，作为附加产物附到同一个 Release。版本号仍只维护三处同步——Tauri 会自动将 `tauri.conf.json` 的 version 生成 Android 的 versionName/versionCode，不另设版本线。
 
 ## 8. 本仓库补充约定（相对行业默认的增量）
 
