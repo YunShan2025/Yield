@@ -2,5 +2,11 @@
     <!-- Base application theme. -->
     <style name="Theme.youqiu" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
+        <!-- edge-to-edge（targetSdk 36，Android 15+ 强制）下系统栏压在窗口上：
+             窗口背景取应用页面底色（values/colors.xml），状态栏/手势条图标用
+             深色（浅色页面），深色模式在 values-night/themes.xml 反转。 -->
+        <item name="android:windowBackground">@color/youqiu_window_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

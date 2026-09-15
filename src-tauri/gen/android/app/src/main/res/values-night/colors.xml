@@ -1,0 +1,4 @@
+<resources>
+    <!-- 深色模式窗口背景 = 应用深色页面底色（tokens.css 的 bg-root 深色值）。 -->
+    <color name="youqiu_window_background">#101722</color>
+</resources>

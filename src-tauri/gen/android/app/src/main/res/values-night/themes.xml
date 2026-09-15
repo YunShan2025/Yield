@@ -2,5 +2,9 @@
     <!-- Base application theme. -->
     <style name="Theme.youqiu" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
+        <!-- 深色模式：窗口背景取应用深色页面底色，系统栏图标用浅色。 -->
+        <item name="android:windowBackground">@color/youqiu_window_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>
