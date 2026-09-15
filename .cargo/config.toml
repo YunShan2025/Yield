@@ -1,0 +1,13 @@
+# Android 15+ 部分设备（16KB 内存页内核）上，native 库 LOAD 段必须 16KB 对齐，
+# 否则 dlopen 直接失败（应用闪退）。NDK r27 链接默认仍是 4KB 对齐，显式指定。
+[target.aarch64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.armv7-linux-androideabi]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.i686-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.x86_64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]

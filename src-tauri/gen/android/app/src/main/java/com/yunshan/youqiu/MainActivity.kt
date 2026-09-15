@@ -1,6 +1,9 @@
 package com.yunshan.youqiu
 
+import android.os.Build
 import android.os.Bundle
+import android.view.ViewGroup
+import android.view.WindowInsets
 import android.webkit.WebView
 
 class MainActivity : TauriActivity() {
@@ -9,9 +12,29 @@ class MainActivity : TauriActivity() {
     if (BuildConfig.DEBUG) {
       WebView.setWebContentsDebuggingEnabled(true)
     }
-    // 不开 edge-to-edge：WebView 停留在状态栏下方，避免 Chrome 83 安全区 env() 缺失导致内容被状态栏遮挡；
-    // 键盘伸缩沿用默认 adjustResize。深色状态栏等外观定制留待 M5。
     super.onCreate(savedInstanceState)
+  }
+
+  override fun onContentChanged() {
+    super.onContentChanged()
+    // targetSdk 36 在 Android 15+ 上被系统强制 edge-to-edge（无法 opt-out），
+    // WebView 会全屏铺到状态栏/手势条底下。这里把系统栏 inset 转成内容区
+    // padding，让 WebView 视口回到「系统栏以内」，观感与旧版本一致；键盘弹出时
+    // ime inset 并入 bottom，等效 adjustResize。
+    // 仅 SDK 35+ 生效：低版本由系统按非 edge-to-edge 自行留白，
+    // 再补 padding 会双重收缩。
+    if (Build.VERSION.SDK_INT < 35) return
+    // wry 由 Rust 侧 setContentView(webview)，onContentChanged 触发时内容视图已就位。
+    val content = findViewById<ViewGroup>(android.R.id.content)
+    content.setOnApplyWindowInsetsListener { v, insets ->
+      val bars = insets.getInsets(
+        WindowInsets.Type.systemBars()
+          or WindowInsets.Type.displayCutout()
+          or WindowInsets.Type.ime()
+      )
+      v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+      insets
+    }
   }
 
   override fun onBackPressed() {
