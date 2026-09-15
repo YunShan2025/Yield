@@ -478,5 +478,8 @@
 
 @media (max-width: 880px) {
   .theme-gallery { grid-template-columns: 1fr; }
-  .theme-preview { grid-template-columns: 150px 1fr; grid-template-rows: auto; }
+  .theme-preview { grid-template-columns: 150px 1fr; grid-template-rows: 92px auto; }
+  /* 按钮全局样式是 align-items:flex-start,网格项不拉伸;画布内容全是
+     绝对定位元素,行高改 92px 后画布自身仍会塌 0,必须给最小高度。 */
+  .theme-preview-canvas { min-height: 92px; }
 }

@@ -490,6 +490,15 @@ html[data-shell="mobile"] .review-workspace .top-controls {
   gap: 6px;
 }
 
+/* 复盘:完成数挪到「‹上周 本周 下周›」右侧,发丝线分隔。 */
+html[data-shell="mobile"] .review-workspace .top-controls .review-hero-total {
+  order: 10;
+  margin-right: 0;
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+}
+
 /* 纪念日新增弹窗：日历段/日期选择换行排布，「收好这个日子」整行收口。 */
 html[data-shell="mobile"] .anni-composer-row .btn-primary {
   width: 100%;
