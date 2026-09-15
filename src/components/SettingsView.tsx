@@ -260,7 +260,7 @@ export function SettingsView() {
         </div>
         <label className="theme-system-toggle">
           <input type="checkbox" checked={settings.theme === "system"} onChange={(event) => void setTheme(event.target.checked ? "system" : "light")} />
-          <span><strong>跟随系统</strong><small>随 Windows 在清昼与静夜之间自动切换</small></span>
+          <span><strong>跟随系统</strong><small>随系统在清昼与静夜之间自动切换</small></span>
         </label>
       </section>
 

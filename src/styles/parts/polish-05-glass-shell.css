@@ -312,19 +312,37 @@
   position: relative;
   display: block;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 82% 100%, color-mix(in srgb, var(--preview-accent) 34%, transparent), transparent 44%),
-    var(--preview-bg);
+  /* Chrome 83 无 color-mix/inset:基础层直接铺背景色,增强层放 @supports
+     (同一规则内重复 background 会整属性 unset,降级不能与增强并写)。 */
+  background: var(--preview-bg);
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .theme-preview-canvas {
+    background:
+      radial-gradient(circle at 82% 100%, color-mix(in srgb, var(--preview-accent) 34%, transparent), transparent 44%),
+      var(--preview-bg);
+  }
 }
 
 .theme-preview-canvas::before {
   content: "";
   position: absolute;
-  inset: 13px 13px 12px 39px;
+  /* inset 简写 Chrome 87 起支持,统一用长写保证旧 WebView 渲染。 */
+  top: 13px;
+  right: 13px;
+  bottom: 12px;
+  left: 39px;
   border: 1px solid rgba(255,255,255,.58);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--preview-card) 76%, transparent);
+  background: var(--preview-card);
   box-shadow: 0 8px 20px rgba(20, 42, 74, .12);
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .theme-preview-canvas::before {
+    background: color-mix(in srgb, var(--preview-card) 76%, transparent);
+  }
 }
 
 .theme-preview-canvas::after {
@@ -335,7 +353,13 @@
   bottom: 9px;
   width: 22px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--preview-card) 62%, var(--preview-accent));
+  background: var(--preview-accent);
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .theme-preview-canvas::after {
+    background: color-mix(in srgb, var(--preview-card) 62%, var(--preview-accent));
+  }
 }
 
 .theme-preview-canvas i,

@@ -2,7 +2,7 @@ import { useAppStore } from "@/store/app";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import type { NavId } from "@/types";
 
-/** 更多页收纳的次级入口:今日/待办箱/记一笔已在底部导航,其余全部收进这里。 */
+/** 更多页收纳的次级入口:今日/待办箱/记账已在底部导航,其余全部收进这里。 */
 const MORE_ITEMS: { id: NavId; label: string; icon: AppIconName }[] = [
   { id: "week", label: "周清单", icon: "review" },
   { id: "growth", label: "成长", icon: "sparkle" },

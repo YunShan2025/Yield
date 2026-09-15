@@ -13,11 +13,10 @@ type MobileTab = {
   onPick: () => void;
 };
 
-/** 底部导航:今日 / 待办箱 / 记一笔 / 更多。「记一笔」直达账本快速录入面板。 */
+/** 底部导航:今日 / 待办箱 / 记账 / 更多。「记账」切到账本页,录入走页面内入口。 */
 export function MobileNav({ onMore }: { onMore: () => void }) {
   const nav = useAppStore((s) => s.nav);
   const setNav = useAppStore((s) => s.setNav);
-  const openLedgerQuickAdd = useAppStore((s) => s.openLedgerQuickAdd);
   const tasks = useAppStore((s) => s.tasks);
 
   const counts = useMemo(
@@ -45,9 +44,9 @@ export function MobileNav({ onMore }: { onMore: () => void }) {
     {
       key: "ledger",
       icon: "wallet",
-      label: "记一笔",
+      label: "记账",
       active: nav === "ledger",
-      onPick: openLedgerQuickAdd,
+      onPick: () => setNav("ledger"),
     },
     {
       key: "more",

@@ -426,4 +426,73 @@ html[data-shell="mobile"] .desktop-notification-stack {
   .scope-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* 周清单当周日历：@container 查询在 Chrome 83 不生效（7 列×38px 不可读），
+     用视口断点兜底两列；≥700px 走容器查询，桌面不受影响。 */
+  .weekly-day-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weekly-days,
+  .weekly-goals {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .weekly-day-col {
+    min-height: 0;
+  }
+
+  /* 提醒状态条：固定 90px×2 统计列会把主文案挤剩 66px（实测截断），
+     改为统计列按内容收缩，主文案吃满剩余宽度。 */
+  .timer-status-rail {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .timer-status-rail > div:not(.timer-status-primary) {
+    padding-left: 12px;
+  }
+}
+
+/* ---------- 4) 验收修复（2026-09-15）：创建行自适应 / 页头操作区靠右 / 纪念日 CTA ---------- */
+
+/* .field 与 .btn-primary 基础都是 width:100%，在页头 flex 行里互抢宽度：
+   习惯/项目/标签的名称输入框显示为固定 200px、按钮被挤压。
+   移动端操作区独占一行，输入吃满剩余宽度，按钮保持内容宽。 */
+html[data-shell="mobile"] .workspace-top > .top-controls {
+  flex: 1 1 100%;
+}
+
+html[data-shell="mobile"] .top-controls .field {
+  width: auto;
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .top-controls .btn-primary,
+html[data-shell="mobile"] .top-controls .primary-btn {
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 页头操作区换行后靠右：复盘的「0 件事完成 + ‹上周 本周 下周›」、
+   纪念日的「新增纪念日」等，与标题基线呼应而非顶到左边。 */
+html[data-shell="mobile"] .review-workspace .top-controls,
+html[data-shell="mobile"] .anniversaries-page .top-controls,
+html[data-shell="mobile"] .weekly-checklist .top-controls {
+  justify-content: flex-end;
+}
+
+html[data-shell="mobile"] .review-workspace .top-controls {
+  gap: 6px;
+}
+
+/* 纪念日新增弹窗：日历段/日期选择换行排布，「收好这个日子」整行收口。 */
+html[data-shell="mobile"] .anni-composer-row .btn-primary {
+  width: 100%;
+  flex: 1 1 100%;
+  margin-top: 2px;
 }

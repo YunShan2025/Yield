@@ -86,8 +86,18 @@
 .weekly-day-bar {
   height: 8px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--goal-accent, var(--accent)) 18%, transparent);
+  /* Chrome 83 无 color-mix:轨道铺浅底色。增强层必须放 @supports ——
+     同一规则里 fallback + color-mix 重复声明,后者无效会导致整个属性
+     invalid-at-computed-value(unset),降级也跟着失效。 */
+  background: var(--accent-soft);
   overflow: hidden;
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .weekly-goal-bar,
+  .weekly-day-bar {
+    background: color-mix(in srgb, var(--goal-accent, var(--accent)) 18%, transparent);
+  }
 }
 
 .weekly-goal-bar > i,
@@ -150,13 +160,26 @@
 }
 
 .weekly-day-col.is-today {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-soft);
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .weekly-day-col.is-today {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
 }
 
 .weekly-day-bar {
   margin-top: 8px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  background: var(--accent-soft);
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .weekly-day-bar {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
 }
 
 .weekly-day-bar > i {
@@ -184,12 +207,18 @@
   align-items: center;
   border: 0;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-app) 70%, transparent);
+  background: var(--bg-soft, var(--bg-panel));
   color: var(--text-primary);
   text-align: left;
   padding: 6px 7px;
   cursor: pointer;
   font-size: 12px;
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .weekly-day-task {
+    background: color-mix(in srgb, var(--bg-app) 70%, transparent);
+  }
 }
 
 /* 当周日历已完成任务:与时间轴/当日事项同一套「成就式」金色认可。
@@ -323,8 +352,14 @@
   flex: 1;
   height: 4px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--accent-soft);
   overflow: hidden;
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .weekly-stat-progress {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
 }
 
 .weekly-stat-progress > i {
