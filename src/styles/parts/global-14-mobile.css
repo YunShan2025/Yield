@@ -48,6 +48,16 @@ html[data-shell="mobile"] .modal {
   overflow: auto;
 }
 
+/* padding-inline/margin-inline 是 Chrome 87+，整条声明会被丢弃：
+   成长页回落到 28px 桌面内边距、记账引导框丢失窄屏内收，补长手等价。 */
+@media (max-width: 560px) {
+  .growth-page { padding-left: 12px; padding-right: 12px; }
+}
+
+@media (max-width: 720px) {
+  .ledger-view .guide-hero { margin-left: 18px; margin-right: 18px; }
+}
+
 html[data-shell="mobile"] {
   -webkit-text-size-adjust: 100%;
 }
@@ -459,9 +469,14 @@ html[data-shell="mobile"] .desktop-notification-stack {
 /* ---------- 4) 验收修复（2026-09-15）：创建行自适应 / 页头操作区靠右 / 纪念日 CTA ---------- */
 
 /* .field 与 .btn-primary 基础都是 width:100%，在页头 flex 行里互抢宽度：
-   习惯/项目/标签的名称输入框显示为固定 200px、按钮被挤压。
-   移动端操作区独占一行，输入吃满剩余宽度，按钮保持内容宽。 */
-html[data-shell="mobile"] .workspace-top > .top-controls {
+   习惯/项目/标签的名称输入框显示为固定 200px、按钮被挤压——
+   这三个带名称输入框的页面让操作区独占一行，输入吃满剩余宽度。
+   复盘/纪念日/周清单为验收定稿样式（操作区独占一行并靠右）。
+   其余页面（今日/待办箱/成长/备忘录/记账）不能独占行：
+   独占后新建按钮会落到第二行左侧，不再与标题同行靠右（实测回归）。 */
+html[data-shell="mobile"] .habits-view .top-controls,
+html[data-shell="mobile"] .tags-view .top-controls,
+html[data-shell="mobile"] .projects-view .top-controls {
   flex: 1 1 100%;
 }
 
@@ -478,11 +493,10 @@ html[data-shell="mobile"] .top-controls .primary-btn {
   white-space: nowrap;
 }
 
-/* 页头操作区换行后靠右：复盘的「0 件事完成 + ‹上周 本周 下周›」、
-   纪念日的「新增纪念日」等，与标题基线呼应而非顶到左边。 */
 html[data-shell="mobile"] .review-workspace .top-controls,
 html[data-shell="mobile"] .anniversaries-page .top-controls,
 html[data-shell="mobile"] .weekly-checklist .top-controls {
+  flex: 1 1 100%;
   justify-content: flex-end;
 }
 

@@ -45,7 +45,19 @@
 .growth-panel-head button { border: 0; background: transparent; color: var(--accent); cursor: pointer; }
 
 .growth-heatmap { display: grid; grid-template-columns: repeat(53, minmax(3px, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: clamp(2px, .3vw, 4px); width: 100%; min-width: 0; padding: 5px 2px 10px; }
-.heat-cell { width: 100%; height: auto; aspect-ratio: 1; padding: 0; border: 1px solid color-mix(in srgb, var(--text-muted) 22%, var(--border)); border-radius: clamp(1px, .25vw, 3px); background: color-mix(in srgb, var(--bg-soft) 84%, var(--text-muted)); }
+/* Chrome 83 WebView（模拟器）无 aspect-ratio 且 border/background 的 color-mix
+   整条声明失效：格子高塌 0、无边框无底色，整张热力图“没有格子”。
+   基础规则给固定格高 + 纯变量边框/底色，增强放 @supports。 */
+.heat-cell { width: 100%; height: clamp(4px, 1.4vw, 9px); padding: 0; border: 1px solid var(--border); border-radius: clamp(1px, .25vw, 3px); background: var(--bg-soft, var(--bg-panel)); }
+@supports (aspect-ratio: 1) {
+  .heat-cell { height: auto; aspect-ratio: 1; }
+}
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .heat-cell {
+    border-color: color-mix(in srgb, var(--text-muted) 22%, var(--border));
+    background: color-mix(in srgb, var(--bg-soft) 84%, var(--text-muted));
+  }
+}
 button.heat-cell { cursor: pointer; transition: transform 100ms ease, outline-color 100ms ease; }
 button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent); }
 .heat-cell.level-1 { background: #dbe8ff; }
