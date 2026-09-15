@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { enable } from "@tauri-apps/plugin-autostart";
 import { useAppStore } from "@/store/app";
+import { isMobileShell } from "@/lib/platform";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 
 const steps: {
@@ -30,6 +31,21 @@ const steps: {
   },
 ];
 
+// Android 壳没有系统托盘，开机自启也是桌面插件：最后一步换移动端文案，
+// 「完成」按钮不再触发 autostart enable()（Android 未注册该插件）。
+const mobileSteps = isMobileShell()
+  ? steps.map((step) =>
+      step.icon === "bell"
+        ? {
+            ...step,
+            title: "提醒不会因为退到后台而消失",
+            body: "到期提醒由系统送达，应用退到后台也能按时响铃。",
+            hint: "收不到通知时，到系统设置里检查本应用的通知权限",
+          }
+        : step,
+    )
+  : steps;
+
 export function OnboardingGuide() {
   const complete = useAppStore((state) => state.settings.onboardingComplete);
   const updateSettings = useAppStore((state) => state.updateSettings);
@@ -37,8 +53,8 @@ export function OnboardingGuide() {
   const [dismissed, setDismissed] = useState(false);
 
   if (complete || dismissed) return null;
-  const current = steps[step];
-  const last = step === steps.length - 1;
+  const current = mobileSteps[step];
+  const last = step === mobileSteps.length - 1;
 
   const finish = (enableAutostart = false) => {
     setDismissed(true);
@@ -69,7 +85,7 @@ export function OnboardingGuide() {
         <p>{current.body}</p>
         <div className="onboarding-hint">{current.hint}</div>
         <div className="onboarding-dots">
-          {steps.map((_, index) => (
+          {mobileSteps.map((_, index) => (
             <span key={index} className={index === step ? "active" : ""} />
           ))}
         </div>
@@ -85,10 +101,10 @@ export function OnboardingGuide() {
                 setStep((value) => value + 1);
                 return;
               }
-              finish(true);
+              finish(!isMobileShell());
             }}
           >
-            {last ? "开启开机自启并开始" : "下一步"}
+            {last ? (isMobileShell() ? "开始使用" : "开启开机自启并开始") : "下一步"}
           </button>
         </footer>
       </section>

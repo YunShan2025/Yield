@@ -15,6 +15,7 @@ import {
 } from "@/lib/db";
 import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
+import { isMobileShell } from "@/lib/platform";
 import { SelectMenu } from "@/components/SelectMenu";
 import {
   activityLevel,
@@ -128,6 +129,12 @@ export function GrowthView() {
     return result;
   }, [visibleEntries]);
   const days = useMemo(dayRange, []);
+  // 手机上 53 周 × 7 列的单格只有 4px 见方；裁成最近 26 周（整周对齐，
+  // dayRange 从周日起步）让单格放大一倍以上，桌面仍显示完整一年。
+  const heatDays = useMemo(
+    () => (isMobileShell() ? days.slice(days.length - 26 * 7) : days),
+    [days],
+  );
   const activeDateKeys = [...entriesByDate.keys()].sort();
   const currentStreak = useMemo(
     () => currentDateStreak(activeDateKeys, todayDateString()),
@@ -267,7 +274,7 @@ export function GrowthView() {
           </section>
           <section className="growth-panel heatmap-panel">
             <div className="growth-panel-head">
-              <div><h3>过去一年的投入</h3><p>点击格子回看当天完成的行动</p></div>
+              <div><h3>{isMobileShell() ? "最近半年的投入" : "过去一年的投入"}</h3><p>点击格子回看当天完成的行动</p></div>
               <SelectMenu
                 ariaLabel="筛选目标"
                 value={filterGoalId}
@@ -275,8 +282,8 @@ export function GrowthView() {
                 options={[{ value: "", label: "全部目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]}
               />
             </div>
-            <div className="growth-heatmap" aria-label="年度成长热点图">
-              {days.map((date) => {
+            <div className="growth-heatmap" aria-label="成长热点图">
+              {heatDays.map((date) => {
                 const key = toDateKey(date);
                 const value = (entriesByDate.get(key) ?? []).reduce((sum, entry) => sum + Number(entry.value), 0);
                 const level = activityLevel(activityEntries(entriesByDate.get(key) ?? []));

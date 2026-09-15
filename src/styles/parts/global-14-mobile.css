@@ -64,6 +64,29 @@ html[data-shell="mobile"] {
 
 /* ---------- 2) Android 壳专属 ---------- */
 
+/* 统一滚动模型：手机上整页一起滚，页头与引导框随内容滚走。
+   桌面是「页头钉住 + 内容区内滚」设计；提醒/标签/备忘录三页的
+   内滚容器（reminders-body/tags-body/memo-list）把引导框和页头
+   留在了滚动区外，手机上内容区只剩一半高度，改为页面根滚动，
+   与今日/记账/复盘等整页滚动的页面一致。 */
+html[data-shell="mobile"] .reminders-view,
+html[data-shell="mobile"] .tags-view,
+html[data-shell="mobile"] .memo-page {
+  overflow-y: auto;
+}
+
+html[data-shell="mobile"] .reminders-body,
+html[data-shell="mobile"] .tags-body,
+html[data-shell="mobile"] .memo-body {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+html[data-shell="mobile"] .memo-list {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
 /* 移动壳没有侧栏:单列布局,主区占满全宽(桌面侧 --side-w 网格不适用)。 */
 html[data-shell="mobile"] .app-body {
   grid-template-columns: 1fr;
@@ -518,4 +541,46 @@ html[data-shell="mobile"] .anni-composer-row .btn-primary {
   width: 100%;
   flex: 1 1 100%;
   margin-top: 2px;
+}
+
+/* ---------- 5) 验收修复（2026-09-15 第二轮） ---------- */
+
+/* 记账页头：月份切换 / 隐藏金额 / ＋记一笔 独占一行并靠右，
+   三个控件挤在标题右侧时会被折成两三行。整体收窄切换器保证同行放得下。 */
+html[data-shell="mobile"] .ledger-view .top-controls {
+  flex: 1 1 100%;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+html[data-shell="mobile"] .ledger-month-switcher strong {
+  min-width: 86px;
+  font-size: 12px;
+}
+
+html[data-shell="mobile"] .ledger-month-switcher button {
+  width: 30px;
+  font-size: 19px;
+}
+
+html[data-shell="mobile"] .ledger-view .top-controls .btn-ghost {
+  white-space: nowrap;
+}
+
+/* 成长热力图：移动端只渲染 26 周（GrowthView 同步裁剪数据）。
+   53 列的 fr 会把宽度平摊给全部空轨道，单格依旧细小，这里同步收列。 */
+html[data-shell="mobile"] .growth-heatmap {
+  grid-template-columns: repeat(26, minmax(8px, 1fr));
+}
+
+/* 手机端格子放大后的老 WebView 兜底高（无 aspect-ratio 时近似方形）。 */
+html[data-shell="mobile"] .heat-cell {
+  height: clamp(9px, 2.6vw, 12px);
+}
+
+@supports (aspect-ratio: 1) {
+  html[data-shell="mobile"] .heat-cell {
+    height: auto;
+  }
 }

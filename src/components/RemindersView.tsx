@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
 import type { Timer } from "@/types";
 import { TIMER_PRESETS, formatCountdown, intervalLabel, liveRemaining } from "@/lib/timers";
+import { isMobileShell } from "@/lib/platform";
 
 const COUNTDOWN_PRESETS = [5, 10, 15, 25, 30, 60];
 const PRESET_MARKS: Record<string, string> = { 喝水: "水", 站起来活动: "动", 护眼休息: "目" };
@@ -56,7 +57,7 @@ export function RemindersView() {
       <div className="today-hero-copy">
         <span className="today-eyebrow">百工 · 提醒</span>
         <h3>关掉窗口，提醒也不会丢。</h3>
-        <p className="today-hero-note">到期提醒由系统送达；彻底退出请用托盘菜单的「退出应用」。</p>
+        <p className="today-hero-note">{isMobileShell() ? "到期提醒由系统送达，应用退到后台也能收到。" : "到期提醒由系统送达；彻底退出请用托盘菜单的「退出应用」。"}</p>
       </div>
     </section>
     <div className="reminders-body">
