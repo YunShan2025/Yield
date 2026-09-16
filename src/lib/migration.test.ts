@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4]);
+    expect(versions).toEqual([1, 2, 3, 4, 5]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -219,5 +219,29 @@ describe("database migration declarations", () => {
     expect((sql.match(/NEW\.id|OLD\.id/g) ?? [])).toHaveLength(0);
     expect(sql).toContain("NEW.task_id");
     expect(sql).toContain("OLD.task_id");
+  });
+
+  it("rebuilds habit_checks insert trigger without created_at via migration v5", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    // 同 v4 的理由：v3 不可改，它历史性地引用了 habit_checks 不存在的
+    // created_at 列（该表只有 id/habit_id/check_date），由 v5 DROP 重建。
+    const v3 = source.match(
+      /version:\s*3,\s*description:\s*"sync_outbox_triggers",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    )?.[1] ?? "";
+    expect(v3).toContain("('habit_checks', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))");
+    const v5 = source.match(
+      /version:\s*5,\s*description:\s*"sync_fix_habit_checks_trigger",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(v5).not.toBeNull();
+    const sql = v5?.[1] ?? "";
+    expect(sql).toContain("DROP TRIGGER IF EXISTS trg_habit_checks_ins");
+    expect(sql).toContain("CREATE TRIGGER IF NOT EXISTS trg_habit_checks_ins");
+    // 表内无时间戳列：row_id 用 NEW.id，ts_ms 取常量 0（与 rowTsMs 的 0 约定一致）。
+    expect(sql).toContain("VALUES ('habit_checks', NEW.id, 'upsert', 0)");
+    expect(sql).toContain("row_id = NEW.id AND ts_ms = 0");
+    expect(sql).not.toContain("created_at");
   });
 });

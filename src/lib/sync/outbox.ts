@@ -165,7 +165,7 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
        SELECT 'task_tags', task_id || ':' || tag_id, 'upsert', ${TS_MS_SQL} FROM task_tags`,
     ),
   );
-  for (const table of ["habit_checks", "focus_sessions", "achievements"]) {
+  for (const table of ["focus_sessions", "achievements"]) {
     const createdMs =
       "COALESCE(CAST(ROUND((julianday(NULLIF(created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0)";
     total += rowsAffected(
@@ -175,6 +175,13 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
       ),
     );
   }
+  // habit_checks 无任何时间戳列：与 v5 触发器一致，ts_ms 取常量 0。
+  total += rowsAffected(
+    await db.execute(
+      `INSERT OR IGNORE INTO sync_outbox(table_name, row_id, op, ts_ms)
+       SELECT 'habit_checks', id, 'upsert', 0 FROM habit_checks`,
+    ),
+  );
   const keys = [...SYNC_SETTINGS_KEYS];
   total += rowsAffected(
     await db.execute(
@@ -188,8 +195,10 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
 }
 
 function rowsAffected(res: unknown): number {
-  if (res && typeof res === "object" && "rowsAffected" in res) {
-    return Number((res as { rowsAffected: unknown }).rowsAffected) || 0;
+  if (res && typeof res === "object") {
+    // tauri-plugin-sql 返回 rowsAffected；node:sqlite 测试替身返回 changes。
+    const r = res as { rowsAffected?: unknown; changes?: unknown };
+    return Number(r.rowsAffected ?? r.changes ?? 0) || 0;
   }
   return 0;
 }

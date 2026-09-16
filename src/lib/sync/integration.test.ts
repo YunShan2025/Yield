@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runSync, type SyncSummary } from "./engine";
-import { captureSettingWrite, type SqlClient } from "./outbox";
+import { captureSettingWrite, backfillOutbox, type SqlClient } from "./outbox";
 import { HlcClock } from "./hlc";
 import { MemoryTransport } from "./transport";
 import type { LogReadState } from "./log";
@@ -19,7 +19,7 @@ import type { LogReadState } from "./log";
 let schemaSql = "";
 beforeAll(() => {
   const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
-  schemaSql = [1, 2, 3, 4]
+  schemaSql = [1, 2, 3, 4, 5]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
       const a = src.indexOf('sql: r#"', i) + 8;
@@ -278,5 +278,58 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     const lenBefore = a.readLocalLog().length;
     await a.sync();
     expect(a.readLocalLog().length).toBe(lenBefore);
+  });
+
+  it("特殊表触发器与全表基线回填在真实 schema 上跑通", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    // task_planning_metadata 主键是 task_id（v4 重建的触发器按 task_id 捕获）；
+    // habit_checks 无任何时间戳列（v5 重建的触发器 ts_ms 取常量 0）。
+    await a.run(
+      `INSERT INTO task_planning_metadata (task_id, reminder_minutes_json, updated_at)
+       VALUES ('pt1', '[10]', '2026-09-16T02:00:00.000Z')`,
+    );
+    await a.run(
+      `INSERT INTO habit_checks (id, habit_id, check_date) VALUES ('hc1', 'h1', '2026-09-16')`,
+    );
+    const captured = await a.rows(
+      "SELECT table_name, row_id FROM sync_outbox ORDER BY table_name",
+    );
+    expect(captured).toContainEqual({ table_name: "habit_checks", row_id: "hc1" });
+    expect(captured).toContainEqual({
+      table_name: "task_planning_metadata",
+      row_id: "pt1",
+    });
+    await a.run("DELETE FROM sync_outbox");
+
+    // 基线回填在真实 schema 上全表 SELECT：SQL 里引用任何不存在的列都会
+    // 在 prepare 期抛错（回归：曾因 habit_checks/created_at、
+    // task_planning_metadata/id 漏网）。
+    const total = await backfillOutbox(a.client);
+    expect(total).toBeGreaterThan(0);
+    for (const table of ["habit_checks", "task_planning_metadata", "settings"]) {
+      const c = await a.rows(
+        "SELECT count(*) AS c FROM sync_outbox WHERE table_name = $1",
+        [table],
+      );
+      expect(c[0]?.c ?? 0).toBeGreaterThan(0);
+    }
+
+    // 全链路：推送 → 对端应用（含无时间戳表的 tick(0) 与回声抑制）
+    await a.sync();
+    const s = await b.sync();
+    expect(s.pulled).toBeGreaterThan(0);
+    const hc = await b.rows(
+      "SELECT habit_id, check_date FROM habit_checks WHERE id = 'hc1'",
+    );
+    expect(hc).toEqual([{ habit_id: "h1", check_date: "2026-09-16" }]);
+    const pm = await b.rows(
+      "SELECT reminder_minutes_json FROM task_planning_metadata WHERE task_id = 'pt1'",
+    );
+    expect(pm).toEqual([{ reminder_minutes_json: "[10]" }]);
+    // 远端应用不产生回声（merge_seen 常量 0 / updated_at ms 两种约定都对上）
+    expect(await b.outboxCount()).toBe(0);
   });
 });

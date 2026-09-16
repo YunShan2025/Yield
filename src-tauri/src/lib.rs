@@ -1095,6 +1095,25 @@ END;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "sync_fix_habit_checks_trigger",
+            // v3 给 habit_checks 的 ins 触发器引用了不存在的 created_at 列
+            //（该表只有 id/habit_id/check_date，无任何时间戳列），打卡写入即报
+            // no such column。表内无时间戳可用，ts_ms 取常量 0，与 TS 侧
+            // rowTsMs() 对无时间戳表返回 0 的约定一致，合并回声抑制可对上。
+            sql: r#"
+DROP TRIGGER IF EXISTS trg_habit_checks_ins;
+
+CREATE TRIGGER IF NOT EXISTS trg_habit_checks_ins AFTER INSERT ON habit_checks
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'habit_checks' AND row_id = NEW.id AND ts_ms = 0)
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('habit_checks', NEW.id, 'upsert', 0);
+END;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
