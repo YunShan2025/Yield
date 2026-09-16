@@ -1,5 +1,6 @@
 import type { AppSettings, ThemeMode } from "@/types";
 import { isPrivacyModeEnabled } from "@/lib/privacy";
+import { captureSettingWrite } from "@/lib/sync/outbox";
 import { getDb } from "./client";
 
 /* Settings */
@@ -18,6 +19,8 @@ export async function setSetting(key: string, value: string): Promise<void> {
     "INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
     [key, value],
   );
+  // settings 无触发器：白名单键在这里显式捕获进同步 outbox。
+  await captureSettingWrite(db, key);
 }
 
 export async function getAllSettings(): Promise<Record<string, string>> {

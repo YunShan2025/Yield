@@ -30,6 +30,7 @@ import {
 } from "./growth";
 import { fetchAnniversaries } from "./anniversaries";
 import { getAllSettings, setSetting } from "./settings";
+import { isSyncLocalOnlyKey } from "@/lib/sync/config";
 
 /* Backup */
 export async function exportBackup(): Promise<BackupPayload> {
@@ -62,7 +63,12 @@ export async function exportBackup(): Promise<BackupPayload> {
   const ledgerAccounts = await db.select<Record<string, unknown>[]>("SELECT * FROM ledger_accounts");
   const ledgerTransactions = await db.select<Record<string, unknown>[]>("SELECT * FROM ledger_transactions");
   const ledgerBudgets = await db.select<Record<string, unknown>[]>("SELECT * FROM ledger_budgets");
-  const settings = await getAllSettings();
+  const allSettings = await getAllSettings();
+  // 同步凭据/设备名是设备本地键，绝不进备份文件明文区。
+  const settings: Record<string, string> = {};
+  for (const [key, value] of Object.entries(allSettings)) {
+    if (!isSyncLocalOnlyKey(key)) settings[key] = value;
+  }
 
   return {
     version: 1,

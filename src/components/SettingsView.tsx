@@ -10,6 +10,8 @@ import { getVersion } from "@tauri-apps/api/app";
 import { themeMeta, type VisualTheme } from "@/lib/themes";
 import { OS_REMINDER_LIMIT } from "@/lib/nativeReminders";
 import { AppIcon } from "./AppIcon";
+import { syncService, useSyncStore } from "@/lib/sync/service";
+import { KEY_SYNC_DEVICE_NAME, KEY_SYNC_FEISHU_APP_ID, KEY_SYNC_FEISHU_APP_SECRET } from "@/lib/sync/config";
 
 type DatabaseHealth = {
   healthy: boolean;
@@ -433,7 +435,178 @@ export function SettingsView() {
           )}
         </div>
       </section>
+
+      <SyncSettingsCard />
     </main>
+  );
+}
+
+function SyncSettingsCard() {
+  const setToast = useAppStore((s) => s.setToast);
+  const phase = useSyncStore((s) => s.phase);
+  const running = useSyncStore((s) => s.running);
+  const storeDevice = useSyncStore((s) => s.deviceName);
+  const lastSummary = useSyncStore((s) => s.lastSummary);
+  const lastError = useSyncStore((s) => s.lastError);
+  const [appId, setAppId] = useState("");
+  const [secretInput, setSecretInput] = useState("");
+  const [secretSet, setSecretSet] = useState(false);
+  const [deviceName, setDeviceName] = useState("");
+  const [busy, setBusy] = useState<"idle" | "credentials" | "sync" | "backfill">("idle");
+  const [configured, setConfigured] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      await syncService.configure();
+      const { getSetting } = await import("@/lib/db");
+      const [savedProvider, savedDevice, savedAppId, savedSecret] = await Promise.all([
+        getSetting("sync_provider"),
+        getSetting(KEY_SYNC_DEVICE_NAME),
+        getSetting(KEY_SYNC_FEISHU_APP_ID),
+        getSetting(KEY_SYNC_FEISHU_APP_SECRET),
+      ]);
+      setConfigured(savedProvider === "feishu" && Boolean(savedAppId) && Boolean(savedSecret));
+      setDeviceName(savedDevice ?? "");
+      setAppId(savedAppId ?? "");
+      setSecretSet(Boolean(savedSecret));
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const saveDeviceName = async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === storeDevice) return;
+    try {
+      const { setSetting } = await import("@/lib/db");
+      await setSetting(KEY_SYNC_DEVICE_NAME, trimmed);
+      await syncService.configure();
+      setToast(`设备名已设为「${trimmed}」`);
+    } catch (error) {
+      setToast(`设备名保存失败：${String(error)}`);
+    }
+  };
+
+  const saveCredentials = async () => {
+    setBusy("credentials");
+    try {
+      const { setSetting } = await import("@/lib/db");
+      if (appId.trim()) await setSetting(KEY_SYNC_FEISHU_APP_ID, appId.trim());
+      if (secretInput.trim()) {
+        await setSetting(KEY_SYNC_FEISHU_APP_SECRET, secretInput.trim());
+        setSecretInput("");
+      }
+      await setSetting("sync_provider", "feishu");
+      await syncService.configure();
+      setConfigured(true);
+      setToast("同步凭据已保存");
+    } catch (error) {
+      setToast(`保存凭据失败：${String(error)}`);
+    } finally {
+      setBusy("idle");
+    }
+  };
+
+  const runSyncNow = async () => {
+    setBusy("sync");
+    try {
+      const summary = await syncService.syncNow();
+      if (!summary.ok) setToast(`同步未完成：${summary.errors[0] ?? "未知错误"}`);
+      else setToast(`同步完成：推送 ${summary.pushed} 条，接收 ${summary.pulled} 条`);
+    } catch (error) {
+      setToast(`同步失败：${String(error)}`);
+    } finally {
+      setBusy("idle");
+    }
+  };
+
+  const runBackfill = async () => {
+    setBusy("backfill");
+    try {
+      const count = await syncService.backfillBaseline();
+      setToast(`基线回填 ${count} 条，开始推送…`);
+      const summary = await syncService.syncNow();
+      if (!summary.ok) setToast(`基线推送失败：${summary.errors[0] ?? "未知错误"}`);
+      else setToast(`基线已推送 ${summary.pushed} 条`);
+    } catch (error) {
+      setToast(`基线生成失败：${String(error)}`);
+    } finally {
+      setBusy("idle");
+    }
+  };
+
+  return (
+    <section className="settings-card" style={{ marginTop: 12 }}>
+      <h3>数据同步</h3>
+      <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+        在两台设备上填写同一份飞书应用凭据（企业自建应用），有秋通过飞书云盘交换增量日志并按时间戳合并。
+        触发时机：启动、回到前台、手动。凭据只保存在本机，不进备份文件。
+      </p>
+      <label className="field-label">设备名（每台设备唯一，用作日志文件名）</label>
+      <input
+        className="field"
+        style={{ maxWidth: 220 }}
+        value={deviceName}
+        placeholder={storeDevice}
+        onChange={(e) => setDeviceName(e.target.value)}
+        onBlur={() => void saveDeviceName(deviceName)}
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <label className="field-label" style={{ marginTop: 10 }}>飞书 App ID</label>
+      <input
+        className="field"
+        value={appId}
+        placeholder="cli_…"
+        onChange={(e) => setAppId(e.target.value)}
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <label className="field-label" style={{ marginTop: 10 }}>
+        飞书 App Secret{secretSet ? "（已保存，留空则沿用）" : ""}
+      </label>
+      <input
+        className="field"
+        type="password"
+        value={secretInput}
+        placeholder={secretSet ? "••••••••" : ""}
+        onChange={(e) => setSecretInput(e.target.value)}
+        autoComplete="new-password"
+      />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={busy !== "idle" || !appId.trim() || (!secretInput.trim() && !secretSet)}
+          onClick={() => void saveCredentials()}
+        >
+          {busy === "credentials" ? "保存中…" : "保存凭据"}
+        </button>
+        <button
+          type="button"
+          className="btn-ghost"
+          disabled={busy !== "idle" || !configured}
+          onClick={() => void runSyncNow()}
+        >
+          {busy === "sync" ? "同步中…" : "立即同步"}
+        </button>
+        <button
+          type="button"
+          className="btn-ghost"
+          disabled={busy !== "idle" || !configured}
+          onClick={() => void runBackfill()}
+        >
+          {busy === "backfill" ? "回填中…" : "生成初始基线"}
+        </button>
+      </div>
+      <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "8px 0 0" }}>
+        状态：
+        {running ? "同步中…" : phase === "ok" ? "正常" : phase === "error" ? "异常" : "未运行"}
+        {lastSummary
+          ? ` · 最近 ${new Date(lastSummary.finishedAt).toLocaleString()} · 推送 ${lastSummary.pushed} / 接收 ${lastSummary.pulled}`
+          : ""}
+        {lastError ? ` · ${lastError}` : ""}
+      </p>
+    </section>
   );
 }
 

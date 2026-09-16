@@ -638,6 +638,429 @@ UPDATE ledger_accounts SET updated_at = created_at WHERE updated_at = '';
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "sync_outbox_triggers",
+            // M4 数据同步：outbox 触发器把业务表写入捕获为待上传日志条目；
+            // sync_state 记录每键已应用的 HLC（LWW 比较依据）；sync_merge_seen
+            // 抑制合并远端数据时的回声（同键同时间戳的写入不重复入箱）。
+            sql: r#"
+
+-- ===== 同步基础设施（M4）：outbox 捕获、合并状态、回声抑制 =====
+CREATE TABLE IF NOT EXISTS sync_outbox (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  table_name TEXT NOT NULL,
+  row_id TEXT NOT NULL,
+  op TEXT NOT NULL CHECK (op IN ('upsert','delete')),
+  ts_ms INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sync_outbox_seq ON sync_outbox(seq);
+CREATE TABLE IF NOT EXISTS sync_state (
+  table_name TEXT NOT NULL,
+  row_id TEXT NOT NULL,
+  hlc_p INTEGER NOT NULL,
+  hlc_l INTEGER NOT NULL,
+  hlc_d TEXT NOT NULL,
+  PRIMARY KEY (table_name, row_id)
+);
+-- merge 应用远端条目前的登记：命中登记且时间戳一致的本地触发不再写 outbox。
+CREATE TABLE IF NOT EXISTS sync_merge_seen (
+  table_name TEXT NOT NULL,
+  row_id TEXT NOT NULL,
+  ts_ms INTEGER NOT NULL,
+  PRIMARY KEY (table_name, row_id)
+);
+
+CREATE TRIGGER IF NOT EXISTS trg_projects_ins AFTER INSERT ON projects
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'projects' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('projects', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_projects_upd AFTER UPDATE ON projects
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'projects' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('projects', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_projects_del AFTER DELETE ON projects
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('projects', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goals_ins AFTER INSERT ON goals
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'goals' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goals', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goals_upd AFTER UPDATE ON goals
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'goals' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goals', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goals_del AFTER DELETE ON goals
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goals', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tags_ins AFTER INSERT ON tags
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'tags' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('tags', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tags_upd AFTER UPDATE ON tags
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'tags' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('tags', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tags_del AFTER DELETE ON tags
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('tags', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_habits_ins AFTER INSERT ON habits
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'habits' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('habits', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_habits_upd AFTER UPDATE ON habits
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'habits' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('habits', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_habits_del AFTER DELETE ON habits
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('habits', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_anniversaries_ins AFTER INSERT ON anniversaries
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'anniversaries' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('anniversaries', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_anniversaries_upd AFTER UPDATE ON anniversaries
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'anniversaries' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('anniversaries', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_anniversaries_del AFTER DELETE ON anniversaries
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('anniversaries', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tasks_ins AFTER INSERT ON tasks
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'tasks' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('tasks', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tasks_upd AFTER UPDATE ON tasks
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'tasks' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('tasks', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tasks_del AFTER DELETE ON tasks
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('tasks', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_ins AFTER INSERT ON task_planning_metadata
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'task_planning_metadata' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_planning_metadata', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_upd AFTER UPDATE ON task_planning_metadata
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'task_planning_metadata' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_planning_metadata', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_del AFTER DELETE ON task_planning_metadata
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_planning_metadata', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_milestones_ins AFTER INSERT ON milestones
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'milestones' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('milestones', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_milestones_upd AFTER UPDATE ON milestones
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'milestones' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('milestones', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_milestones_del AFTER DELETE ON milestones
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('milestones', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goal_entries_ins AFTER INSERT ON goal_entries
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'goal_entries' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goal_entries', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goal_entries_upd AFTER UPDATE ON goal_entries
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'goal_entries' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goal_entries', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goal_entries_del AFTER DELETE ON goal_entries
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goal_entries', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goal_milestones_ins AFTER INSERT ON goal_milestones
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'goal_milestones' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goal_milestones', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goal_milestones_upd AFTER UPDATE ON goal_milestones
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'goal_milestones' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goal_milestones', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_goal_milestones_del AFTER DELETE ON goal_milestones
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('goal_milestones', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_memos_ins AFTER INSERT ON memos
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'memos' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('memos', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_memos_upd AFTER UPDATE ON memos
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'memos' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('memos', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_memos_del AFTER DELETE ON memos
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('memos', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_timers_ins AFTER INSERT ON timers
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'timers' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('timers', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_timers_upd AFTER UPDATE ON timers
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'timers' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('timers', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_timers_del AFTER DELETE ON timers
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('timers', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_categories_ins AFTER INSERT ON ledger_categories
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_categories' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_categories', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_categories_upd AFTER UPDATE ON ledger_categories
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_categories' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_categories', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_categories_del AFTER DELETE ON ledger_categories
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_categories', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_accounts_ins AFTER INSERT ON ledger_accounts
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_accounts' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_accounts', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_accounts_upd AFTER UPDATE ON ledger_accounts
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_accounts' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_accounts', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_accounts_del AFTER DELETE ON ledger_accounts
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_accounts', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_transactions_ins AFTER INSERT ON ledger_transactions
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_transactions' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_transactions', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_transactions_upd AFTER UPDATE ON ledger_transactions
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_transactions' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_transactions', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_transactions_del AFTER DELETE ON ledger_transactions
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_transactions', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_budgets_ins AFTER INSERT ON ledger_budgets
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_budgets' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_budgets', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_budgets_upd AFTER UPDATE ON ledger_budgets
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'ledger_budgets' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_budgets', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ledger_budgets_del AFTER DELETE ON ledger_budgets
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('ledger_budgets', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_tags_ins AFTER INSERT ON task_tags
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'task_tags' AND row_id = NEW.task_id || ':' || NEW.tag_id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_tags', NEW.task_id || ':' || NEW.tag_id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_tags_del AFTER DELETE ON task_tags
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_tags', OLD.task_id || ':' || OLD.tag_id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_habit_checks_ins AFTER INSERT ON habit_checks
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'habit_checks' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('habit_checks', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_habit_checks_del AFTER DELETE ON habit_checks
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('habit_checks', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_focus_sessions_ins AFTER INSERT ON focus_sessions
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'focus_sessions' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('focus_sessions', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_focus_sessions_del AFTER DELETE ON focus_sessions
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('focus_sessions', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_achievements_ins AFTER INSERT ON achievements
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'achievements' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('achievements', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_achievements_del AFTER DELETE ON achievements
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('achievements', OLD.id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

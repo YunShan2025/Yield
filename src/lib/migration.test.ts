@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2]);
+    expect(versions).toEqual([1, 2, 3]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -165,5 +165,32 @@ describe("database migration declarations", () => {
     expect(compatibility).not.toContain("ALTER TABLE");
     expect(compatibility).not.toContain("my_day_date");
     expect(compatibility).not.toContain("remind_minutes");
+  });
+
+  it("installs sync outbox infrastructure via migration v3", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*3,\s*description:\s*"sync_outbox_triggers",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 三张同步元表。
+    for (const table of ["sync_outbox", "sync_state", "sync_merge_seen"]) {
+      expect(sql).toContain(`CREATE TABLE IF NOT EXISTS ${table}`);
+    }
+    // 20 张同步表（settings 走白名单键捕获，不建触发器）：
+    // 16 张 updatable 表 × 3 + task_tags/habit_checks/focus_sessions/achievements 各 2。
+    expect((sql.match(/CREATE TRIGGER IF NOT EXISTS/g) ?? []).length).toBe(56);
+    // 墓碑、回声抑制、整数 id 与复合主键的关键形态。
+    expect(sql).toContain("CREATE TRIGGER IF NOT EXISTS trg_tasks_upd AFTER UPDATE ON tasks");
+    expect(sql).toContain("trg_task_tags_del AFTER DELETE ON task_tags");
+    expect(sql).toContain("NEW.task_id || ':' || NEW.tag_id");
+    expect(sql).toContain("trg_ledger_transactions_upd");
+    expect(sql).not.toContain("ON settings"); // settings 不建触发器
+    // 触发器写入 outbox 的 op 合法值约束。
+    expect(sql).toContain("op TEXT NOT NULL CHECK (op IN ('upsert','delete'))");
   });
 });

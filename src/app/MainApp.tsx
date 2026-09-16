@@ -34,6 +34,7 @@ import {
 } from "@/lib/db";
 import { privacySafeNotification } from "@/lib/privacy";
 import { useAppStore } from "@/store/app";
+import { syncService } from "@/lib/sync/service";
 import { filterTasksByView } from "@/lib/tasks";
 import { todayDateString } from "@/lib/dates";
 import {
@@ -311,6 +312,30 @@ export function MainApp() {
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
+
+  // 数据同步触发点：启动、回前台、10 分钟定时兜底（打开/手动时合并，非实时）。
+  // run 内部单飞 + 排队，重复触发不会并发；未配置凭据时只排水本地日志。
+  useEffect(() => {
+    if (!ready) return;
+    void syncService
+      .configure()
+      .then(() => syncService.run("startup"))
+      .catch(() => undefined);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void syncService.run("resume");
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    const interval = window.setInterval(
+      () => void syncService.run("debounce"),
+      10 * 60 * 1000,
+    );
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      window.clearInterval(interval);
+    };
+  }, [ready]);
 
   // Single global focus ticker — uses absolute endsAt so sleep gaps are settled.
   useEffect(() => {
