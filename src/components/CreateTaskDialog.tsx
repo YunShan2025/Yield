@@ -4,6 +4,7 @@ import type { RepeatRule, TaskPriority } from "@/types";
 import { TimeRangeFields } from "@/components/TimePicker";
 import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
+import { DatePicker } from "@/components/DatePicker";
 import { findFirstAvailableTimeSlot } from "@/lib/planning";
 import { nowTimeString, parseTimeToMinutes, todayDateString } from "@/lib/dates";
 import {
@@ -141,8 +142,7 @@ export function CreateTaskDialog() {
         <label>任务名称<input ref={titleRef} value={title} placeholder="现在要完成什么？" onChange={(event) => setTitle(event.target.value)} /></label>
         <label>任务说明<textarea value={description} placeholder="可选：补充背景或完成标准" onChange={(event) => setDescription(event.target.value)} /></label>
         <div className="create-task-grid">
-          <label>日期<input type="date" value={dueDate} onChange={(event) => {
-            const next = event.target.value;
+          <label>日期<DatePicker value={dueDate} onChange={(next) => {
             setDueDate(next);
             if (!next) {
               setRepeat(null);
@@ -152,7 +152,7 @@ export function CreateTaskDialog() {
             } else if (repeat?.frequency === "weekly") {
               setRepeat(weeklyRuleFromDate(next));
             }
-          }} /></label>
+          }} allowClear ariaLabel="任务日期" /></label>
           <label>优先级<SelectMenu ariaLabel="优先级" value={String(priority)} onChange={(value) => setPriority(Number(value) as TaskPriority)} options={[{ value: "1", label: "P1 紧急" }, { value: "2", label: "P2 高" }, { value: "3", label: "P3 普通" }, { value: "4", label: "P4 低" }]} /></label>
           <label>预计时长<SelectMenu ariaLabel="预计时长" value={String(estimatedMinutes)} onChange={(value) => setEstimatedMinutes(Number(value))} options={[{ value: "30", label: "30 分钟" }, { value: "45", label: "45 分钟" }, { value: "60", label: "1 小时" }, { value: "90", label: "1.5 小时" }, { value: "120", label: "2 小时" }]} /></label>
           <label>所属项目<SelectMenu ariaLabel="所属项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "无项目" }, ...projects.filter((project) => !project.archived).map((project) => ({ value: project.id, label: project.name }))]} /></label>

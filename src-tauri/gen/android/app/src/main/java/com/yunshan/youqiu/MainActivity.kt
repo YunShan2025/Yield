@@ -18,9 +18,11 @@ class MainActivity : TauriActivity() {
   override fun onContentChanged() {
     super.onContentChanged()
     // targetSdk 36 在 Android 15+ 上被系统强制 edge-to-edge（无法 opt-out），
-    // WebView 会全屏铺到状态栏/手势条底下。这里把系统栏 inset 转成内容区
-    // padding，让 WebView 视口回到「系统栏以内」，观感与旧版本一致；键盘弹出时
-    // ime inset 并入 bottom，等效 adjustResize。
+    // WebView 会全屏铺到系统栏底下。这里把「左右/键盘」inset 转成内容区
+    // padding；顶部 inset 不再消费——WebView 直通状态栏底下，由页面自身
+    // 用 env(safe-area-inset-top) 让出高度，页面底色（含主题渐变）直通
+    // 状态栏，不再有原生窗口背景与页面底色之间的分界线（真机验收反馈）。
+    // 键盘弹出时 ime inset 并入 bottom，等效 adjustResize。
     // 仅 SDK 35+ 生效：低版本由系统按非 edge-to-edge 自行留白，
     // 再补 padding 会双重收缩。
     if (Build.VERSION.SDK_INT < 35) return
@@ -32,7 +34,7 @@ class MainActivity : TauriActivity() {
           or WindowInsets.Type.displayCutout()
           or WindowInsets.Type.ime()
       )
-      v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+      v.setPadding(bars.left, 0, bars.right, bars.bottom)
       insets
     }
   }

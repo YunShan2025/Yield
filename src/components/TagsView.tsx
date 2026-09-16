@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
+import { confirmAction, promptAction } from "@/components/AppConfirm";
 import { filterTasksByView, taskRowClassName } from "@/lib/tasks";
 import { formatDueDate } from "@/lib/dates";
 
@@ -122,14 +123,17 @@ export function TagsView() {
                         type="button"
                         className="btn-ghost"
                         onClick={() => {
-                          const next = window.prompt(
-                            `重命名标签「${tag.name}」`,
-                            tag.name,
-                          );
-                          const trimmed = next?.trim();
-                          if (trimmed && trimmed !== tag.name) {
-                            void updateTag(tag.id, trimmed);
-                          }
+                          void promptAction({
+                            title: `重命名标签「${tag.name}」`,
+                            initial: tag.name,
+                            maxLength: 16,
+                            confirmText: "重命名",
+                          }).then((next) => {
+                            const trimmed = next?.trim();
+                            if (trimmed && trimmed !== tag.name) {
+                              void updateTag(tag.id, trimmed);
+                            }
+                          });
                         }}
                       >
                         重命名
@@ -138,13 +142,14 @@ export function TagsView() {
                         type="button"
                         className="btn-ghost danger"
                         onClick={() => {
-                          if (
-                            window.confirm(
-                              `删除标签「${tag.name}」？任务不会被删除，仅解除关联。`,
-                            )
-                          ) {
-                            void removeTag(tag.id);
-                          }
+                          void confirmAction({
+                            title: `删除标签「${tag.name}」？`,
+                            description: "任务不会被删除，仅解除关联。",
+                            confirmText: "删除",
+                            danger: true,
+                          }).then((ok) => {
+                            if (ok) void removeTag(tag.id);
+                          });
                         }}
                       >
                         删除

@@ -17,6 +17,8 @@ import {
 } from "@/lib/anniversaries";
 import { todayDateString } from "@/lib/dates";
 import { SelectMenu } from "@/components/SelectMenu";
+import { confirmAction } from "@/components/AppConfirm";
+import { DatePicker } from "@/components/DatePicker";
 import type { Anniversary } from "@/types";
 
 export function AnniversariesView() {
@@ -170,11 +172,10 @@ export function AnniversariesView() {
             </button>
           </div>
           {calendar === "solar" ? (
-            <input
-              className="field"
-              type="date"
+            <DatePicker
               value={eventDate}
-              onChange={(event) => setEventDate(event.target.value)}
+              onChange={setEventDate}
+              ariaLabel="纪念日日期"
             />
           ) : (
             <div className="anni-lunar-pickers">
@@ -310,7 +311,7 @@ export function AnniversariesView() {
           })}
         </section>
       )}
-      {selected ? <div className="modal-backdrop" onMouseDown={() => setSelected(null)}><section className="anni-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-detail-title" onMouseDown={(event) => event.stopPropagation()}>{(() => { const head = anniversaryHeadline(selected, today); return <><header><div><span>纪念日详情</span><h2 id="anni-detail-title">{selected.title}</h2></div><button type="button" aria-label="关闭" onClick={() => setSelected(null)}>×</button></header><div className="anni-detail-count"><strong>{head.daysLeft === 0 ? "今天" : head.daysLeft === null ? "—" : head.daysLeft}</strong><span>{head.label}</span></div><dl><div><dt>日期</dt><dd>{formatAnniversaryAnchor(selected)}</dd></div><div><dt>提醒方式</dt><dd>{selected.recur_yearly ? "每年提醒" : "仅记录一次"}</dd></div>{head.nextDate ? <div><dt>下一次</dt><dd>{head.nextDate}</dd></div> : null}</dl><section><span>留下的话</span><p>{selected.note || "这个日子还没有备注。"}</p></section><footer><button type="button" className="btn-ghost" onClick={() => { void updateAnniversary(selected.id, { recur_yearly: selected.recur_yearly ? 0 : 1 }).then(async () => { await refresh(); setSelected({ ...selected, recur_yearly: selected.recur_yearly ? 0 : 1 }); }); }}>{selected.recur_yearly ? "改为单次" : "改为每年"}</button><button type="button" className="btn-ghost danger" onClick={() => { if (window.confirm(`删除纪念日「${selected.title}」？`)) void deleteAnniversary(selected.id).then(async () => { await refresh(); setSelected(null); }); }}>删除</button></footer></>; })()}</section></div> : null}
+      {selected ? <div className="modal-backdrop" onMouseDown={() => setSelected(null)}><section className="anni-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-detail-title" onMouseDown={(event) => event.stopPropagation()}>{(() => { const head = anniversaryHeadline(selected, today); return <><header><div><span>纪念日详情</span><h2 id="anni-detail-title">{selected.title}</h2></div><button type="button" aria-label="关闭" onClick={() => setSelected(null)}>×</button></header><div className="anni-detail-count"><strong>{head.daysLeft === 0 ? "今天" : head.daysLeft === null ? "—" : head.daysLeft}</strong><span>{head.label}</span></div><dl><div><dt>日期</dt><dd>{formatAnniversaryAnchor(selected)}</dd></div><div><dt>提醒方式</dt><dd>{selected.recur_yearly ? "每年提醒" : "仅记录一次"}</dd></div>{head.nextDate ? <div><dt>下一次</dt><dd>{head.nextDate}</dd></div> : null}</dl><section><span>留下的话</span><p>{selected.note || "这个日子还没有备注。"}</p></section><footer><button type="button" className="btn-ghost" onClick={() => { void updateAnniversary(selected.id, { recur_yearly: selected.recur_yearly ? 0 : 1 }).then(async () => { await refresh(); setSelected({ ...selected, recur_yearly: selected.recur_yearly ? 0 : 1 }); }); }}>{selected.recur_yearly ? "改为单次" : "改为每年"}</button><button type="button" className="btn-ghost danger" onClick={() => { void confirmAction({ title: `删除纪念日「${selected.title}」？`, confirmText: "删除", danger: true }).then((ok) => { if (ok) void deleteAnniversary(selected.id).then(async () => { await refresh(); setSelected(null); }); }); }}>删除</button></footer></>; })()}</section></div> : null}
       </div>
     </main>
   );

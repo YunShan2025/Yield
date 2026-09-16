@@ -10,6 +10,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { themeMeta, type VisualTheme } from "@/lib/themes";
 import { OS_REMINDER_LIMIT } from "@/lib/nativeReminders";
 import { AppIcon } from "./AppIcon";
+import { confirmAction } from "@/components/AppConfirm";
 import { syncService, useSyncStore } from "@/lib/sync/service";
 import { KEY_SYNC_DEVICE_NAME, KEY_SYNC_FEISHU_APP_ID, KEY_SYNC_FEISHU_APP_SECRET } from "@/lib/sync/config";
 
@@ -61,13 +62,13 @@ export function SettingsView() {
 
   const restoreDatabaseBackup = async (backup: DatabaseBackupInfo) => {
     const created = new Date(backup.createdAt * 1000).toLocaleString();
-    if (
-      !window.confirm(
-        `确认恢复 ${created} 的启动备份？\n\n当前数据库会先自动备份，应用随后重启。`,
-      )
-    ) {
-      return;
-    }
+    const ok = await confirmAction({
+      title: `确认恢复 ${created} 的启动备份？`,
+      description: "当前数据库会先自动备份，应用随后重启。",
+      confirmText: "恢复并重启",
+      danger: true,
+    });
+    if (!ok) return;
     await invoke("schedule_database_restore", { backupId: backup.id });
     await invoke("restart_app");
   };
@@ -165,7 +166,13 @@ export function SettingsView() {
       setToast(`读取备份文件失败：${String(error)}`);
       return;
     }
-    if (!window.confirm(summarizeBackupRestore(payload))) return;
+    const ok = await confirmAction({
+      title: "确认从该文件恢复数据？",
+      description: summarizeBackupRestore(payload),
+      confirmText: "恢复",
+      danger: true,
+    });
+    if (!ok) return;
     const backupId = await invoke<string>("create_database_backup");
     // Keep a crash-safe rollback marker until every import write succeeds.
     await invoke("schedule_database_restore", { backupId });

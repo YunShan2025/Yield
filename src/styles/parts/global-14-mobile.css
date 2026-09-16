@@ -615,3 +615,47 @@ html[data-shell="mobile"] .timer-status-primary strong {
 html[data-shell="mobile"] .theme-section-heading > span {
   white-space: nowrap;
 }
+
+/* ---------- 7) 真机验收修复（2026-09-16） ---------- */
+
+/* 外观区胶囊保持 nowrap，避免极端窄屏下胶囊内逐字断行（已堆叠独行不常触发）。 */
+html[data-shell="mobile"] .theme-section-heading > span {
+  white-space: nowrap;
+}
+
+/* 状态栏不再由原生层收缩视口（MainActivity 只吃左右/底部 inset）：
+   WebView 直通状态栏底下，由页面让出系统栏高度——状态栏区域露出的
+   就是页面自己的底色（含主题渐变），不再出现原生窗口背景与页面底色
+   之间的分界线。env() 老 WebView 不识别时整条声明被丢弃，
+   前面的静态值兜底；padding 在滚动容器上随内容滚走，滚动内容
+   从状态栏下穿过（Android 常规观感）。 */
+html[data-shell="mobile"] .main-workspace,
+html[data-shell="mobile"] .detail-panel,
+html[data-shell="mobile"] .mobile-more {
+  padding-top: 24px;
+  padding-top: env(safe-area-inset-top, 24px);
+}
+
+/* dawn/glass 壳给 .app-root 画的 1px 描边与圆角在手机上正好落在状态栏
+   下沿，就是那条「分界线」：移动壳全屏，一律去掉。 */
+html[data-shell="mobile"] .app-root {
+  border: 0;
+  border-radius: 0;
+}
+
+/* 引导框主文案 12 字在 393px 下因 22px 字号（clamp 下限）约 253px，
+   超出「今日」页进度环让出的 ~205px 文案列，末行断出「奏。」孤字。
+   降到随视口收缩的 15-17px，最长 13 字的待办箱文案在 360px 也单行放下。 */
+@media (max-width: 700px) {
+  .today-hero h3 {
+    font-size: clamp(15px, 4.3vw, 17px);
+  }
+}
+
+/* 设置页外观区：flex 行里右侧胶囊 nowrap 占宽后，左侧「选择一天工作时
+   想进入的光线。」被挤到逐字竖排（实测显示不全）。改为上下堆叠，
+   标题、描述吃满整行，胶囊独行靠左。 */
+html[data-shell="mobile"] .theme-section-heading {
+  flex-direction: column;
+  gap: 8px;
+}

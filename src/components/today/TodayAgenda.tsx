@@ -21,6 +21,7 @@ import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { buildTaskDeferredUpdate } from "@/lib/planning";
 import { addDays, formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
 import { confirmAction } from "@/components/AppConfirm";
+import { DatePicker } from "@/components/DatePicker";
 import type { Task } from "@/types";
 import { isActiveTask } from "@/lib/tasks";
 
@@ -104,15 +105,13 @@ function RowMenu({ task, cursor }: { task: Task; cursor: string }) {
             {customOpen ? (
               <label className="row-menu-date">
                 <span>改期到</span>
-                <input
-                  type="date"
-                  className="field"
+                <DatePicker
                   value={customDate}
-                  autoFocus
-                  onChange={(event) => {
-                    setCustomDate(event.target.value);
-                    if (event.target.value) deferTo(event.target.value);
+                  onChange={(next) => {
+                    setCustomDate(next);
+                    if (next) deferTo(next);
                   }}
+                  ariaLabel="改期到"
                 />
               </label>
             ) : (

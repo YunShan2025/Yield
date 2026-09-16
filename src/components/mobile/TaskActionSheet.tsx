@@ -4,6 +4,7 @@ import { useAppStore } from "@/store/app";
 import { addDays, priorityLabel } from "@/lib/dates";
 import { buildTaskDeferredUpdate } from "@/lib/planning";
 import { confirmAction } from "@/components/AppConfirm";
+import { DatePicker } from "@/components/DatePicker";
 import type { Task, TaskPriority } from "@/types";
 
 const PRIORITIES: TaskPriority[] = [1, 2, 3, 4];
@@ -78,14 +79,13 @@ export function TaskActionSheet({
         {customOpen ? (
           <label className="action-sheet-date">
             <span>改期到</span>
-            <input
-              type="date"
-              className="field"
+            <DatePicker
               value={customDate}
-              onChange={(event) => {
-                setCustomDate(event.target.value);
-                if (event.target.value) deferTo(event.target.value);
+              onChange={(next) => {
+                setCustomDate(next);
+                if (next) deferTo(next);
               }}
+              ariaLabel="改期到"
             />
           </label>
         ) : null}

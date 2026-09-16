@@ -23,6 +23,7 @@ import {
 import { formatDueDate, formatTimeRange, todayDateString, addDays, formatLongDate, formatStamp, weekDates, parseDate, startOfWeek, parseTimeToMinutes } from "@/lib/dates";
 import type { Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
+import { confirmAction } from "@/components/AppConfirm";
 import { DayBoard } from "@/components/today/DayBoard";
 
 const SettingsView = lazy(() =>
@@ -504,9 +505,14 @@ function TrashView() {
           className="btn-ghost danger"
           disabled={!total}
           onClick={() => {
-            if (window.confirm(`确定清空回收站的 ${total} 项？此操作不可恢复。`)) {
-              void purgeTrash();
-            }
+            void confirmAction({
+              title: `确定清空回收站的 ${total} 项？`,
+              description: "此操作不可恢复。",
+              confirmText: "清空",
+              danger: true,
+            }).then((ok) => {
+              if (ok) void purgeTrash();
+            });
           }}
         >
           清空回收站
@@ -543,9 +549,14 @@ function TrashView() {
                   type="button"
                   className="btn-ghost danger"
                   onClick={() => {
-                    if (window.confirm(`永久删除「${task.title}」？不可恢复。`)) {
-                      void purgeTask(task.id);
-                    }
+                    void confirmAction({
+                      title: `永久删除「${task.title}」？`,
+                      description: "不可恢复。",
+                      confirmText: "永久删除",
+                      danger: true,
+                    }).then((ok) => {
+                      if (ok) void purgeTask(task.id);
+                    });
                   }}
                 >
                   永久删除

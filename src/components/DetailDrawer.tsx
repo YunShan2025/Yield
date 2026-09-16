@@ -13,6 +13,8 @@ import type {
 import { open } from "@tauri-apps/plugin-dialog";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { PomodoroPanel } from "@/components/PomodoroPanel";
+import { confirmAction } from "@/components/AppConfirm";
+import { DatePicker } from "@/components/DatePicker";
 import { parseReminderMinutes } from "@/lib/planning";
 import { fetchGoals } from "@/lib/db";
 import {
@@ -150,18 +152,33 @@ export function DetailDrawer() {
   };
 
   const cancelEdit = () => {
-    if (dirty && !window.confirm("当前修改尚未保存，确定放弃吗？")) return;
-    hydrateFromTask();
-    setDirty(false);
-    setMode("view");
+    if (!dirty) {
+      hydrateFromTask();
+      setDirty(false);
+      setMode("view");
+      return;
+    }
+    void confirmAction({
+      title: "当前修改尚未保存，确定放弃吗？",
+      danger: true,
+      confirmText: "放弃修改",
+    }).then((ok) => {
+      if (!ok) return;
+      hydrateFromTask();
+      setDirty(false);
+      setMode("view");
+    });
   };
 
   const closeDetail = () => {
-    if (
-      mode === "edit" &&
-      dirty &&
-      !window.confirm("当前修改尚未保存，确定关闭吗？")
-    ) {
+    if (mode === "edit" && dirty) {
+      void confirmAction({
+        title: "当前修改尚未保存，确定关闭吗？",
+        danger: true,
+        confirmText: "不保存关闭",
+      }).then((ok) => {
+        if (ok) selectTask(null);
+      });
       return;
     }
     selectTask(null);
@@ -276,8 +293,14 @@ export function DetailDrawer() {
   };
 
   const confirmDelete = () => {
-    if (!window.confirm(`确定将「${task.title}」移入回收站吗？`)) return;
-    void deleteTask(task.id);
+    void confirmAction({
+      title: `确定将「${task.title}」移入回收站吗？`,
+      description: "回收站中的任务可随时恢复。",
+      confirmText: "移入回收站",
+      danger: true,
+    }).then((ok) => {
+      if (ok) void deleteTask(task.id);
+    });
   };
 
   const startFocus = () => {
@@ -483,11 +506,11 @@ export function DetailDrawer() {
           </div>
           <div>
             <label className="field-label">截止日期</label>
-            <input
-              className="field"
-              type="date"
+            <DatePicker
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              onChange={setDueDate}
+              allowClear
+              ariaLabel="截止日期"
             />
           </div>
           <TimeRangeFields

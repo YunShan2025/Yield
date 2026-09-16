@@ -3,6 +3,8 @@ import { useAppStore } from "@/store/app";
 import type { Timer } from "@/types";
 import { TIMER_PRESETS, formatCountdown, intervalLabel, liveRemaining } from "@/lib/timers";
 import { isMobileShell } from "@/lib/platform";
+import { confirmAction } from "@/components/AppConfirm";
+import { TimePicker } from "@/components/TimePicker";
 
 const COUNTDOWN_PRESETS = [5, 10, 15, 25, 30, 60];
 const PRESET_MARKS: Record<string, string> = { 喝水: "水", 站起来活动: "动", 护眼休息: "目" };
@@ -68,7 +70,7 @@ export function RemindersView() {
     </section>
     {tab === "countdown" ? <>
       <section className="countdown-composer" aria-label="新建倒计时"><div className="countdown-composer-title"><div><span>新建倒计时</span><strong>想在多久后收到提醒？</strong></div><div className="countdown-mode-switch"><button type="button" className={timeMode === "duration" ? "active" : ""} onClick={() => setTimeMode("duration")}>按时长</button><button type="button" className={timeMode === "finish" ? "active" : ""} onClick={() => setTimeMode("finish")}>到指定时间</button></div></div>
-        {timeMode === "duration" ? <div className="countdown-time-rail">{COUNTDOWN_PRESETS.map((minutes) => <button key={minutes} type="button" className={countdownMinutes === minutes ? "active" : ""} onClick={() => setCountdownMinutes(minutes)}><strong>{minutes}</strong><span>分钟</span></button>)}<label className="countdown-custom-time"><span>自定义</span><input aria-label="自定义分钟数" type="number" min={1} max={1440} value={countdownMinutes} onChange={(event) => setCountdownMinutes(Number(event.target.value) || 1)} /></label></div> : <label className="countdown-finish-field"><span>结束时间</span><input type="time" value={finishAt} onChange={(event) => setFinishAt(event.target.value)} /><small>早于当前时间时，将按明天计算。</small></label>}
+        {timeMode === "duration" ? <div className="countdown-time-rail">{COUNTDOWN_PRESETS.map((minutes) => <button key={minutes} type="button" className={countdownMinutes === minutes ? "active" : ""} onClick={() => setCountdownMinutes(minutes)}><strong>{minutes}</strong><span>分钟</span></button>)}<label className="countdown-custom-time"><span>自定义</span><input aria-label="自定义分钟数" type="number" min={1} max={1440} value={countdownMinutes} onChange={(event) => setCountdownMinutes(Number(event.target.value) || 1)} /></label></div> : <label className="countdown-finish-field"><span>结束时间</span><TimePicker value={finishAt} onChange={setFinishAt} placeholder="选择时间" /><small>早于当前时间时，将按明天计算。</small></label>}
         <div className="countdown-create-row"><input className="field" value={countdownTitle} onChange={(event) => setCountdownTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void createCountdown(); }} placeholder="倒计时名称" /><button type="button" className="primary-btn" disabled={timeMode === "finish" && !finishAt} onClick={() => void createCountdown()}>开始倒计时</button></div>
       </section>
       <TimerList title="我的倒计时" timers={countdowns} empty="还没有倒计时。选择一个时长，输入名称后即可开始。" onStart={startTimer} onPause={pauseTimer} onReset={resetTimer} onExtend={(id) => extendTimer(id, 300)} onRemove={removeTimer} />
@@ -82,7 +84,7 @@ export function RemindersView() {
 
 type TimerListProps = { title: string; timers: Timer[]; empty: string; onStart: (id: string) => Promise<void>; onPause: (id: string) => Promise<void>; onReset: (id: string) => Promise<void>; onExtend?: (id: string) => Promise<void>; onRemove: (id: string) => Promise<void> };
 function TimerList({ title, timers, empty, onStart, onPause, onReset, onExtend, onRemove }: TimerListProps) {
-  return <section className="reminders-section"><div className="reminders-section-head"><h3>{title}</h3><span>{timers.length}</span></div>{!timers.length ? <div className="reminders-empty">{empty}</div> : <div className="reminders-stack">{timers.map((timer) => <TimerCard key={timer.id} timer={timer} onStart={() => void onStart(timer.id)} onPause={() => void onPause(timer.id)} onReset={() => void onReset(timer.id)} onExtend={onExtend ? () => void onExtend(timer.id) : undefined} onRemove={() => { if (window.confirm(`删除「${timer.title}」？`)) void onRemove(timer.id); }} />)}</div>}</section>;
+  return <section className="reminders-section"><div className="reminders-section-head"><h3>{title}</h3><span>{timers.length}</span></div>{!timers.length ? <div className="reminders-empty">{empty}</div> : <div className="reminders-stack">{timers.map((timer) => <TimerCard key={timer.id} timer={timer} onStart={() => void onStart(timer.id)} onPause={() => void onPause(timer.id)} onReset={() => void onReset(timer.id)} onExtend={onExtend ? () => void onExtend(timer.id) : undefined} onRemove={() => { void confirmAction({ title: `删除「${timer.title}」？`, confirmText: "删除", danger: true }).then((ok) => { if (ok) void onRemove(timer.id); }); }} />)}</div>}</section>;
 }
 
 function TimerCard({ timer, onStart, onPause, onReset, onExtend, onRemove }: { timer: Timer; onStart: () => void; onPause: () => void; onReset: () => void; onExtend?: () => void; onRemove: () => void }) {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { AppIcon } from "@/components/AppIcon";
+import { DatePicker } from "@/components/DatePicker";
 import type { Milestone, Project } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import {
@@ -260,7 +261,7 @@ export function ProjectsView() {
                     {milestones
                       .filter((item) => item.project_id === project.id)
                       .map((item) => (
-                        editingMilestoneId === item.id ? <form key={item.id} className="milestone-edit" onSubmit={(event) => { event.preventDefault(); void submitMilestoneEdit(item); }}><input className="field" autoFocus value={editMilestoneTitle} onChange={(event) => setEditMilestoneTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setEditingMilestoneId(null); }} aria-label="里程碑名称" /><input className="field" type="date" value={editMilestoneDate} onChange={(event) => setEditMilestoneDate(event.target.value)} aria-label="里程碑日期" /><div><button type="button" className="btn-ghost" disabled={savingMilestone} onClick={() => setEditingMilestoneId(null)}>取消</button><button type="submit" className="btn-primary" disabled={savingMilestone || !editMilestoneTitle.trim()}>保存</button></div></form> : <div className="milestone-item" key={item.id}><label><input type="checkbox" checked={Boolean(item.completed)} onChange={(event) => void toggleMilestone(item.id, event.target.checked).then(refreshMilestones)} /><span>{item.title}</span>{item.due_date ? <small>{item.due_date}</small> : null}</label><button type="button" className="milestone-edit-trigger" title="编辑里程碑" aria-label={`编辑里程碑 ${item.title}`} onClick={() => beginEditMilestone(item)}><AppIcon name="edit" size={14} /></button></div>
+                        editingMilestoneId === item.id ? <form key={item.id} className="milestone-edit" onSubmit={(event) => { event.preventDefault(); void submitMilestoneEdit(item); }}><input className="field" autoFocus value={editMilestoneTitle} onChange={(event) => setEditMilestoneTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setEditingMilestoneId(null); }} aria-label="里程碑名称" /><DatePicker value={editMilestoneDate} onChange={setEditMilestoneDate} allowClear ariaLabel="里程碑日期" /><div><button type="button" className="btn-ghost" disabled={savingMilestone} onClick={() => setEditingMilestoneId(null)}>取消</button><button type="submit" className="btn-primary" disabled={savingMilestone || !editMilestoneTitle.trim()}>保存</button></div></form> : <div className="milestone-item" key={item.id}><label><input type="checkbox" checked={Boolean(item.completed)} onChange={(event) => void toggleMilestone(item.id, event.target.checked).then(refreshMilestones)} /><span>{item.title}</span>{item.due_date ? <small>{item.due_date}</small> : null}</label><button type="button" className="milestone-edit-trigger" title="编辑里程碑" aria-label={`编辑里程碑 ${item.title}`} onClick={() => beginEditMilestone(item)}><AppIcon name="edit" size={14} /></button></div>
                       ))}
                     {addingMilestoneFor === project.id ? (
                       <form
@@ -361,7 +362,7 @@ export function ProjectsView() {
             </label>
             <label>
               截止日期
-              <input type="date" value={editDueDate} onChange={(event) => setEditDueDate(event.target.value)} />
+              <DatePicker value={editDueDate} onChange={setEditDueDate} allowClear ariaLabel="项目截止日期" />
             </label>
             <div className="project-edit-actions">
               <button type="button" className="btn-ghost" onClick={() => setEditingProject(null)}>取消</button>

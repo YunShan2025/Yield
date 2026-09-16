@@ -4,6 +4,7 @@ import { buildTaskDeferredUpdate } from "@/lib/planning";
 import { addDays } from "@/lib/dates";
 import type { Task, TaskUpdate } from "@/types";
 import { confirmAction } from "@/components/AppConfirm";
+import { DatePicker } from "@/components/DatePicker";
 
 /** Batch actions for selected day-board tasks. */
 export function BatchToolbar({
@@ -74,11 +75,10 @@ export function BatchToolbar({
       </button>
       <label className="batch-date-action">
         <span>改期</span>
-        <input
-          type="date"
-          className="field"
+        <DatePicker
           value={batchDate}
-          onChange={(event) => setBatchDate(event.target.value)}
+          onChange={setBatchDate}
+          ariaLabel="批量改期日期"
         />
       </label>
       <button
