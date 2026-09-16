@@ -140,7 +140,7 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
   let total = 0;
   const updatable = [
     "projects", "goals", "tags", "habits", "anniversaries", "tasks",
-    "task_planning_metadata", "milestones", "goal_entries", "goal_milestones",
+    "milestones", "goal_entries", "goal_milestones",
     "memos", "timers", "ledger_categories", "ledger_accounts",
     "ledger_transactions", "ledger_budgets",
   ];
@@ -152,6 +152,13 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
       ),
     );
   }
+  // task_planning_metadata 主键是 task_id（无 id 列）。
+  total += rowsAffected(
+    await db.execute(
+      `INSERT OR IGNORE INTO sync_outbox(table_name, row_id, op, ts_ms)
+       SELECT 'task_planning_metadata', task_id, 'upsert', ${TS_MS_SQL} FROM task_planning_metadata`,
+    ),
+  );
   total += rowsAffected(
     await db.execute(
       `INSERT OR IGNORE INTO sync_outbox(table_name, row_id, op, ts_ms)

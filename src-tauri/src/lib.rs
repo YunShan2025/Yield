@@ -1061,6 +1061,40 @@ END;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "sync_fix_task_planning_triggers",
+            // v3 生成 task_planning_metadata 触发器时误用了不存在的 id 列
+            //（该表主键是 task_id；SQLite 建触发器不校验列名，触发时才报错）。
+            // v3 原地已改对，此处 DROP 重建覆盖已应用过旧 v3 的库。
+            sql: r#"
+DROP TRIGGER IF EXISTS trg_task_planning_metadata_ins;
+DROP TRIGGER IF EXISTS trg_task_planning_metadata_upd;
+DROP TRIGGER IF EXISTS trg_task_planning_metadata_del;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_ins AFTER INSERT ON task_planning_metadata
+WHEN NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'task_planning_metadata' AND row_id = NEW.task_id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_planning_metadata', NEW.task_id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_upd AFTER UPDATE ON task_planning_metadata
+WHEN NEW.updated_at IS NOT OLD.updated_at
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'task_planning_metadata' AND row_id = NEW.task_id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_planning_metadata', NEW.task_id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_del AFTER DELETE ON task_planning_metadata
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('task_planning_metadata', OLD.task_id, 'delete', CAST(ROUND((julianday('now')-2440587.5)*86400000.0) AS INTEGER));
+END;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

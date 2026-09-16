@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3]);
+    expect(versions).toEqual([1, 2, 3, 4]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -192,5 +192,32 @@ describe("database migration declarations", () => {
     expect(sql).not.toContain("ON settings"); // settings 不建触发器
     // 触发器写入 outbox 的 op 合法值约束。
     expect(sql).toContain("op TEXT NOT NULL CHECK (op IN ('upsert','delete'))");
+  });
+
+  it("rebuilds task_planning_metadata triggers on task_id via migration v4", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    // tauri-plugin-sql 校验已应用 migration 的 checksum：v3 一经发布不可再改
+    //（改了会报 "migration 3 was previously applied but has been modified"）。
+    // 它的 planning 触发器带着历史错误的 NEW.id，由 v4 DROP 重建修正。
+    const v3 = source.match(
+      /version:\s*3,\s*description:\s*"sync_outbox_triggers",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    )?.[1] ?? "";
+    expect(v3).toContain("('task_planning_metadata', NEW.id, 'upsert'");
+    const v4 = source.match(
+      /version:\s*4,\s*description:\s*"sync_fix_task_planning_triggers",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(v4).not.toBeNull();
+    const sql = v4?.[1] ?? "";
+    // 修复已应用过坏 v3 的既有库：DROP 三个坏触发器后重建
+    for (const name of ["ins", "upd", "del"]) {
+      expect(sql).toContain(`DROP TRIGGER IF EXISTS trg_task_planning_metadata_${name}`);
+      expect(sql).toContain(`CREATE TRIGGER IF NOT EXISTS trg_task_planning_metadata_${name}`);
+    }
+    expect((sql.match(/NEW\.id|OLD\.id/g) ?? [])).toHaveLength(0);
+    expect(sql).toContain("NEW.task_id");
+    expect(sql).toContain("OLD.task_id");
   });
 });

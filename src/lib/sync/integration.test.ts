@@ -19,7 +19,7 @@ import type { LogReadState } from "./log";
 let schemaSql = "";
 beforeAll(() => {
   const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
-  schemaSql = [1, 2, 3]
+  schemaSql = [1, 2, 3, 4]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
       const a = src.indexOf('sql: r#"', i) + 8;
