@@ -42,15 +42,29 @@
     "fs:default",
     {
       "identifier": "fs:allow-mkdir",
-      "allow": [{ "path": "$APPDATA/backups" }, { "path": "$APPDATA/backups/**" }]
+      "allow": [
+        { "path": "$APPDATA/backups" },
+        { "path": "$APPDATA/backups/**" },
+        { "path": "$APPDATA/sync" },
+        { "path": "$APPDATA/sync/**" }
+      ]
     },
     {
       "identifier": "fs:allow-read-dir",
       "allow": [{ "path": "$APPDATA/backups" }, { "path": "$APPDATA/backups/**" }]
     },
     {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$APPDATA/sync" }, { "path": "$APPDATA/sync/**" }]
+    },
+    {
       "identifier": "fs:allow-write-text-file",
-      "allow": [{ "path": "$APPDATA/backups" }, { "path": "$APPDATA/backups/**" }]
+      "allow": [
+        { "path": "$APPDATA/backups" },
+        { "path": "$APPDATA/backups/**" },
+        { "path": "$APPDATA/sync" },
+        { "path": "$APPDATA/sync/**" }
+      ]
     },
     {
       "identifier": "fs:allow-remove",
