@@ -21,9 +21,26 @@ const DEFAULT_TAGS: { name: string; color: string }[] = ["工作", "生活", "�
   }),
 );
 
-/** 首次启动或缺失时补齐四个默认标签；已存在的同名标签（含用户自建）不动。 */
+/**
+ * 首次启动或缺失时补齐四个默认标签；已存在的同名标签（含用户自建）不动。
+ *
+ * 已配置同步的设备跳过补种：默认标签是每台设备用随机 id 生成的同名行，
+ * 新设备补种会与首台设备经基线同步来的同名标签撞 tags.name UNIQUE，
+ * 四条远端记录全部应用失败；新设备的默认标签应来自基线合并。
+ */
 export async function ensureDefaultTags(): Promise<void> {
   const db = await getDb();
+  const syncKeys = await db.select<{ key: string; value: string }[]>(
+    "SELECT key, value FROM settings WHERE key IN ('sync_provider','sync_feishu_app_id','sync_feishu_app_secret')",
+  );
+  const byKey = new Map(syncKeys.map((row) => [row.key, row.value]));
+  if (
+    byKey.get("sync_provider") === "feishu" &&
+    byKey.get("sync_feishu_app_id") &&
+    byKey.get("sync_feishu_app_secret")
+  ) {
+    return;
+  }
   const existing = await db.select<{ name: string }[]>("SELECT name FROM tags");
   const names = new Set(existing.map((row) => row.name));
   for (const [index, tag] of DEFAULT_TAGS.entries()) {

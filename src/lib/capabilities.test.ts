@@ -18,7 +18,11 @@ describe("capability split", () => {
     expect(main).toContain('"fs:allow-read-dir"');
     expect(main).toContain('"fs:allow-remove"');
     expect(main).toContain('"$APPDATA/backups/**"');
-    expect(main).not.toContain('"fs:allow-read-text-file"');
+    expect(main).toContain('"$APPDATA/backups/**"');
+    // 同步日志（appDataDir/sync/<device>.jsonl）需要读自身日志；读取授权
+    // 只给 sync 目录，backups 的读取仍走定制命令不放开。
+    expect(main).toContain('"fs:allow-read-text-file"');
+    expect(main).toContain('"$APPDATA/sync/**"');
     expect(main).toContain("http:default");
     expect(main).not.toContain("allow-desktop-shortcuts");
     expect(main).not.toContain("global-shortcut");
