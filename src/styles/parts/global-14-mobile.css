@@ -308,11 +308,17 @@ html[data-shell="mobile"] .drag-handle {
 }
 
 .mobile-more-head {
+  /* 页头钉住：更多页自身是滚动容器，头部 sticky 后滚动内容从页头下
+     穿过时标题不动（系统栏高度由 MainActivity 原生让位，页内无需 env）。 */
+  position: sticky;
+  top: 0;
   flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 4px;
+  padding: 20px 20px 10px;
+  background: var(--bg-root);
+  border-bottom: 1px solid var(--border);
 }
 
 .mobile-more-head h1 {
@@ -321,27 +327,33 @@ html[data-shell="mobile"] .drag-handle {
   font-size: 1.25rem;
 }
 
+/* 次级入口按行展现（2026-09-16 真机反馈）：整宽一行一个入口，
+   图标在左、文案随行，不再 3 列方块。 */
 .mobile-more-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 14px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 14px calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-more-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 76px;
-  padding: 10px 6px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg-panel);
+  gap: 14px;
+  min-height: 50px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 14px;
+  text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-more-item:active {
+  background: var(--accent-soft);
 }
 
 .mobile-more-icon {
@@ -623,17 +635,38 @@ html[data-shell="mobile"] .theme-section-heading > span {
   white-space: nowrap;
 }
 
-/* 状态栏不再由原生层收缩视口（MainActivity 只吃左右/底部 inset）：
-   WebView 直通状态栏底下，由页面让出系统栏高度——状态栏区域露出的
-   就是页面自己的底色（含主题渐变），不再出现原生窗口背景与页面底色
-   之间的分界线。env() 老 WebView 不识别时整条声明被丢弃，
-   前面的静态值兜底；padding 在滚动容器上随内容滚走，滚动内容
-   从状态栏下穿过（Android 常规观感）。 */
-html[data-shell="mobile"] .main-workspace,
-html[data-shell="mobile"] .detail-panel,
-html[data-shell="mobile"] .mobile-more {
-  padding-top: 24px;
-  padding-top: env(safe-area-inset-top, 24px);
+/* 状态栏让位策略 v3（真机第二轮反馈：内容随滚动顶进状态栏，标题行也被卷走）：
+   系统栏高度由 MainActivity 原生消费（WebView 视口从状态栏下方开始），
+   页面内容物理上到不了状态栏底下；页内再由 workspace-top 在滚动容器内
+   sticky 钉住——上下拖动内容时标题行固定不动。今日/待办箱的页头本就落在
+   内滚容器（scope-board）之外，天然固定；根滚动的页面（设置/记账/成长/
+   备忘录等）由 sticky 生效。不写更高 z-index——Chrome 83 里 flex 子项
+   z-index 会意外压过 fixed z-30 抽屉（§6-15），sticky 定位层已足够盖住
+   普通滚动内容。不透明底色把滚动内容挡在身后，发丝线分隔页头与内容。 */
+html[data-shell="mobile"] .workspace-top,
+/* 成长页页头自带的 (0,3,0) 特异性 padding 会盖掉上面的覆盖，同列加 arm。 */
+html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
+  position: sticky;
+  top: 0;
+  background: var(--bg-root);
+  border-bottom: 1px solid var(--border);
+}
+html[data-shell="mobile"] .workspace-top,
+/* 成长页页头自带的 (0,3,0) 特异性 padding 会盖掉上面的覆盖，同列加 arm。 */
+html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
+  position: sticky;
+  top: 0;
+  background: var(--bg-root);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 详情抽屉内部滚动、页头不随滚（native inset 已让出系统栏），无需处理。 */
+
+/* 根滚动的页面（设置/记账/成长/纪念日等，根即 .main-workspace）：顶部内边距
+   交给 sticky 页头自己提供。若容器自带 padding-top，钉住的页头会停在
+   padding 下沿，滚动内容从页头上方的缝隙里穿行，观感像「顶出去了」。 */
+html[data-shell="mobile"] .main-workspace {
+  padding-top: 0;
 }
 
 /* dawn/glass 壳给 .app-root 画的 1px 描边与圆角在手机上正好落在状态栏
@@ -658,4 +691,20 @@ html[data-shell="mobile"] .app-root {
 html[data-shell="mobile"] .theme-section-heading {
   flex-direction: column;
   gap: 8px;
+}
+
+/* 主题预览卡：≤900px 桌面窄窗断点是「150px 画布 | 1fr 文案」两列，但
+   grid-template-rows 仍是 92px auto——文案落进 92px 定高行，超出部分被
+   .theme-preview 的 overflow:hidden 裁掉，主题描述「整窗外壳与内嵌标题栏…」
+   显示不全。手机上改回上下堆叠（画布一行、文案整行 auto），描述完整可见。 */
+html[data-shell="mobile"] .theme-preview {
+  grid-template-columns: 1fr;
+}
+
+/* toast 定位在 left:50% + translateX(-50%)，自动宽度被「半屏到右缘」
+   限制（393px 下约 196px），「设备名已设为「Android」」这类文案刚好
+   折成两行。移动端让提示框按内容撑开（上限留 24px 边距），恢复单行胶囊。 */
+html[data-shell="mobile"] .toast {
+  width: max-content;
+  max-width: calc(100vw - 24px);
 }

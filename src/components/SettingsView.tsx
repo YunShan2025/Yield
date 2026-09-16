@@ -203,8 +203,12 @@ export function SettingsView() {
   };
 
   return (
-    <main className="main-workspace" style={{ padding: 22, overflow: "auto" }}>
-      <h2 className="workspace-top" style={{ padding: 0 }}>
+    <main
+      className="main-workspace"
+      style={{ padding: 22, paddingTop: isMobileShell() ? 0 : undefined, overflow: "auto" }}
+    >
+      {/* 移动端 main 顶部内边距归零（sticky 页头不能上方留缝），顶距改由页头提供。 */}
+      <h2 className="workspace-top" style={{ padding: 0, paddingTop: isMobileShell() ? 16 : 0 }}>
         设置
       </h2>
 

@@ -185,8 +185,9 @@ export function DetailDrawer() {
   };
 
   // 点击抽屉以外的任意区域(主区、侧栏、标题栏)收起抽屉,沿用 closeDetail 的未保存确认。
-  // 应用级浮层(确认弹窗遮罩、任务行菜单、SelectMenu 的 portal 弹层)承载自己的交互,
-  // 不算"点了外面"——否则点选下拉选项会连带收起整个抽屉、选择丢失。
+  // 应用级浮层(确认弹窗遮罩、任务行菜单、SelectMenu/DatePicker/TimePicker 的 portal
+  // 弹层)承载自己的交互,不算"点了外面"——否则点选下拉选项或日历选日期会连带收起
+  // 整个抽屉、选择丢失。
   const closeRef = useRef<() => void>(() => {});
   useEffect(() => {
     closeRef.current = closeDetail;
@@ -197,7 +198,7 @@ export function DetailDrawer() {
       if (event.target.closest(".detail-panel")) return;
       if (
         event.target.closest(
-          ".modal-backdrop, .row-menu, .row-menu-backdrop, .select-menu",
+          ".modal-backdrop, .row-menu, .row-menu-backdrop, .select-menu, .date-picker-pop, .time-picker-pop",
         )
       ) {
         return;
