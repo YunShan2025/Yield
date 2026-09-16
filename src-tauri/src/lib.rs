@@ -1114,6 +1114,23 @@ END;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "sync_tag_alias",
+            // tags.name 有 UNIQUE 约束：双端各自种出同名标签（随机 id）时，
+            // 合并对端条目会撞键。TS 侧合并后端按"收养"解决——保留本地同名词行，
+            // 把对端 id 映射到本地 id，后续 task_tags 条目经映射改写 tag_id。
+            // 映射必须跨同步轮持久化（拉取按水位增量，关联条目可能晚于标签
+            // 若干轮才到），故落一张设备本地簿记表。
+            sql: r#"
+CREATE TABLE IF NOT EXISTS sync_tag_alias (
+  remote_row_id TEXT PRIMARY KEY,
+  local_id TEXT NOT NULL,
+  ts_ms INTEGER NOT NULL
+);
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

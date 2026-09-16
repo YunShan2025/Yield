@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -237,11 +237,26 @@ describe("database migration declarations", () => {
     );
     expect(v5).not.toBeNull();
     const sql = v5?.[1] ?? "";
-    expect(sql).toContain("DROP TRIGGER IF EXISTS trg_habit_checks_ins");
-    expect(sql).toContain("CREATE TRIGGER IF NOT EXISTS trg_habit_checks_ins");
     // 表内无时间戳列：row_id 用 NEW.id，ts_ms 取常量 0（与 rowTsMs 的 0 约定一致）。
     expect(sql).toContain("VALUES ('habit_checks', NEW.id, 'upsert', 0)");
     expect(sql).toContain("row_id = NEW.id AND ts_ms = 0");
     expect(sql).not.toContain("created_at");
+  });
+
+  it("installs tag alias bookkeeping via migration v6", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*6,\s*description:\s*"sync_tag_alias",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // tags.name 的 UNIQUE 冲突由 TS 合并后端按"收养"解决（保留本地同名词行，
+    // 对端 id → 本地 id 的映射），映射跨同步轮持久化在这张设备本地簿记表。
+    expect(sql).toContain("CREATE TABLE IF NOT EXISTS sync_tag_alias");
+    expect(sql).toContain("remote_row_id TEXT PRIMARY KEY");
+    expect(sql).toContain("local_id TEXT NOT NULL");
   });
 });

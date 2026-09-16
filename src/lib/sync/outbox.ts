@@ -11,7 +11,7 @@
 
 import type { Hlc } from "./hlc";
 import type { MergeBackend } from "./merge";
-import { splitTaskTagRowId, TABLE_SPECS } from "./columns";
+import { splitTaskTagRowId, taskTagRowId, TABLE_SPECS } from "./columns";
 import { isSyncTable, SYNC_SCHEMA_VERSION, SYNC_SETTINGS_KEYS, type SyncTableName } from "./tables";
 
 /** tauri-plugin-sql 与测试替身共用的最小 SQL 接口。 */
@@ -207,11 +207,30 @@ function rowsAffected(res: unknown): number {
  * 真实 SQLite 的合并后端。upsert 前登记 sync_merge_seen 抑制触发器回声；
  * 已应用 HLC 写入 sync_state。cleanupSeen 在合并完成后清掉登记
  * （登记只在合并期间有效，残留行因时间戳匹配而天然无害，仍定期清理）。
+ *
+ * tags 同名词收养：tags.name 有 UNIQUE 约束，双端各自种出的同名标签（随机
+ * id 不同）合并时必撞键。策略是零本地删除——保留本地同名词行，把对端 id
+ * 收养为该行（映射存 sync_tag_alias，跨轮持久化），后续 task_tags 条目经
+ * 映射改写 tag_id。绝不 DELETE 本地行：tags/task_tags 的删除触发器无 WHEN
+ * 守卫且 ts 取当前时间，收养路径的任何删除都会产生回声墓碑，误删对端的
+ * 真实数据。两端按相同规则各自保留自己的 id，名称/颜色/关联自然收敛。
  */
 export function createSqliteMergeBackend(db: SqlClient): {
   backend: MergeBackend;
   cleanupSeen(): Promise<void>;
 } {
+  // 本进程内的别名缓存；权威数据在 sync_tag_alias 表（跨同步轮有效）。
+  const tagAliases = new Map<string, string>();
+  const loadTagAlias = async (remoteRowId: string): Promise<string | null> => {
+    const rows = await db.select<{ local_id: string }[]>(
+      "SELECT local_id FROM sync_tag_alias WHERE remote_row_id = $1 LIMIT 1",
+      [remoteRowId],
+    );
+    const localId = rows[0]?.local_id ?? null;
+    if (localId) tagAliases.set(remoteRowId, localId);
+    return localId;
+  };
+
   const backend: MergeBackend = {
     async getState(table, rowId) {
       const rows = await db.select<{ hlc_p: number; hlc_l: number; hlc_d: string }[]>(
@@ -230,6 +249,37 @@ export function createSqliteMergeBackend(db: SqlClient): {
         );
         return;
       }
+      if (table === "tags") {
+        const alias = tagAliases.get(rowId) ?? (await loadTagAlias(rowId));
+        if (alias) {
+          // 该对端 id 之前已收养：条目只在较新时刷新本地行的内容。
+          await adoptTagUpdate(db, alias, data, tsMs);
+          return;
+        }
+        const name = typeof data.name === "string" ? data.name : "";
+        const rows = await db.select<{ id: string }[]>(
+          "SELECT id FROM tags WHERE name = $1 AND id <> $2 LIMIT 1",
+          [name, rowId],
+        );
+        const localId = rows[0]?.id;
+        if (name && localId) {
+          tagAliases.set(rowId, localId);
+          await db.execute(
+            `INSERT INTO sync_tag_alias (remote_row_id, local_id, ts_ms) VALUES ($1, $2, $3)
+             ON CONFLICT(remote_row_id) DO UPDATE SET local_id = excluded.local_id`,
+            [rowId, localId, Date.now()],
+          );
+          await adoptTagUpdate(db, localId, data, tsMs);
+          return;
+        }
+      }
+      if (table === "task_tags") {
+        // 关联条目里的 tag_id 可能是对端已被收养的 id：改写成本地 id 再落库，
+        // 触发器的 row_id（task_id || ':' || tag_id）随之对上回声抑制键。
+        const { task_id, tag_id } = splitTaskTagRowId(rowId);
+        const localTagId = tagAliases.get(tag_id) ?? (await loadTagAlias(tag_id));
+        if (localTagId) rowId = taskTagRowId(task_id, localTagId);
+      }
       await buildUpsert(db, table, rowId, data, tsMs);
     },
     async remove(table, rowId) {
@@ -237,11 +287,20 @@ export function createSqliteMergeBackend(db: SqlClient): {
         await db.execute("DELETE FROM settings WHERE key = $1", [rowId]);
         return;
       }
+      if (table === "tags") {
+        // 已收养的对端 id：本地行是同名词的独立行，对端删除不波及本地
+        //（否则删除回声会清掉对端自己那份数据）。墓碑仍记入 sync_state。
+        const alias = tagAliases.get(rowId) ?? (await loadTagAlias(rowId));
+        if (alias) return;
+        await db.execute("DELETE FROM tags WHERE id = $1", [rowId]);
+        return;
+      }
       if (table === "task_tags") {
         const { task_id, tag_id } = splitTaskTagRowId(rowId);
+        const localTagId = tagAliases.get(tag_id) ?? (await loadTagAlias(tag_id));
         await db.execute("DELETE FROM task_tags WHERE task_id = $1 AND tag_id = $2", [
           task_id,
-          tag_id,
+          localTagId ?? tag_id,
         ]);
         return;
       }
@@ -275,6 +334,46 @@ function rowTsMs(data: Record<string, unknown>): number {
     if (Number.isFinite(ms)) return ms;
   }
   return 0;
+}
+
+/**
+ * 收养后的内容跟随：对端条目较新时把名称/颜色刷进本地同名词行。
+ * updated_at 一并写成对端值——触发器按行内 updated_at 派生 ts 与
+ * sync_merge_seen 比对，写入值与登记值必须同源。对端较旧或无时间戳
+ * （ts 0）时保留本地内容，只维持 id 映射。
+ */
+async function adoptTagUpdate(
+  db: SqlClient,
+  localId: string,
+  data: Record<string, unknown>,
+  tsMs: number,
+): Promise<void> {
+  const rows = await db.select<{ updated_at: string; name: string }[]>(
+    "SELECT updated_at, name FROM tags WHERE id = $1 LIMIT 1",
+    [localId],
+  );
+  const local = rows[0];
+  if (!local || tsMs === 0 || tsMs <= rowTsMs(local)) return;
+  const nextUpdatedAt =
+    typeof data.updated_at === "string" && data.updated_at
+      ? data.updated_at
+      : typeof data.created_at === "string" && data.created_at
+        ? data.created_at
+        : local.updated_at;
+  await db.execute(
+    `INSERT INTO sync_merge_seen (table_name, row_id, ts_ms) VALUES ('tags', $1, $2)
+     ON CONFLICT(table_name, row_id) DO UPDATE SET ts_ms = excluded.ts_ms`,
+    [localId, tsMs],
+  );
+  await db.execute(
+    "UPDATE tags SET name = $1, color = COALESCE($2, color), updated_at = $3 WHERE id = $4",
+    [
+      typeof data.name === "string" && data.name ? data.name : local.name,
+      data.color ?? null,
+      nextUpdatedAt,
+      localId,
+    ],
+  );
 }
 
 /** 列白名单过滤：远端日志里的未知键丢弃，id 一律以 row_id 为准。 */

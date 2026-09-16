@@ -19,7 +19,7 @@ import type { LogReadState } from "./log";
 let schemaSql = "";
 beforeAll(() => {
   const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
-  schemaSql = [1, 2, 3, 4, 5]
+  schemaSql = [1, 2, 3, 4, 5, 6]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
       const a = src.indexOf('sql: r#"', i) + 8;
@@ -278,6 +278,117 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     const lenBefore = a.readLocalLog().length;
     await a.sync();
     expect(a.readLocalLog().length).toBe(lenBefore);
+  });
+
+  it("双端各自种下同名标签：收养收敛，关联改写，无失败无回声", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    // 真实事故场景：两端独立建同名标签（随机 id），合并撞 tags.name 的
+    // UNIQUE 约束。修复前 B 合并报 UNIQUE constraint failed: tags.name。
+    await a.run(
+      `INSERT INTO tags (id,name,color,created_at,updated_at)
+       VALUES ('tagA','工作','#f00','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await b.run(
+      `INSERT INTO tags (id,name,color,created_at,updated_at)
+       VALUES ('tagB','工作','#00f','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await a.run(
+      `INSERT INTO tasks (id,title,created_at,updated_at)
+       VALUES ('ta','A任务','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await a.run(
+      `INSERT INTO task_tags (task_id,tag_id,updated_at) VALUES ('ta','tagA','2026-09-16T01:00:00.000Z')`,
+    );
+
+    await a.sync();
+    const sb = await b.sync();
+    expect(sb.ok).toBe(true);
+    expect(sb.errors).toEqual([]);
+    // B 保留自己的行（id 不变），没有引入对端行，也没有删除本地行
+    let tags = await b.rows("SELECT id, name FROM tags");
+    expect(tags).toEqual([{ id: "tagB", name: "工作" }]);
+    // A 的关联条目改写到 B 的本地 id
+    let assoc = await b.rows("SELECT task_id, tag_id FROM task_tags");
+    expect(assoc).toEqual([{ task_id: "ta", tag_id: "tagB" }]);
+    expect(await b.outboxCount()).toBe(0);
+
+    // A 收养 B 的标签（对称），双端各留自己的 id、关联齐全
+    await b.run(
+      `INSERT INTO task_tags (task_id,tag_id,updated_at) VALUES ('tb','tagB','2026-09-16T01:30:00.000Z')`,
+    );
+    await b.run(
+      `INSERT INTO tasks (id,title,created_at,updated_at)
+       VALUES ('tb','B任务','2026-09-16T01:30:00.000Z','2026-09-16T01:30:00.000Z')`,
+    );
+    await b.sync();
+    const sa = await a.sync();
+    expect(sa.ok).toBe(true);
+    expect(await a.rows("SELECT id, name FROM tags")).toEqual([
+      { id: "tagA", name: "工作" },
+    ]);
+    expect((await a.rows("SELECT task_id FROM task_tags")).map((r) => r.task_id).sort()).toEqual([
+      "ta",
+      "tb",
+    ]);
+
+    // 跨轮持久化：下一轮（新合并后端实例）A 的新关联仍要改写。
+    // B 的水位只前进不回头，别名必须落库而不是只活在单次合并里。
+    await a.run(
+      `INSERT INTO tasks (id,title,created_at,updated_at)
+       VALUES ('ta2','A任务2','2026-09-16T02:00:00.000Z','2026-09-16T02:00:00.000Z')`,
+    );
+    await a.run(
+      `INSERT INTO task_tags (task_id,tag_id,updated_at) VALUES ('ta2','tagA','2026-09-16T02:00:00.000Z')`,
+    );
+    await a.sync();
+    const sb2 = await b.sync();
+    expect(sb2.ok).toBe(true);
+    assoc = await b.rows("SELECT task_id, tag_id FROM task_tags ORDER BY task_id");
+    expect(assoc).toEqual([
+      { task_id: "ta", tag_id: "tagB" },
+      { task_id: "ta2", tag_id: "tagB" },
+      { task_id: "tb", tag_id: "tagB" },
+    ]);
+  });
+
+  it("对端较新的同名标签内容经收养刷新本地行，且不产生回声", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    await a.run(
+      `INSERT INTO tags (id,name,color,created_at,updated_at)
+       VALUES ('tagA','工作','#ff0000','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await b.run(
+      `INSERT INTO tags (id,name,color,created_at,updated_at)
+       VALUES ('tagB','工作','#00ff00','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await a.sync();
+    await b.sync();
+
+    // A 更新了标签颜色（对端较新）：B 收养后内容跟随，仍保留自己的 id
+    await a.run(
+      `UPDATE tags SET color='#ff8800', updated_at='2026-09-16T06:00:00.000Z' WHERE id='tagA'`,
+    );
+    await a.sync();
+    const sb = await b.sync();
+    expect(sb.ok).toBe(true);
+    expect(await b.rows("SELECT id, name, color FROM tags")).toEqual([
+      { id: "tagB", name: "工作", color: "#ff8800" },
+    ]);
+    // 收养刷新走 merge_seen 抑制，不产生回声
+    expect(await b.outboxCount()).toBe(0);
+
+    // 对端删除已收养的 id：本地行保留（零删除收养），墓碑不误伤
+    await a.run("DELETE FROM tags WHERE id='tagA'");
+    await a.sync();
+    await b.sync();
+    expect(await b.rows("SELECT id FROM tags WHERE id='tagB'")).toHaveLength(1);
+    expect(await b.outboxCount()).toBe(0);
   });
 
   it("特殊表触发器与全表基线回填在真实 schema 上跑通", async () => {
