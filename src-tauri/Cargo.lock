@@ -6441,6 +6441,7 @@ dependencies = [
 name = "youqiu"
 version = "1.0.2"
 dependencies = [
+ "jni",
  "serde",
  "serde_json",
  "tauri",
@@ -6454,6 +6455,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-sql",
  "windows",
+ "wry",
 ]
 
 [[package]]

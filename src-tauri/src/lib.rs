@@ -187,7 +187,62 @@ fn read_backup_file(path: String) -> Result<String, String> {
     if path.trim().is_empty() {
         return Err("导入路径为空".into());
     }
+    // Android 系统文件选择器返回 content:// URI，std::fs 无法读取，
+    // 需经 ContentResolver 打开输入流（Kotlin 助手 BackupContentReader）。
+    #[cfg(target_os = "android")]
+    if path.starts_with("content:") {
+        return read_android_content_uri(&path);
+    }
     std::fs::read_to_string(&path).map_err(|error| error.to_string())
+}
+
+#[cfg(target_os = "android")]
+fn read_android_content_uri(uri: &str) -> Result<String, String> {
+    use std::sync::mpsc;
+
+    let uri = uri.to_string();
+    let (tx, rx) = mpsc::channel::<Result<String, String>>();
+    // Tauri 命令线程没有已初始化的 android JNI 上下文（ndk-context 未初始化），
+    // 必须经 wry 的调度在主 looper 线程执行 JNI。
+    wry::prelude::dispatch(move |env, activity, _webview| {
+        let _ = tx.send(read_content_uri_with_jni(env, activity, &uri));
+    });
+    rx.recv()
+        .map_err(|_| "JNI 通道不可用".to_string())?
+}
+
+#[cfg(target_os = "android")]
+fn read_content_uri_with_jni(
+    env: &mut jni::JNIEnv,
+    activity: &jni::objects::JObject<'_>,
+    uri: &str,
+) -> Result<String, String> {
+    use jni::objects::JValue;
+
+    let class = wry::prelude::find_class(
+        env,
+        activity,
+        "com.yunshan.youqiu.BackupContentReader".to_string(),
+    )
+    .map_err(|error| error.to_string())?;
+    let juri = env.new_string(uri).map_err(|error| error.to_string())?;
+    let result = env
+        .call_static_method(
+            &class,
+            "read",
+            "(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;",
+            &[JValue::Object(activity), JValue::Object(&juri)],
+        )
+        .map_err(|error| error.to_string())?;
+    let jstring = result.l().map_err(|error| error.to_string())?;
+    if jstring.is_null() {
+        return Err("无法读取所选文件（content://），请改用应用内导出的备份文件".into());
+    }
+    let jstr = jni::objects::JString::from(jstring);
+    let text = env
+        .get_string(&jstr)
+        .map_err(|error| error.to_string())?;
+    Ok(text.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
