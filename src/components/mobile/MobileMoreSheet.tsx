@@ -28,8 +28,8 @@ export function MobileMoreSheet({ onNavigate }: { onNavigate: (id: NavId) => voi
             <AppIcon name="brand" size={18} />
           </span>
           <div>
-            <h1>更多</h1>
-            <span className="brand-caption">周清单 · 成长 · 习惯 · 设置</span>
+            <h1>有秋</h1>
+            <span className="brand-caption">Yield · 服田力穑，乃亦有秋</span>
           </div>
         </div>
       </header>

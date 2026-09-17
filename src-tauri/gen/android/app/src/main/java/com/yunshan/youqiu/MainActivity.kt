@@ -49,13 +49,19 @@ class MainActivity : TauriActivity() {
     // ① 键盘开着→先收键盘；② 询问前端 __youqiuAndroidBack，返回 "handled"
     //    表示已消费（回「更多」/收起面板）；③ 否则退后台（原行为）。
     // 进程不销毁，应用内提醒调度与 AlarmManager 计划通知不受影响。
-    val focused = currentFocus
-    if (focused != null) {
+    // 键盘分支必须先确认 IME 真的在显示：imm.isActive 在软键盘收起后仍为
+    // true（InputConnection 残留），且 hideSoftInputFromWindow 对已收起的
+    // 键盘也返回 true——不加可见性门控会把输入操作之后的第一次返回手势
+    // 整个吞掉（真机第四轮反馈：第一次右滑无响应）。
+    if (Build.VERSION.SDK_INT >= 30 &&
+      window.decorView.rootWindowInsets.isVisible(WindowInsets.Type.ime())
+    ) {
       val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-      if (imm.isActive && imm.hideSoftInputFromWindow(focused.windowToken, 0)) {
-        focused.clearFocus()
-        return
+      currentFocus?.let {
+        imm.hideSoftInputFromWindow(it.windowToken, 0)
+        it.clearFocus()
       }
+      return
     }
     val webview = findWebView(findViewById(android.R.id.content))
     if (webview == null) {
