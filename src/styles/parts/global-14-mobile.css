@@ -666,14 +666,6 @@ html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
   background: var(--bg-root);
   border-bottom: 1px solid var(--border);
 }
-html[data-shell="mobile"] .workspace-top,
-/* 成长页页头自带的 (0,3,0) 特异性 padding 会盖掉上面的覆盖，同列加 arm。 */
-html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
-  position: sticky;
-  top: 0;
-  background: var(--bg-root);
-  border-bottom: 1px solid var(--border);
-}
 
 /* 真机第三轮反馈：滚动时卡片盖住标题行——带定位/层叠上下文的卡片
    （transform、relative 等）在页头 z-index:auto 时按 DOM 顺序后到先得。
@@ -732,4 +724,44 @@ html[data-shell="mobile"] .theme-preview {
 html[data-shell="mobile"] .toast {
   width: max-content;
   max-width: calc(100vw - 24px);
+}
+
+/* ---------- 8) 引导框统一（真机第四轮反馈） ---------- */
+
+/* 各页 .today-hero.guide-hero 原本沿用桌面端各自的 margin（28px/18px），
+   叠上页面容器自身 padding 后，实测左右内距有 13/15/19/29/45px 五种。
+   统一为：容器负责 14px 页面留白，框自身 margin-inline 归零、
+   下间距 16px，与移动端滚动容器的 14px 留白节奏对齐。
+   特异性 (0,2,1) 压过各页 (0,2,0) 的 margin 覆写。 */
+html[data-shell="mobile"] .today-hero.guide-hero {
+  margin: 0 14px 16px;
+  /* 项目页的 .projects-scroll 是定高 grid + overflow:auto，grid 子项
+     overflow:hidden 时自动最小尺寸为 0，auto 行高塌到 33px 把引导框
+     裁得只剩一条（真机反馈「显示不全」）；min-height 用内在尺寸顶回。
+     其余页面内容本就 ≥ 此值，无副作用。 */
+  min-height: fit-content;
+}
+
+/* 自带 14px 左右 padding 的容器：框不再加横向 margin，与同页内容同列。
+   （成长 12px、纪念日 16px 也一并归一到 14px，见下。） */
+html[data-shell="mobile"] .growth-page .today-hero.guide-hero,
+html[data-shell="mobile"] .projects-scroll .today-hero.guide-hero,
+html[data-shell="mobile"] .habits-body .today-hero.guide-hero,
+html[data-shell="mobile"] .moments-page .today-hero.guide-hero {
+  margin: 0 0 16px;
+}
+
+/* 容器 padding 各写各的（成长 12 / 习惯 28 / 纪念日 16），统一到 14px，
+   让引导框与页面其余内容一起落在标准留白列上。 */
+html[data-shell="mobile"] .growth-page {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+html[data-shell="mobile"] .habits-body {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+html[data-shell="mobile"] .moments-page {
+  padding-left: 14px;
+  padding-right: 14px;
 }
