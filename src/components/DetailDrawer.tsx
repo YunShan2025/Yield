@@ -12,7 +12,6 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
-import { MultiSelectMenu } from "@/components/MultiSelectMenu";
 import {
   ensureEndAfterStart,
   formatTimeRange,
@@ -490,19 +489,17 @@ export function DetailDrawer() {
 
           <div>
             <label className="field-label">标签</label>
-            <MultiSelectMenu
+            <SelectMenu
               ariaLabel="标签"
               className="field"
-              values={selectedTags}
-              options={tags.map((tag) => ({ value: tag.id, label: tag.name }))}
-              onToggle={(tagId) => {
-                const next = selectedTags.includes(tagId)
-                  ? selectedTags.filter((id) => id !== tagId)
-                  : [...selectedTags, tagId];
-                void setTaskTags(task.id, next);
-              }}
-              emptyHint="暂无标签，可在「更多 → 标签」中新建"
-              placeholder="选择标签"
+              value={selectedTags[0] ?? ""}
+              onChange={(tagId) =>
+                void setTaskTags(task.id, tagId ? [tagId] : [])
+              }
+              options={[
+                { value: "", label: "无标签" },
+                ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
+              ]}
             />
           </div>
 

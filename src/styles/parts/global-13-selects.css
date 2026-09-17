@@ -107,14 +107,6 @@
   font-size: 12px;
 }
 
-/* MultiSelectMenu 无可选项时的占位行(如任务标签为空)。 */
-.select-empty {
-  padding: 9px 10px;
-  color: var(--text-muted);
-  font-size: 12.5px;
-  white-space: nowrap;
-}
-
 /* 容器级配套:原来按 select 元素设置的尺寸规则,改为按 .select-btn 匹配。 */
 .ledger-drawer .select-btn {
   width: 100%;

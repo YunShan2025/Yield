@@ -124,7 +124,7 @@ npm run tauri android build -- --debug --apk --target aarch64   # 真机 arm64
 
 ## 下载与安装
 
-当前版本 **v1.0.5**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
+当前版本 **v1.0.6**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
@@ -187,6 +187,12 @@ npm run release:check
 - 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；需求方向与产品边界的取舍记录见 [产品需求与决策记录](docs/PRODUCT_DECISIONS.md)，修改档案见 [修改记录](docs/CHANGES.md)
 
 ## 版本记录
+
+#### v1.0.6 标签改单选与热力图恢复半年量
+
+- 「标签」选择改为真单选：新建任务与编辑任务中均为与其他字段一致的单选下拉（「无标签」+ 已有标签），选中即生效；新建任务中「标签」与「重复」并排占一行
+- 数据模型不变（任务表仍保留多标签能力），仅选择交互收为单选；已有多标签的任务在编辑保存时会收拢为一个
+- 成长页热力图恢复为半年量：26 周 × 7 天共 182 格，桌面与手机一致；完成任务与目标记录点亮格子的逻辑保留
 
 #### v1.0.5 标签选择改用下拉样式
 

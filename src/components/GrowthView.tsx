@@ -50,13 +50,13 @@ function toDateKey(date: Date) {
 }
 
 function dayRange() {
-  // 最近一个月：5 整周（周日起步）× 7 天 = 35 格，行优先排布（每行一周），
-  // 桌面与手机同一版式。
+  // 最近半年：26 整周（周日起步）× 7 天 = 182 格，列优先排布（每列一周），
+  // 桌面与手机同一数量。
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = new Date(today);
-  start.setDate(today.getDate() - 28 - today.getDay());
-  return Array.from({ length: 35 }, (_, index) => {
+  start.setDate(today.getDate() - 175 - today.getDay());
+  return Array.from({ length: 182 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     return date;
@@ -285,18 +285,13 @@ export function GrowthView() {
           </section>
           <section className="growth-panel heatmap-panel">
             <div className="growth-panel-head">
-              <div><h3>最近一个月的投入</h3><p>点击格子回看当天完成的行动</p></div>
+              <div><h3>最近半年的投入</h3><p>点击格子回看当天完成的行动</p></div>
               <SelectMenu
                 ariaLabel="筛选目标"
                 value={filterGoalId}
                 onChange={setFilterGoalId}
                 options={[{ value: "", label: "全部目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]}
               />
-            </div>
-            <div className="heatmap-weekdays" aria-hidden="true">
-              {["日", "一", "二", "三", "四", "五", "六"].map((weekday) => (
-                <span key={weekday}>{weekday}</span>
-              ))}
             </div>
             <div className="growth-heatmap" aria-label="成长热点图">
               {days.map((date) => {
