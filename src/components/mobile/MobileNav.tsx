@@ -3,6 +3,7 @@ import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
 import { computeNavCounts } from "@/lib/tasks";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
+import type { NavId } from "@/types";
 
 type MobileTab = {
   key: string;
@@ -13,10 +14,18 @@ type MobileTab = {
   onPick: () => void;
 };
 
-/** 底部导航:今日 / 待办箱 / 记账 / 更多。「记账」切到账本页,录入走页面内入口。 */
-export function MobileNav({ onMore }: { onMore: () => void }) {
+/** 底部导航:今日 / 待办箱 / 记账 / 更多。「记账」切到账本页,录入走页面内入口。
+ *  导航统一走 onNavigate(由 MainApp 提供):维护返回键语义与「更多」面板开关。 */
+export function MobileNav({
+  onMore,
+  onNavigate,
+  moreActive = false,
+}: {
+  onMore: () => void;
+  onNavigate: (id: NavId) => void;
+  moreActive?: boolean;
+}) {
   const nav = useAppStore((s) => s.nav);
-  const setNav = useAppStore((s) => s.setNav);
   const tasks = useAppStore((s) => s.tasks);
 
   const counts = useMemo(
@@ -31,7 +40,7 @@ export function MobileNav({ onMore }: { onMore: () => void }) {
       label: "今日",
       count: counts.today,
       active: nav === "today",
-      onPick: () => setNav("today"),
+      onPick: () => onNavigate("today"),
     },
     {
       key: "inbox",
@@ -39,20 +48,20 @@ export function MobileNav({ onMore }: { onMore: () => void }) {
       label: "待办箱",
       count: counts.inbox,
       active: nav === "inbox",
-      onPick: () => setNav("inbox"),
+      onPick: () => onNavigate("inbox"),
     },
     {
       key: "ledger",
       icon: "wallet",
       label: "记账",
       active: nav === "ledger",
-      onPick: () => setNav("ledger"),
+      onPick: () => onNavigate("ledger"),
     },
     {
       key: "more",
       icon: "panel",
       label: "更多",
-      active: false,
+      active: moreActive,
       onPick: onMore,
     },
   ];

@@ -292,12 +292,13 @@ html[data-shell="mobile"] .drag-handle {
   color: var(--text-secondary);
 }
 
-/* 「更多」页：全屏面板收纳次级导航。 */
+/* 「更多」页：底部导航上方的面板（2026-09-17 真机反馈：导航栏保持常驻，
+   方便直接切换，不再用「完成」按钮收口；返回键也能收起本面板）。 */
 .mobile-more {
   position: fixed;
   top: 0;
   right: 0;
-  bottom: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   left: 0;
   z-index: 45;
   display: flex;
@@ -660,7 +661,17 @@ html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
   border-bottom: 1px solid var(--border);
 }
 
-/* 详情抽屉内部滚动、页头不随滚（native inset 已让出系统栏），无需处理。 */
+/* 真机第三轮反馈：滚动时卡片盖住标题行——带定位/层叠上下文的卡片
+   （transform、relative 等）在页头 z-index:auto 时按 DOM 顺序后到先得。
+   给页头 z-index:5（低于抽屉 z-30）。@supports(aspect-ratio) 即 Chrome 88+
+   才生效：Chrome 83 里 flex 子项 z-index 会意外压过 fixed z-30 抽屉（§6-15），
+   老 WebView 保持 z-auto（仅失去「盖住卡片」这一增强，滚动行为不变）。 */
+@supports (aspect-ratio: 1) {
+  html[data-shell="mobile"] .workspace-top,
+  html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
+    z-index: 5;
+  }
+}
 
 /* 根滚动的页面（设置/记账/成长/纪念日等，根即 .main-workspace）：顶部内边距
    交给 sticky 页头自己提供。若容器自带 padding-top，钉住的页头会停在

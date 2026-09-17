@@ -22,6 +22,7 @@ import { VersionUpdateNotice } from "@/components/VersionUpdateNotice";
 import { MobileNav } from "@/components/mobile/MobileNav";
 import { MobileMoreSheet } from "@/components/mobile/MobileMoreSheet";
 import { isMobileShell } from "@/lib/platform";
+import type { NavId } from "@/types";
 import { nextRunningTimerDueAt } from "@/lib/timers";
 import {
   createNotificationRecord,
@@ -53,6 +54,14 @@ const NAV_WIDTH_DEFAULT = 272;
 const NAV_WIDTH_MIN = 200;
 const NAV_WIDTH_MAX = 440;
 const REMINDER_RESYNC_MS = 6 * 60 * 60 * 1000;
+
+// Android 返回键桥：MainActivity.onBackPressed 经 evaluateJavascript 调用此钩子，
+// 返回 "handled" 表示已由前端消费（返回「更多」/收起面板），否则原生层退后台。
+declare global {
+  interface Window {
+    __youqiuAndroidBack?: () => "handled" | "";
+  }
+}
 
 type OsReminderSyncResult = {
   ok: boolean;
@@ -113,6 +122,51 @@ export function MainApp() {
 
   // 移动端「更多」页开关(仅 Android 壳使用)。
   const [moreOpen, setMoreOpen] = useState(false);
+  // 返回键语义：当前页面是否从「更多」进入（真机反馈：返回应回「更多」而非退应用）。
+  // 用 ref 记录,回调里读到的永远是最新值,不随渲染重建。
+  const moreOpenRef = useRef(false);
+  const enteredFromMoreRef = useRef(false);
+  useEffect(() => {
+    moreOpenRef.current = moreOpen;
+  }, [moreOpen]);
+
+  // 「更多」导航项:面板开着再点一次收起（底部导航常驻后的开关语义）。
+  const toggleMore = () => {
+    enteredFromMoreRef.current = false;
+    setMoreOpen((value) => !value);
+  };
+  // 底部导航/更多页入口共用的导航函数:顺带维护返回键语义与面板开关。
+  const navigateMobile = (id: NavId) => {
+    enteredFromMoreRef.current = false;
+    setMoreOpen(false);
+    setNav(id);
+  };
+  const navigateFromMore = (id: NavId) => {
+    enteredFromMoreRef.current = true;
+    setMoreOpen(false);
+    setNav(id);
+  };
+
+  // Android 返回键：更多页开着→收起；页面是从「更多」进的→回「更多」；
+  // 其余交给原生层退后台（保持既有行为）。
+  useEffect(() => {
+    if (!isMobileShell()) return;
+    window.__youqiuAndroidBack = () => {
+      if (moreOpenRef.current) {
+        setMoreOpen(false);
+        return "handled";
+      }
+      if (enteredFromMoreRef.current) {
+        enteredFromMoreRef.current = false;
+        setMoreOpen(true);
+        return "handled";
+      }
+      return "";
+    };
+    return () => {
+      delete window.__youqiuAndroidBack;
+    };
+  }, []);
 
   // 侧栏宽度:拖动侧栏与主区边界调整,持久化到 localStorage(不进数据库)。
   const [navWidth, setNavWidth] = useState<number>(() => {
@@ -765,8 +819,8 @@ export function MainApp() {
           <MainWorkspace />
           {detailOpen ? <DetailDrawer /> : null}
         </div>
-        <MobileNav onMore={() => setMoreOpen(true)} />
-        {moreOpen ? <MobileMoreSheet onClose={() => setMoreOpen(false)} /> : null}
+        <MobileNav moreActive={moreOpen} onMore={toggleMore} onNavigate={navigateMobile} />
+        {moreOpen ? <MobileMoreSheet onNavigate={navigateFromMore} /> : null}
         {createTaskOpen ? <CreateTaskDialog /> : null}
         <FocusRecoveryDialog />
         <AppConfirmHost />
