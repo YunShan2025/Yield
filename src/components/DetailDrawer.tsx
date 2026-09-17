@@ -315,22 +315,16 @@ export function DetailDrawer() {
               <span className="field-label">重复</span>
               <strong>{repeatLabel(task.repeat_rule)}</strong>
             </div>
-            <div className="detail-meta detail-meta-tags">
+            <div className="detail-meta">
               <span className="field-label">标签</span>
-              {selectedTags.length ? (
-                <div className="tag-pills">
-                  {selectedTags.map((id) => {
-                    const tag = tags.find((item) => item.id === id);
-                    return tag ? (
-                      <span key={id} className="tag-pill on">
-                        {tag.name}
-                      </span>
-                    ) : null;
-                  })}
-                </div>
-              ) : (
-                <strong>无</strong>
-              )}
+              <strong>
+                {selectedTags.length
+                  ? selectedTags
+                      .map((id) => tags.find((item) => item.id === id)?.name)
+                      .filter(Boolean)
+                      .join("、") || "无标签"
+                  : "无标签"}
+              </strong>
             </div>
           </div>
 
