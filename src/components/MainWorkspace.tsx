@@ -277,7 +277,7 @@ function WeekBoard() {
                   <button
                     key={t.id}
                     type="button"
-                    className="week-allday-event"
+                    className={`week-allday-event ${t.status === "completed" ? "is-done" : ""}`}
                     onClick={() => selectTask(t.id)}
                   >
                     {t.title}
@@ -465,7 +465,7 @@ function MonthBoard() {
                   .map((t) => (
                     <div
                       key={t.id}
-                      className="cal-task"
+                      className={`cal-task ${t.status === "completed" ? "is-done" : ""}`}
                       draggable
                       onDragStart={(e) => e.dataTransfer.setData("text/task", t.id)}
                       onClick={(e) => {

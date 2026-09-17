@@ -7,16 +7,12 @@ import type {
   Attachment,
   RepeatRule,
   TaskPriority,
-  TaskStatus,
-  Goal,
 } from "@/types";
 import { open } from "@tauri-apps/plugin-dialog";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
-import { PomodoroPanel } from "@/components/PomodoroPanel";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
-import { parseReminderMinutes } from "@/lib/planning";
-import { fetchGoals } from "@/lib/db";
+import { TagListBox } from "@/components/TagListBox";
 import {
   ensureEndAfterStart,
   formatTimeRange,
@@ -35,18 +31,6 @@ const PRIORITY_LABEL: Record<number, string> = {
 
 function repeatLabel(rule: string | null): string {
   return describeRepeatRule(parseRepeatRule(rule));
-}
-
-function statusLabel(status: TaskStatus): string {
-  return {
-    draft: "草稿",
-    pending: "待处理",
-    in_progress: "进行中",
-    waiting: "等待",
-    blocked: "阻塞",
-    completed: "已完成",
-    cancelled: "已取消",
-  }[status];
 }
 
 export function DetailDrawer() {
@@ -81,28 +65,12 @@ export function DetailDrawer() {
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [remind, setRemind] = useState("");
-  const [estimatedMinutes, setEstimatedMinutes] = useState("");
-  const [status, setStatus] = useState<TaskStatus>("pending");
   const [completionCriteria, setCompletionCriteria] = useState("");
-  const [energyLevel, setEnergyLevel] =
-    useState<"low" | "medium" | "high">("medium");
-  const [flexible, setFlexible] = useState(true);
-  const [scheduleLocked, setScheduleLocked] = useState(false);
-  const [blockedById, setBlockedById] = useState("");
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const linkedGoal = task?.goal_id
-    ? goals.find((goal) => goal.id === task.goal_id) ?? null
-    : null;
   const [repeat, setRepeat] = useState<RepeatRule | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const loadedId = useRef<string | null>(null);
-
-  useEffect(() => {
-    void fetchGoals().then(setGoals);
-  }, []);
 
   useEffect(() => {
     if (!task) {
@@ -132,16 +100,7 @@ export function DetailDrawer() {
       task.end_time ??
         ensureEndAfterStart(task.due_time ?? range.start, null),
     );
-    setRemind(task.reminder_minutes.join(", "));
-    setEstimatedMinutes(
-      task.estimated_minutes != null ? String(task.estimated_minutes) : "",
-    );
-    setStatus(task.status);
     setCompletionCriteria(task.completion_criteria);
-    setEnergyLevel(task.energy_level);
-    setFlexible(Boolean(task.flexible));
-    setScheduleLocked(Boolean(task.schedule_locked));
-    setBlockedById(task.blocked_by_id ?? "");
     setRepeat(parseRepeatRule(task.repeat_rule));
   };
 
@@ -234,16 +193,16 @@ export function DetailDrawer() {
         due_date: dueDate || null,
         due_time: start,
         end_time: end,
-        reminder_minutes: remind ? parseReminderMinutes(remind) : [],
-        estimated_minutes: estimatedMinutes
-          ? Math.max(1, Number(estimatedMinutes))
-          : null,
-        status,
+        // 提醒/预计/状态/精力/排程/前置任务已从编辑表单移除，
+        // 这里透传任务现有值，避免保存时被清掉。
+        reminder_minutes: task.reminder_minutes,
+        estimated_minutes: task.estimated_minutes,
+        status: task.status,
         completion_criteria: completionCriteria,
-        energy_level: energyLevel,
-        flexible: flexible ? 1 : 0,
-        schedule_locked: scheduleLocked ? 1 : 0,
-        blocked_by_id: blockedById || null,
+        energy_level: task.energy_level,
+        flexible: task.flexible,
+        schedule_locked: task.schedule_locked,
+        blocked_by_id: task.blocked_by_id,
         repeat_rule: stringifyRepeatRule(repeat),
       });
       setToast("已保存");
@@ -264,27 +223,7 @@ export function DetailDrawer() {
   const project = task.project_id
     ? projects.find((item) => item.id === task.project_id) ?? null
     : null;
-  const blockedBy = task.blocked_by_id
-    ? tasks.find((item) => item.id === task.blocked_by_id) ?? null
-    : null;
   const timeText = formatTimeRange(task.due_time, task.end_time);
-  const estimateSamples = tasks.filter(
-    (candidate) =>
-      candidate.id !== task.id &&
-      candidate.status === "completed" &&
-      candidate.actual_minutes > 0 &&
-      (task.project_id
-        ? candidate.project_id === task.project_id
-        : candidate.priority === task.priority),
-  );
-  const suggestedEstimate = estimateSamples.length
-    ? Math.round(
-        estimateSamples.reduce(
-          (sum, candidate) => sum + candidate.actual_minutes,
-          0,
-        ) / estimateSamples.length,
-      )
-    : null;
 
   const pickFile = async () => {
     const selected = await open({ multiple: false });
@@ -370,97 +309,31 @@ export function DetailDrawer() {
               </strong>
             </div>
             <div className="detail-meta">
-              <span className="field-label">当前状态</span>
-              <strong>{statusLabel(task.status)}</strong>
-            </div>
-            <div className="detail-meta">
               <span className="field-label">所属项目</span>
               <strong>{project ? project.name : "无项目"}</strong>
             </div>
             <div className="detail-meta">
-              <span className="field-label">关联成长目标</span>
-              <strong>
-                {linkedGoal
-                  ? `${linkedGoal.title} · ${
-                      linkedGoal.goal_type === "time"
-                        ? "专注时长计入"
-                        : `贡献 ${task.goal_contribution}`
-                    }`
-                  : "不关联目标"}
-              </strong>
+              <span className="field-label">重复</span>
+              <strong>{repeatLabel(task.repeat_rule)}</strong>
+            </div>
+            <div className="detail-meta detail-meta-tags">
+              <span className="field-label">标签</span>
+              {selectedTags.length ? (
+                <div className="tag-pills">
+                  {selectedTags.map((id) => {
+                    const tag = tags.find((item) => item.id === id);
+                    return tag ? (
+                      <span key={id} className="tag-pill on">
+                        {tag.name}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              ) : (
+                <strong>无</strong>
+              )}
             </div>
           </div>
-
-          {selectedTags.length ? (
-            <div className="detail-view-tags">
-              <span className="field-label">标签</span>
-              <div className="tag-pills">
-                {selectedTags.map((id) => {
-                  const tag = tags.find((item) => item.id === id);
-                  return tag ? (
-                    <span key={id} className="tag-pill on">
-                      {tag.name}
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <details className="detail-section">
-            <summary>计划信息</summary>
-            <div className="detail-section-body">
-              <div className="detail-meta-grid">
-                <div className="detail-meta">
-                  <span className="field-label">提醒</span>
-                  <strong>
-                    {task.reminder_minutes.length
-                      ? task.reminder_minutes.map((m) => `提前 ${m} 分钟`).join("、")
-                      : "无"}
-                  </strong>
-                </div>
-                <div className="detail-meta">
-                  <span className="field-label">预计 / 实际</span>
-                  <strong>
-                    {task.estimated_minutes ?? "—"} / {task.actual_minutes} 分钟
-                  </strong>
-                </div>
-                <div className="detail-meta">
-                  <span className="field-label">精力</span>
-                  <strong>
-                    {task.energy_level === "high" ? "高" : task.energy_level === "low" ? "低" : "中"}
-                  </strong>
-                </div>
-                <div className="detail-meta">
-                  <span className="field-label">排程</span>
-                  <strong>
-                    {task.flexible ? "可灵活排程" : "固定时间"}
-                    {task.schedule_locked ? " · 已锁定" : ""}
-                  </strong>
-                </div>
-                <div className="detail-meta">
-                  <span className="field-label">重复</span>
-                  <strong>{repeatLabel(task.repeat_rule)}</strong>
-                </div>
-                <div className="detail-meta">
-                  <span className="field-label">前置任务</span>
-                  <strong>{blockedBy ? blockedBy.title : "无"}</strong>
-                </div>
-              </div>
-              {task.completion_criteria ? (
-                <div>
-                  <span className="field-label">完成标准</span>
-                  <p className="detail-view-notes">{task.completion_criteria}</p>
-                </div>
-              ) : null}
-              {task.notes ? (
-                <div>
-                  <span className="field-label">备注</span>
-                  <p className="detail-view-notes">{task.notes}</p>
-                </div>
-              ) : null}
-            </div>
-          </details>
 
           {attachments.length ? (
             <div>
@@ -476,8 +349,6 @@ export function DetailDrawer() {
               </div>
             </div>
           ) : null}
-
-          <PomodoroPanel compact boundTaskId={task.id} />
         </div>
       ) : (
         <div
@@ -506,12 +377,12 @@ export function DetailDrawer() {
             />
           </div>
           <div>
-            <label className="field-label">截止日期</label>
+            <label className="field-label">日期</label>
             <DatePicker
               value={dueDate}
               onChange={setDueDate}
               allowClear
-              ariaLabel="截止日期"
+              ariaLabel="日期"
             />
           </div>
           <TimeRangeFields
@@ -520,65 +391,20 @@ export function DetailDrawer() {
             onStartChange={setDueTime}
             onEndChange={setEndTime}
           />
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
-          >
-            <div>
-              <label className="field-label">优先级</label>
-              <SelectMenu
-                className="field"
-                ariaLabel="优先级"
-                value={String(priority)}
-                onChange={(value) => setPriority(Number(value) as TaskPriority)}
-                options={[
-                  { value: "1", label: "P1" },
-                  { value: "2", label: "P2" },
-                  { value: "3", label: "P3" },
-                  { value: "4", label: "P4" },
-                ]}
-              />
-            </div>
-            <div>
-              <label className="field-label">提前提醒（可填多个）</label>
-              <input
-                className="field"
-                value={remind}
-                onChange={(e) => setRemind(e.target.value)}
-              />
-            </div>
-          </div>
           <div>
-            <label className="field-label">预计耗时（分钟）</label>
-            <input
+            <label className="field-label">优先级</label>
+            <SelectMenu
               className="field"
-              type="number"
-              min={1}
-              value={estimatedMinutes}
-              onChange={(e) => setEstimatedMinutes(e.target.value)}
-              />
-            <div className="estimate-presets">
-              {[15, 30, 45, 60, 90].map((minutes) => (
-                <button
-                  key={minutes}
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => setEstimatedMinutes(String(minutes))}
-                >
-                  {minutes} 分
-                </button>
-              ))}
-              {suggestedEstimate ? (
-                <button
-                  type="button"
-                  className="btn-ghost estimate-suggestion"
-                  onClick={() =>
-                    setEstimatedMinutes(String(suggestedEstimate))
-                  }
-                >
-                  根据历史建议 {suggestedEstimate} 分
-                </button>
-              ) : null}
-            </div>
+              ariaLabel="优先级"
+              value={String(priority)}
+              onChange={(value) => setPriority(Number(value) as TaskPriority)}
+              options={[
+                { value: "1", label: "P1" },
+                { value: "2", label: "P2" },
+                { value: "3", label: "P3" },
+                { value: "4", label: "P4" },
+              ]}
+            />
           </div>
           <div>
             <label className="field-label">所属项目</label>
@@ -594,78 +420,6 @@ export function DetailDrawer() {
               options={[{ value: "", label: "无项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
             />
           </div>
-          <div className="lifecycle-grid">
-            <div>
-              <label className="field-label">关联成长目标</label>
-              <SelectMenu
-                className="field"
-                ariaLabel="关联成长目标"
-                value={task.goal_id ?? ""}
-                onChange={(value) =>
-                  void saveTask(task.id, { goal_id: value || null })
-                }
-                options={[{ value: "", label: "不关联目标" }, ...goals.filter((goal) =>
-                  goal.status === "active" &&
-                  ["quantity", "frequency", "time"].includes(goal.goal_type)
-                ).map((goal) => ({ value: goal.id, label: goal.title }))]}
-              />
-            </div>
-            <div>
-              <label className="field-label">
-                {linkedGoal?.goal_type === "time" ? "计入方式" : "完成贡献值"}
-              </label>
-              <input
-                className="field"
-                type="number"
-                disabled={linkedGoal?.goal_type === "time"}
-                min={0.1}
-                step={0.1}
-                value={task.goal_contribution}
-                onChange={(event) =>
-                  void saveTask(task.id, {
-                    goal_contribution: Math.max(0.1, Number(event.target.value) || 1),
-                  })
-                }
-              />
-              {linkedGoal?.goal_type === "time" ? (
-                <small className="field-hint">按专注会话分钟自动计入，完成任务不会重复增加。</small>
-              ) : null}
-            </div>
-          </div>
-          <div className="lifecycle-grid">
-            <div>
-              <label className="field-label">任务状态</label>
-              <SelectMenu
-                className="field"
-                ariaLabel="任务状态"
-                value={status}
-                onChange={(value) => setStatus(value as TaskStatus)}
-                options={[
-                  { value: "draft", label: "草稿" },
-                  { value: "pending", label: "待处理" },
-                  { value: "in_progress", label: "进行中" },
-                  { value: "waiting", label: "等待" },
-                  { value: "blocked", label: "阻塞" },
-                  { value: "completed", label: "完成" },
-                  { value: "cancelled", label: "取消" },
-                ]}
-              />
-            </div>
-            <div>
-              <label className="field-label">精力要求</label>
-              <SelectMenu
-                className="field"
-                ariaLabel="精力要求"
-                value={energyLevel}
-                onChange={(value) => setEnergyLevel(value as "low" | "medium" | "high")}
-                options={[
-                  { value: "low", label: "低" },
-                  { value: "medium", label: "中" },
-                  { value: "high", label: "高" },
-                ]}
-              />
-            </div>
-          </div>
           <div>
             <label className="field-label">完成标准</label>
             <textarea
@@ -675,39 +429,6 @@ export function DetailDrawer() {
               onChange={(event) => setCompletionCriteria(event.target.value)}
             />
           </div>
-          <div>
-            <label className="field-label">前置任务</label>
-            <SelectMenu
-              className="field"
-              ariaLabel="前置任务"
-              value={blockedById}
-              onChange={setBlockedById}
-              options={[{ value: "", label: "无" }, ...tasks
-                .filter(
-                  (candidate) =>
-                    candidate.id !== task.id &&
-                    !candidate.parent_id &&
-                    candidate.status !== "completed",
-                )
-                .map((candidate) => ({ value: candidate.id, label: candidate.title }))]}
-            />
-          </div>
-          <label className="toggle-row">
-            <input
-              type="checkbox"
-              checked={flexible}
-              onChange={(event) => setFlexible(event.target.checked)}
-            />
-            可由智能排程调整时间
-          </label>
-          <label className="toggle-row">
-            <input
-              type="checkbox"
-              checked={scheduleLocked}
-              onChange={(event) => setScheduleLocked(event.target.checked)}
-            />
-            锁定当前排程（重启后仍保留）
-          </label>
           <div>
             <label className="field-label">重复</label>
             <SelectMenu
@@ -769,32 +490,16 @@ export function DetailDrawer() {
 
           <div>
             <label className="field-label">标签</label>
-            {tags.length ? (
-              <div className="tag-pills">
-                {tags.map((tag) => {
-                  const on = selectedTags.includes(tag.id);
-                  return (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      className={`tag-pill ${on ? "on" : ""}`}
-                      onClick={() => {
-                        const next = on
-                          ? selectedTags.filter((id) => id !== tag.id)
-                          : [...selectedTags, tag.id];
-                        void setTaskTags(task.id, next);
-                      }}
-                    >
-                      {tag.name}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <span className="field-hint">
-                暂无标签，可在左侧栏「更多 → 标签」中新建
-              </span>
-            )}
+            <TagListBox
+              tags={tags}
+              selected={selectedTags}
+              onToggle={(tagId) => {
+                const next = selectedTags.includes(tagId)
+                  ? selectedTags.filter((id) => id !== tagId)
+                  : [...selectedTags, tagId];
+                void setTaskTags(task.id, next);
+              }}
+            />
           </div>
 
           <div>

@@ -40,13 +40,17 @@ export function calculateGoalProgress(goal: Goal): number {
   return Math.max(0, Math.min(100, (moved / span) * 100));
 }
 
-export function activityLevel(entries: GoalEntry[]): 0 | 1 | 2 | 3 | 4 {
-  const value = entries.reduce((sum, entry) => sum + Math.abs(Number(entry.value)), 0);
+export function activityLevelFromValue(value: number): 0 | 1 | 2 | 3 | 4 {
   if (value <= 0) return 0;
   if (value < 2) return 1;
   if (value < 5) return 2;
   if (value < 10) return 3;
   return 4;
+}
+
+export function activityLevel(entries: GoalEntry[]): 0 | 1 | 2 | 3 | 4 {
+  const value = entries.reduce((sum, entry) => sum + Math.abs(Number(entry.value)), 0);
+  return activityLevelFromValue(value);
 }
 
 export function longestDateStreak(dateKeys: string[]): number {

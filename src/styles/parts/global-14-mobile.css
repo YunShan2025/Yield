@@ -595,23 +595,6 @@ html[data-shell="mobile"] .ledger-view .top-controls .btn-ghost {
   white-space: nowrap;
 }
 
-/* 成长热力图：移动端只渲染 26 周（GrowthView 同步裁剪数据）。
-   53 列的 fr 会把宽度平摊给全部空轨道，单格依旧细小，这里同步收列。 */
-html[data-shell="mobile"] .growth-heatmap {
-  grid-template-columns: repeat(26, minmax(8px, 1fr));
-}
-
-/* 手机端格子放大后的老 WebView 兜底高（无 aspect-ratio 时近似方形）。 */
-html[data-shell="mobile"] .heat-cell {
-  height: clamp(9px, 2.6vw, 12px);
-}
-
-@supports (aspect-ratio: 1) {
-  html[data-shell="mobile"] .heat-cell {
-    height: auto;
-  }
-}
-
 /* ---------- 6) 孤字修复（2026-09-15）：文本折行末行只剩一个字 ---------- */
 
 /* 检测方式：Range.getClientRects 逐文本节点量行框，末行 ≤1.6 字宽即孤字。

@@ -756,6 +756,56 @@ select {
   cursor: grab;
 }
 
+.cal-task.is-done {
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  color: #b45309;
+}
+
+.cal-task.is-done::before {
+  content: "✓ ";
+  color: #d97706;
+  font-weight: 700;
+}
+
+/* 周/月历完成态暗色适配。 */
+:root[data-theme="dark"] .week-chip.is-done {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .week-chip.is-done .week-chip-date {
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .week-event.is-done {
+  background: rgba(245, 158, 11, 0.14);
+  border-left-color: #f59e0b;
+}
+
+:root[data-theme="dark"] .week-event.is-done .week-event-time {
+  background: none;
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .week-allday-event.is-done {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .week-allday-event.is-done::before {
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .cal-task.is-done {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .cal-task.is-done::before {
+  color: #fbbf24;
+}
+
 .detail-panel {
   background: var(--bg-panel);
   border-left: 1px solid var(--border);
@@ -1497,9 +1547,32 @@ select {
   text-align: left;
 }
 
+/* 周历/月历与日历同一套「成就式」完成态:金色认可——✓ 金章、暖金底。
+   不置灰、不划线、不降透明:完成是成就感,不是退场。 */
 .week-chip.is-done {
-  opacity: 0.55;
-  text-decoration: line-through;
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #b45309;
+}
+
+.week-chip.is-done::before {
+  content: "✓";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.35);
+}
+
+.week-chip.is-done .week-chip-date {
+  color: #b45309;
 }
 
 .week-chip-date {
@@ -1539,6 +1612,17 @@ select {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.week-allday-event.is-done {
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  color: #b45309;
+}
+
+.week-allday-event.is-done::before {
+  content: "✓ ";
+  color: #d97706;
+  font-weight: 700;
 }
 
 .week-event-time {
@@ -1652,11 +1736,31 @@ select {
 }
 
 .week-event.is-done {
-  opacity: 0.55;
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  border-left-color: #d97706;
 }
 
-.week-event.is-done .week-event-title {
-  text-decoration: line-through;
+.week-event.is-done .week-event-time {
+  color: #b45309;
+  opacity: 1;
+}
+
+.week-event.is-done::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.35);
 }
 
 .week-now {
@@ -1809,6 +1913,61 @@ select {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* 标签列表框：任务可多标签，新建/编辑统一用它替代下拉单选与散点胶囊。 */
+.tag-listbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 148px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.tag-listbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag-listbox-option:hover {
+  background: var(--bg-soft, rgba(0, 0, 0, 0.04));
+}
+
+.tag-listbox-option.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tag-listbox-check {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.tag-listbox-option.on .tag-listbox-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .subtask-list {

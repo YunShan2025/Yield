@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalType } from "@/types";
+import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalType, Task } from "@/types";
 import {
   addGoalEntry,
   createAchievement,
@@ -15,13 +15,13 @@ import {
 } from "@/lib/db";
 import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
-import { isMobileShell } from "@/lib/platform";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
 import {
-  activityLevel,
+  activityLevelFromValue,
   calculateGoalProgress,
   currentDateStreak,
+  localDateKey,
   longestDateStreak,
 } from "@/lib/growth";
 
@@ -50,11 +50,13 @@ function toDateKey(date: Date) {
 }
 
 function dayRange() {
+  // 最近一个月：5 整周（周日起步）× 7 天 = 35 格，行优先排布（每行一周），
+  // 桌面与手机同一版式。
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = new Date(today);
-  start.setDate(today.getDate() - 364 - today.getDay());
-  return Array.from({ length: 371 }, (_, index) => {
+  start.setDate(today.getDate() - 28 - today.getDay());
+  return Array.from({ length: 35 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     return date;
@@ -90,6 +92,7 @@ export function GrowthView() {
   const [projectId, setProjectId] = useState("");
   const projects = useAppStore((state) => state.projects);
   const addTask = useAppStore((state) => state.addTask);
+  const allTasks = useAppStore((state) => state.tasks);
 
   const refresh = async () => {
     const [nextGoals, nextEntries, nextMilestones, nextAchievements] = await Promise.all([
@@ -130,13 +133,20 @@ export function GrowthView() {
     return result;
   }, [visibleEntries]);
   const days = useMemo(dayRange, []);
-  // 手机上 53 周 × 7 列的单格只有 4px 见方；裁成最近 26 周（整周对齐，
-  // dayRange 从周日起步）让单格放大一倍以上，桌面仍显示完整一年。
-  const heatDays = useMemo(
-    () => (isMobileShell() ? days.slice(days.length - 26 * 7) : days),
-    [days],
-  );
-  const activeDateKeys = [...entriesByDate.keys()].sort();
+  // 完成的任务也点亮热力图：按完成时刻落位到本地日期。
+  const completedTasksByDate = useMemo(() => {
+    const result = new Map<string, Task[]>();
+    for (const task of allTasks) {
+      if (task.parent_id || task.deleted_at) continue;
+      if (task.status !== "completed" || !task.completed_at) continue;
+      const key = localDateKey(new Date(task.completed_at));
+      const list = result.get(key) ?? [];
+      list.push(task);
+      result.set(key, list);
+    }
+    return result;
+  }, [allTasks]);
+  const activeDateKeys = [...new Set([...entriesByDate.keys(), ...completedTasksByDate.keys()])].sort();
   const currentStreak = useMemo(
     () => currentDateStreak(activeDateKeys, todayDateString()),
     [activeDateKeys],
@@ -275,7 +285,7 @@ export function GrowthView() {
           </section>
           <section className="growth-panel heatmap-panel">
             <div className="growth-panel-head">
-              <div><h3>{isMobileShell() ? "最近半年的投入" : "过去一年的投入"}</h3><p>点击格子回看当天完成的行动</p></div>
+              <div><h3>最近一个月的投入</h3><p>点击格子回看当天完成的行动</p></div>
               <SelectMenu
                 ariaLabel="筛选目标"
                 value={filterGoalId}
@@ -283,11 +293,19 @@ export function GrowthView() {
                 options={[{ value: "", label: "全部目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]}
               />
             </div>
+            <div className="heatmap-weekdays" aria-hidden="true">
+              {["日", "一", "二", "三", "四", "五", "六"].map((weekday) => (
+                <span key={weekday}>{weekday}</span>
+              ))}
+            </div>
             <div className="growth-heatmap" aria-label="成长热点图">
-              {heatDays.map((date) => {
+              {days.map((date) => {
                 const key = toDateKey(date);
-                const value = (entriesByDate.get(key) ?? []).reduce((sum, entry) => sum + Number(entry.value), 0);
-                const level = activityLevel(activityEntries(entriesByDate.get(key) ?? []));
+                const entryValue = activityEntries(entriesByDate.get(key) ?? [])
+                  .reduce((sum, entry) => sum + Math.abs(Number(entry.value)), 0);
+                const doneCount = (completedTasksByDate.get(key) ?? []).length;
+                const value = entryValue + doneCount;
+                const level = activityLevelFromValue(value);
                 return <button key={key} className={`heat-cell level-${level}`} title={`${key} · ${value || "无"}投入`} onClick={() => setSelectedDate(key)} />;
               })}
             </div>
@@ -347,7 +365,7 @@ export function GrowthView() {
 
       {showCreate ? <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}><div className="goal-create-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><h3>创建长期目标</h3><button onClick={() => setShowCreate(false)}>×</button></div><label>目标名称<input autoFocus value={goalTitle} onChange={(event) => setGoalTitle(event.target.value)} /></label><div className="form-row"><label>目标类型<SelectMenu ariaLabel="目标类型" value={goalType} onChange={(value) => { const next = value as GoalType; setGoalType(next); setUnit(GOAL_TYPES.find((item) => item.value === next)?.unit ?? "次"); setStartValue("0"); }} options={GOAL_TYPES.map((item) => ({ value: item.value, label: item.label }))} /></label>{goalType !== "project" ? <label>{goalType === "change" ? "起始值" : "当前值"}<input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>目标值<input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>单位<input value={unit} onChange={(event) => setUnit(event.target.value)} /></label> : null}</div>{goalType === "frequency" ? <label>每周目标次数<input type="number" min="1" value={weeklyTarget} onChange={(event) => setWeeklyTarget(event.target.value)} /></label> : null}{goalType === "project" ? <label>关联项目<SelectMenu ariaLabel="关联项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "请选择项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} /></label> : null}<label>目标日期<DatePicker value={targetDate} onChange={setTargetDate} ariaLabel="目标日期" allowClear /></label><label>为什么想完成它<textarea value={motivation} onChange={(event) => setMotivation(event.target.value)} /></label><div className="goal-color-picker">{COLORS.map((item) => <button key={item} className={color === item ? "active" : ""} style={{ background: item }} onClick={() => setColor(item)} />)}</div><button className="btn-primary" onClick={() => void submitGoal()}>创建目标</button></div></div> : null}
 
-      {selectedDate ? <div className="modal-backdrop" onMouseDown={() => setSelectedDate(null)}><div className="day-activity-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><div><span>成长回看</span><h3>{selectedDate}</h3></div><button onClick={() => setSelectedDate(null)}>×</button></div>{(entriesByDate.get(selectedDate) ?? []).map((entry) => { const goal = goals.find((item) => item.id === entry.goal_id); const valueLabel = goal?.goal_type === "change" ? `当前 ${entry.value}` : `+${entry.value}`; return <div className="day-activity-row" key={entry.id}><i style={{ background: goal?.color }} /><div><strong>{entry.note || "记录了一次成长"}</strong><span>{goal?.title} · {valueLabel}{goal?.unit}</span></div></div>; })}{!(entriesByDate.get(selectedDate) ?? []).length ? <div className="empty-state">这一天没有记录。空白不是失败，只是尚未留下足迹。</div> : null}</div></div> : null}
+      {selectedDate ? <div className="modal-backdrop" onMouseDown={() => setSelectedDate(null)}><div className="day-activity-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><div><span>成长回看</span><h3>{selectedDate}</h3></div><button onClick={() => setSelectedDate(null)}>×</button></div>{(completedTasksByDate.get(selectedDate) ?? []).map((task) => <div className="day-activity-row" key={task.id}><i className="done" /><div><strong>{task.title}</strong><span>完成任务{task.due_time ? ` · ${task.due_time}` : ""}</span></div></div>)}{(entriesByDate.get(selectedDate) ?? []).map((entry) => { const goal = goals.find((item) => item.id === entry.goal_id); const valueLabel = goal?.goal_type === "change" ? `当前 ${entry.value}` : `+${entry.value}`; return <div className="day-activity-row" key={entry.id}><i style={{ background: goal?.color }} /><div><strong>{entry.note || "记录了一次成长"}</strong><span>{goal?.title} · {valueLabel}{goal?.unit}</span></div></div>; })}{!(entriesByDate.get(selectedDate) ?? []).length && !(completedTasksByDate.get(selectedDate) ?? []).length ? <div className="empty-state">这一天没有记录。空白不是失败，只是尚未留下足迹。</div> : null}</div></div> : null}
     </div>
   );
 }
