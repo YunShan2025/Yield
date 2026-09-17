@@ -33,6 +33,22 @@ if (tauri.bundle?.windows?.nsis?.template) {
   failures.push("Windows 安装包应使用 Tauri 标准 NSIS 模板，避免自定义安装壳依赖");
 }
 
+/* Android 产物（M5 发布阶段）：签名接线与密钥隔离。 */
+const gradle = readFileSync(new URL("src-tauri/gen/android/app/build.gradle.kts", root), "utf8");
+if (!gradle.includes("keystore.properties") || !gradle.includes('signingConfigs')) {
+  failures.push("Android release 签名未接入 keystore.properties（build.gradle.kts）");
+}
+if (!/getByName\("release"\)[\s\S]*signingConfig\s*=\s*signingConfigs/.test(gradle)) {
+  failures.push("Android release buildType 未绑定签名配置，产物将无法安装");
+}
+const gitStatus = spawnSync("git", ["check-ignore", "-q", "src-tauri/gen/android/app/keystore.properties"], {
+  cwd: fileURLToPath(root),
+  shell: false,
+});
+if (gitStatus.status !== 0) {
+  failures.push("keystore.properties（签名密码）必须被 .gitignore 忽略，不得入库");
+}
+
 if (failures.length) {
   console.error(`发布检查失败：\n- ${failures.join("\n- ")}`);
   process.exit(1);

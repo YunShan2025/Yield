@@ -24,3 +24,7 @@ build_resume.py
 separate_resume_sections.py
 个人简历*.docx
 *高级后端研发工程师*.docx
+
+# M5 发布签名：自签 keystore 与密码文件永不入库
+keys/
+src-tauri/gen/android/app/keystore.properties
