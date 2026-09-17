@@ -765,3 +765,16 @@ html[data-shell="mobile"] .moments-page {
   padding-left: 14px;
   padding-right: 14px;
 }
+
+/* 提醒页 .reminders-body 自带 28px 横向 padding，统一到 14px，内容与
+   引导框同列。纪念日页 .moments-page 容器已归一 14px，其内层
+   .moments-body 再叠 28px 会让内容缩进 29px——移动端直接归零，
+   由容器负责留白。 */
+html[data-shell="mobile"] .reminders-body {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+html[data-shell="mobile"] .moments-body {
+  padding-left: 0;
+  padding-right: 0;
+}

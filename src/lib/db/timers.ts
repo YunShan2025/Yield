@@ -121,18 +121,44 @@ export async function deleteTimer(id: string): Promise<void> {
   await db.execute("DELETE FROM timers WHERE id=$1", [id]);
 }
 
-export async function startTimer(id: string): Promise<Timer | null> {
+/** 倒计时互斥（真机第六轮反馈：同一时间只允许一个倒计时运作）。
+ *  暂停 id 之外所有运行中的倒计时，remaining_sec 按各自 ends_at 结算，
+ *  与手动暂停同语义；循环提醒（interval）不受限。返回被暂停的名称。 */
+export async function pauseOtherRunningCountdowns(
+  exceptId: string,
+): Promise<string[]> {
+  const db = await getDb();
+  const rows = await db.select<Timer[]>(
+    "SELECT * FROM timers WHERE kind='task' AND running=1 AND id<>$1",
+    [exceptId],
+  );
+  if (!rows.length) return [];
+  const titles: string[] = [];
+  for (const row of rows) {
+    const paused = await pauseTimer(row.id);
+    if (paused) titles.push(paused.title);
+  }
+  return titles;
+}
+
+export async function startTimer(
+  id: string,
+): Promise<{ timer: Timer | null; pausedTitles: string[] }> {
   const db = await getDb();
   const rows = await db.select<Timer[]>("SELECT * FROM timers WHERE id=$1", [id]);
-  if (!rows[0]) return null;
+  if (!rows[0]) return { timer: null, pausedTitles: [] };
   const current = mapTimer(rows[0]);
+  // 倒计时（kind=task）启动前先暂停其余运行中的倒计时，保证单实例。
+  const pausedTitles =
+    current.kind === "task" ? await pauseOtherRunningCountdowns(id) : [];
   const remaining = Math.max(5, current.remaining_sec || current.interval_sec);
-  return updateTimer(id, {
+  const timer = await updateTimer(id, {
     running: 1,
     enabled: 1,
     remaining_sec: remaining,
     ends_at: new Date(Date.now() + remaining * 1000).toISOString(),
   });
+  return { timer, pausedTitles };
 }
 
 export async function pauseTimer(id: string): Promise<Timer | null> {

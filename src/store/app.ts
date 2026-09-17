@@ -140,6 +140,15 @@ function applyTheme(theme: ThemeMode) {
   void syncWindowChrome(theme);
 }
 
+/** 倒计时启动提示：有其他倒计时被自动暂停（单实例）时随 toast 告知。 */
+function startToast(title: string, pausedTitles: string[]): string {
+  const base = `「${title}」已开始`;
+  if (!pausedTitles.length) return base;
+  return pausedTitles.length === 1
+    ? `${base}，「${pausedTitles[0]}」已暂停`
+    : `${base}，已暂停其余 ${pausedTitles.length} 个倒计时`;
+}
+
 let lastFocusHeartbeatWrite = 0;
 const FOCUS_HEARTBEAT_MS = 15_000;
 
@@ -573,9 +582,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   addTimer: async (draft) => {
     try {
+      // 倒计时单实例（真机第六轮反馈）：新建即启动的倒计时，先暂停
+      // 其余运行中的倒计时；循环提醒不受限。
+      const pausedTitles =
+        draft.kind === "task" && draft.start
+          ? await db.pauseOtherRunningCountdowns("")
+          : [];
       const timer = await db.createTimer(draft);
       await get().refreshTimers();
-      set({ toast: draft.start ? `「${timer.title}」已开始` : "已创建提醒" });
+      set({
+        toast: draft.start
+          ? startToast(timer.title, pausedTitles)
+          : "已创建提醒",
+      });
       return timer;
     } catch (e) {
       set({ toast: e instanceof Error ? e.message : "创建提醒失败" });
@@ -584,10 +603,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   startTimer: async (id) => {
-    await db.startTimer(id);
+    const { timer, pausedTitles } = await db.startTimer(id);
     await get().refreshTimers();
-    const t = get().timers.find((x) => x.id === id);
-    set({ toast: t ? `「${t.title}」已开始` : "提醒已开始" });
+    set({ toast: timer ? startToast(timer.title, pausedTitles) : "提醒已开始" });
   },
 
   pauseTimer: async (id) => {
