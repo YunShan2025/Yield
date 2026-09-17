@@ -1,6 +1,6 @@
 # 有秋（Yield）Git 推送与发布惯例
 
-本文约定本仓库的分支、提交、推送、版本号、标签与发布流程。除第 8 节「本仓库补充约定」外，均为业界通用默认惯例（GitHub Flow + SemVer + Conventional Commits），日常开发与发版时对照执行。开发验证基线见 `docs/CHANGES.md` 的记录约定，产品语义见 `docs/PRODUCT_DECISIONS.md`。
+本文约定本仓库的分支、提交、推送、版本号、标签与发布流程。除第 8 节「本仓库补充约定」外，均为业界通用默认惯例（GitHub Flow + SemVer + Conventional Commits），日常开发与发版时对照执行。开发验证与变更记录约定见 `docs/CHANGES.md`，架构与模块地图见 `docs/ARCHITECTURE.md`。
 
 ## 1. 分支模型
 
@@ -98,23 +98,26 @@ git push origin v1.0.1
 | tag 打错且已推送 | 不移动，发新版本 |
 | 误推敏感信息 | 先作废泄露的密钥/令牌（旋转密钥优先于清洗历史），再评估是否需要改写历史 |
 
-## 7. 发布流程（Windows 安装包）
+## 7. 发布流程（桌面 + Android 双端）
 
-1. **同步版本号三处**：`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`（`Cargo.lock` 随构建自动更新）。漏一处会导致前端、安装器与 Rust 元数据版本不一致。
-2. **验证**：`npm run release:check` 通过。
-3. **提交**：`chore(release): vX.Y.Z`。
-4. **构建**：`npm run tauri build`，产物在 `src-tauri/target/release/bundle/nsis/Yield_X.Y.Z_x64-setup.exe`。
-5. **推送**：`git push origin main`，再推标签 `git push origin vX.Y.Z`。
-6. **创建 Release** 并附安装包：
+1. **同步版本号三处**：`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`（`Cargo.lock` 用 `cargo update -p youqiu` 同步更新）。漏一处会导致前端、安装器与 Rust 元数据版本不一致。
+2. **版本记录**：在 `docs/CHANGES.md`「版本记录」区顶部按 `#### v{版本号} 标题` 追加条目（发布 Release 时按该标题撰写说明）。
+3. **验证**：`npm run release:check` 通过。
+4. **提交**：`chore(release): vX.Y.Z`。
+5. **构建双端**：
+   - 桌面：`npm run tauri build` → `src-tauri/target/release/bundle/nsis/Yield_X.Y.Z_x64-setup.exe`
+   - Android：`npm run tauri android build -- --target aarch64` → `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk`，复制重命名为 **`Yield_X.Y.Z.apk`**（自 v1.0.6 起不带架构后缀，每版仅一个 arm64 包）
+6. **推送**：`git push origin main`，再推标签 `git push origin vX.Y.Z`。
+7. **创建 Release** 并附两个产物：
 
 ```
-gh release create vX.Y.Z "src-tauri/target/release/bundle/nsis/Yield_X.Y.Z_x64-setup.exe" \
-  --title "vX.Y.Z" --notes "变更摘要"
+gh release create vX.Y.Z "…/Yield_X.Y.Z.apk" "…/Yield_X.Y.Z_x64-setup.exe" \
+  --title "有秋 vX.Y.Z · 一句话主题" --notes-file notes.md
 ```
 
-Release 说明面向使用者：一段摘要 + 修复/新增列表，不写实现细节。
+Release 说明面向使用者：一段摘要 + 修复/新增列表 + 双端安装说明，不写实现细节；需含「桌面安装包未做代码签名，杀毒软件可能误报拦截」的提示。
 
-> **Android 版上线后（计划 M5）扩展**：同版本号下执行 `npm run tauri android build` 产出 APK/AAB，作为附加产物附到同一个 Release。版本号仍只维护三处同步——Tauri 会自动将 `tauri.conf.json` 的 version 生成 Android 的 versionName/versionCode，不另设版本线。
+> Android 签名为自签 keystore（`keys/youqiu-release.jks`，凭据文件 `keystore.properties`，两者均不入库）；versionName/versionCode 由 Tauri 自动取自 `tauri.conf.json` 的 version，不另设版本线。
 
 ## 8. 本仓库补充约定（相对行业默认的增量）
 
