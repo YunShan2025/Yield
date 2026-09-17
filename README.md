@@ -124,7 +124,7 @@ npm run tauri android build -- --debug --apk --target aarch64   # 真机 arm64
 
 ## 下载与安装
 
-当前版本 **v1.0.2**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
+当前版本 **v1.0.3**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
@@ -187,6 +187,15 @@ npm run release:check
 - 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；需求方向与产品边界的取舍记录见 [产品需求与决策记录](docs/PRODUCT_DECISIONS.md)，修改档案见 [修改记录](docs/CHANGES.md)
 
 ## 版本记录
+
+#### v1.0.3 Android 版首发布
+
+- 新增 Android 版：Tauri 2 构建，复用桌面全部功能；竖屏移动壳 + 底部导航 + 返回键/边缘手势返回语义
+- 新增桌面 ↔ Android 数据同步：飞书云盘 JSONL 日志 + HLC 合并（离线优先，启动/回前台/手动触发，无服务器、无实时）
+- Android 系统级提醒重写（精确闹钟 + 通知，桌面托盘路径不适用平台自动降级）
+- 真机验收六轮反馈共 14 项呈现与交互问题修复（引导框间距、返回键语义、软键盘与手势、倒计时互斥等）
+- 修复 Android 导入恢复必失败的问题：系统文件选择器返回的 content:// URI 现经 ContentResolver 读取
+- release APK 自签名，版本号与桌面端统一管理；备份导出/导入兜底通道 Android 实测可用
 
 #### v1.0.2 界面交互修复
 
