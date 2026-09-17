@@ -689,7 +689,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setFocusTask: (focusTaskId) => {
     // Re-binding the same task must not wipe an in-progress session
-    // (detail drawer / pomodoro panel sync often re-calls this).
+    // (detail drawer focus actions often re-call this).
     if (get().focusTaskId === focusTaskId) {
       set({ focusTaskId });
       return;

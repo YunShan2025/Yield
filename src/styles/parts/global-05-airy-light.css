@@ -1238,26 +1238,6 @@ select {
   }
 }
 
-.pomodoro-popup {
-  position: absolute;
-  left: 18px;
-  bottom: 18px;
-  z-index: 8;
-  width: min(320px, calc(100% - 36px));
-  animation: pomo-pop 160ms ease;
-}
-
-@keyframes pomo-pop {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -1269,59 +1249,6 @@ select {
 .panel-head h3 {
   margin: 0;
   font-size: 1rem;
-}
-
-.pomodoro-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  box-shadow: 0 12px 32px rgba(31, 42, 55, 0.14);
-}
-
-.pomodoro-panel.is-compact {
-  padding: 12px 14px;
-}
-
-.pomodoro-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.pomodoro-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.pomodoro-time {
-  font-size: 28px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-.pomodoro-close {
-  margin-left: auto;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.pomodoro-task {
-  margin: 8px 0 12px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pomodoro-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .scope-board {
@@ -1832,20 +1759,12 @@ select {
   flex: 1;
 }
 
-.detail-view-desc,
-.detail-view-notes {
+.detail-view-desc {
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
   color: var(--text-secondary);
   white-space: pre-wrap;
-}
-
-.detail-view-notes {
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-root);
-  border: 1px solid var(--border);
 }
 
 .detail-meta-grid {
@@ -1880,10 +1799,6 @@ select {
 
 .detail-meta .prio.p2 {
   color: #ea580c;
-}
-
-.detail-view .pomodoro-panel {
-  margin: 4px 0;
 }
 
 .field-label {

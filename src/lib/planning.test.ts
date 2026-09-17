@@ -3,8 +3,6 @@ import {
   findFirstAvailableTimeSlot,
   buildTaskDeferredUpdate,
   findTimeConflictIds,
-  parseReminderMinutes,
-  pendingEstimatedMinutes,
 } from "./planning";
 import type { Task } from "@/types";
 
@@ -19,20 +17,6 @@ const task = (patch: Partial<Task>): Task =>
   }) as Task;
 
 describe("planning helpers", () => {
-  it("normalizes multiple reminder values", () => {
-    expect(parseReminderMinutes("10, 30，10 60")).toEqual([60, 30, 10]);
-  });
-
-  it("sums pending estimates only", () => {
-    expect(
-      pendingEstimatedMinutes([
-        task({ estimated_minutes: 30 }),
-        task({ estimated_minutes: 45 }),
-        task({ status: "completed", estimated_minutes: 90 }),
-      ]),
-    ).toBe(75);
-  });
-
   it("chooses the first gap between existing tasks", () => {
     const slot = findFirstAvailableTimeSlot(
       [

@@ -48,11 +48,6 @@ export function activityLevelFromValue(value: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
-export function activityLevel(entries: GoalEntry[]): 0 | 1 | 2 | 3 | 4 {
-  const value = entries.reduce((sum, entry) => sum + Math.abs(Number(entry.value)), 0);
-  return activityLevelFromValue(value);
-}
-
 export function longestDateStreak(dateKeys: string[]): number {
   const unique = [...new Set(dateKeys)].sort();
   let longest = 0;

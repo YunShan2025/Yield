@@ -1,24 +1,6 @@
 import type { Task, TaskUpdate } from "@/types";
 import { parseTimeToMinutes } from "@/lib/dates";
 
-export function parseReminderMinutes(input: string): number[] {
-  return [...new Set(
-    input
-      .split(/[,，\s]+/)
-      .map(Number)
-      .filter((value) => Number.isFinite(value) && value >= 0),
-  )].sort((a, b) => b - a);
-}
-
-export function pendingEstimatedMinutes(tasks: Task[]): number {
-  return tasks
-    .filter(
-      (task) =>
-        task.status !== "completed" && task.status !== "cancelled",
-    )
-    .reduce((sum, task) => sum + (task.estimated_minutes ?? 0), 0);
-}
-
 /** Defer a task shown on a day board to another date. Day boards list tasks
  *  by due date, so deferring always moves the due date itself. */
 export function buildTaskDeferredUpdate(date: string): TaskUpdate {

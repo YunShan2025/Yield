@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Goal, GoalEntry } from "@/types";
+import type { Goal } from "@/types";
 import {
-  activityLevel,
+  activityLevelFromValue,
   calculateGoalProgress,
   currentDateStreak,
   goalAcceptsSource,
@@ -20,12 +20,11 @@ describe("growth metrics", () => {
   });
 
   it("groups activity into bounded heat levels", () => {
-    const entry = (value: number) => ({ value }) as GoalEntry;
-    expect(activityLevel([])).toBe(0);
-    expect(activityLevel([entry(1)])).toBe(1);
-    expect(activityLevel([entry(3)])).toBe(2);
-    expect(activityLevel([entry(7)])).toBe(3);
-    expect(activityLevel([entry(15)])).toBe(4);
+    expect(activityLevelFromValue(0)).toBe(0);
+    expect(activityLevelFromValue(1)).toBe(1);
+    expect(activityLevelFromValue(3)).toBe(2);
+    expect(activityLevelFromValue(7)).toBe(3);
+    expect(activityLevelFromValue(15)).toBe(4);
   });
 
   it("finds the longest streak without double-counting dates", () => {

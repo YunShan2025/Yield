@@ -401,19 +401,6 @@
   background: #fff0ef;
 }
 
-.estimate-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 7px;
-}
-
-.estimate-presets .btn-ghost {
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  font-size: 11px;
-}
-
 /* 页头右上角的主按钮按内容收窄,不随全局 width:100% 拉通。 */
 .workspace-top .btn-primary {
   flex: 0 0 auto;
@@ -599,49 +586,6 @@
 
 .command-results small {
   color: var(--text-muted);
-}
-
-.lifecycle-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.toggle-row input {
-  width: auto;
-}
-
-.detail-section {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  background: var(--bg-panel);
-}
-
-.detail-section summary {
-  padding: 12px 14px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.detail-section[open] summary {
-  border-bottom: 1px solid var(--border);
-}
-
-.detail-section-body {
-  display: grid;
-  gap: 13px;
-  padding: 13px;
 }
 
 .detail-complete-action {
