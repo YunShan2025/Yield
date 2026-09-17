@@ -5,7 +5,7 @@ import { TimeRangeFields } from "@/components/TimePicker";
 import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
-import { TagListBox } from "@/components/TagListBox";
+import { MultiSelectMenu } from "@/components/MultiSelectMenu";
 import { findFirstAvailableTimeSlot } from "@/lib/planning";
 import { nowTimeString, parseTimeToMinutes, todayDateString } from "@/lib/dates";
 import {
@@ -157,7 +157,7 @@ export function CreateTaskDialog() {
           <label>优先级<SelectMenu ariaLabel="优先级" value={String(priority)} onChange={(value) => setPriority(Number(value) as TaskPriority)} options={[{ value: "1", label: "P1 紧急" }, { value: "2", label: "P2 高" }, { value: "3", label: "P3 普通" }, { value: "4", label: "P4 低" }]} /></label>
           <label>预计时长<SelectMenu ariaLabel="预计时长" value={String(estimatedMinutes)} onChange={(value) => setEstimatedMinutes(Number(value))} options={[{ value: "30", label: "30 分钟" }, { value: "45", label: "45 分钟" }, { value: "60", label: "1 小时" }, { value: "90", label: "1.5 小时" }, { value: "120", label: "2 小时" }]} /></label>
           <label>所属项目<SelectMenu ariaLabel="所属项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "无项目" }, ...projects.filter((project) => !project.archived).map((project) => ({ value: project.id, label: project.name }))]} /></label>
-          <label style={{ gridColumn: "1 / -1" }}>标签<TagListBox tags={tags} selected={selectedTagIds} onToggle={(id) => setSelectedTagIds((ids) => ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id])} /></label>
+          <label style={{ gridColumn: "1 / -1" }}>标签<MultiSelectMenu ariaLabel="标签" className="field" values={selectedTagIds} options={tags.map((tag) => ({ value: tag.id, label: tag.name }))} onToggle={(id) => setSelectedTagIds((ids) => ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id])} emptyHint="暂无标签，可在「更多 → 标签」中新建" placeholder="选择标签" /></label>
           {dueDate ? (
             <label>
               重复

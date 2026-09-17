@@ -124,7 +124,7 @@ npm run tauri android build -- --debug --apk --target aarch64   # 真机 arm64
 
 ## 下载与安装
 
-当前版本 **v1.0.4**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
+当前版本 **v1.0.5**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
@@ -187,6 +187,11 @@ npm run release:check
 - 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；需求方向与产品边界的取舍记录见 [产品需求与决策记录](docs/PRODUCT_DECISIONS.md)，修改档案见 [修改记录](docs/CHANGES.md)
 
 ## 版本记录
+
+#### v1.0.5 标签选择改用下拉样式
+
+- 新建任务与编辑任务的「标签」选择从多选列表框改为与其他字段（如优先级）一致的下拉样式：收起态显示已选标签（如「工作、健康」），展开后点选即勾选/取消、可同时勾选多个，选中项带 ✓ 标记
+- 数据模型不变：任务仍支持多个标签，仅呈现方式与其他下拉字段统一
 
 #### v1.0.4 任务表单统一与成长热力图改版
 
