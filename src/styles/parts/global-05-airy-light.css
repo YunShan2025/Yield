@@ -597,9 +597,20 @@ select {
   background: var(--bg-selected);
 }
 
+/* 标签页任务行的完成态：与日历/周历同一套「成就式」金色认可——✓ 金章、暖金底。
+   不置灰、不划线、不降透明：完成是成就感，不是退场。 */
+.task-row.is-completed {
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  border-color: rgba(217, 119, 6, 0.28);
+  box-shadow: 0 1px 0 rgba(217, 119, 6, 0.12);
+}
+
 .task-row.is-completed .task-title {
-  color: var(--text-muted);
-  text-decoration: line-through;
+  color: #b45309;
+}
+
+.task-row.is-completed .tags-task-due {
+  color: #b45309;
 }
 
 .task-row.is-overdue .task-title {
@@ -627,9 +638,9 @@ select {
 }
 
 .task-row.is-completed .task-check {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border-color: transparent;
+  color: #fff;
 }
 
 .task-title {
@@ -772,6 +783,24 @@ select {
   background: rgba(245, 158, 11, 0.14);
   border-color: rgba(245, 158, 11, 0.4);
   color: #fbbf24;
+}
+
+/* 标签页任务行完成态暗色适配（与周历完成态同一套金色）。 */
+:root[data-theme="dark"] .task-row.is-completed {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .task-row.is-completed .task-title,
+:root[data-theme="dark"] .task-row.is-completed .tags-task-due {
+  color: #fbbf24;
+}
+
+:root[data-theme="dark"] .task-row.is-completed .task-check {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border-color: transparent;
+  color: #fff;
 }
 
 :root[data-theme="dark"] .week-chip.is-done .week-chip-date {

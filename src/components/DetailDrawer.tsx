@@ -48,10 +48,6 @@ export function DetailDrawer() {
   const addAttachment = useAppStore((s) => s.addAttachment);
   const removeAttachment = useAppStore((s) => s.removeAttachment);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
-  const setFocusTask = useAppStore((s) => s.setFocusTask);
-  const focusTaskId = useAppStore((s) => s.focusTaskId);
-  const focusRunning = useAppStore((s) => s.focusRunning);
-  const toggleFocus = useAppStore((s) => s.toggleFocus);
   const projects = useAppStore((s) => s.projects);
 
   const task = tasks.find((t) => t.id === selectedTaskId) ?? null;
@@ -240,18 +236,6 @@ export function DetailDrawer() {
     }).then((ok) => {
       if (ok) void deleteTask(task.id);
     });
-  };
-
-  const startFocus = () => {
-    if (focusRunning && focusTaskId !== task.id) {
-      setToast("请先暂停当前专注");
-      return;
-    }
-    setFocusTask(task.id);
-    if (task.status !== "in_progress") {
-      void saveTask(task.id, { status: "in_progress" });
-    }
-    if (!focusRunning) void toggleFocus();
   };
 
   return (
@@ -572,13 +556,10 @@ export function DetailDrawer() {
           </>
         ) : (
           <>
-            <button type="button" className="btn-primary" onClick={startFocus}>
-              {focusRunning && focusTaskId === task.id ? "专注中" : "开始专注"}
-            </button>
             {task.status !== "completed" ? (
               <button
                 type="button"
-                className="btn-ghost detail-complete-action"
+                className="btn-primary"
                 onClick={() => void toggleComplete(task.id)}
               >
                 完成

@@ -588,11 +588,6 @@
   color: var(--text-muted);
 }
 
-.detail-complete-action {
-  color: var(--accent) !important;
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-}
-
 .batch-date-action {
   display: inline-flex;
   align-items: center;

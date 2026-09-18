@@ -133,13 +133,17 @@ export function GrowthView() {
     return result;
   }, [visibleEntries]);
   const days = useMemo(dayRange, []);
-  // 完成的任务也点亮热力图：按完成时刻落位到本地日期。
+  // 完成的任务也点亮热力图：按任务自身的日期（截止日）落位，而非完成时刻——
+  // 补记/延后完成的任务应算在它所属的那一天。无日期的任务回退到完成时刻。
   const completedTasksByDate = useMemo(() => {
     const result = new Map<string, Task[]>();
     for (const task of allTasks) {
       if (task.parent_id || task.deleted_at) continue;
-      if (task.status !== "completed" || !task.completed_at) continue;
-      const key = localDateKey(new Date(task.completed_at));
+      if (task.status !== "completed") continue;
+      const key =
+        task.due_date ??
+        (task.completed_at ? localDateKey(new Date(task.completed_at)) : null);
+      if (!key) continue;
       const list = result.get(key) ?? [];
       list.push(task);
       result.set(key, list);
