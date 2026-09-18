@@ -306,6 +306,14 @@ html[data-shell="mobile"] .drag-handle {
   color: var(--text-secondary);
 }
 
+/* 「记一笔」抽屉在移动壳里占满全屏（width:100vw）：打开期间隐藏底部导航。
+   真机反馈：老 WebView 里 fixed + z-30 的抽屉压不过 DOM 靠后的 flex 子项
+   导航条，四个导航图标叠在「取消/保存记录」上方；全屏录入时导航也本该
+   隐藏。桌面无 data-shell="mobile"，此规则不生效。 */
+html[data-shell="mobile"] body.ledger-drawer-open .mobile-nav {
+  display: none;
+}
+
 /* 「更多」页：底部导航上方的面板（2026-09-17 真机反馈：导航栏保持常驻，
    方便直接切换，不再用「完成」按钮收口；返回键也能收起本面板）。 */
 .mobile-more {

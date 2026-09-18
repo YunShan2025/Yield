@@ -93,6 +93,13 @@ export function LedgerView() {
   }, [month]);
 
   useEffect(() => { void load(); }, [load]);
+  // 移动壳里「记一笔」抽屉占满全屏：打开期间给 body 挂类，由移动端样式
+  // 隐藏底部导航（老 WebView 中 fixed 抽屉压不过 DOM 靠后的导航条，
+  // 图标会叠在「取消/保存记录」上；且全屏录入时导航本就多余）。
+  useEffect(() => {
+    document.body.classList.toggle("ledger-drawer-open", drawer);
+    return () => document.body.classList.remove("ledger-drawer-open");
+  }, [drawer]);
   useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(null), 6000);
