@@ -21,8 +21,7 @@ export function findTimeConflictIds(tasks: Task[]): Set<string> {
         task,
         start,
         end:
-          parseTimeToMinutes(task.end_time) ??
-          start + (task.estimated_minutes ?? 60),
+          parseTimeToMinutes(task.end_time) ?? start + 60,
       };
     });
   const conflicts = new Set<string>();
@@ -75,7 +74,7 @@ export function findFirstAvailableTimeSlot(
         end: Math.max(
           start + 15,
           parseTimeToMinutes(task.end_time) ??
-            start + (task.estimated_minutes ?? 60),
+            start + 60,
         ),
       };
     })

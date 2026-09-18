@@ -20,7 +20,6 @@ function makeTask(patch: Partial<Task> & { id: string }): Task {
     parent_id: null,
     repeat_rule: null,
     reminder_minutes: [],
-    estimated_minutes: null,
     project_id: null,
     blocked_by_id: null,
     completion_criteria: "",
@@ -75,11 +74,11 @@ describe("layoutTimeline", () => {
     expect(layout.timed[0]).toMatchObject({ start: 600, end: 660, lane: 0 });
   });
 
-  it("derives the estimated end from estimated_minutes when end_time is missing", () => {
+  it("falls back to a one-hour block when end_time is missing", () => {
     const layout = layoutTimeline([
-      makeTask({ id: "a", due_time: "09:00", estimated_minutes: 45 }),
+      makeTask({ id: "a", due_time: "09:00" }),
     ]);
-    expect(layout.timed[0]).toMatchObject({ start: 540, end: 585 });
+    expect(layout.timed[0]).toMatchObject({ start: 540, end: 600 });
   });
 
   it("wraps blocks that end at or before their start across midnight", () => {

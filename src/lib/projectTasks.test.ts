@@ -21,7 +21,6 @@ function task(overrides: Partial<Task>): Task {
     parent_id: null,
     repeat_rule: null,
     reminder_minutes: [],
-    estimated_minutes: null,
     project_id: "project-1",
     blocked_by_id: null,
     completion_criteria: "",

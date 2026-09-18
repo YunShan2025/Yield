@@ -1752,19 +1752,36 @@ select {
   background: var(--bg-panel);
 }
 
-.detail-footer .btn-primary {
-  flex: 1 1 auto;
-  width: auto;
+.detail-footer > button {
+  flex: 1 1 0;
   min-width: 0;
-}
-
-.detail-footer .btn-ghost {
-  flex: 0 0 auto;
   white-space: nowrap;
 }
 
+.detail-footer .btn-primary {
+  flex: 1.3 1 0;
+}
+
+.detail-footer .btn-ghost {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+
+.detail-footer .btn-ghost:hover {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+  background: var(--bg-hover);
+}
+
 .detail-footer .btn-ghost.danger {
-  border: 1px solid color-mix(in srgb, var(--text-overdue) 28%, transparent);
+  border: 1px solid transparent;
+  background: var(--danger);
+  color: #fff;
+}
+
+.detail-footer .btn-ghost.danger:hover {
+  background: color-mix(in srgb, var(--danger) 86%, #000);
+  color: #fff;
 }
 
 .detail-head-actions {
@@ -1794,6 +1811,16 @@ select {
   line-height: 1.55;
   color: var(--text-secondary);
   white-space: pre-wrap;
+}
+
+.detail-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+@media (max-width: 620px) {
+  .detail-form-row { grid-template-columns: 1fr; }
 }
 
 .detail-meta-grid {

@@ -12,7 +12,6 @@ const task = (patch: Partial<Task>): Task =>
     status: "pending",
     due_time: null,
     end_time: null,
-    estimated_minutes: null,
     ...patch,
   }) as Task;
 

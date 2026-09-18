@@ -77,9 +77,6 @@ export function ExpandableTaskItem({
           <p className="task-title">{task.title}</p>
           <div className="task-meta">
             {meta}
-            {task.estimated_minutes ? (
-              <span className="estimate-chip">预计 {task.estimated_minutes} 分钟</span>
-            ) : null}
             {task.reminder_minutes.length > 1 ? (
               <span className="reminder-chip">
                 {task.reminder_minutes.length} 个提醒

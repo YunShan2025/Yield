@@ -248,7 +248,6 @@ export function nextRepeatTaskDraft(
     end_time: task.end_time,
     repeat_rule: repeatRule,
     reminder_minutes: [...task.reminder_minutes],
-    estimated_minutes: task.estimated_minutes,
     project_id: task.project_id,
     blocked_by_id: task.blocked_by_id,
     completion_criteria: task.completion_criteria,

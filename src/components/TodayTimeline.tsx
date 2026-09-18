@@ -297,9 +297,6 @@ export function TodayTimeline() {
                 {hoveredTask.task.status === "in_progress" ? "进行中" : "待处理"}
               </span>
             )}
-            {hoveredTask.task.estimated_minutes ? (
-              <span>预计 {hoveredTask.task.estimated_minutes} 分钟</span>
-            ) : null}
           </div>
           {hoveredTask.task.description || hoveredTask.task.notes ? (
             <p>{hoveredTask.task.description || hoveredTask.task.notes}</p>

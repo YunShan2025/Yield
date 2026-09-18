@@ -9,7 +9,6 @@ export type TimelineTaskInput = Pick<
   | "priority"
   | "due_time"
   | "end_time"
-  | "estimated_minutes"
 >;
 
 export type TimelineTimedBlock = {
@@ -76,8 +75,7 @@ export function layoutTimeline(
       allDay.push(task);
       continue;
     }
-    let end =
-      parseTimeToMinutes(task.end_time) ?? start + (task.estimated_minutes ?? 60);
+    let end = parseTimeToMinutes(task.end_time) ?? start + 60;
     if (end <= start) end = start + 24 * 60; // crosses midnight
     raw.push({
       task,

@@ -62,7 +62,6 @@ export interface Task {
   parent_id: string | null;
   repeat_rule: string | null;
   reminder_minutes: number[];
-  estimated_minutes: number | null;
   project_id: string | null;
   blocked_by_id: string | null;
   completion_criteria: string;
@@ -157,7 +156,6 @@ export interface TaskDraft {
   parent_id?: string | null;
   repeat_rule?: string | null;
   reminder_minutes?: number[];
-  estimated_minutes?: number | null;
   project_id?: string | null;
   relative_due_days?: number;
   subtasks?: TaskDraft[];
@@ -184,7 +182,6 @@ export interface TaskUpdate {
   parent_id?: string | null;
   repeat_rule?: string | null;
   reminder_minutes?: number[];
-  estimated_minutes?: number | null;
   project_id?: string | null;
   blocked_by_id?: string | null;
   completion_criteria?: string;

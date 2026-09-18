@@ -4,8 +4,7 @@ import { DB_URL, nowIso } from "@/lib/dates";
 
 let dbPromise: Promise<Database> | null = null;
 export const TASK_SELECT = `SELECT tasks.*,
-  task_planning_metadata.reminder_minutes_json AS reminder_minutes_json,
-  task_planning_metadata.estimated_minutes AS estimated_minutes
+  task_planning_metadata.reminder_minutes_json AS reminder_minutes_json
   FROM tasks LEFT JOIN task_planning_metadata
     ON task_planning_metadata.task_id = tasks.id`;
 
@@ -83,7 +82,6 @@ export function mapTask(row: Task): Task {
     repeat_rule: row.repeat_rule ?? null,
     end_time: row.end_time ?? null,
     reminder_minutes: reminders,
-    estimated_minutes: row.estimated_minutes ?? null,
     project_id: row.project_id ?? null,
     blocked_by_id: row.blocked_by_id ?? null,
     completion_criteria: row.completion_criteria ?? "",
@@ -101,16 +99,14 @@ export async function saveTaskPlanningMetadata(task: Task): Promise<void> {
   const db = await getDb();
   await db.execute(
     `INSERT INTO task_planning_metadata
-     (task_id, reminder_minutes_json, estimated_minutes, updated_at)
-     VALUES ($1,$2,$3,$4)
+     (task_id, reminder_minutes_json, updated_at)
+     VALUES ($1,$2,$3)
      ON CONFLICT(task_id) DO UPDATE SET
        reminder_minutes_json=excluded.reminder_minutes_json,
-       estimated_minutes=excluded.estimated_minutes,
        updated_at=excluded.updated_at`,
     [
       task.id,
       JSON.stringify(task.reminder_minutes ?? []),
-      task.estimated_minutes ?? null,
       task.updated_at || nowIso(),
     ],
   );

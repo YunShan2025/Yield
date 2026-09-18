@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -90,6 +90,21 @@ describe("database migration declarations", () => {
     expect(sql).toContain("DELETE FROM sync_outbox WHERE table_name = 'focus_sessions'");
     expect(sql).toContain("DELETE FROM sync_state WHERE table_name = 'focus_sessions'");
     expect(sql).toContain("DELETE FROM settings WHERE key = 'active_focus'");
+  });
+
+  it("drops estimated_minutes via migration v8", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*8,\s*description:\s*"drop_estimated_minutes",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    // 预计时长概念下线：从规划元数据表里删列。
+    expect(match?.[1] ?? "").toContain(
+      "ALTER TABLE task_planning_metadata DROP COLUMN estimated_minutes",
+    );
   });
 
   it("adds sync metadata via migration v2", () => {

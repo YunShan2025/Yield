@@ -82,7 +82,6 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
     parent_id: draft.parent_id ?? null,
     repeat_rule: draft.repeat_rule ?? null,
     reminder_minutes: draft.reminder_minutes ?? [],
-    estimated_minutes: draft.estimated_minutes ?? null,
     project_id: draft.project_id ?? null,
     blocked_by_id: draft.blocked_by_id ?? null,
     completion_criteria: draft.completion_criteria ?? "",

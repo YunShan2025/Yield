@@ -94,7 +94,6 @@ describe("repeat rules", () => {
       priority: 1,
       end_time: "10:00",
       reminder_minutes: [60, 30, 10],
-      estimated_minutes: 45,
       project_id: "project-1",
       blocked_by_id: "blocker-1",
       completion_criteria: "reviewed",
@@ -106,7 +105,6 @@ describe("repeat rules", () => {
     expect(nextRepeatTaskDraft(source, new Date("2026-07-28T08:00:00"))).toMatchObject({
       due_date: "2026-07-29",
       reminder_minutes: [60, 30, 10],
-      estimated_minutes: 45,
       project_id: "project-1",
       blocked_by_id: "blocker-1",
       completion_criteria: "reviewed",

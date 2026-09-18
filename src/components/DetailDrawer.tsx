@@ -55,12 +55,10 @@ export function DetailDrawer() {
   const [mode, setMode] = useState<Mode>("view");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [notes, setNotes] = useState("");
   const [priority, setPriority] = useState<TaskPriority>(3);
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [completionCriteria, setCompletionCriteria] = useState("");
   const [repeat, setRepeat] = useState<RepeatRule | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -86,7 +84,6 @@ export function DetailDrawer() {
     if (!task) return;
     setTitle(task.title);
     setDescription(task.description);
-    setNotes(task.notes);
     setPriority(task.priority);
     const range = defaultTimeRange();
     setDueDate(task.due_date ?? "");
@@ -95,7 +92,6 @@ export function DetailDrawer() {
       task.end_time ??
         ensureEndAfterStart(task.due_time ?? range.start, null),
     );
-    setCompletionCriteria(task.completion_criteria);
     setRepeat(parseRepeatRule(task.repeat_rule));
   };
 
@@ -183,17 +179,16 @@ export function DetailDrawer() {
       await saveTask(task.id, {
         title: nextTitle,
         description,
-        notes,
         priority,
         due_date: dueDate || null,
         due_time: start,
         end_time: end,
-        // 提醒/预计/状态/精力/排程/前置任务已从编辑表单移除，
+        // 备注/完成标准/提醒/预计/状态/精力/排程/前置任务已从编辑表单移除，
         // 这里透传任务现有值，避免保存时被清掉。
+        notes: task.notes,
         reminder_minutes: task.reminder_minutes,
-        estimated_minutes: task.estimated_minutes,
         status: task.status,
-        completion_criteria: completionCriteria,
+        completion_criteria: task.completion_criteria,
         energy_level: task.energy_level,
         flexible: task.flexible,
         schedule_locked: task.schedule_locked,
@@ -243,11 +238,6 @@ export function DetailDrawer() {
       <div className="panel-head">
         <h3>{mode === "view" ? "任务详情" : "编辑任务"}</h3>
         <div className="detail-head-actions">
-          {mode === "view" ? (
-            <button type="button" className="btn-ghost" onClick={enterEdit}>
-              编辑
-            </button>
-          ) : null}
           <button
             type="button"
             className="btn-ghost"
@@ -368,101 +358,102 @@ export function DetailDrawer() {
             onStartChange={setDueTime}
             onEndChange={setEndTime}
           />
-          <div>
-            <label className="field-label">优先级</label>
-            <SelectMenu
-              className="field"
-              ariaLabel="优先级"
-              value={String(priority)}
-              onChange={(value) => setPriority(Number(value) as TaskPriority)}
-              options={[
-                { value: "1", label: "P1" },
-                { value: "2", label: "P2" },
-                { value: "3", label: "P3" },
-                { value: "4", label: "P4" },
-              ]}
-            />
+          <div className="detail-form-row">
+            <div>
+              <label className="field-label">优先级</label>
+              <SelectMenu
+                className="field"
+                ariaLabel="优先级"
+                value={String(priority)}
+                onChange={(value) => setPriority(Number(value) as TaskPriority)}
+                options={[
+                  { value: "1", label: "P1" },
+                  { value: "2", label: "P2" },
+                  { value: "3", label: "P3" },
+                  { value: "4", label: "P4" },
+                ]}
+              />
+            </div>
+            <div>
+              <label className="field-label">所属项目</label>
+              <SelectMenu
+                className="field"
+                ariaLabel="所属项目"
+                value={task.project_id ?? ""}
+                onChange={(value) =>
+                  void saveTask(task.id, {
+                    project_id: value || null,
+                  })
+                }
+                options={[{ value: "", label: "无项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
+              />
+            </div>
           </div>
-          <div>
-            <label className="field-label">所属项目</label>
-            <SelectMenu
-              className="field"
-              ariaLabel="所属项目"
-              value={task.project_id ?? ""}
-              onChange={(value) =>
-                void saveTask(task.id, {
-                  project_id: value || null,
-                })
-              }
-              options={[{ value: "", label: "无项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
-            />
-          </div>
-          <div>
-            <label className="field-label">完成标准</label>
-            <textarea
-              className="field"
-              rows={2}
-              value={completionCriteria}
-              onChange={(event) => setCompletionCriteria(event.target.value)}
-            />
-          </div>
-          <div>
-            <label className="field-label">重复</label>
-            <SelectMenu
-              className="field"
-              ariaLabel="重复"
-              value={repeat?.frequency ?? ""}
-              onChange={(value) => {
-                if (!value) setRepeat(null);
-                else if (value === "custom")
-                  setRepeat({
-                    frequency: "custom",
-                    interval: 1,
-                    nthWeekday: { n: -1, weekday: 5 },
-                  });
-                else if (value === "weekly")
-                  setRepeat(weeklyRuleFromDate(dueDate || todayDateString()));
-                else if (value === "monthly")
-                  setRepeat(monthlyRuleFromDate(dueDate || todayDateString()));
-                else
-                  setRepeat({
-                    frequency: value as RepeatRule["frequency"],
-                    interval: 1,
-                  });
-              }}
-              options={[
-                { value: "", label: "不重复" },
-                { value: "daily", label: "每天" },
-                { value: "weekly", label: "每周" },
-                { value: "monthly", label: "每月" },
-                { value: "custom", label: "每月最后周五" },
-              ]}
-            />
-            {repeat?.frequency === "weekly" ? (
-              <div className="create-task-weekdays" style={{ marginTop: 8 }}>
-                <RepeatWeekdayPicker
-                  weekdays={
-                    repeat.weekdays ??
-                    weeklyRuleFromDate(dueDate || todayDateString()).weekdays!
-                  }
-                  onChange={(weekdays) => {
-                    setRepeat({ ...repeat, weekdays });
-                    if (dueDate) {
-                      setDueDate(nextDateMatchingWeekdays(dueDate, weekdays));
+          <div className="detail-form-row">
+            <div>
+              <label className="field-label">重复</label>
+              <SelectMenu
+                className="field"
+                ariaLabel="重复"
+                value={repeat?.frequency ?? ""}
+                onChange={(value) => {
+                  if (!value) setRepeat(null);
+                  else if (value === "custom")
+                    setRepeat({
+                      frequency: "custom",
+                      interval: 1,
+                      nthWeekday: { n: -1, weekday: 5 },
+                    });
+                  else if (value === "weekly")
+                    setRepeat(weeklyRuleFromDate(dueDate || todayDateString()));
+                  else if (value === "monthly")
+                    setRepeat(monthlyRuleFromDate(dueDate || todayDateString()));
+                  else
+                    setRepeat({
+                      frequency: value as RepeatRule["frequency"],
+                      interval: 1,
+                    });
+                }}
+                options={[
+                  { value: "", label: "不重复" },
+                  { value: "daily", label: "每天" },
+                  { value: "weekly", label: "每周" },
+                  { value: "monthly", label: "每月" },
+                  { value: "custom", label: "每月最后周五" },
+                ]}
+              />
+              {repeat?.frequency === "weekly" ? (
+                <div className="create-task-weekdays" style={{ marginTop: 8 }}>
+                  <RepeatWeekdayPicker
+                    weekdays={
+                      repeat.weekdays ??
+                      weeklyRuleFromDate(dueDate || todayDateString()).weekdays!
                     }
-                  }}
-                />
-              </div>
-            ) : null}
-          </div>
-          <div>
-            <label className="field-label">备注</label>
-            <textarea
-              className="field"
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
+                    onChange={(weekdays) => {
+                      setRepeat({ ...repeat, weekdays });
+                      if (dueDate) {
+                        setDueDate(nextDateMatchingWeekdays(dueDate, weekdays));
+                      }
+                    }}
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div>
+              <label className="field-label">标签</label>
+              <SelectMenu
+                ariaLabel="标签"
+                className="field"
+                value={selectedTags[0] ?? ""}
+                onChange={(tagId) =>
+                  void setTaskTags(task.id, tagId ? [tagId] : [])
+                }
+                options={[
+                  { value: "", label: "无标签" },
+                  ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
+                ]}
+              />
+            </div>
           </div>
 
           <div>

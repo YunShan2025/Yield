@@ -65,7 +65,7 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   },
   task_planning_metadata: {
     idColumns: ["task_id"],
-    columns: ["reminder_minutes_json", "estimated_minutes", "updated_at"],
+    columns: ["reminder_minutes_json", "updated_at"],
   },
   milestones: {
     idColumns: ["id"],

@@ -28,7 +28,6 @@ function task(partial: Partial<Task> & Pick<Task, "id" | "title">): Task {
     parent_id: null,
     repeat_rule: null,
     reminder_minutes: [],
-    estimated_minutes: null,
     project_id: null,
     blocked_by_id: null,
     created_at: "2026-08-10T00:00:00.000Z",

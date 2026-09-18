@@ -607,20 +607,14 @@ html[data-shell="mobile"] .ledger-view .top-controls .btn-ghost {
 
 /* 检测方式：Range.getClientRects 逐文本节点量行框，末行 ≤1.6 字宽即孤字。
    胶囊/徽标类被 flex 挤压时 CJK 逐字断行，末行只剩一个字，很难看：
-   一律 nowrap（整颗胶囊换行也好过断在字中间），时长胶囊再降 1px 字号
-   让三枚胶囊在 227px 的 meta 行内放得下。 */
+   一律 nowrap（整颗胶囊换行也好过断在字中间）。 */
 html[data-shell="mobile"] .task-meta {
   flex-wrap: wrap;
 }
 
-html[data-shell="mobile"] .estimate-chip,
 html[data-shell="mobile"] .reminder-chip,
 html[data-shell="mobile"] .done-at-chip {
   white-space: nowrap;
-}
-
-html[data-shell="mobile"] .estimate-chip {
-  font-size: 11px;
 }
 
 /* 提醒状态条主文案（空闲态 13 字）在 175px 列里末行只剩一个「时」，
