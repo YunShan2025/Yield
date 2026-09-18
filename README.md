@@ -176,7 +176,7 @@ npm run tauri build -- --target aarch64-apple-darwin --bundles dmg
 
 ## 维护约定
 
-- 每次代码改动记录到 `docs/CHANGES.md`（倒序追加），数据库结构只支持向前升级、绝不删除用户数据
+- 每次发布在 `docs/CHANGES.md` 版本记录区追加条目（倒序追加），数据库结构只支持向前升级、绝不删除用户数据
 - 影响用户可感知行为的修改同步更新本 README；发布新版本时版本号同步 `package.json` 与 `src-tauri/tauri.conf.json`
 - 发布前跑完整门禁：
 
@@ -184,4 +184,4 @@ npm run tauri build -- --target aarch64-apple-darwin --bundles dmg
 npm run release:check
 ```
 
-- 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；开发与发布惯例见 [Git 惯例](docs/GIT_CONVENTIONS.md)；修改记录与版本记录见 [修改记录](docs/CHANGES.md)
+- 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；开发与发布惯例见 [Git 惯例](docs/GIT_CONVENTIONS.md)；版本历史见 [版本记录](docs/CHANGES.md)
