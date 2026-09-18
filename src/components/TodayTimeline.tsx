@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { useAppStore } from "@/store/app";
 import { formatIsoTime, todayDateString } from "@/lib/dates";
 import { layoutTimeline } from "@/lib/timeline";
@@ -22,9 +22,15 @@ function formatRange(start?: string | null, end?: string | null) {
   return start ?? end ?? "";
 }
 
+function formatMin(min: number) {
+  const m = ((min % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+
 export function TodayTimeline() {
   const tasks = useAppStore((s) => s.tasks);
   const selectTask = useAppStore((s) => s.selectTask);
+  const saveTask = useAppStore((s) => s.saveTask);
   const selectedTaskId = useAppStore((s) => s.selectedTaskId);
   const cursor = useAppStore((s) => s.calendarCursor);
   const today = todayDateString();
@@ -115,6 +121,83 @@ export function TodayTimeline() {
   const openTaskDetail = (taskId: string) => {
     setHoveredTask(null);
     selectTask(taskId);
+  };
+
+  // 横向拖动事件块改时间:按 15 分钟对齐,松手写回开始/结束(时长不变)。
+  // 移动距离小于阈值视为点击,照常打开详情;不渲染任何显性拖动条。
+  const [drag, setDrag] = useState<{ id: string; deltaMin: number } | null>(
+    null,
+  );
+  const dragRef = useRef<{
+    id: string;
+    pointerId: number;
+    startX: number;
+    origStartMin: number;
+    origEndMin: number;
+    deltaMin: number;
+    moved: boolean;
+    endedAt: number;
+  } | null>(null);
+
+  const onEventPointerDown = (
+    event: PointerEvent<HTMLButtonElement>,
+    item: LaidOut,
+  ) => {
+    if (event.button !== 0) return;
+    if (item.task.status === "completed") return;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      /* 某些指针类型可能不支持捕获,退化为窗口内跟随 */
+    }
+    dragRef.current = {
+      id: item.task.id,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      origStartMin: item.startMin,
+      origEndMin: item.endMin,
+      deltaMin: 0,
+      moved: false,
+      endedAt: 0,
+    };
+  };
+
+  const onEventPointerMove = (
+    event: PointerEvent<HTMLButtonElement>,
+  ) => {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== event.pointerId) return;
+    const dx = event.clientX - d.startX;
+    if (!d.moved && Math.abs(dx) < 4) return;
+    d.moved = true;
+    const deltaMin = Math.round((dx / SLOT_W) * 60 / 15) * 15;
+    d.deltaMin = deltaMin;
+    setDrag({ id: d.id, deltaMin });
+  };
+
+  const onEventPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== event.pointerId) return;
+    d.endedAt = Date.now();
+    if (d.moved) {
+      const duration =
+        d.origEndMin > d.origStartMin ? d.origEndMin - d.origStartMin : 60;
+      const newStart = Math.min(
+        1439 - duration,
+        Math.max(0, d.origStartMin + d.deltaMin),
+      );
+      void saveTask(d.id, {
+        due_time: formatMin(newStart),
+        end_time: formatMin(newStart + duration),
+      });
+    }
+    dragRef.current = { ...d };
+    setDrag(null);
+  };
+
+  const justDragged = (taskId: string) => {
+    const d = dragRef.current;
+    return d?.id === taskId && d.moved && Date.now() - d.endedAt < 300;
   };
 
   const showTaskPreview = (
@@ -212,35 +295,53 @@ export function TodayTimeline() {
                 ) : null}
 
                 {items.map(({ task, startMin, endMin, lane }) => {
-                  const left = minToX(startMin);
+                  const dragging = drag?.id === task.id ? drag : null;
+                  const displayStart = dragging
+                    ? Math.min(1440, Math.max(0, startMin + dragging.deltaMin))
+                    : startMin;
+                  const displayEnd = dragging
+                    ? displayStart + Math.max(60, endMin - startMin)
+                    : endMin;
+                  const left = minToX(displayStart);
                   const width = Math.max(168, minToX(endMin) - left - 7);
-                  const range = formatRange(task.due_time, task.end_time);
+                  const staticRange = formatRange(task.due_time, task.end_time);
+                  const range = dragging
+                    ? `${formatMin(displayStart)}–${formatMin(displayEnd)}`
+                    : staticRange;
                   const p = task.priority ?? 3;
                   const done = task.status === "completed";
                   return (
                     <button
                       key={task.id}
                       type="button"
-                      className={`timeline-h-event p${p} ${done ? "is-done" : ""} ${highlightTaskId === task.id ? "is-focus" : ""}`}
+                      className={`timeline-h-event p${p} ${done ? "is-done" : ""} ${highlightTaskId === task.id ? "is-focus" : ""} ${dragging ? "is-dragging" : ""}`}
                       style={{
                         left,
                         width,
                         top: lane * LANE_H + 8,
                         height: LANE_H - 16,
                       }}
-                      aria-label={`${task.title} ${range}${done ? " 已完成" : ""}`}
+                      aria-label={`${task.title} ${formatRange(task.due_time, task.end_time)}${done ? " 已完成" : ""}`}
+                      onPointerDown={(event) => onEventPointerDown(event, { task, startMin, endMin, lane })}
+                      onPointerMove={onEventPointerMove}
+                      onPointerUp={onEventPointerUp}
+                      onPointerCancel={onEventPointerUp}
                       onMouseEnter={(event) =>
                         showTaskPreview(event, task, range)
                       }
-                      onMouseMove={(event) =>
-                        showTaskPreview(event, task, range)
-                      }
+                      onMouseMove={(event) => {
+                        if (dragRef.current?.moved) return;
+                        showTaskPreview(event, task, range);
+                      }}
                       onMouseLeave={() => setHoveredTask(null)}
                       onFocus={(event) =>
                         showTaskPreview(event, task, range)
                       }
                       onBlur={() => setHoveredTask(null)}
-                      onClick={() => openTaskDetail(task.id)}
+                      onClick={() => {
+                        if (justDragged(task.id)) return;
+                        openTaskDetail(task.id);
+                      }}
                     >
                       <span className="timeline-h-event-title">
                         {task.title}

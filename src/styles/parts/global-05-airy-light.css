@@ -978,6 +978,19 @@ select {
     border-color 140ms ease;
 }
 
+/* 拖动改时间:整块即手柄(无显性拖动条),未完成的块可横向拖动。 */
+.timeline-h-event:not(.is-done) {
+  touch-action: none;
+  cursor: grab;
+}
+
+.timeline-h-event.is-dragging {
+  cursor: grabbing;
+  z-index: 3;
+  box-shadow: 0 10px 24px rgba(98, 99, 168, 0.22);
+  user-select: none;
+}
+
 .timeline-h-event::before {
   content: "";
   position: absolute;

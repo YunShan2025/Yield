@@ -457,22 +457,6 @@ export function DetailDrawer() {
           </div>
 
           <div>
-            <label className="field-label">标签</label>
-            <SelectMenu
-              ariaLabel="标签"
-              className="field"
-              value={selectedTags[0] ?? ""}
-              onChange={(tagId) =>
-                void setTaskTags(task.id, tagId ? [tagId] : [])
-              }
-              options={[
-                { value: "", label: "无标签" },
-                ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
-              ]}
-            />
-          </div>
-
-          <div>
             <label className="field-label">附件</label>
             <div
               className={`drop-zone ${dragOver ? "active" : ""}`}

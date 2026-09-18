@@ -6,7 +6,12 @@ import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
 import { findFirstAvailableTimeSlot } from "@/lib/planning";
-import { nowTimeString, parseTimeToMinutes, todayDateString } from "@/lib/dates";
+import {
+  ensureEndAfterStart,
+  nowTimeString,
+  parseTimeToMinutes,
+  todayDateString,
+} from "@/lib/dates";
 import {
   nextDateMatchingWeekdays,
   stringifyRepeatRule,
@@ -109,8 +114,8 @@ export function CreateTaskDialog() {
       title: title.trim(),
       description: description.trim(),
       due_date: finalDue || null,
-      due_time: dueDate ? dueTime : null,
-      end_time: dueDate ? endTime : null,
+      due_time: dueTime || null,
+      end_time: endTime ? ensureEndAfterStart(dueTime, endTime) : null,
       priority,
       project_id: projectId || null,
       repeat_rule: stringifyRepeatRule(finalRepeat),
@@ -201,20 +206,18 @@ export function CreateTaskDialog() {
               setRepeat(weeklyRuleFromDate(next));
             }
           }} allowClear ariaLabel="任务日期" /></label>
-          {dueDate ? (
-            <TimeRangeFields
-              start={dueTime}
-              end={endTime}
-              onStartChange={(value) => {
-                setTimeManual(true);
-                setDueTime(value);
-              }}
-              onEndChange={(value) => {
-                setTimeManual(true);
-                setEndTime(value);
-              }}
-            />
-          ) : null}
+          <TimeRangeFields
+            start={dueTime}
+            end={endTime}
+            onStartChange={(value) => {
+              setTimeManual(true);
+              setDueTime(value);
+            }}
+            onEndChange={(value) => {
+              setTimeManual(true);
+              setEndTime(value);
+            }}
+          />
         </div>
         <div className="create-task-actions"><button type="button" className="btn-ghost" onClick={close}>取消</button><button type="submit" className="btn-primary" disabled={!title.trim() || (Boolean(dueDate) && (!dueTime || !endTime)) || saving}>{saving ? "创建中…" : "创建任务"}</button></div>
       </form>
