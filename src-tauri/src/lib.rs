@@ -1202,6 +1202,14 @@ DELETE FROM settings WHERE key = 'active_focus';
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 8,
+            description: "drop_estimated_minutes",
+            // 预计时长概念下线：编辑/新建表单与 UI 均不再展示，
+            // TS 侧读写与同步注册已同步移除该列，这里从库里删掉。
+            sql: r#"ALTER TABLE task_planning_metadata DROP COLUMN estimated_minutes;"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
