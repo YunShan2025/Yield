@@ -200,9 +200,6 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
       (item) => !item.task_id || taskIds.has(item.task_id),
     ),
     taskEvents: payload.taskEvents?.filter((item) => taskIds.has(item.task_id)),
-    focusSessions: payload.focusSessions?.filter(
-      (item) => !item.task_id || taskIds.has(item.task_id),
-    ),
     timers: payload.timers?.filter((item) => !item.task_id || taskIds.has(item.task_id)),
     goalEntries: payload.goalEntries?.filter((item) => {
       if (hasGoals && !goalIds.has(item.goal_id)) return false;

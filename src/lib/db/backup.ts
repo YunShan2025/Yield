@@ -1,7 +1,6 @@
 import type {
   AppNotification,
   BackupPayload,
-  FocusSession,
   Milestone,
   Project,
   TaskEvent,
@@ -49,9 +48,6 @@ export async function exportBackup(): Promise<BackupPayload> {
     "SELECT * FROM app_notifications",
   );
   const taskEvents = await db.select<TaskEvent[]>("SELECT * FROM task_events");
-  const focusSessions = await db.select<FocusSession[]>(
-    "SELECT * FROM focus_sessions",
-  );
   const milestones = await db.select<Milestone[]>("SELECT * FROM milestones");
   const goals = await fetchGoals(true);
   const goalEntries = await fetchGoalEntries();
@@ -83,7 +79,6 @@ export async function exportBackup(): Promise<BackupPayload> {
     projects,
     notifications,
     taskEvents,
-    focusSessions,
     milestones,
     goals,
     goalEntries,
@@ -130,7 +125,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
       // goal ledger. Remove the old sources before their owners disappear.
       await db.execute("DELETE FROM goal_entries WHERE source_type IN ('task','habit')");
     }
-    if (has("focusSessions")) await db.execute("DELETE FROM focus_sessions");
     if (has("taskEvents")) await db.execute("DELETE FROM task_events");
     if (has("milestones")) await db.execute("DELETE FROM milestones");
     await db.execute("DELETE FROM habit_checks");
@@ -295,22 +289,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         event.after_json,
         event.note,
         event.created_at,
-      ],
-    );
-  }
-  for (const session of payload.focusSessions ?? []) {
-    await db.execute(
-      `INSERT INTO focus_sessions
-       (id, task_id, started_at, ended_at, duration_sec, interruption_reason, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [
-        session.id,
-        session.task_id,
-        session.started_at,
-        session.ended_at,
-        session.duration_sec,
-        session.interruption_reason,
-        session.created_at,
       ],
     );
   }

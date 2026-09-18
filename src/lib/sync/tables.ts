@@ -2,8 +2,10 @@
  * 同步范围注册表：参与同步的表、外键依赖序（父表先于子表应用）、settings 白名单。
  * 顺序约定：projects/goals/tags/habits/anniversaries 等父表在前，
  * tasks 再到其关联表；ledger 分类/账户先于交易。
- * 追加型表（task_events / focus_sessions / habit_checks / achievements）
+ * 追加型表（task_events / habit_checks / achievements）
  * 只会有插入与（habit_checks 的）删除，无更新语义。
+ * focus_sessions 已随专注功能下线移出同步范围（migration v7 删表），
+ * 旧日志中的同名条目经 isSyncTable 过滤自然跳过。
  */
 
 export type SyncTableName =
@@ -22,7 +24,6 @@ export type SyncTableName =
   | "achievements"
   | "memos"
   | "timers"
-  | "focus_sessions"
   | "ledger_categories"
   | "ledger_accounts"
   | "ledger_transactions"
@@ -46,7 +47,6 @@ export const SYNC_TABLES: readonly SyncTableName[] = [
   "achievements",
   "memos",
   "timers",
-  "focus_sessions",
   "ledger_categories",
   "ledger_accounts",
   "ledger_transactions",

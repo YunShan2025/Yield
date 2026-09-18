@@ -204,9 +204,9 @@ describe("mergeEntries · settings 键级 LWW", () => {
 });
 
 describe("同步范围完整性", () => {
-  it("SYNC_TABLES 共 21 表，依赖序与 settings 收尾正确", () => {
-    expect(SYNC_TABLES).toHaveLength(21);
-    expect(new Set(SYNC_TABLES).size).toBe(21);
+  it("SYNC_TABLES 共 20 表，依赖序与 settings 收尾正确", () => {
+    expect(SYNC_TABLES).toHaveLength(20);
+    expect(new Set(SYNC_TABLES).size).toBe(20);
     expect(SYNC_TABLES.indexOf("projects")).toBeLessThan(SYNC_TABLES.indexOf("tasks"));
     expect(SYNC_TABLES.indexOf("tags")).toBeLessThan(SYNC_TABLES.indexOf("task_tags"));
     expect(SYNC_TABLES.indexOf("goals")).toBeLessThan(SYNC_TABLES.indexOf("goal_entries"));

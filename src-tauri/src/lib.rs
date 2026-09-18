@@ -1186,6 +1186,22 @@ CREATE TABLE IF NOT EXISTS sync_tag_alias (
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 7,
+            description: "drop_focus_sessions",
+            // 专注（番茄钟）功能永久下线：删表并清掉历史数据与残留簿记——
+            // 同步 outbox/state 里可能滞留的 focus_sessions 行、心跳设置键。
+            // TS 侧已同步移除该表的同步注册与备份读写；旧日志里的同名条目
+            // 经 isSyncTable 过滤自然跳过。
+            sql: r#"
+DROP INDEX IF EXISTS idx_focus_sessions_task;
+DROP TABLE IF EXISTS focus_sessions;
+DELETE FROM sync_outbox WHERE table_name = 'focus_sessions';
+DELETE FROM sync_state WHERE table_name = 'focus_sessions';
+DELETE FROM settings WHERE key = 'active_focus';
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

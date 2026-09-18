@@ -236,16 +236,6 @@ export interface TaskEvent {
   created_at: string;
 }
 
-export interface FocusSession {
-  id: string;
-  task_id: string | null;
-  started_at: string;
-  ended_at: string | null;
-  duration_sec: number;
-  interruption_reason: string | null;
-  created_at: string;
-}
-
 /** 纪念日：记录原日期，可按年循环倒数。 */
 export interface Anniversary {
   id: string;
@@ -375,7 +365,6 @@ export interface BackupPayload {
   projects?: Project[];
   notifications?: AppNotification[];
   taskEvents?: TaskEvent[];
-  focusSessions?: FocusSession[];
   milestones?: Milestone[];
   goals?: Goal[];
   goalEntries?: GoalEntry[];

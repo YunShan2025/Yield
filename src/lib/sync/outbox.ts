@@ -165,13 +165,14 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
        SELECT 'task_tags', task_id || ':' || tag_id, 'upsert', ${TS_MS_SQL} FROM task_tags`,
     ),
   );
-  for (const table of ["focus_sessions", "achievements"]) {
+  // achievements 为追加型表：按 created_at 派生 ts_ms。
+  {
     const createdMs =
       "COALESCE(CAST(ROUND((julianday(NULLIF(created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0)";
     total += rowsAffected(
       await db.execute(
         `INSERT OR IGNORE INTO sync_outbox(table_name, row_id, op, ts_ms)
-         SELECT '${table}', CAST(id AS TEXT), 'upsert', ${createdMs} FROM ${table}`,
+         SELECT 'achievements', CAST(id AS TEXT), 'upsert', ${createdMs} FROM achievements`,
       ),
     );
   }

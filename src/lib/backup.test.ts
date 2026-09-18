@@ -34,7 +34,6 @@ describe("backup coverage", () => {
       .join("\n");
     for (const table of [
       "task_events",
-      "focus_sessions",
       "milestones",
       "goals",
       "goal_entries",
@@ -64,6 +63,7 @@ describe("backup coverage", () => {
       "karma_ledger",
       "my_day_date",
       "remind_minutes",
+      "focus_sessions",
     ]) {
       expect(source).not.toContain(legacy);
     }

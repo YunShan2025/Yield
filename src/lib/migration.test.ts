@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -73,6 +73,23 @@ describe("database migration declarations", () => {
     expect(baseline).not.toContain("ALTER TABLE");
     expect(source).not.toContain("INSERT OR REPLACE INTO task_planning_metadata");
     expect(baseline).toContain("schedule_locked INTEGER NOT NULL DEFAULT 0");
+  });
+
+  it("drops focus_sessions with its leftovers via migration v7", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*7,\s*description:\s*"drop_focus_sessions",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 专注功能下线：删表删历史数据，并清掉可能滞留的同步簿记与心跳设置键。
+    expect(sql).toContain("DROP TABLE IF EXISTS focus_sessions");
+    expect(sql).toContain("DELETE FROM sync_outbox WHERE table_name = 'focus_sessions'");
+    expect(sql).toContain("DELETE FROM sync_state WHERE table_name = 'focus_sessions'");
+    expect(sql).toContain("DELETE FROM settings WHERE key = 'active_focus'");
   });
 
   it("adds sync metadata via migration v2", () => {

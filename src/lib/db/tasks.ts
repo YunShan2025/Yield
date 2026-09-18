@@ -1,5 +1,4 @@
 import type {
-  FocusSession,
   Task,
   TaskDraft,
   TaskUpdate,
@@ -334,131 +333,6 @@ export async function recordTaskEvent(
   );
 }
 
-export async function startFocusSession(
-  taskId: string | null,
-): Promise<FocusSession> {
-  const db = await getDb();
-  const stamp = nowIso();
-  const session: FocusSession = {
-    id: createId(),
-    task_id: taskId,
-    started_at: stamp,
-    ended_at: null,
-    duration_sec: 0,
-    interruption_reason: null,
-    created_at: stamp,
-  };
-  await db.execute(
-    `INSERT INTO focus_sessions
-      (id, task_id, started_at, ended_at, duration_sec, interruption_reason, created_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-    [
-      session.id,
-      session.task_id,
-      session.started_at,
-      session.ended_at,
-      session.duration_sec,
-      session.interruption_reason,
-      session.created_at,
-    ],
-  );
-  return session;
-}
-
-export async function finishFocusSession(
-  id: string,
-  interruptionReason?: string | null,
-  endedAt = nowIso(),
-): Promise<boolean> {
-  return withTransaction(async () => {
-    const db = await getDb();
-    const rows = await db.select<FocusSession[]>(
-      "SELECT * FROM focus_sessions WHERE id = $1 LIMIT 1",
-      [id],
-    );
-    if (!rows.length || rows[0].ended_at) return false;
-    const session = rows[0];
-    const endedMs = new Date(endedAt).getTime();
-    const startedMs = new Date(session.started_at).getTime();
-    const ended = Number.isFinite(endedMs) ? endedAt : nowIso();
-    const durationSec =
-      Number.isFinite(endedMs) && Number.isFinite(startedMs)
-        ? Math.max(0, Math.round((endedMs - startedMs) / 1000))
-        : 0;
-    const result = await db.execute(
-      `UPDATE focus_sessions
-       SET ended_at = $1, duration_sec = $2, interruption_reason = $3
-       WHERE id = $4 AND ended_at IS NULL`,
-      [ended, durationSec, interruptionReason ?? null, id],
-    );
-    if (!result.rowsAffected) return false;
-    if (session.task_id && durationSec > 0) {
-      const minutes = Math.max(1, Math.round(durationSec / 60));
-      await db.execute(
-        `UPDATE tasks
-         SET actual_minutes = COALESCE(actual_minutes, 0) + $1,
-             updated_at = $2
-         WHERE id = $3`,
-        [minutes, ended, session.task_id],
-      );
-      await recordTaskEvent(
-        session.task_id,
-        "time_logged",
-        null,
-        { minutes, interruptionReason: interruptionReason ?? null },
-      );
-      const taskRows = await db.select<Task[]>(
-        `${TASK_SELECT} WHERE tasks.id = $1 LIMIT 1`,
-        [session.task_id],
-      );
-      const task = taskRows[0] ? mapTask(taskRows[0]) : null;
-      if (task?.goal_id) {
-        await addGoalEntry({
-          goal_id: task.goal_id,
-          entry_date: localDateKey(new Date(ended)),
-          value: minutes,
-          source_type: "focus",
-          source_id: id,
-          note: `专注：${task.title}`,
-        });
-      }
-    }
-    return true;
-  });
-}
-
-export async function fetchOpenFocusSessions(): Promise<FocusSession[]> {
-  const db = await getDb();
-  return db.select<FocusSession[]>(
-    "SELECT * FROM focus_sessions WHERE ended_at IS NULL ORDER BY started_at DESC",
-  );
-}
-
-const STALE_OPEN_FOCUS_MS = 12 * 60 * 60 * 1000;
-
-/** Close leftover focus rows that can no longer be continued. */
-export async function abandonStaleOpenFocusSessions(
-  nowMs = Date.now(),
-  maxAgeMs = STALE_OPEN_FOCUS_MS,
-): Promise<number> {
-  const open = await fetchOpenFocusSessions();
-  let closed = 0;
-  for (const session of open) {
-    const started = Date.parse(session.started_at);
-    if (Number.isFinite(started) && nowMs - started < maxAgeMs) continue;
-    const endedAt = Number.isFinite(started)
-      ? new Date(started).toISOString()
-      : session.started_at;
-    try {
-      await finishFocusSession(session.id, "异常退出，已放弃", endedAt);
-      closed += 1;
-    } catch {
-      /* retry on next launch */
-    }
-  }
-  return closed;
-}
-
 export async function reorderTasks(
   orderedIds: string[],
 ): Promise<void> {
@@ -674,9 +548,6 @@ export async function purgeTrash(): Promise<number> {
       `DELETE FROM task_events WHERE task_id IN (${trash})`,
     );
     await db.execute(
-      `UPDATE focus_sessions SET task_id = NULL WHERE task_id IN (${trash})`,
-    );
-    await db.execute(
       `DELETE FROM goal_entries WHERE source_type = 'task' AND source_id IN (${trash})`,
     );
     await db.execute(
@@ -725,10 +596,6 @@ export async function purgeTask(id: string): Promise<void> {
       ids,
     );
     await db.execute(`DELETE FROM task_events WHERE task_id IN (${placeholders})`, ids);
-    await db.execute(
-      `UPDATE focus_sessions SET task_id = NULL WHERE task_id IN (${placeholders})`,
-      ids,
-    );
     await db.execute(
       `DELETE FROM goal_entries WHERE source_type = 'task' AND source_id IN (${placeholders})`,
       ids,

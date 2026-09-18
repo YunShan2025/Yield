@@ -59,36 +59,3 @@ export async function loadAppSettings(): Promise<AppSettings> {
     onboardingComplete: s.onboarding_complete === "true",
   };
 }
-
-const ACTIVE_FOCUS_KEY = "active_focus";
-
-export type ActiveFocusState = {
-  sessionId: string;
-  taskId: string | null;
-  endsAt: number;
-  plannedSec: number;
-  lastHeartbeatAt?: number;
-  hiddenAt?: number | null;
-};
-
-export async function saveActiveFocus(state: ActiveFocusState | null): Promise<void> {
-  await setSetting(ACTIVE_FOCUS_KEY, state ? JSON.stringify(state) : "");
-}
-
-export async function loadActiveFocus(): Promise<ActiveFocusState | null> {
-  const raw = await getSetting(ACTIVE_FOCUS_KEY);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as ActiveFocusState;
-    if (!parsed?.sessionId || !Number.isFinite(parsed.endsAt)) return null;
-    if (parsed.lastHeartbeatAt != null && !Number.isFinite(parsed.lastHeartbeatAt)) {
-      delete parsed.lastHeartbeatAt;
-    }
-    if (parsed.hiddenAt != null && !Number.isFinite(parsed.hiddenAt)) {
-      parsed.hiddenAt = null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}

@@ -98,10 +98,6 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
       "task_id", "ends_at", "last_fired_at", "created_at", "updated_at",
     ],
   },
-  focus_sessions: {
-    idColumns: ["id"],
-    columns: ["task_id", "started_at", "ended_at", "duration_sec", "interruption_reason", "created_at"],
-  },
   ledger_categories: {
     idColumns: ["id"],
     integerId: true,

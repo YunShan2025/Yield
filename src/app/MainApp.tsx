@@ -14,7 +14,6 @@ import { MainWorkspace } from "@/components/MainWorkspace";
 import { DetailDrawer } from "@/components/DetailDrawer";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
-import { FocusRecoveryDialog } from "@/components/FocusRecoveryDialog";
 import { AppConfirmHost } from "@/components/AppConfirm";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { GlassTitlebar } from "@/components/GlassTitlebar";
@@ -100,8 +99,6 @@ export function MainApp() {
   const timers = useAppStore((s) => s.timers);
   const settleTimers = useAppStore((s) => s.settleTimers);
   const refreshTimers = useAppStore((s) => s.refreshTimers);
-  const focusRunning = useAppStore((s) => s.focusRunning);
-  const tickFocus = useAppStore((s) => s.tickFocus);
 
   const overdueSignature = useMemo(
     () =>
@@ -390,28 +387,6 @@ export function MainApp() {
       window.clearInterval(interval);
     };
   }, [ready]);
-
-  // Single global focus ticker — uses absolute endsAt so sleep gaps are settled.
-  useEffect(() => {
-    if (!focusRunning) return;
-    const id = window.setInterval(() => tickFocus(), 1000);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") tickFocus();
-      else useAppStore.getState().persistFocusHeartbeat(true);
-    };
-    const onPageHide = () => {
-      useAppStore.getState().persistFocusHeartbeat(true);
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onVisible);
-    window.addEventListener("pagehide", onPageHide);
-    return () => {
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onVisible);
-      window.removeEventListener("pagehide", onPageHide);
-    };
-  }, [focusRunning, tickFocus]);
 
   // 应用跨天保持打开时，回到窗口即把今日页游标刷新到新的一天。
   // 任务不随之移动：今日页只呈现「今天截止」的任务，逾期任务留在待办箱。
@@ -822,7 +797,6 @@ export function MainApp() {
         <MobileNav moreActive={moreOpen} onMore={toggleMore} onNavigate={navigateMobile} />
         {moreOpen ? <MobileMoreSheet onNavigate={navigateFromMore} /> : null}
         {createTaskOpen ? <CreateTaskDialog /> : null}
-        <FocusRecoveryDialog />
         <AppConfirmHost />
         <OnboardingGuide />
         <DesktopNotificationCards />
@@ -859,7 +833,6 @@ export function MainApp() {
       </div>
       <CommandPalette />
       {createTaskOpen ? <CreateTaskDialog /> : null}
-      <FocusRecoveryDialog />
       <AppConfirmHost />
       <OnboardingGuide />
       <DesktopNotificationCards />
