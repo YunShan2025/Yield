@@ -11,6 +11,15 @@
 
 /* ---------- 1) Chrome 83 垫片 ---------- */
 
+/* WebView 的点击高亮是半透明蓝色方块，按钮越多越明显：移动端全局关闭。
+ * （该属性可继承，但老 WebView 实现不一，元素级兜底最稳。） */
+html[data-shell="mobile"],
+html[data-shell="mobile"] button,
+html[data-shell="mobile"] a,
+html[data-shell="mobile"] [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* inset 简写在 Chrome 87 才支持，全部补长手；新浏览器下与原值相同。 */
 .modal-backdrop,
 .row-menu-backdrop,
@@ -180,14 +189,9 @@ html[data-shell="mobile"] .task-quick-actions {
 }
 
 /* 行内「⋯」菜单在手机上冗余:长按已弹出操作面板(顺延/改期都在),
- * 「详情」后跟「⋯」还占标题宽度。隐藏菜单,行级「删除」顶替其位置
- * （下方覆盖 ≤700px 的隐藏规则, specificity 更高不依赖顺序）。 */
+ * 「详情」后跟「⋯」还占标题宽度。隐藏菜单,行级「删除」顶替其位置。 */
 html[data-shell="mobile"] .row-more {
   display: none;
-}
-
-html[data-shell="mobile"] .expand-task-row > .expand-delete {
-  display: flex;
 }
 
 /* 长按弹操作面板:屏蔽 WebView 原生长按选择/呼出菜单。 */
@@ -483,12 +487,13 @@ html[data-shell="mobile"] .desktop-notification-stack {
     grid-template-columns: 44px repeat(7, minmax(76px, 1fr));
   }
 
-  /* 任务行：窄屏隐藏行级删除（详情面板里有），保住标题宽度。 */
+  /* 任务行：窄屏收紧行距。行级删除只在桌面窄窗隐藏（移动壳要常显，
+   * 用 :not 排除，避免与移动壳的显示规则打 specificity 战）。 */
   .expand-task-row {
     padding: 10px 12px;
   }
 
-  .expand-task-row > .expand-delete {
+  html:not([data-shell="mobile"]) .expand-task-row > .expand-delete {
     display: none;
   }
 
