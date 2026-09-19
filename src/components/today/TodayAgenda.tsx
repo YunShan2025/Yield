@@ -1,5 +1,4 @@
 import { useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import {
   DndContext,
   PointerSensor,
@@ -18,114 +17,10 @@ import { useAppStore } from "@/store/app";
 import { isMobileShell } from "@/lib/platform";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
-import { buildTaskDeferredUpdate } from "@/lib/planning";
-import { addDays, formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
+import { formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
 import { confirmAction } from "@/components/AppConfirm";
-import { DatePicker } from "@/components/DatePicker";
 import type { Task } from "@/types";
 import { isActiveTask } from "@/lib/tasks";
-
-/** Row "⋯" menu. Rendered through a portal + viewport-fixed: ancestors may
- * carry transforms (e.g. .expand-task:hover translateY), which would otherwise
- * hijack position:fixed and misplace the menu until the pointer leaves. */
-function RowMenu({ task, cursor }: { task: Task; cursor: string }) {
-  const [open, setOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ left: number; top: number } | null>(null);
-  const [customOpen, setCustomOpen] = useState(false);
-  const [customDate, setCustomDate] = useState(addDays(cursor, 1));
-  const anchorRef = useRef<HTMLButtonElement>(null);
-
-  const openMenu = () => {
-    const rect = anchorRef.current?.getBoundingClientRect();
-    if (rect) {
-      const MENU_W = 208;
-      const MENU_H = 150;
-      const left = Math.max(
-        8,
-        Math.min(window.innerWidth - MENU_W - 8, rect.right - MENU_W),
-      );
-      const below = rect.bottom + 6;
-      setMenuPos({
-        left,
-        top:
-          below + MENU_H > window.innerHeight
-            ? Math.max(8, rect.top - MENU_H - 6)
-            : below,
-      });
-    }
-    setOpen(true);
-  };
-
-  const close = () => {
-    setOpen(false);
-    setCustomOpen(false);
-  };
-
-  const deferTo = (date: string) => {
-    close();
-    if (!date) return;
-    void useAppStore
-      .getState()
-      .saveTask(task.id, buildTaskDeferredUpdate(date));
-  };
-
-  return (
-    <span className="row-more-wrap">
-      <button
-        type="button"
-        ref={anchorRef}
-        className="btn-ghost row-more"
-        title="更多操作"
-        aria-label="更多操作"
-        aria-expanded={open}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (open) close();
-          else openMenu();
-        }}
-      >
-        ⋯
-      </button>
-      {open && menuPos ? createPortal(
-        <>
-          <button
-            type="button"
-            className="row-menu-backdrop"
-            aria-label="关闭菜单"
-            onClick={close}
-          />
-          <div
-            className="row-menu"
-            style={{ left: menuPos.left, top: menuPos.top }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button type="button" onClick={() => deferTo(addDays(cursor, 1))}>
-              顺延到明天
-            </button>
-            {customOpen ? (
-              <label className="row-menu-date">
-                <span>改期到</span>
-                <DatePicker
-                  value={customDate}
-                  onChange={(next) => {
-                    setCustomDate(next);
-                    if (next) deferTo(next);
-                  }}
-                  ariaLabel="改期到"
-                />
-              </label>
-            ) : (
-              <button type="button" onClick={() => setCustomOpen(true)}>
-                改期到自定义日期…
-              </button>
-            )}
-          </div>
-        </>,
-        document.body,
-      ) : null}
-    </span>
-  );
-}
 
 /** 触摸屏长按行弹出操作面板的时长。移动端拖拽改由独立手柄启动,
  * 因此行内长按不会与拖拽冲突,只归操作面板。 */
@@ -278,23 +173,18 @@ function DayTaskRow({
           ) : null
         }
         actions={
-          !selecting && isActiveTask(task) ? (
-            <>
-              {mobile ? (
-                <button
-                  type="button"
-                  className="btn-ghost drag-handle"
-                  title="拖动排序"
-                  aria-label="拖动排序"
-                  onClick={(e) => e.stopPropagation()}
-                  {...sortable.attributes}
-                  {...sortable.listeners}
-                >
-                  ⋮⋮
-                </button>
-              ) : null}
-              <RowMenu task={task} cursor={cursor} />
-            </>
+          !selecting && isActiveTask(task) && mobile ? (
+            <button
+              type="button"
+              className="btn-ghost drag-handle"
+              title="拖动排序"
+              aria-label="拖动排序"
+              onClick={(e) => e.stopPropagation()}
+              {...sortable.attributes}
+              {...sortable.listeners}
+            >
+              ⋮⋮
+            </button>
           ) : null
         }
       />
