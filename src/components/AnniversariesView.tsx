@@ -65,6 +65,14 @@ export function AnniversariesView() {
     void refresh();
   }, []);
 
+  // 同步拉回对端新数据后重载本页列表（周年日为页内本地状态，不进全局 store）。
+  useEffect(() => {
+    const reload = () => void refresh();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const sorted = useMemo(() => sortAnniversaries(items, today), [items, today]);
   const upcoming = sorted.filter((item) => {
     const days = anniversaryHeadline(item, today).daysLeft;

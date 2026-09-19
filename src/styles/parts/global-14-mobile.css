@@ -174,8 +174,19 @@ html[data-shell="mobile"] .expand-task:hover {
 }
 
 /* ≤1080px 时桌面样式把行快捷区（⋯ 菜单）整块隐藏——触摸屏没有 hover,
- * 必须重新常显,顺延/改期才可达。 */
+ * 必须重新常显,拖拽手柄才可达。 */
 html[data-shell="mobile"] .task-quick-actions {
+  display: flex;
+}
+
+/* 行内「⋯」菜单在手机上冗余:长按已弹出操作面板(顺延/改期都在),
+ * 「详情」后跟「⋯」还占标题宽度。隐藏菜单,行级「删除」顶替其位置
+ * （下方覆盖 ≤700px 的隐藏规则, specificity 更高不依赖顺序）。 */
+html[data-shell="mobile"] .row-more {
+  display: none;
+}
+
+html[data-shell="mobile"] .expand-task-row > .expand-delete {
   display: flex;
 }
 

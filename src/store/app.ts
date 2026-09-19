@@ -115,7 +115,15 @@ interface AppStore {
 }
 
 function applyTheme(theme: ThemeMode) {
-  document.documentElement.dataset.theme = theme;
+  // data-theme 必须落成具体的 light/dark：样式层的组件级暗色覆盖
+  // （方框、时间轴事件块等 80+ 处）都挂在 [data-theme="dark"] 上，
+  // 留着 "system" 的话，跟随系统的深色环境会全部漏掉、沿用浅色硬编码色。
+  document.documentElement.dataset.theme =
+    theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : theme;
   void syncWindowChrome(theme);
 }
 
@@ -637,3 +645,26 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
   setReminderSync: (reminderSync) => set({ reminderSync }),
 }));
+
+// 同步拉到对端新数据后即时重载全局数据：任务/标签/习惯/项目等
+// 否则界面停在旧数据，要重启应用才看得到同步结果。手动「立即同步」、
+// 启动与回前台的自动同步都经由 service 派发这一事件。
+if (typeof window !== "undefined") {
+  window.addEventListener("youqiu:sync-applied", () => {
+    void useAppStore.getState().refreshAll();
+  });
+}
+
+// 跟随系统主题：系统在明暗间切换时实时重算 data-theme。
+if (typeof window !== "undefined" && window.matchMedia) {
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const onSchemeChange = () => {
+    if (useAppStore.getState().settings.theme === "system") applyTheme("system");
+  };
+  if (typeof darkQuery.addEventListener === "function") {
+    darkQuery.addEventListener("change", onSchemeChange);
+  } else if (typeof darkQuery.addListener === "function") {
+    // 旧 WebView 兼容
+    darkQuery.addListener(onSchemeChange);
+  }
+}

@@ -56,6 +56,13 @@ export function MemosView() {
   };
 
   useEffect(() => { void refresh(); }, []);
+
+  // 同步拉回新备忘后重载页内列表（备忘为页内本地状态，不进全局 store）。
+  useEffect(() => {
+    const reload = () => void refresh();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
+  });
   useEffect(() => {
     if (editing && editorRef.current) editorRef.current.innerHTML = sanitizeRichText(content);
   }, [editing, selectedId]);

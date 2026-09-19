@@ -12,6 +12,8 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
+import { isMobileShell } from "@/lib/platform";
+import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import {
   ensureEndAfterStart,
   formatTimeRange,
@@ -142,6 +144,21 @@ export function DetailDrawer() {
   useEffect(() => {
     closeRef.current = closeDetail;
   });
+  const panelRef = useRef<HTMLElement>(null);
+  // 移动端:系统返回键与抽屉内右滑手势都走「关闭抽屉」,
+  // 未保存时的确认流程由 closeDetail 统一处理。
+  useEffect(() => {
+    if (!isMobileShell()) return;
+    const unregister = pushBackHandler(() => {
+      closeRef.current();
+      return true;
+    });
+    return unregister;
+  }, []);
+  useEffect(() => {
+    if (!isMobileShell() || !panelRef?.current) return;
+    return attachSwipeRightToClose(panelRef.current, () => closeRef.current());
+  }, []);
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
@@ -234,7 +251,7 @@ export function DetailDrawer() {
   };
 
   return (
-    <aside className="detail-panel">
+    <aside ref={panelRef} className="detail-panel">
       <div className="panel-head">
         <h3>{mode === "view" ? "任务详情" : "编辑任务"}</h3>
         <div className="detail-head-actions">

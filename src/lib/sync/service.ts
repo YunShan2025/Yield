@@ -195,6 +195,11 @@ export class SyncService {
         lastSummary: summary,
         lastError: summary.errors[0] ?? null,
       });
+      // 对端拉回了新写入：通知 UI 层重载，避免界面一直显示旧数据、
+      // 要重启应用才看得到同步结果。手动与自动触发（启动/回前台）都走这里。
+      if (summary.ok && summary.pulled > 0) {
+        window.dispatchEvent(new Event("youqiu:sync-applied"));
+      }
       return summary;
     } catch (err) {
       const message = errText(err);

@@ -21,6 +21,7 @@ import { VersionUpdateNotice } from "@/components/VersionUpdateNotice";
 import { MobileNav } from "@/components/mobile/MobileNav";
 import { MobileMoreSheet } from "@/components/mobile/MobileMoreSheet";
 import { isMobileShell } from "@/lib/platform";
+import { runBackHandlers } from "@/lib/mobileBack";
 import type { NavId } from "@/types";
 import { nextRunningTimerDueAt } from "@/lib/timers";
 import {
@@ -144,24 +145,57 @@ export function MainApp() {
     setNav(id);
   };
 
-  // Android 返回键：更多页开着→收起；页面是从「更多」进的→回「更多」；
-  // 其余交给原生层退后台（保持既有行为）。
+  // 移动端返回语义（返回键桥与左缘右滑手势共用）：抽屉/弹层开着→关最上层；
+  // 「更多」面板开着→收起；页面是从「更多」进的→回「更多」；其余不消费。
+  const mobileBack = (): boolean => {
+    if (runBackHandlers()) return true;
+    if (moreOpenRef.current) {
+      setMoreOpen(false);
+      return true;
+    }
+    if (enteredFromMoreRef.current) {
+      enteredFromMoreRef.current = false;
+      setMoreOpen(true);
+      return true;
+    }
+    return false;
+  };
+
+  // Android 返回键与左缘右滑手势共用 mobileBack 语义；右滑永不退出应用。
   useEffect(() => {
     if (!isMobileShell()) return;
-    window.__youqiuAndroidBack = () => {
-      if (moreOpenRef.current) {
-        setMoreOpen(false);
-        return "handled";
-      }
-      if (enteredFromMoreRef.current) {
-        enteredFromMoreRef.current = false;
-        setMoreOpen(true);
-        return "handled";
-      }
-      return "";
+    window.__youqiuAndroidBack = () =>
+      mobileBack() ? "handled" : "";
+    let start: { x: number; y: number } | null = null;
+    const onStart = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+      start = touch.clientX <= 40 ? { x: touch.clientX, y: touch.clientY } : null;
     };
+    const onMove = (event: TouchEvent) => {
+      if (!start) return;
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (dx > 88 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        start = null;
+        mobileBack();
+      }
+    };
+    const onEnd = () => {
+      start = null;
+    };
+    document.addEventListener("touchstart", onStart, { passive: true });
+    document.addEventListener("touchmove", onMove, { passive: true });
+    document.addEventListener("touchend", onEnd, { passive: true });
+    document.addEventListener("touchcancel", onEnd, { passive: true });
     return () => {
       delete window.__youqiuAndroidBack;
+      document.removeEventListener("touchstart", onStart);
+      document.removeEventListener("touchmove", onMove);
+      document.removeEventListener("touchend", onEnd);
+      document.removeEventListener("touchcancel", onEnd);
     };
   }, []);
 

@@ -12,6 +12,8 @@ import {
   parseTimeToMinutes,
   todayDateString,
 } from "@/lib/dates";
+import { isMobileShell } from "@/lib/platform";
+import { pushBackHandler } from "@/lib/mobileBack";
 import {
   nextDateMatchingWeekdays,
   stringifyRepeatRule,
@@ -94,6 +96,15 @@ export function CreateTaskDialog() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  }, [close]);
+
+  // 移动端：系统返回键关闭新建抽屉而非退出应用。
+  useEffect(() => {
+    if (!isMobileShell()) return;
+    return pushBackHandler(() => {
+      close();
+      return true;
+    });
   }, [close]);
 
   const submit = async () => {
