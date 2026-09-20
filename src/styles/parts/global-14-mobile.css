@@ -211,6 +211,11 @@ html[data-shell="mobile"] .ledger-day-head {
   align-items: center;
 }
 
+/* 底部导航占高约 70px:提示浮层上移到导航之上,不再重叠。 */
+html[data-shell="mobile"] .ledger-toast {
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
 /* 长按弹操作面板:屏蔽 WebView 原生长按选择/呼出菜单。 */
 html[data-shell="mobile"] .expand-task-row {
   -webkit-touch-callout: none;

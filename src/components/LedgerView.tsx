@@ -200,14 +200,14 @@ export function LedgerView() {
 
   async function remove(item: LedgerTransaction) {
     const ok = await confirmAction({
-      title: "移入账本回收站？",
+      title: "移入回收站？",
       description: "可在回收站中恢复该笔记录。",
       confirmText: "删除",
       danger: true,
     });
     if (!ok) return;
     if (!await softDeleteLedgerTransaction(item.id, item.version)) { setNotice({ text: "记录已经变化，请刷新后重试" }); return; }
-    setNotice({ text: "已移入账本回收站", undoId: item.id }); await load();
+    setNotice({ text: "已移入回收站", undoId: item.id }); await load();
   }
 
   async function undoDelete(id: number) { await restoreLedgerTransaction(id); setNotice({ text: "已恢复记录" }); await load(); }
