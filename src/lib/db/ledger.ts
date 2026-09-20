@@ -215,6 +215,30 @@ export async function restoreLedgerTransaction(id: number) {
   return Boolean(result.rowsAffected);
 }
 
+/** 回收站里的账目（is_deleted=1），按删除时间倒序。 */
+export async function fetchLedgerTrash() {
+  const db = await getDb();
+  return db.select<LedgerTransaction[]>(
+    `SELECT t.*, c.name category_name, c.icon category_icon, c.color category_color,
+      a.name account_name, a.color account_color
+     FROM ledger_transactions t
+     JOIN ledger_categories c ON c.id = t.category_id
+     JOIN ledger_accounts a ON a.id = t.account_id
+     WHERE t.is_deleted=1
+     ORDER BY t.deleted_at DESC, t.id DESC`,
+  );
+}
+
+/** 永久删除单笔已软删的账目。 */
+export async function purgeLedgerTransaction(id: number) {
+  const db = await getDb();
+  const result = await db.execute(
+    "DELETE FROM ledger_transactions WHERE id=$1 AND is_deleted=1",
+    [id],
+  );
+  return Boolean(result.rowsAffected);
+}
+
 export async function getLedgerBudget(month: string): Promise<number> {
   const db = await getDb();
   const rows = await db.select<{ amount_cents: number }[]>(

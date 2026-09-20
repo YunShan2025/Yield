@@ -251,12 +251,42 @@
 .ledger-bar-group i.expense { background: var(--ledger-expense); }
 
 .ledger-list-card { padding-bottom: 10px; }
-.ledger-day h4 {
+/* 日期行：日期居左，当日合计靠右，整行是折叠手柄。 */
+.ledger-day-head {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 16px 0 5px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.ledger-day-head h4 {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 650;
-  margin: 16px 0 5px;
+  margin: 0;
 }
+.ledger-day-total {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.ledger-day-total.expense { color: var(--ledger-expense); }
+.ledger-day-total.income { color: var(--ledger-income); }
+.ledger-day-caret {
+  flex: none;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+.ledger-day-caret.collapsed { transform: rotate(-90deg); }
 .ledger-row {
   min-height: 62px;
   display: grid;
@@ -570,8 +600,9 @@
   .ledger-view .guide-hero { margin-inline: 18px; }
   .ledger-stat-grid { grid-template-columns: 1fr; }
   .ledger-row { grid-template-columns: 38px 1fr auto; }
-  .ledger-account,
-  .ledger-row-actions { display: none; }
+  /* 行内编辑/删除只在桌面窄窗隐藏（移动壳要常显，见 global-14-mobile）。 */
+  html:not([data-shell="mobile"]) .ledger-row-actions { display: none; }
+  .ledger-account { display: none; }
   .ledger-choice-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {

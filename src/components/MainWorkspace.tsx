@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -24,6 +24,13 @@ import { formatDueDate, formatTimeRange, todayDateString, addDays, formatLongDat
 import type { Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { confirmAction } from "@/components/AppConfirm";
+import {
+  fetchLedgerTrash,
+  formatLedgerMoney,
+  purgeLedgerTransaction,
+  restoreLedgerTransaction,
+  type LedgerTransaction,
+} from "@/lib/db";
 import { DayBoard } from "@/components/today/DayBoard";
 
 const SettingsView = lazy(() =>
@@ -489,7 +496,26 @@ function TrashView() {
   const restoreTask = useAppStore((s) => s.restoreTask);
   const purgeTask = useAppStore((s) => s.purgeTask);
   const purgeTrash = useAppStore((s) => s.purgeTrash);
-  const total = trashTasks.length;
+  // 账本回收站：软删的账目行（页内本地状态，与收支总览一致）。
+  const [ledgerTrash, setLedgerTrash] = useState<LedgerTransaction[]>([]);
+  const loadLedgerTrash = async () => {
+    try {
+      setLedgerTrash(await fetchLedgerTrash());
+    } catch {
+      /* 回收站里账目加载失败不阻塞任务列表 */
+    }
+  };
+  useEffect(() => {
+    void loadLedgerTrash();
+    const reload = () => void loadLedgerTrash();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
+  }, []);
+  const total = trashTasks.length + ledgerTrash.length;
+
+  const restoreLedger = async (id: number) => {
+    if (await restoreLedgerTransaction(id)) await loadLedgerTrash();
+  };
 
   return (
     <div className="task-scroll">
@@ -510,8 +536,12 @@ function TrashView() {
               description: "此操作不可恢复。",
               confirmText: "清空",
               danger: true,
-            }).then((ok) => {
-              if (ok) void purgeTrash();
+            }).then(async (ok) => {
+              if (!ok) return;
+              if (ledgerTrash.length) {
+                for (const item of ledgerTrash) await purgeLedgerTransaction(item.id);
+              }
+              void purgeTrash();
             });
           }}
         >
@@ -556,6 +586,58 @@ function TrashView() {
                       danger: true,
                     }).then((ok) => {
                       if (ok) void purgeTask(task.id);
+                    });
+                  }}
+                >
+                  永久删除
+                </button>
+              </div>
+            </article>
+          ))}
+          {ledgerTrash.map((item) => (
+            <article key={`ledger-${item.id}`} className="trash-item">
+              <div className="trash-item-main">
+                <p className="task-title">
+                  <span
+                    className="ledger-row-icon"
+                    style={{ background: `${item.category_color}20`, color: item.category_color }}
+                  >
+                    {item.category_name.slice(0, 1)}
+                  </span>
+                  {item.category_name}
+                  <span className={item.type === "expense" ? "trash-amount expense" : "trash-amount income"}>
+                    {item.type === "expense" ? "−" : "+"}
+                    {formatLedgerMoney(item.amount_cents)}
+                  </span>
+                </p>
+                <div className="trash-item-meta">
+                  {item.deleted_at ? <span>删除于 {formatStamp(item.deleted_at)}</span> : null}
+                  <span>{item.date}</span>
+                  <span>{item.type === "expense" ? "支出" : "收入"} · {item.account_name}</span>
+                  {item.note ? <span>{item.note}</span> : null}
+                </div>
+              </div>
+              <div className="trash-item-actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => void restoreLedger(item.id)}
+                >
+                  恢复
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost danger"
+                  onClick={() => {
+                    void confirmAction({
+                      title: `永久删除「${item.category_name} ${formatLedgerMoney(item.amount_cents)}」？`,
+                      description: "不可恢复。",
+                      confirmText: "永久删除",
+                      danger: true,
+                    }).then((ok) => {
+                      if (ok) {
+                        void purgeLedgerTransaction(item.id).then(() => loadLedgerTrash());
+                      }
                     });
                   }}
                 >

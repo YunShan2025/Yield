@@ -188,6 +188,29 @@ html[data-shell="mobile"] .task-quick-actions {
   display: flex;
 }
 
+/* 账本明细行的编辑/删除:窄屏规则把它们藏了,触摸屏没有 hover,
+ * 必须常显才可达;网格加一列容纳金额与按钮并排。 */
+html[data-shell="mobile"] .ledger-row {
+  grid-template-columns: 38px minmax(0, 1fr) auto auto;
+}
+
+html[data-shell="mobile"] .ledger-row-actions {
+  display: flex;
+  opacity: 1;
+}
+
+html[data-shell="mobile"] .ledger-row-actions button {
+  min-width: 34px;
+  min-height: 34px;
+  font-size: 12px;
+}
+
+/* 账本每日折叠行:日期+合计整行是手柄,触摸目标加高。 */
+html[data-shell="mobile"] .ledger-day-head {
+  min-height: 40px;
+  align-items: center;
+}
+
 /* 长按弹操作面板:屏蔽 WebView 原生长按选择/呼出菜单。 */
 html[data-shell="mobile"] .expand-task-row {
   -webkit-touch-callout: none;

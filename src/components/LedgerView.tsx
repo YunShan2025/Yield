@@ -26,6 +26,7 @@ import {
 } from "@/lib/db";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
+import { confirmAction } from "@/components/AppConfirm";
 
 const ICONS: Record<string, string> = {
   food: "餐", car: "行", bag: "购", home: "住", play: "娱", medical: "医",
@@ -198,6 +199,13 @@ export function LedgerView() {
   }
 
   async function remove(item: LedgerTransaction) {
+    const ok = await confirmAction({
+      title: "移入账本回收站？",
+      description: "可在回收站中恢复该笔记录。",
+      confirmText: "删除",
+      danger: true,
+    });
+    if (!ok) return;
     if (!await softDeleteLedgerTransaction(item.id, item.version)) { setNotice({ text: "记录已经变化，请刷新后重试" }); return; }
     setNotice({ text: "已移入账本回收站", undoId: item.id }); await load();
   }
@@ -229,6 +237,10 @@ export function LedgerView() {
   const grouped = transactions.reduce<Record<string, LedgerTransaction[]>>((map, item) => {
     (map[item.date] ??= []).push(item); return map;
   }, {});
+  // 每日明细折叠状态：默认展开，点日期行收起/展开（跨月保留各日期的选择）。
+  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({});
+  const toggleDay = (date: string) =>
+    setCollapsedDays((current) => ({ ...current, [date]: !current[date] }));
 
   return (
     <main className="main-workspace ledger-view">
@@ -291,7 +303,23 @@ export function LedgerView() {
           </section>
 
           <section className="ledger-card ledger-list-card"><div className="ledger-card-title"><div><h3>明细</h3><p>{monthLabel(month)} · {transactions.length} 笔</p></div></div>
-            {loading ? <div className="empty-state">正在汇总账目…</div> : !transactions.length ? <div className="ledger-empty"><span>水面还很安静</span><p>记下第一笔，慢慢看清生活的流向。</p><button className="btn-primary" onClick={() => openDrawer()}>记第一笔</button></div> : Object.entries(grouped).map(([date, items]) => <div className="ledger-day" key={date}><h4>{date}</h4>{items.map((item) => <div className="ledger-row" key={item.id}><span className="ledger-row-icon" style={{ background: `${item.category_color}20`, color: item.category_color }}>{ICONS[item.category_icon] ?? "·"}</span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions"><button onClick={() => openDrawer(item)}>编辑</button><button onClick={() => void remove(item)}>删除</button></div></div>)}</div>)}</section>
+            {loading ? <div className="empty-state">正在汇总账目…</div> : !transactions.length ? <div className="ledger-empty"><span>水面还很安静</span><p>记下第一笔，慢慢看清生活的流向。</p><button className="btn-primary" onClick={() => openDrawer()}>记第一笔</button></div> : Object.entries(grouped).map(([date, items]) => {
+              const collapsed = Boolean(collapsedDays[date]);
+              const dayExpense = items.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + entry.amount_cents, 0);
+              const dayIncome = items.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + entry.amount_cents, 0);
+              return (
+                <div className="ledger-day" key={date}>
+                  <button type="button" className="ledger-day-head" aria-expanded={!collapsed} onClick={() => toggleDay(date)}>
+                    <h4>{date}</h4>
+                    <span className={`ledger-day-total ${dayExpense ? "expense" : dayIncome ? "income" : ""}`}>
+                      {hidden ? formatLedgerMoney(0, true) : dayExpense ? `−${formatLedgerMoney(dayExpense)}` : `+${formatLedgerMoney(dayIncome)}`}
+                    </span>
+                    <span className={`ledger-day-caret${collapsed ? " collapsed" : ""}`} aria-hidden>▾</span>
+                  </button>
+                  {!collapsed && items.map((item) => <div className="ledger-row" key={item.id}><span className="ledger-row-icon" style={{ background: `${item.category_color}20`, color: item.category_color }}>{ICONS[item.category_icon] ?? "·"}</span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions"><button onClick={() => openDrawer(item)}>编辑</button><button onClick={() => void remove(item)}>删除</button></div></div>)}
+                </div>
+              );
+            })}</section>
       </>
       </div>
 
