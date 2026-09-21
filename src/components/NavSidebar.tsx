@@ -59,13 +59,13 @@ export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSideb
         { id: "reminders", label: "提醒", icon: "timer" },
         { id: "memos", label: "备忘录", icon: "memo" },
         { id: "projects", label: "项目", icon: "layers" },
+        { id: "tags", label: "标签", icon: "tag" },
       ],
     },
     {
       label: "更多",
       items: [
         { id: "anniversaries", label: "纪念日", icon: "heart" },
-        { id: "tags", label: "标签", icon: "tag" },
         { id: "settings", label: "设置", icon: "settings" },
         { id: "trash", label: "回收站", icon: "trash" },
       ],

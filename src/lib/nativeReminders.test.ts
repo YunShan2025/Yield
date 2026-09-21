@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Task } from "@/types";
 import {
   applyPrivacyToReminderPlans,
-  buildMissedReminderPlans,
   buildNativeReminderPlans,
-  missedReminderNeedsPopup,
   OS_REMINDER_LIMIT,
   selectOsReminderWindow,
 } from "./nativeReminders";
@@ -72,54 +70,6 @@ describe("native reminder lifecycle", () => {
     );
   });
 
-  it("recovers only reminders missed while the app was closed", () => {
-    const closedAt = new Date("2026-07-30T09:20:00").getTime();
-    const reopenedAt = new Date("2026-07-30T09:35:00").getTime();
-    const plans = buildMissedReminderPlans(
-      [task({ reminder_minutes: [30] })],
-      30,
-      closedAt,
-      reopenedAt,
-    );
-    expect(plans).toHaveLength(1);
-    expect(plans[0].showSystemNotification).toBe(true);
-  });
-
-  it("keeps older missed reminders in the center without a system popup", () => {
-    const closedAt = new Date("2026-07-30T08:00:00").getTime();
-    const reopenedAt = new Date("2026-07-30T09:45:01").getTime();
-    const plans = buildMissedReminderPlans(
-      [task({ reminder_minutes: [60] })],
-      30,
-      closedAt,
-      reopenedAt,
-    );
-    expect(plans).toHaveLength(1);
-    expect(plans[0].showSystemNotification).toBe(false);
-  });
-
-  it("records every missed offset but only surfaces the newest one", () => {
-    const plans = buildMissedReminderPlans(
-      [task({ reminder_minutes: [60, 30] })],
-      30,
-      new Date("2026-07-30T08:00:00").getTime(),
-      new Date("2026-07-30T09:45:00").getTime(),
-    );
-    expect(plans).toHaveLength(2);
-    expect(plans.filter((item) => item.showSystemNotification)).toHaveLength(1);
-  });
-
-  it("does not recover completed tasks", () => {
-    expect(
-      buildMissedReminderPlans(
-        [task({ status: "completed", reminder_minutes: [30] })],
-        30,
-        new Date("2026-07-30T09:00:00").getTime(),
-        new Date("2026-07-30T09:45:00").getTime(),
-      ),
-    ).toEqual([]);
-  });
-
   it("masks reminder copy when privacy mode is on", () => {
     const raw = buildNativeReminderPlans([task({})], 30, now);
     const masked = applyPrivacyToReminderPlans(raw, true);
@@ -151,37 +101,5 @@ describe("native reminder lifecycle", () => {
     expect(window.windowed).toHaveLength(OS_REMINDER_LIMIT);
     expect(window.truncated).toBe(true);
     expect(window.overflow.some((item) => item.taskId === "far")).toBe(true);
-  });
-
-  it("still pops overflow reminders after a successful OS sync", () => {
-    const handled = new Set(["kept"]);
-    expect(
-      missedReminderNeedsPopup(
-        {
-          reminderId: "kept",
-          taskId: "a",
-          title: "t",
-          body: "b",
-          fireAtMs: now,
-          showSystemNotification: true,
-        },
-        true,
-        handled,
-      ),
-    ).toBe(false);
-    expect(
-      missedReminderNeedsPopup(
-        {
-          reminderId: "overflow",
-          taskId: "b",
-          title: "t",
-          body: "b",
-          fireAtMs: now,
-          showSystemNotification: true,
-        },
-        true,
-        handled,
-      ),
-    ).toBe(true);
   });
 });

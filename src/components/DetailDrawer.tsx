@@ -299,12 +299,12 @@ export function DetailDrawer() {
               </strong>
             </div>
             <div className="detail-meta">
-              <span className="field-label">所属项目</span>
-              <strong>{project ? project.name : "无项目"}</strong>
-            </div>
-            <div className="detail-meta">
               <span className="field-label">重复</span>
               <strong>{repeatLabel(task.repeat_rule)}</strong>
+            </div>
+            <div className="detail-meta">
+              <span className="field-label">所属项目</span>
+              <strong>{project ? project.name : "无项目"}</strong>
             </div>
             <div className="detail-meta">
               <span className="field-label">标签</span>
@@ -392,23 +392,6 @@ export function DetailDrawer() {
               />
             </div>
             <div>
-              <label className="field-label">所属项目</label>
-              <SelectMenu
-                className="field"
-                ariaLabel="所属项目"
-                value={task.project_id ?? ""}
-                onChange={(value) =>
-                  void saveTask(task.id, {
-                    project_id: value || null,
-                  })
-                }
-                options={[{ value: "", label: "无项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
-              />
-            </div>
-          </div>
-          <div className="detail-form-row">
-            <div>
-              <label className="field-label">重复</label>
               <SelectMenu
                 className="field"
                 ariaLabel="重复"
@@ -455,6 +438,28 @@ export function DetailDrawer() {
                   />
                 </div>
               ) : null}
+            </div>
+          </div>
+          <div className="detail-form-row">
+            <div>
+              <label className="field-label">所属项目</label>
+              <SelectMenu
+                className="field"
+                ariaLabel="所属项目"
+                value={task.project_id ?? ""}
+                onChange={(value) => {
+                  void saveTask(task.id, {
+                    project_id: value || null,
+                  });
+                  // 选中项目后标签默认跟随项目自带的标签；之后仍可在标签行单独修改。
+                  const nextProject = projects.find((item) => item.id === value);
+                  void setTaskTags(
+                    task.id,
+                    nextProject?.tag_id ? [nextProject.tag_id] : [],
+                  );
+                }}
+                options={[{ value: "", label: "无项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
+              />
             </div>
             <div>
               <label className="field-label">标签</label>

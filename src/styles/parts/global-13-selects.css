@@ -118,6 +118,22 @@
   padding: 10px 30px 10px 11px;
 }
 
+/* 记一笔抽屉「日期/账户」两列对齐:日期触发钮与账户下拉同高、同边框、
+   同上边距（.ledger-drawer .select-btn 有 margin-top:7px，日期侧此前缺失，
+   导致两行控件上下错位）。 */
+.ledger-form-row .date-picker {
+  margin-top: 7px;
+}
+
+.ledger-form-row .date-picker-trigger {
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 8px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+
 /* ---- DatePicker:替代原生 input[type=date] 的自绘日历(样式对齐 TimePicker) ---- */
 .date-picker {
   position: relative;

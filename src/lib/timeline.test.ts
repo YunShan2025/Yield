@@ -113,4 +113,36 @@ describe("layoutTimeline", () => {
     ]);
     expect(layout.timed.map((block) => block.lane)).toEqual([0, 1, 0]);
   });
+
+  it("keeps base density when tasks are well spaced", () => {
+    const layout = layoutTimeline([
+      makeTask({ id: "a", due_time: "09:00", end_time: "09:30" }),
+      makeTask({ id: "b", due_time: "14:00", end_time: "15:00" }),
+    ]);
+    expect(layout.pxPerMin).toBe(96 / 60);
+    expect(layout.timed.map((block) => block.lane)).toEqual([0, 0]);
+  });
+
+  it("widens the axis and stacks near-simultaneous tasks instead of overlapping", () => {
+    // 09:00–09:15 与 09:20–10:00 时间上不重叠，但 96px/小时下前者的最小
+    // 渲染宽度会压住后者：轴放大到上限，放不下的块换行。
+    const layout = layoutTimeline([
+      makeTask({ id: "a", due_time: "09:00", end_time: "09:15" }),
+      makeTask({ id: "b", due_time: "09:20", end_time: "10:00" }),
+    ]);
+    expect(layout.pxPerMin).toBe(240 / 60);
+    expect(layout.timed.map((block) => block.lane)).toEqual([0, 1]);
+  });
+
+  it("stacks a dense cluster row by row when the axis zoom caps out", () => {
+    // 间隔 10 分钟的三个任务：轴已放大到上限仍放不下最小渲染宽度，
+    // 依次换行，绝不互相压盖。
+    const layout = layoutTimeline([
+      makeTask({ id: "a", due_time: "09:00", end_time: "09:10" }),
+      makeTask({ id: "b", due_time: "09:10", end_time: "09:20" }),
+      makeTask({ id: "c", due_time: "09:20", end_time: "09:30" }),
+    ]);
+    expect(layout.pxPerMin).toBe(240 / 60);
+    expect(layout.timed.map((block) => block.lane)).toEqual([0, 1, 2]);
+  });
 });

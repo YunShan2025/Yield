@@ -57,11 +57,7 @@ export function DesktopNotificationCards() {
           <div className="desktop-notification-content">
             <header>
               <span>
-                {item.kind === "system"
-                  ? "系统提醒"
-                  : item.kind === "missed"
-                    ? "错过的提醒"
-                    : "有秋"}
+                {item.kind === "system" ? "系统提醒" : "有秋"}
               </span>
               <button
                 type="button"

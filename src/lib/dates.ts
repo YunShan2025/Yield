@@ -152,6 +152,13 @@ export function formatStamp(date: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${hh}:${mm}`;
 }
 
+/** ISO 时间戳 → "2026年9月12日"（只到日），用于任务完成日期展示。 */
+export function formatDayStamp(date: string): string {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
 export function weekDates(anchor: string): string[] {
   const start = startOfWeek(anchor);
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));

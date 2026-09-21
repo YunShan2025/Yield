@@ -72,6 +72,7 @@ interface AppStore {
   saveTask: (id: string, updates: TaskUpdate) => Promise<void>;
   saveTasksBatch: (items: { id: string; updates: TaskUpdate }[]) => Promise<void>;
   toggleComplete: (id: string) => Promise<void>;
+  setTaskCompletedAt: (id: string, completedAt: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   batchComplete: (ids: string[]) => Promise<void>;
   batchDelete: (ids: string[]) => Promise<void>;
@@ -84,7 +85,7 @@ interface AppStore {
   updateTag: (id: string, name: string) => Promise<void>;
   removeTag: (id: string) => Promise<void>;
   setTaskTags: (taskId: string, tagIds: string[]) => Promise<void>;
-  addProject: (name: string) => Promise<void>;
+  addProject: (name: string, tagId?: string | null) => Promise<void>;
   archiveProject: (id: string) => Promise<void>;
 
 
@@ -395,6 +396,24 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  setTaskCompletedAt: async (id, completedAt) => {
+    try {
+      const updated = await db.updateTask(id, { completed_at: completedAt });
+      if (updated) {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id ? updated : task,
+          ),
+        }));
+        await get().refreshAll();
+        set({ toast: "完成时间已更新" });
+      }
+    } catch (e) {
+      const msg = errorMessage(e, "修改完成时间失败");
+      set({ error: msg, toast: msg });
+    }
+  },
+
   deleteTask: async (id) => {
     await db.softDeleteTask(id);
     set({
@@ -494,8 +513,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     await get().refreshAll();
   },
 
-  addProject: async (name) => {
-    await db.createProject(name);
+  addProject: async (name, tagId) => {
+    await db.createProject(name, undefined, tagId ?? null);
     await get().refreshAll();
     set({ toast: "项目已创建" });
   },

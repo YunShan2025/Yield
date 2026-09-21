@@ -6,7 +6,6 @@ import type { Task } from "@/types";
 import { AppIcon } from "@/components/AppIcon";
 import { isActiveTask } from "@/lib/tasks";
 
-const SLOT_W = 96;
 const LANE_H = 84;
 
 type LaidOut = {
@@ -59,7 +58,7 @@ export function TodayTimeline() {
     [tasks, cursor],
   );
 
-  const { timed, allDay, startHour, endHour } = useMemo(
+  const { timed, allDay, startHour, endHour, pxPerMin } = useMemo(
     () => layoutTimeline(dayTasks),
     [dayTasks],
   );
@@ -81,7 +80,8 @@ export function TodayTimeline() {
   const axisEnd = endHour * 60;
   const totalMin = axisEnd - axisStart;
   const hourCount = endHour - startHour;
-  const axisWidth = hourCount * SLOT_W;
+  const hourW = pxPerMin * 60;
+  const axisWidth = hourCount * hourW;
   const nowLeft =
     ((Math.min(axisEnd, Math.max(axisStart, nowMin)) - axisStart) /
       totalMin) *
@@ -211,7 +211,7 @@ export function TodayTimeline() {
                     <div
                       key={h}
                       className="timeline-h-hour"
-                      style={{ width: SLOT_W }}
+                      style={{ width: hourW }}
                     >
                       {String(h).padStart(2, "0")}:00
                     </div>
@@ -249,7 +249,7 @@ export function TodayTimeline() {
                   <div
                     key={i}
                     className="timeline-h-gridline"
-                    style={{ left: i * SLOT_W }}
+                    style={{ left: i * hourW }}
                   />
                 ))}
 

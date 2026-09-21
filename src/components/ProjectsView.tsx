@@ -1,145 +1,59 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
-import { AppIcon } from "@/components/AppIcon";
 import { DatePicker } from "@/components/DatePicker";
-import type { Milestone, Project } from "@/types";
+import { SelectMenu } from "@/components/SelectMenu";
+import type { Project } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
-import {
-  createMilestone,
-  fetchMilestones,
-  toggleMilestone,
-  updateMilestone,
-  updateProject,
-} from "@/lib/db";
+import { formatDayStamp } from "@/lib/dates";
+import { updateProject } from "@/lib/db";
 
 export function ProjectsView() {
   const projects = useAppStore((state) => state.projects);
+  const tags = useAppStore((state) => state.tags);
   const tasks = useAppStore((state) => state.tasks);
   const addProject = useAppStore((state) => state.addProject);
   const archiveProject = useAppStore((state) => state.archiveProject);
-  const selectTask = useAppStore((state) => state.selectTask);
-  const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createColor, setCreateColor] = useState("#7D9BE8");
+  const [createTagId, setCreateTagId] = useState("");
+  const [savingCreate, setSavingCreate] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("#7D9BE8");
-  const [editGoal, setEditGoal] = useState("");
-  const [editCriteria, setEditCriteria] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
+  const [editTagId, setEditTagId] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [addingMilestoneFor, setAddingMilestoneFor] = useState<string | null>(
-    null,
-  );
-  const [milestoneTitle, setMilestoneTitle] = useState("");
-  const [savingMilestone, setSavingMilestone] = useState(false);
-  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(null);
-  const [editMilestoneTitle, setEditMilestoneTitle] = useState("");
-  const [editMilestoneDate, setEditMilestoneDate] = useState("");
-  const milestoneInputRef = useRef<HTMLInputElement>(null);
-  const [goalProject, setGoalProject] = useState<Project | null>(null);
-  const [goalDraft, setGoalDraft] = useState("");
-  const [savingGoal, setSavingGoal] = useState(false);
-  const refreshMilestones = async () => setMilestones(await fetchMilestones());
 
-  const beginAddMilestone = (projectId: string) => {
-    setAddingMilestoneFor(projectId);
-    setMilestoneTitle("");
+  const openCreate = () => {
+    setCreateName("");
+    setCreateColor("#7D9BE8");
+    setCreateTagId("");
+    setCreating(true);
   };
 
-  const cancelAddMilestone = () => {
-    if (savingMilestone) return;
-    setAddingMilestoneFor(null);
-    setMilestoneTitle("");
-  };
-
-  const submitMilestone = async (projectId: string) => {
-    const title = milestoneTitle.trim();
-    if (!title || savingMilestone) return;
-    setSavingMilestone(true);
-    try {
-      await createMilestone(projectId, title);
-      await refreshMilestones();
-      setMilestoneTitle("");
-      milestoneInputRef.current?.focus();
-    } catch {
-      useAppStore.getState().setToast("添加里程碑失败");
-    } finally {
-      setSavingMilestone(false);
-    }
-  };
-
-  const beginEditMilestone = (item: Milestone) => {
-    setEditingMilestoneId(item.id);
-    setEditMilestoneTitle(item.title);
-    setEditMilestoneDate(item.due_date ?? "");
-  };
-
-  const submitMilestoneEdit = async (item: Milestone) => {
-    const title = editMilestoneTitle.trim();
-    if (!title || savingMilestone) return;
-    setSavingMilestone(true);
-    try {
-      await updateMilestone(item.id, { title, due_date: editMilestoneDate || null });
-      await refreshMilestones();
-      setEditingMilestoneId(null);
-      useAppStore.getState().setToast("里程碑已更新");
-    } catch {
-      useAppStore.getState().setToast("更新里程碑失败");
-    } finally {
-      setSavingMilestone(false);
-    }
-  };
-  const beginAddGoal = (project: Project) => {
-    setGoalProject(project);
-    setGoalDraft("");
-  };
-
-  const cancelAddGoal = () => {
-    if (savingGoal) return;
-    setGoalProject(null);
-    setGoalDraft("");
-  };
-
-  const saveGoal = async () => {
-    const goal = goalDraft.trim();
-    if (!goalProject || !goal || savingGoal) return;
-    setSavingGoal(true);
-    try {
-      await updateProject(goalProject.id, { goal });
-      await useAppStore.getState().refreshAll();
-      setGoalProject(null);
-      setGoalDraft("");
-      useAppStore.getState().setToast("项目成果已保存");
-    } catch {
-      useAppStore.getState().setToast("保存项目成果失败");
-    } finally {
-      setSavingGoal(false);
-    }
-  };
-
-  const createProject = async () => {
-    const projectName = name.trim();
-    if (!projectName) {
-      nameInputRef.current?.focus();
-      useAppStore.getState().setToast("请先输入项目名称");
+  const submitCreate = async () => {
+    const projectName = createName.trim();
+    if (!projectName || savingCreate) {
+      if (!projectName) nameInputRef.current?.focus();
       return;
     }
-    await addProject(projectName);
-    setName("");
-    nameInputRef.current?.focus();
+    setSavingCreate(true);
+    try {
+      await addProject(projectName, createTagId || null);
+      setCreating(false);
+    } finally {
+      setSavingCreate(false);
+    }
   };
-
-  useEffect(() => {
-    void refreshMilestones();
-  }, []);
 
   const beginEditProject = (project: Project) => {
     setEditingProject(project);
     setEditName(project.name);
     setEditColor(project.color);
-    setEditGoal(project.goal ?? "");
-    setEditCriteria(project.success_criteria ?? "");
     setEditDueDate(project.due_date ?? "");
+    setEditTagId(project.tag_id ?? "");
   };
 
   const saveProject = async () => {
@@ -150,40 +64,30 @@ export function ProjectsView() {
     await updateProject(editingProject.id, {
       name: editName.trim(),
       color: editColor,
-      goal: editGoal.trim(),
-      success_criteria: editCriteria.trim(),
       due_date: editDueDate || null,
+      tag_id: editTagId || null,
     });
     await useAppStore.getState().refreshAll();
     setEditingProject(null);
     useAppStore.getState().setToast("项目已更新");
   };
 
+  const activeProject = projects.find((p) => p.id === activeProjectId) ?? null;
+
   return (
     <main className="main-workspace projects-view">
       <div className="workspace-top">
         <div>
           <h2>项目</h2>
-          <p className="workspace-subtitle">组织长期事项，聚合相关任务与里程碑</p>
+          <p className="workspace-subtitle">组织长期事项，聚合相关任务</p>
         </div>
         <div className="top-controls">
-          <input
-            ref={nameInputRef}
-            className="field project-name-input"
-            value={name}
-            placeholder="新项目名称"
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key !== "Enter" || !name.trim()) return;
-              void createProject();
-            }}
-          />
           <button
             type="button"
             className="btn-primary"
-            onClick={() => void createProject()}
+            onClick={openCreate}
           >
-            创建
+            ＋ 新建项目
           </button>
         </div>
       </div>
@@ -194,7 +98,7 @@ export function ProjectsView() {
           <div className="today-hero-copy">
             <span className="today-eyebrow">百工 · 项目</span>
             <h3>百工居肆以成其事。</h3>
-            <p className="today-hero-note">项目是长期事项的工坊：任务、里程碑与成果都在这里聚拢。</p>
+            <p className="today-hero-note">项目是长期事项的工坊：任务与成果都在这里聚拢。</p>
           </div>
         </section>
         <section>
@@ -202,118 +106,34 @@ export function ProjectsView() {
             <h3>项目</h3>
           </div>
 
-          <div className="project-grid">
+          {/* 与标签页同构：上方紧凑卡片，点击卡片在下方展开具体任务 */}
+          <div className="projects-grid">
             {projects.map((project) => {
               const projectTasks = selectProjectTasks(tasks, project.id);
               const done = projectTasks.filter(
                 (task) => task.status === "completed",
               ).length;
-              const progress = projectTasks.length
-                ? Math.round((done / projectTasks.length) * 100)
-                : 0;
+              const on = activeProjectId === project.id;
               return (
-                <article key={project.id} className="project-card">
-                  <div className="project-card-head">
-                    <span style={{ background: project.color }} />
+                <article
+                  key={project.id}
+                  className={`tag-card project-tile ${on ? "is-active" : ""}`}
+                  style={{ "--tag-accent": project.color } as CSSProperties}
+                >
+                  <button
+                    type="button"
+                    className="tag-card-main"
+                    title={on ? "收起该项目" : "查看该项目的任务"}
+                    onClick={() => setActiveProjectId(on ? null : project.id)}
+                  >
+                    <span className="tag-card-dot" aria-hidden />
                     <strong>{project.name}</strong>
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      onClick={() => beginEditProject(project)}
-                    >
-                      编辑
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      onClick={() => void archiveProject(project.id)}
-                    >
-                      归档
-                    </button>
-                  </div>
-                  <p>{projectTasks.length} 项任务 · 已完成 {done}</p>
-                  {project.goal ? (
-                    <p className="project-goal">{project.goal}</p>
-                  ) : (
-                    <button
-                      type="button"
-                      className="project-inline-action"
-                      onClick={() => beginAddGoal(project)}
-                    >
-                      ＋ 添加项目成果
-                    </button>
-                  )}
-                  <div className="progress-bar">
-                    <span style={{ width: `${progress}%` }} />
-                  </div>
-                  <div className="project-task-links">
-                    {projectTasks.slice(0, 4).map((task) => (
-                      <button
-                        key={task.id}
-                        type="button"
-                        onClick={() => selectTask(task.id)}
-                      >
-                        {task.status === "completed" ? "✓" : "○"} {task.title}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="milestone-list">
-                    {milestones
-                      .filter((item) => item.project_id === project.id)
-                      .map((item) => (
-                        editingMilestoneId === item.id ? <form key={item.id} className="milestone-edit" onSubmit={(event) => { event.preventDefault(); void submitMilestoneEdit(item); }}><input className="field" autoFocus value={editMilestoneTitle} onChange={(event) => setEditMilestoneTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") setEditingMilestoneId(null); }} aria-label="里程碑名称" /><DatePicker value={editMilestoneDate} onChange={setEditMilestoneDate} allowClear ariaLabel="里程碑日期" /><div><button type="button" className="btn-ghost" disabled={savingMilestone} onClick={() => setEditingMilestoneId(null)}>取消</button><button type="submit" className="btn-primary" disabled={savingMilestone || !editMilestoneTitle.trim()}>保存</button></div></form> : <div className="milestone-item" key={item.id}><label><input type="checkbox" checked={Boolean(item.completed)} onChange={(event) => void toggleMilestone(item.id, event.target.checked).then(refreshMilestones)} /><span>{item.title}</span>{item.due_date ? <small>{item.due_date}</small> : null}</label><button type="button" className="milestone-edit-trigger" title="编辑里程碑" aria-label={`编辑里程碑 ${item.title}`} onClick={() => beginEditMilestone(item)}><AppIcon name="edit" size={14} /></button></div>
-                      ))}
-                    {addingMilestoneFor === project.id ? (
-                      <form
-                        className="milestone-compose"
-                        onSubmit={(event) => {
-                          event.preventDefault();
-                          void submitMilestone(project.id);
-                        }}
-                      >
-                        <input
-                          ref={milestoneInputRef}
-                          className="field"
-                          value={milestoneTitle}
-                          placeholder="里程碑名称"
-                          autoFocus
-                          disabled={savingMilestone}
-                          onChange={(event) =>
-                            setMilestoneTitle(event.target.value)
-                          }
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") {
-                              event.preventDefault();
-                              cancelAddMilestone();
-                            }
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="btn-ghost"
-                          disabled={savingMilestone}
-                          onClick={cancelAddMilestone}
-                        >
-                          取消
-                        </button>
-                        <button
-                          type="submit"
-                          className="btn-primary"
-                          disabled={savingMilestone || !milestoneTitle.trim()}
-                        >
-                          添加
-                        </button>
-                      </form>
-                    ) : (
-                      <button
-                        type="button"
-                        className="project-inline-action"
-                        onClick={() => beginAddMilestone(project.id)}
-                      >
-                        ＋ 添加里程碑
-                      </button>
-                    )}
-                  </div>
+                    <span className="tag-card-count">
+                      {projectTasks.length
+                        ? `${projectTasks.length} 项任务 · 已完成 ${done}`
+                        : "暂无任务"}
+                    </span>
+                  </button>
                 </article>
               );
             })}
@@ -322,7 +142,79 @@ export function ProjectsView() {
             ) : null}
           </div>
         </section>
+
+        {activeProject ? (
+          <ProjectDetail
+            project={activeProject}
+            tasks={tasks}
+            tags={tags}
+            onEdit={() => beginEditProject(activeProject)}
+            onArchive={() => void archiveProject(activeProject.id)}
+            onClose={() => setActiveProjectId(null)}
+          />
+        ) : (
+          <p className="projects-hint">点击上方项目卡片，可查看对应的任务与进度。</p>
+        )}
       </div>
+
+      {creating ? (
+        <div className="modal-backdrop" onMouseDown={() => setCreating(false)}>
+          <form
+            className="project-edit-modal"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitCreate();
+            }}
+          >
+            <div className="modal-head">
+              <div>
+                <span>项目</span>
+                <h3>新建项目</h3>
+              </div>
+              <button type="button" onClick={() => setCreating(false)}>×</button>
+            </div>
+            <label>
+              项目名称
+              <input
+                ref={nameInputRef}
+                autoFocus
+                value={createName}
+                placeholder="这个项目叫什么？"
+                onChange={(event) => setCreateName(event.target.value)}
+              />
+            </label>
+            <label>
+              项目标识色
+              <div className="project-color-field">
+                <input type="color" value={createColor} onChange={(event) => setCreateColor(event.target.value)} />
+                <span>{createColor.toUpperCase()}</span>
+              </div>
+            </label>
+            <label>
+              项目标签
+              <SelectMenu
+                ariaLabel="项目标签"
+                value={createTagId}
+                onChange={setCreateTagId}
+                options={[
+                  { value: "", label: "无标签" },
+                  ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
+                ]}
+              />
+              <small className="project-field-hint">选中此项目的任务会默认带上这个标签。</small>
+            </label>
+            <div className="project-edit-actions">
+              <button type="button" className="btn-ghost" onClick={() => setCreating(false)}>取消</button>
+              <button type="submit" className="btn-primary" disabled={!createName.trim() || savingCreate}>
+                {savingCreate ? "创建中…" : "创建项目"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
 
       {editingProject ? (
         <div className="modal-backdrop" onMouseDown={() => setEditingProject(null)}>
@@ -353,12 +245,16 @@ export function ProjectsView() {
               </div>
             </label>
             <label>
-              项目成果
-              <textarea value={editGoal} placeholder="这个项目最终要交付什么成果？" onChange={(event) => setEditGoal(event.target.value)} />
-            </label>
-            <label>
-              成功标准
-              <textarea value={editCriteria} placeholder="满足哪些条件代表项目完成？" onChange={(event) => setEditCriteria(event.target.value)} />
+              项目标签
+              <SelectMenu
+                ariaLabel="项目标签"
+                value={editTagId}
+                onChange={setEditTagId}
+                options={[
+                  { value: "", label: "无标签" },
+                  ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
+                ]}
+              />
             </label>
             <label>
               截止日期
@@ -371,47 +267,99 @@ export function ProjectsView() {
           </form>
         </div>
       ) : null}
-
-      {goalProject ? (
-        <div className="modal-backdrop" onMouseDown={() => cancelAddGoal()}>
-          <form
-            className="project-edit-modal"
-            onMouseDown={(event) => event.stopPropagation()}
-            onSubmit={(event) => {
-              event.preventDefault();
-              void saveGoal();
-            }}
-          >
-            <div className="modal-head">
-              <div>
-                <span>{goalProject.name}</span>
-                <h3>添加项目成果</h3>
-              </div>
-              <button type="button" onClick={() => cancelAddGoal()}>×</button>
-            </div>
-            <label>
-              项目成果
-              <textarea
-                autoFocus
-                value={goalDraft}
-                placeholder="这个项目最终要交付什么成果？"
-                onChange={(event) => setGoalDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    cancelAddGoal();
-                  }
-                }}
-              />
-            </label>
-            <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={() => cancelAddGoal()}>取消</button>
-              <button type="submit" className="btn-primary" disabled={savingGoal || !goalDraft.trim()}>保存</button>
-            </div>
-          </form>
-        </div>
-      ) : null}
     </main>
+  );
+}
+
+/** 选中项目后展开的任务详情区，样式对齐标签页的筛选区。 */
+function ProjectDetail({
+  project,
+  tasks,
+  tags,
+  onEdit,
+  onArchive,
+  onClose,
+}: {
+  project: Project;
+  tasks: ReturnType<typeof useAppStore.getState>["tasks"];
+  tags: ReturnType<typeof useAppStore.getState>["tags"];
+  onEdit: () => void;
+  onArchive: () => void;
+  onClose: () => void;
+}) {
+  const selectTask = useAppStore((s) => s.selectTask);
+  const [showAllTasks, setShowAllTasks] = useState(false);
+  const projectTasks = selectProjectTasks(tasks, project.id);
+  const done = projectTasks.filter((task) => task.status === "completed").length;
+  const progress = projectTasks.length
+    ? Math.round((done / projectTasks.length) * 100)
+    : 0;
+  const tagName = tags.find((tag) => tag.id === project.tag_id)?.name;
+  // 完成时间倒序（未完成在后）；默认只展示前五条，可展开全部
+  const sortedTasks = [...projectTasks].sort(
+    (a, b) =>
+      (Date.parse(b.completed_at ?? "") || 0) -
+      (Date.parse(a.completed_at ?? "") || 0),
+  );
+  const visibleTasks = showAllTasks ? sortedTasks : sortedTasks.slice(0, 5);
+  return (
+    <section className="tags-filtered projects-detail" aria-label={`${project.name} 的任务`}>
+      <header>
+        <h3>
+          <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
+          「{project.name}」的任务
+          <span className="tags-filtered-count">{projectTasks.length}</span>
+        </h3>
+        <div className="projects-detail-actions">
+          <button type="button" className="project-card-edit" onClick={onEdit}>
+            编辑
+          </button>
+          <button type="button" className="project-card-archive" onClick={onArchive}>
+            归档
+          </button>
+          <button type="button" className="btn-ghost" onClick={onClose}>
+            关闭
+          </button>
+        </div>
+      </header>
+      <div className="project-card-meta">
+        <p>{projectTasks.length} 项任务 · 已完成 {done}</p>
+        {project.tag_id ? (
+          <span
+            className="project-card-tag"
+            style={{ "--tag-accent": tags.find((tag) => tag.id === project.tag_id)?.color } as CSSProperties}
+          >
+            <i className="tag-card-dot" aria-hidden />
+            {tagName ?? "标签"}
+          </span>
+        ) : null}
+      </div>
+      <div className="progress-bar">
+        <span style={{ width: `${progress}%` }} />
+      </div>
+      <div className="project-task-links">
+        {visibleTasks.map((task) => (
+          <button key={task.id} type="button" onClick={() => selectTask(task.id)}>
+            <span className="project-task-link-title">
+              {task.status === "completed" ? "✓" : "○"} {task.title}
+            </span>
+            {task.completed_at ? (
+              <span className="project-task-done-at">
+                {formatDayStamp(task.completed_at)}
+              </span>
+            ) : null}
+          </button>
+        ))}
+      </div>
+      {sortedTasks.length > 5 ? (
+        <button
+          type="button"
+          className="btn-ghost project-tasks-toggle"
+          onClick={() => setShowAllTasks((v) => !v)}
+        >
+          {showAllTasks ? "收起任务列表" : `展开全部 ${sortedTasks.length} 项任务`}
+        </button>
+      ) : null}
+    </section>
   );
 }

@@ -49,23 +49,33 @@
 /* Chrome 83 WebView（模拟器）无 aspect-ratio 且 border/background 的 color-mix
    整条声明失效：格子高塌 0、无边框无底色，整张热力图“没有格子”。
    基础规则给固定格高 + 纯变量边框/底色，增强放 @supports。 */
-.heat-cell { width: 100%; height: clamp(9px, 1.4vw, 13px); padding: 0; border: 1px solid var(--border); border-radius: clamp(1px, .25vw, 3px); background: var(--bg-soft, var(--bg-panel)); }
+.heat-cell { width: 100%; height: clamp(9px, 1.4vw, 13px); padding: 0; border: 1px solid var(--border); border-radius: clamp(1px, .25vw, 3px); background: var(--bg-panel); }
 @supports (aspect-ratio: 1) {
   .heat-cell { height: auto; aspect-ratio: 1; }
 }
+/* 档位色先给固定 hex 兜底（老 WebView 无 color-mix），增强版用主题 accent
+   调出 0→4 的单色渐进。档距要大（空档纯面板色，之后 30/55/78/100），
+   否则相邻档肉眼难辨。此前空档引用了未定义的 --bg-soft，color-mix 整条失效。 */
+.heat-cell.level-1 { background: #c7d9fb; }
+.heat-cell.level-2 { background: #8db4f7; }
+.heat-cell.level-3 { background: #5b9af5; }
+.heat-cell.level-4 { background: #2f6fed; }
 @supports (background: color-mix(in srgb, red 10%, blue)) {
   .heat-cell {
     border-color: color-mix(in srgb, var(--text-muted) 22%, var(--border));
-    background: color-mix(in srgb, var(--bg-soft) 84%, var(--text-muted));
+  }
+  .heat-cell.level-1 { background: color-mix(in srgb, var(--accent) 30%, var(--bg-panel)); }
+  .heat-cell.level-2 { background: color-mix(in srgb, var(--accent) 55%, var(--bg-panel)); }
+  .heat-cell.level-3 { background: color-mix(in srgb, var(--accent) 78%, var(--bg-panel)); }
+  .heat-cell.level-4 { background: var(--accent); }
+  :root[data-theme="dark"] .heat-cell,
+  :root[data-theme="glass"] .heat-cell { border-color: rgba(220, 232, 250, 0.14); }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="system"] .heat-cell { border-color: rgba(220, 232, 250, 0.14); }
   }
 }
 button.heat-cell { cursor: pointer; transition: transform 100ms ease, outline-color 100ms ease; }
 button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent); }
-.heat-cell.level-1 { background: #dbe8ff; }
-.heat-cell.level-2 { background: #a9c6fb; }
-.heat-cell.level-3 { background: #6f9df5; }
-.heat-cell.level-4 { background: #2f6fed; }
-:root[data-theme="dark"] .heat-cell.level-0 { border-color: #39465a; background: #273142; }
 .heatmap-legend { display: flex; align-items: center; justify-content: flex-end; gap: 5px; color: var(--text-muted); font-size: 10px; }
 .heatmap-legend .heat-cell { flex: 0 0 12px; width: 12px; height: 12px; aspect-ratio: auto; }
 
@@ -307,6 +317,25 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   box-shadow: 0 24px 70px rgba(20, 35, 70, 0.22);
   overscroll-behavior: contain;
 }
+
+/* 修改完成时间弹窗（已完成任务行的「修改完成时间」按钮） */
+.completed-time-modal {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--bg-panel);
+  box-shadow: 0 24px 70px rgba(20, 35, 70, 0.22);
+  overscroll-behavior: contain;
+}
+.completed-time-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.completed-time-fields label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.completed-time-actions { display: flex; justify-content: flex-end; gap: 8px; }
+@media (max-width: 560px) { .completed-time-fields { grid-template-columns: 1fr; } }
 
 .create-task-modal {
   width: min(620px, calc(100vw - 32px));
@@ -604,6 +633,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .tag-card-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 6px;
 }
 
@@ -611,6 +642,27 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   min-height: 26px;
   padding: 3px 10px;
   font-size: 12px;
+}
+
+/* 重命名：白底黑字；删除：红底白字 */
+.tag-card-actions .btn-ghost {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #1f2328;
+}
+
+.tag-card-actions .btn-ghost:hover {
+  background: #f2f3f5;
+}
+
+.tag-card-actions .btn-ghost.danger {
+  border-color: transparent;
+  background: var(--danger);
+  color: #fff;
+}
+
+.tag-card-actions .btn-ghost.danger:hover {
+  background: color-mix(in srgb, var(--danger) 86%, #000);
 }
 
 .tags-filtered header {
@@ -638,11 +690,213 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   text-align: center;
 }
 
+/* 标签筛选区：项目与任务分成两个区块，行内名称与任务标题同字号（14px）。 */
+.tags-project-section h4,
+.tags-task-section h4 {
+  margin: 14px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .tags-task-list {
   display: grid;
   gap: 8px;
+  margin-top: 8px;
+}
+
+/* 标签筛选区里的项目行（标签按项目数优先统计的展示面） */
+.tags-project-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tags-project-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* 与下方任务行（.task-row）同款盒模型：内边距/圆角/行高一致 */
+  padding: 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  min-height: 48px;
+  font-size: 13px;
+}
+
+/* 项目名与任务标题同字号同字重，两个列表观感一致 */
+.tags-project-name,
+.tags-task-section .task-title {
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 610;
+  letter-spacing: -0.012em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tags-project-row .tags-task-due {
+  margin-left: auto;
+}
+
+/* 项目页与标签页同构：上方紧凑卡片网格，点击卡片在下方展开详情 */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
   margin-top: 12px;
 }
+
+/* 紧凑项目卡片：对齐标签卡片的观感（覆盖 polish-01 的大卡片内边距/圆角） */
+.tag-card.project-tile {
+  padding: 13px 15px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.projects-hint {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* 项目详情区：统计行右侧的标签徽标 */
+.project-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  height: auto;
+  padding: 3px 10px;
+  border-radius: 99px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--tag-accent, var(--accent)) 12%, transparent);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.project-card-tag .tag-card-dot { width: 8px; height: 8px; }
+
+/* 详情区头部按钮：编辑白底黑字、归档红底白字 */
+.projects-detail .project-card-edit {
+  flex: none;
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: #fff;
+  color: #1f2328;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.projects-detail .project-card-edit:hover {
+  background: #f2f3f5;
+}
+
+/* 统计行：任务数靠左，标签徽标靠右 */
+.project-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.project-card-meta > p {
+  margin: 0;
+}
+
+.project-card-meta .project-card-tag {
+  margin-left: auto;
+}
+
+.projects-detail .project-card-archive {
+  padding: 4px 14px;
+  border: none;
+  border-radius: 99px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.projects-detail .project-card-archive:hover {
+  background: color-mix(in srgb, var(--danger) 86%, #000);
+}
+
+.projects-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 详情区头部「关闭」按钮：与编辑/归档同款胶囊观感（白底黑字） */
+.projects-detail-actions .btn-ghost {
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: #fff;
+  color: #1f2328;
+  font-size: 12px;
+}
+
+.projects-detail-actions .btn-ghost:hover {
+  background: #f2f3f5;
+}
+
+/* 任务链接区：默认只展示前五条（倒序），可展开全部，不做高度截断 */
+.projects-detail .project-task-links {
+  margin-top: 12px;
+}
+
+/* 展开全部/收起按钮，与头部按钮同观感 */
+.project-tasks-toggle {
+  margin-top: 8px;
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: #fff;
+  color: #1f2328;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-tasks-toggle:hover {
+  background: #f2f3f5;
+}
+
+/* 行内布局：标题截断省略，完成日期靠右 */
+.projects-detail .project-task-links button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.projects-detail .project-task-links .project-task-link-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-task-done-at {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.project-field-hint {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 400;
+}
+
 
 .tags-task-due {
   margin-left: auto;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
@@ -27,10 +27,8 @@ import { nextRunningTimerDueAt } from "@/lib/timers";
 import {
   createNotificationRecord,
   ensureReminderRecord,
-  ensureMissedNotification,
   fetchDueNotifications,
-  getSetting,
-  setSetting,
+  dismissMissedNotifications,
   setNotificationStatus,
 } from "@/lib/db";
 import { privacySafeNotification } from "@/lib/privacy";
@@ -40,9 +38,7 @@ import { filterTasksByView } from "@/lib/tasks";
 import { todayDateString } from "@/lib/dates";
 import {
   applyPrivacyToReminderPlans,
-  buildMissedReminderPlans,
   buildNativeReminderPlans,
-  missedReminderNeedsPopup,
   OS_REMINDER_LIMIT,
   selectOsReminderWindow,
   type ReminderSyncStatus,
@@ -100,15 +96,6 @@ export function MainApp() {
   const timers = useAppStore((s) => s.timers);
   const settleTimers = useAppStore((s) => s.settleTimers);
   const refreshTimers = useAppStore((s) => s.refreshTimers);
-
-  const overdueSignature = useMemo(
-    () =>
-      tasks
-        .filter((task) => task.status === "pending" && task.due_date && !task.parent_id)
-        .map((task) => `${task.id}:${task.due_date}:${task.due_time ?? ""}`)
-        .join("|"),
-    [tasks],
-  );
 
   const [navCollapsed, setNavCollapsed] = useState(() => {
     try {
@@ -350,47 +337,9 @@ export function MainApp() {
     }
   };
 
-  const scanMissedReminders = async (host: OsHostState) => {
-    const snapshot = useAppStore.getState();
-    const now = Date.now();
-    const stored = await getSetting("native_reminder_last_scan_at");
-    const lastScan = stored ? Number(stored) : now;
-    const missed = buildMissedReminderPlans(
-      snapshot.tasks,
-      snapshot.settings.notifyAhead,
-      lastScan,
-      now,
-    );
-    for (const item of missed) {
-      const created = await ensureReminderRecord({
-        taskId: item.taskId,
-        title: item.title,
-        body: item.body,
-        scheduledAt: new Date(item.fireAtMs).toISOString(),
-      });
-      if (created && missedReminderNeedsPopup(item, host.osOk, host.hostedIds)) {
-        const copy = privacySafeNotification(
-          snapshot.settings.privacyMode,
-          item.title,
-          item.body,
-        );
-        sendNotification(copy);
-      }
-    }
-    await setSetting("native_reminder_last_scan_at", String(now));
-    if (missed.length) {
-      window.dispatchEvent(new Event("notifications:changed"));
-    }
-  };
-
   const runFullReminderPass = () =>
     enqueueReminderPass(async () => {
-      const host = await syncOsReminders();
-      await scanMissedReminders(host);
-    });
-  const runMissedOnlyPass = () =>
-    enqueueReminderPass(async () => {
-      await scanMissedReminders(lastOsHostRef.current);
+      await syncOsReminders();
     });
   runFullReminderPassRef.current = runFullReminderPass;
 
@@ -536,16 +485,13 @@ export function MainApp() {
 
   useEffect(() => {
     if (!ready) return;
+    void dismissMissedNotifications().catch(() => undefined);
     void runFullReminderPass().catch(() => undefined);
     const fullTimer = window.setInterval(() => {
       void runFullReminderPassRef.current().catch(() => undefined);
     }, REMINDER_RESYNC_MS);
-    const missedTimer = window.setInterval(() => {
-      void runMissedOnlyPass().catch(() => undefined);
-    }, 60_000);
     return () => {
       window.clearInterval(fullTimer);
-      window.clearInterval(missedTimer);
     };
   }, [ready, settings.notifyAhead, settings.privacyMode]);
 
@@ -585,7 +531,6 @@ export function MainApp() {
         window.dispatchEvent(new Event("notifications:changed")),
       );
       void (async () => {
-        await setSetting("native_reminder_last_scan_at", String(Date.now()));
         await runFullReminderPassRef.current();
       })().catch(() => undefined);
     }).then((fn) => {
@@ -752,29 +697,6 @@ export function MainApp() {
     const timer = window.setInterval(() => void backup(), 6 * 60 * 60 * 1000);
     return () => window.clearInterval(timer);
   }, [settings.autoBackup]);
-
-  useEffect(() => {
-    if (!ready) return;
-    const debounce = window.setTimeout(() => {
-      const now = Date.now();
-      const current = useAppStore.getState().tasks;
-      const missed = current.filter((task) => {
-        if (task.status !== "pending" || !task.due_date || task.parent_id) {
-          return false;
-        }
-        const due = new Date(
-          `${task.due_date}T${task.due_time ?? "23:59"}:00`,
-        ).getTime();
-        return due < now;
-      });
-      void Promise.all(missed.map(ensureMissedNotification)).then(() => {
-        if (missed.length) {
-          window.dispatchEvent(new Event("notifications:changed"));
-        }
-      });
-    }, 800);
-    return () => window.clearTimeout(debounce);
-  }, [ready, overdueSignature]);
 
   if (!ready) {
     return <div className="empty-state">加载中…</div>;

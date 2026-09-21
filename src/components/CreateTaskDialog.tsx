@@ -160,7 +160,6 @@ export function CreateTaskDialog() {
         <label>任务说明<textarea value={description} placeholder="可选：补充背景或完成标准" onChange={(event) => setDescription(event.target.value)} /></label>
         <div className="create-task-grid">
           <label>优先级<SelectMenu ariaLabel="优先级" value={String(priority)} onChange={(value) => setPriority(Number(value) as TaskPriority)} options={[{ value: "1", label: "P1 紧急" }, { value: "2", label: "P2 高" }, { value: "3", label: "P3 普通" }, { value: "4", label: "P4 低" }]} /></label>
-          <label>所属项目<SelectMenu ariaLabel="所属项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "无项目" }, ...projects.filter((project) => !project.archived).map((project) => ({ value: project.id, label: project.name }))]} /></label>
           <label>
             重复
             <SelectMenu
@@ -176,6 +175,20 @@ export function CreateTaskDialog() {
                 { value: "monthly", label: "每月" },
                 { value: "custom", label: "每月最后周五" },
               ]}
+            />
+          </label>
+          <label>
+            所属项目
+            <SelectMenu
+              ariaLabel="所属项目"
+              value={projectId}
+              onChange={(value) => {
+                setProjectId(value);
+                // 选中项目后标签行默认带项目标签，但仍可自行更改。
+                const nextProject = projects.find((project) => project.id === value);
+                setSelectedTagId(nextProject?.tag_id ?? "");
+              }}
+              options={[{ value: "", label: "无项目" }, ...projects.filter((project) => !project.archived).map((project) => ({ value: project.id, label: project.name }))]}
             />
           </label>
           <label>标签<SelectMenu ariaLabel="标签" value={selectedTagId} onChange={setSelectedTagId} options={[{ value: "", label: "无标签" }, ...tags.map((tag) => ({ value: tag.id, label: tag.name }))]} /></label>

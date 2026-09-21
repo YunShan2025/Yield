@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -107,8 +107,30 @@ describe("database migration declarations", () => {
     );
   });
 
-  it("adds sync metadata via migration v2", () => {
+  it("drops project goal/criteria/milestones via migration v10", () => {
     const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*10,\s*description:\s*"drop_project_goal_criteria_milestones",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 成果/成功标准/项目里程碑功能下线：删表删列并清理同步簿记。
+    expect(sql).toContain("DROP TABLE IF EXISTS milestones");
+    expect(sql).toContain("ALTER TABLE projects DROP COLUMN goal");
+    expect(sql).toContain("ALTER TABLE projects DROP COLUMN success_criteria");
+    expect(sql).toContain("DELETE FROM sync_outbox WHERE table_name = 'milestones'");
+    expect(sql).toContain("DELETE FROM sync_state WHERE table_name = 'milestones'");
+    expect(sql).toContain("DELETE FROM sync_merge_seen WHERE table_name = 'milestones'");
+    // 评审期的项目标签备份表回填 tag_id 后删除。
+    expect(sql).toContain("DROP TABLE projects_tag_backup");
+    // 成长目标里程碑（goal_milestones）是另一套功能，不受影响。
+    expect(sql).not.toContain("goal_milestones");
+  });
+
+  it("adds sync metadata via migration v2", () => {    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
       /\r\n/g,
       "\n",
     );

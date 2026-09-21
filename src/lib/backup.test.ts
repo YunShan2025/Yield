@@ -34,7 +34,6 @@ describe("backup coverage", () => {
       .join("\n");
     for (const table of [
       "task_events",
-      "milestones",
       "goals",
       "goal_entries",
       "goal_milestones",

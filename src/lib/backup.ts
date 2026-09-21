@@ -208,9 +208,6 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
       }
       return true;
     }),
-    milestones: payload.milestones?.filter(
-      (item) => !hasProjects || projectIds.has(item.project_id),
-    ),
     goalMilestones: payload.goalMilestones?.filter(
       (item) => !hasGoals || goalIds.has(item.goal_id),
     ),

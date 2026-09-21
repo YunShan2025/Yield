@@ -17,7 +17,6 @@ export type SyncTableName =
   | "tasks"
   | "task_tags"
   | "task_planning_metadata"
-  | "milestones"
   | "goal_entries"
   | "goal_milestones"
   | "habit_checks"
@@ -40,7 +39,6 @@ export const SYNC_TABLES: readonly SyncTableName[] = [
   "tasks",
   "task_tags",
   "task_planning_metadata",
-  "milestones",
   "goal_entries",
   "goal_milestones",
   "habit_checks",

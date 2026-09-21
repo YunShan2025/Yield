@@ -24,13 +24,21 @@ export function ReviewView() {
   const weekEnd = weekDates[6];
 
   const stats = useMemo(() => {
+    // 新增/完成都按当日计，已删除的任务不计入。
     const created = weekDates.map(
-      (d) => tasks.filter((t) => !t.parent_id && localDateKey(new Date(t.created_at)) === d).length,
+      (d) =>
+        tasks.filter(
+          (t) => !t.parent_id && !t.deleted_at && localDateKey(new Date(t.created_at)) === d,
+        ).length,
     );
     const completed = weekDates.map(
       (d) =>
         tasks.filter(
-          (t) => !t.parent_id && t.completed_at && localDateKey(new Date(t.completed_at)) === d,
+          (t) =>
+            !t.parent_id &&
+            !t.deleted_at &&
+            t.completed_at &&
+            localDateKey(new Date(t.completed_at)) === d,
         ).length,
     );
     const roots = tasks.filter((t) => !t.parent_id);
@@ -117,7 +125,7 @@ export function ReviewView() {
         <article><span>整体完成率</span><strong>{stats.rate}%</strong><small>全部任务累计表现</small></article>
         <article><span>延期完成</span><strong>{stats.delayRate}%</strong><small>{stats.delayRate ? "可以留意计划余量" : "节奏保持得很好"}</small></article>
         <article><span>高效时段</span><strong>{stats.peak}:00</strong><small>最常完成任务的时间</small></article>
-        <article><span>满勤天数</span><strong>{stats.fullDays}</strong><small>当日事项全部完成的天数</small></article>
+        <article><span>满勤天数</span><strong>{stats.fullDays}</strong><small>本周中当日事项全部完成的天数</small></article>
       </section>
 
       <div className="review-main-grid">

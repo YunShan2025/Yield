@@ -1,8 +1,85 @@
 import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useAppStore } from "@/store/app";
 import { getSubtasks, subtaskProgress } from "@/lib/tasks";
 import { priorityLabel } from "@/lib/dates";
+import { DatePicker } from "@/components/DatePicker";
+import { TimePicker } from "@/components/TimePicker";
 import type { Task } from "@/types";
+
+/** 把完成时刻（ISO）拆成本地日期 + 时间供表单编辑。 */
+function splitCompletedAt(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
+
+function CompletedTimeEditor({
+  task,
+  onClose,
+}: {
+  task: Task;
+  onClose: () => void;
+}) {
+  const setTaskCompletedAt = useAppStore((s) => s.setTaskCompletedAt);
+  const initial = task.completed_at ? splitCompletedAt(task.completed_at) : null;
+  const [date, setDate] = useState(initial?.date ?? "");
+  const [time, setTime] = useState(initial?.time ?? "09:00");
+
+  const save = () => {
+    if (!date || !time) return;
+    const next = new Date(`${date}T${time}:00`);
+    if (Number.isNaN(next.getTime())) return;
+    void setTaskCompletedAt(task.id, next.toISOString()).then(onClose);
+  };
+
+  // Portal 到 body：任务行 hover 时带 transform，会把 fixed 弹窗错位到行内。
+  return createPortal(
+    <div className="modal-backdrop" onMouseDown={onClose}>
+      <form
+        className="completed-time-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="completed-time-title"
+        onMouseDown={(event) => event.stopPropagation()}
+        onSubmit={(event) => {
+          event.preventDefault();
+          save();
+        }}
+      >
+        <div className="modal-head">
+          <div>
+            <span>{task.title}</span>
+            <h3>修改完成时间</h3>
+          </div>
+          <button type="button" onClick={onClose}>×</button>
+        </div>
+        <div className="completed-time-fields">
+          <label>
+            完成日期
+            <DatePicker value={date} onChange={setDate} ariaLabel="完成日期" />
+          </label>
+          <label>
+            完成时间
+            <TimePicker value={time} onChange={setTime} />
+          </label>
+        </div>
+        <div className="completed-time-actions">
+          <button type="button" className="btn-ghost" onClick={onClose}>
+            取消
+          </button>
+          <button type="submit" className="btn-primary" disabled={!date || !time}>
+            保存
+          </button>
+        </div>
+      </form>
+    </div>,
+    document.body,
+  );
+}
 
 export function ExpandableTaskItem({
   task,
@@ -31,6 +108,7 @@ export function ExpandableTaskItem({
   const addTask = useAppStore((s) => s.addTask);
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState("");
+  const [editCompletedAt, setEditCompletedAt] = useState(false);
 
   const subs = getSubtasks(tasks, task.id);
   const progress = subtaskProgress(tasks, task.id);
@@ -92,6 +170,19 @@ export function ExpandableTaskItem({
             ) : null}
           </div>
         </div>
+        {task.status === "completed" ? (
+          <button
+            type="button"
+            className="btn-ghost expand-detail"
+            title="修改完成时间"
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditCompletedAt(true);
+            }}
+          >
+            修改完成时间
+          </button>
+        ) : null}
         <button
           type="button"
           className="btn-ghost expand-detail"
@@ -162,6 +253,10 @@ export function ExpandableTaskItem({
             }}
           />
         </div>
+      ) : null}
+
+      {editCompletedAt ? (
+        <CompletedTimeEditor task={task} onClose={() => setEditCompletedAt(false)} />
       ) : null}
     </div>
   );

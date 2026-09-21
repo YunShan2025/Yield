@@ -1,7 +1,6 @@
 import type {
   AppNotification,
   BackupPayload,
-  Milestone,
   Project,
   TaskEvent,
 } from "@/types";
@@ -48,7 +47,6 @@ export async function exportBackup(): Promise<BackupPayload> {
     "SELECT * FROM app_notifications",
   );
   const taskEvents = await db.select<TaskEvent[]>("SELECT * FROM task_events");
-  const milestones = await db.select<Milestone[]>("SELECT * FROM milestones");
   const goals = await fetchGoals(true);
   const goalEntries = await fetchGoalEntries();
   const goalMilestones = await fetchGoalMilestones();
@@ -79,7 +77,6 @@ export async function exportBackup(): Promise<BackupPayload> {
     projects,
     notifications,
     taskEvents,
-    milestones,
     goals,
     goalEntries,
     goalMilestones,
@@ -126,7 +123,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
       await db.execute("DELETE FROM goal_entries WHERE source_type IN ('task','habit')");
     }
     if (has("taskEvents")) await db.execute("DELETE FROM task_events");
-    if (has("milestones")) await db.execute("DELETE FROM milestones");
     await db.execute("DELETE FROM habit_checks");
     await db.execute("DELETE FROM habits");
     await db.execute("DELETE FROM attachments");
@@ -243,8 +239,8 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   for (const project of payload.projects ?? []) {
     await db.execute(
       `INSERT INTO projects
-       (id, name, color, due_date, archived, created_at, updated_at, goal, success_criteria)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+       (id, name, color, due_date, archived, created_at, updated_at, tag_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       [
         project.id,
         project.name,
@@ -253,8 +249,7 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         project.archived,
         project.created_at,
         project.updated_at,
-        project.goal ?? "",
-        project.success_criteria ?? "",
+        project.tag_id ?? null,
       ],
     );
   }
@@ -289,21 +284,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         event.after_json,
         event.note,
         event.created_at,
-      ],
-    );
-  }
-  for (const milestone of payload.milestones ?? []) {
-    await db.execute(
-      `INSERT INTO milestones (id, project_id, title, due_date, completed, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [
-        milestone.id,
-        milestone.project_id,
-        milestone.title,
-        milestone.due_date,
-        milestone.completed,
-        milestone.created_at,
-        milestone.updated_at ?? milestone.created_at,
       ],
     );
   }

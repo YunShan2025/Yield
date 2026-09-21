@@ -176,6 +176,8 @@ export interface TaskUpdate {
   notes?: string;
   priority?: TaskPriority;
   status?: TaskStatus;
+  /** 仅在任务保持 completed 状态时允许显式修改（修改完成时间）。 */
+  completed_at?: string | null;
   due_date?: string | null;
   due_time?: string | null;
   end_time?: string | null;
@@ -219,8 +221,8 @@ export interface Project {
   archived: number;
   created_at: string;
   updated_at: string;
-  goal: string;
-  success_criteria: string;
+  /** 项目自带的标签：选中该项目的任务默认打上此标签。 */
+  tag_id: string | null;
 }
 
 export interface TaskEvent {
@@ -250,16 +252,6 @@ export interface Anniversary {
   /** 1=每年循环，0=仅该日一次 */
   recur_yearly: number;
   note: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Milestone {
-  id: string;
-  project_id: string;
-  title: string;
-  due_date: string | null;
-  completed: number;
   created_at: string;
   updated_at: string;
 }
@@ -362,7 +354,6 @@ export interface BackupPayload {
   projects?: Project[];
   notifications?: AppNotification[];
   taskEvents?: TaskEvent[];
-  milestones?: Milestone[];
   goals?: Goal[];
   goalEntries?: GoalEntry[];
   goalMilestones?: GoalMilestone[];

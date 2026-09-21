@@ -1,15 +1,12 @@
 import type {
   AppNotification,
-  Milestone,
   Project,
-  Task,
 } from "@/types";
 import { createId, nowIso } from "@/lib/dates";
 import { getDb } from "./client";
 
-/* Projects and milestones */
-export async function fetchProjects(): Promise<Project[]> {
-  const db = await getDb();
+/* Projects */
+export async function fetchProjects(): Promise<Project[]> {  const db = await getDb();
   return db.select<Project[]>(
     "SELECT * FROM projects WHERE archived = 0 ORDER BY created_at DESC",
   );
@@ -18,6 +15,7 @@ export async function fetchProjects(): Promise<Project[]> {
 export async function createProject(
   name: string,
   color = "#7D9BE8",
+  tagId: string | null = null,
 ): Promise<Project> {
   const db = await getDb();
   const timestamp = nowIso();
@@ -29,13 +27,12 @@ export async function createProject(
     archived: 0,
     created_at: timestamp,
     updated_at: timestamp,
-    goal: "",
-    success_criteria: "",
+    tag_id: tagId,
   };
   await db.execute(
     `INSERT INTO projects
-      (id, name, color, due_date, archived, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      (id, name, color, due_date, archived, created_at, updated_at, tag_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
     [
       project.id,
       project.name,
@@ -44,6 +41,7 @@ export async function createProject(
       project.archived,
       project.created_at,
       project.updated_at,
+      project.tag_id,
     ],
   );
   return project;
@@ -60,7 +58,7 @@ export async function archiveProject(id: string): Promise<void> {
 export async function updateProject(
   id: string,
   updates: Partial<
-    Pick<Project, "name" | "color" | "goal" | "success_criteria" | "due_date">
+    Pick<Project, "name" | "color" | "due_date" | "tag_id">
   >,
 ): Promise<void> {
   const db = await getDb();
@@ -73,65 +71,16 @@ export async function updateProject(
   if (!current) return;
   const next = { ...current, ...updates, updated_at: nowIso() };
   await db.execute(
-    `UPDATE projects SET name=$1, color=$2, goal=$3, success_criteria=$4,
-     due_date=$5, updated_at=$6 WHERE id=$7`,
+    `UPDATE projects SET name=$1, color=$2,
+     due_date=$3, tag_id=$4, updated_at=$5 WHERE id=$6`,
     [
       next.name,
       next.color,
-      next.goal,
-      next.success_criteria,
       next.due_date,
+      next.tag_id ?? null,
       next.updated_at,
       id,
     ],
-  );
-}
-
-export async function fetchMilestones(): Promise<Milestone[]> {
-  const db = await getDb();
-  return db.select<Milestone[]>(
-    "SELECT * FROM milestones ORDER BY due_date ASC, created_at ASC",
-  );
-}
-
-export async function createMilestone(
-  projectId: string,
-  title: string,
-): Promise<void> {
-  const db = await getDb();
-  await db.execute(
-    `INSERT INTO milestones
-     (id, project_id, title, due_date, completed, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-    [createId(), projectId, title.trim(), null, 0, nowIso(), nowIso()],
-  );
-}
-
-export async function toggleMilestone(
-  id: string,
-  completed: boolean,
-): Promise<void> {
-  const db = await getDb();
-  await db.execute(
-    "UPDATE milestones SET completed = $1, updated_at = $2 WHERE id = $3",
-    [completed ? 1 : 0, nowIso(), id],
-  );
-}
-
-export async function updateMilestone(
-  id: string,
-  patch: { title?: string; due_date?: string | null },
-): Promise<void> {
-  const db = await getDb();
-  const rows = await db.select<Milestone[]>("SELECT * FROM milestones WHERE id = $1", [id]);
-  const current = rows[0];
-  if (!current) return;
-  const title = patch.title === undefined ? current.title : patch.title.trim();
-  if (!title) return;
-  const dueDate = patch.due_date === undefined ? current.due_date : patch.due_date;
-  await db.execute(
-    "UPDATE milestones SET title = $1, due_date = $2, updated_at = $3 WHERE id = $4",
-    [title, dueDate || null, nowIso(), id],
   );
 }
 
@@ -255,35 +204,13 @@ export async function fetchDueNotifications(): Promise<AppNotification[]> {
   );
 }
 
-const missedNotificationInflight = new Map<string, Promise<void>>();
-
-export async function ensureMissedNotification(
-  task: Task,
-): Promise<void> {
-  if (!task.due_date) return;
-  const pending = missedNotificationInflight.get(task.id);
-  if (pending) {
-    await pending;
-    return;
-  }
-  const work = (async () => {
-    const db = await getDb();
-    const exists = await db.select<{ id: string }[]>(
-      `SELECT id FROM app_notifications
-       WHERE task_id = $1 AND kind = 'missed' LIMIT 1`,
-      [task.id],
-    );
-    if (exists.length) return;
-    await createNotificationRecord({
-      taskId: task.id,
-      kind: "missed",
-      title: "错过的任务",
-      body: task.title,
-      scheduledAt: `${task.due_date}T${task.due_time ?? "23:59"}:00`,
-    });
-  })().finally(() => {
-    missedNotificationInflight.delete(task.id);
-  });
-  missedNotificationInflight.set(task.id, work);
-  await work;
+/**
+ * 「错过的提醒/错过的任务」自动通知功能已下线：不再生成新的 missed 行，
+ * 历史遗留的 missed 通知在启动时统一置为已读，不再出现在通知卡片里。
+ */
+export async function dismissMissedNotifications(): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE app_notifications SET status = 'read' WHERE kind = 'missed' AND status IN ('pending', 'delivered')",
+  );
 }

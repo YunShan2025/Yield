@@ -215,6 +215,14 @@ async function updateTaskWithinTransaction(
   if (current.status === "completed" && next.status !== "completed") {
     next.completed_at = null;
   }
+  // 显式修改完成时间（任务保持 completed）：只允许改时刻，不改状态。
+  if (
+    updates.completed_at !== undefined &&
+    current.status === "completed" &&
+    next.status === "completed"
+  ) {
+    next.completed_at = updates.completed_at;
+  }
 
   await db.execute(
     `UPDATE tasks SET
@@ -274,6 +282,22 @@ async function updateTaskWithinTransaction(
     });
   } else if (current.goal_id && current.status === "completed" && next.status !== "completed") {
     await removeGoalEntryBySource(current.goal_id, "task", current.id);
+  } else if (
+    next.goal_id &&
+    next.status === "completed" &&
+    updates.completed_at !== undefined &&
+    updates.completed_at !== current.completed_at
+  ) {
+    // 完成时间被修改：把目标贡献记录挪到新的完成日期。
+    await removeGoalEntryBySource(next.goal_id, "task", next.id);
+    await addGoalEntry({
+      goal_id: next.goal_id,
+      entry_date: localDateKey(new Date(next.completed_at ?? nowIso())),
+      value: next.goal_contribution || 1,
+      source_id: next.id,
+      source_type: "task",
+      note: next.title,
+    });
   }
   const affectedProjectIds = new Set(
     [current.project_id, next.project_id].filter((value): value is string => Boolean(value)),

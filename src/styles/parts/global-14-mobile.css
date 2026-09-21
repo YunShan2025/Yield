@@ -453,6 +453,31 @@ html[data-shell="mobile"] .desktop-notification-stack {
     flex-wrap: wrap;
   }
 
+  /* 项目页：新建项目按钮向右对齐 */
+  .projects-view .workspace-top .top-controls {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  /* 项目详情：标题与编辑/归档/关闭分两行，393px 下按钮不再被挤压变形 */
+  .projects-detail header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .projects-detail .projects-detail-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+
+  .projects-detail .project-card-edit,
+  .projects-detail .project-card-archive,
+  .projects-detail .projects-detail-actions .btn-ghost,
+  .project-tasks-toggle {
+    flex: none;
+    min-height: 0;
+  }
+
   .workspace-subtitle {
     font-size: 11px;
   }

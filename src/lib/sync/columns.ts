@@ -29,7 +29,7 @@ const TASK_COLUMNS = [
 export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> = {
   projects: {
     idColumns: ["id"],
-    columns: ["name", "color", "due_date", "archived", "goal", "success_criteria", "created_at", "updated_at"],
+    columns: ["name", "color", "due_date", "archived", "tag_id", "created_at", "updated_at"],
   },
   goals: {
     idColumns: ["id"],
@@ -66,10 +66,6 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   task_planning_metadata: {
     idColumns: ["task_id"],
     columns: ["reminder_minutes_json", "updated_at"],
-  },
-  milestones: {
-    idColumns: ["id"],
-    columns: ["project_id", "title", "due_date", "completed", "created_at", "updated_at"],
   },
   goal_entries: {
     idColumns: ["id"],

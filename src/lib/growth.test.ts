@@ -22,8 +22,9 @@ describe("growth metrics", () => {
   it("groups activity into bounded heat levels", () => {
     expect(activityLevelFromValue(0)).toBe(0);
     expect(activityLevelFromValue(1)).toBe(1);
-    expect(activityLevelFromValue(3)).toBe(2);
-    expect(activityLevelFromValue(7)).toBe(3);
+    expect(activityLevelFromValue(2)).toBe(2);
+    expect(activityLevelFromValue(3)).toBe(3);
+    expect(activityLevelFromValue(4)).toBe(4);
     expect(activityLevelFromValue(15)).toBe(4);
   });
 

@@ -41,10 +41,11 @@ export function calculateGoalProgress(goal: Goal): number {
 }
 
 export function activityLevelFromValue(value: number): 0 | 1 | 2 | 3 | 4 {
+  // 五档对应 0、1、2、3、≥4：投入每多一个，颜色加深一档。
   if (value <= 0) return 0;
   if (value < 2) return 1;
-  if (value < 5) return 2;
-  if (value < 10) return 3;
+  if (value < 3) return 2;
+  if (value < 4) return 3;
   return 4;
 }
 
