@@ -98,7 +98,7 @@ export function ProjectsView() {
           <div className="today-hero-copy">
             <span className="today-eyebrow">百工 · 项目</span>
             <h3>百工居肆以成其事。</h3>
-            <p className="today-hero-note">项目是长期事项的工坊：任务与成果都在这里聚拢。</p>
+            <p className="today-hero-note">项目是长期事项的工坊：相关任务都在这里聚拢。</p>
           </div>
         </section>
         <section>
