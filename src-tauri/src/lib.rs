@@ -1210,6 +1210,38 @@ DELETE FROM settings WHERE key = 'active_focus';
             sql: r#"ALTER TABLE task_planning_metadata DROP COLUMN estimated_minutes;"#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 9,
+            description: "projects_tag_id",
+            // 标签系统重构：项目可携带一个标签，新建项目界面选择；
+            // 选择该项目的任务默认继承这个标签。列为可空，旧项目无标签。
+            sql: r#"ALTER TABLE projects ADD COLUMN tag_id TEXT;"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 10,
+            description: "drop_project_goal_criteria_milestones",
+            // 项目成果 / 成功标准 / 项目里程碑功能永久下线：UI 与 TS 读写
+            // 已移除，这里删表删列，并清理同步簿记。projects_tag_backup 是
+            // 评审期手工备份的项目标签值（正式版不带该表，IF NOT EXISTS
+            // 兜底为空表），回填进 tag_id 后删除。goal_milestones 是成长
+            // 目标的里程碑，另一套功能，保留。
+            sql: r#"
+CREATE TABLE IF NOT EXISTS projects_tag_backup (project_id TEXT PRIMARY KEY, tag_id TEXT);
+UPDATE projects SET tag_id = (
+  SELECT b.tag_id FROM projects_tag_backup AS b WHERE b.project_id = projects.id
+)
+WHERE EXISTS (SELECT 1 FROM projects_tag_backup AS b WHERE b.project_id = projects.id);
+DROP TABLE projects_tag_backup;
+DELETE FROM sync_outbox WHERE table_name = 'milestones';
+DELETE FROM sync_state WHERE table_name = 'milestones';
+DELETE FROM sync_merge_seen WHERE table_name = 'milestones';
+DROP TABLE IF EXISTS milestones;
+ALTER TABLE projects DROP COLUMN goal;
+ALTER TABLE projects DROP COLUMN success_criteria;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

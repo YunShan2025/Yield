@@ -38,7 +38,7 @@
 
 - **提醒**：单次提醒与多提醒组合，系统通知与通知中心；倒计时与循环提醒适合会议、发布、喝水、护眼等周期事项
 - **备忘录**：富文本与 Markdown 双格式，支持置顶、归档与搜索
-- **项目**：用颜色、目标、成功标准与截止日期组织相关任务，里程碑标记关键阶段
+- **项目**：用颜色、标签与截止日期组织相关任务；项目可携带标签，选中该项目的任务默认继承
 
 ### 更多
 
@@ -124,7 +124,7 @@ npm run tauri android build -- --debug --apk --target aarch64   # 真机 arm64
 
 ## 下载与安装
 
-当前版本 **v1.0.14**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
+当前版本 **v1.1.0**（见 `package.json` / `src-tauri/tauri.conf.json`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
