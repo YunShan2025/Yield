@@ -417,6 +417,10 @@
   gap: 26px;
   padding: 0 28px 28px;
   overflow: auto;
+  /* 定高滚动容器里 auto 行会被压缩到比内容矮（详情展开后内容互相叠压，
+     移动端实测「xxx的任务」标题行与上方区块重叠 14px）。行高一律取
+     内容高，超高交给 overflow 滚动。 */
+  grid-auto-rows: max-content;
 }
 
 .section-title-row,
