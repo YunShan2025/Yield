@@ -140,7 +140,7 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
   let total = 0;
   const updatable = [
     "projects", "goals", "tags", "habits", "anniversaries", "tasks",
-    "milestones", "goal_entries", "goal_milestones",
+    "goal_entries", "goal_milestones",
     "memos", "timers", "ledger_categories", "ledger_accounts",
     "ledger_transactions", "ledger_budgets",
   ];

@@ -133,6 +133,50 @@ function createDevice(name: string, transport: MemoryTransport): Device {
 }
 
 describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () => {
+  it("项目标签回填后经 migration v11 重推，同步到对端", async () => {
+    const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
+    const i = src.indexOf("version: 11,");
+    const v11 = src.slice(
+      src.indexOf("\n", src.indexOf('sql: r#"', i)) + 1,
+      src.indexOf('"#,', i),
+    );
+
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    // 双端在旧版本（无 tag_id 列）下建项目并同步一轮，双方水位推进。
+    await a.run(
+      `INSERT INTO projects (id, name, created_at, updated_at)
+       VALUES ('p1','小论文','2026-09-15T00:00:00.000Z','2026-09-15T00:00:00.000Z')`,
+    );
+    await a.sync();
+    await b.sync();
+
+    // 双端升级：加列（v9），A 端回填标签——模拟 v10 的回填 UPDATE，不改 updated_at。
+    await a.run("ALTER TABLE projects ADD COLUMN tag_id TEXT");
+    await b.run("ALTER TABLE projects ADD COLUMN tag_id TEXT");
+    await a.run("UPDATE projects SET tag_id = 'tagX' WHERE id = 'p1'");
+    // 回归点：更新时间未变，触发器（WHEN updated_at 变化）不入箱——
+    // 这正是 v1.1.0 标签同步丢失的根因。
+    expect(await a.outboxCount()).toBe(0);
+
+    // v11 把带标签的项目重新压回 outbox，下一轮排水以新 HLC 全行重发。
+    await a.run(v11);
+    expect(
+      await a.rows("SELECT row_id FROM sync_outbox WHERE table_name='projects'"),
+    ).toEqual([{ row_id: "p1" }]);
+    const pushed = await a.sync();
+    expect(pushed.pushed).toBeGreaterThan(0);
+    const pulled = await b.sync();
+    expect(pulled.pulled).toBeGreaterThan(0);
+    expect(await b.rows("SELECT tag_id FROM projects WHERE id='p1'")).toEqual([
+      { tag_id: "tagX" },
+    ]);
+    // 对端应用无回声。
+    expect(await b.outboxCount()).toBe(0);
+  });
+
   it("A 建任务 → 同步 → B 可见 → B 改标题 → 同步 → A 跟随", async () => {
     const transport = new MemoryTransport();
     const a = createDevice("desktop", transport);

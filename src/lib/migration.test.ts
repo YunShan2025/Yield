@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -128,6 +128,26 @@ describe("database migration declarations", () => {
     expect(sql).toContain("DROP TABLE projects_tag_backup");
     // 成长目标里程碑（goal_milestones）是另一套功能，不受影响。
     expect(sql).not.toContain("goal_milestones");
+  });
+
+  it("re-enqueues tagged projects into the outbox via migration v11", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*11,\s*description:\s*"resync_project_tags",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 回归：v10 的回填 UPDATE 不改 updated_at，触发器（WHEN updated_at
+    // 变化）不会入箱，标签从未进同步日志。v11 必须把带标签的项目重新
+    // 压回 outbox，靠排水以新 HLC 全行重发。
+    expect(sql).toContain("INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)");
+    expect(sql).toContain("SELECT 'projects', CAST(id AS TEXT), 'upsert'");
+    expect(sql).toContain("FROM projects WHERE tag_id IS NOT NULL");
+    // 只重发带标签的行：无标签的旧条目不得盖掉对端的新值。
+    expect(sql).not.toContain("WHERE tag_id IS NULL");
   });
 
   it("adds sync metadata via migration v2", () => {    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(

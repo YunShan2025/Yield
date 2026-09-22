@@ -1242,6 +1242,23 @@ ALTER TABLE projects DROP COLUMN success_criteria;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 11,
+            description: "resync_project_tags",
+            // 项目标签回填修复：v10 的回填 UPDATE 不改 updated_at，而项目
+            // 同步触发器（trg_projects_upd）只在 updated_at 变化时入箱，
+            // 回填进来的 tag_id 从未进入同步日志；对端若已在旧版本下消费过
+            // 更早的条目（水位推进），标签就永远同步不过去。这里把带标签的
+            // 项目重新压入 outbox，下一轮排水以新 HLC 全行重发，LWW 收敛。
+            // 只挑 tag_id 非空的行：无标签的旧条目不重发，避免旧空值盖新值。
+            sql: r#"
+INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+SELECT 'projects', CAST(id AS TEXT), 'upsert',
+  COALESCE(CAST(ROUND((julianday(NULLIF(updated_at,''))-2440587.5)*86400000.0) AS INTEGER), 0)
+FROM projects WHERE tag_id IS NOT NULL;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
