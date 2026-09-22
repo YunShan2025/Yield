@@ -66,8 +66,14 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
   "ledger_hide_amount",
 ]);
 
-/** 当前数据库 schema 版本（与 src-tauri migration 版本保持一致），写入每条日志。 */
-export const SYNC_SCHEMA_VERSION = 2;
+/**
+ * 同步日志格式版本。v3（v1.1.2）：新增字段的闸门——projects.tag_id 等
+ * 新列进入日志后，旧版本（schema_v 2）的列白名单会把它静默丢弃且照常
+ * 推进水位，数据从此缺失。升版后旧端在 header 闸门被整体拒收并明确
+ * 提示升级，不再静默丢字段；本版本解析时接受 ≤ 自身版本的条目（旧格式
+ * 是新格式的列子集，白名单会滤掉已删列），保证升级顺序无关的收敛。
+ */
+export const SYNC_SCHEMA_VERSION = 3;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);

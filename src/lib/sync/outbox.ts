@@ -204,6 +204,26 @@ function rowsAffected(res: unknown): number {
   return 0;
 }
 
+/** 一次性修复的登记键（settings，设备本地）：做过就不再重复。 */
+export const REPAIR_KEY_PROJECT_TAGS = "project_tags_v3";
+
+/**
+ * 一次性修复：把带标签的项目重新压入 outbox（与 migration v11 同款 SQL）。
+ * migration 11 只帮到"尚未升到 v10"的设备；已在 v1.1.0/v1.1.1 上用旧
+ * 列白名单消费过补发条目的对端（水位已推进）仍拿不到标签。升级到本版
+ * 后每个设备再重推一次，对端拉到新 HLC 条目即收敛。幂等性由调用方的
+ * settings 登记键保证，LWW 让重复推送无害。
+ */
+export async function requeueTaggedProjects(db: SqlClient): Promise<number> {
+  return rowsAffected(
+    await db.execute(
+      `INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+       SELECT 'projects', CAST(id AS TEXT), 'upsert', ${TS_MS_SQL}
+       FROM projects WHERE tag_id IS NOT NULL`,
+    ),
+  );
+}
+
 /**
  * 真实 SQLite 的合并后端。upsert 前登记 sync_merge_seen 抑制触发器回声；
  * 已应用 HLC 写入 sync_state。cleanupSeen 在合并完成后清掉登记

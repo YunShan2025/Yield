@@ -42,6 +42,7 @@ interface Device {
   run(sql: string, params?: unknown[]): Promise<unknown>;
   outboxCount(): Promise<number>;
   readLocalLog(): string;
+  rewriteLocal(text: string): Promise<void>;
   get lastSync(): SyncSummary | null;
 }
 
@@ -85,6 +86,9 @@ function createDevice(name: string, transport: MemoryTransport): Device {
       const prev = readLog();
       writeFileSync(logPath, prev + lines.join("\n") + "\n");
     },
+    async rewriteLocal(text: string): Promise<void> {
+      writeFileSync(logPath, text);
+    },
   };
   const hooks = {
     async persistClock() {},
@@ -126,6 +130,7 @@ function createDevice(name: string, transport: MemoryTransport): Device {
       return rows[0]?.c ?? 0;
     },
     readLocalLog: readLog,
+    rewriteLocal: store.rewriteLocal,
     get lastSync() {
       return lastSync;
     },
@@ -133,6 +138,47 @@ function createDevice(name: string, transport: MemoryTransport): Device {
 }
 
 describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () => {
+  it("升版重排：旧 header 本地日志补新 header 上传，对端清水位重读收敛", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    // A 在"旧版本"下建数据并同步（对端已消费，水位推进）。
+    await a.run(
+      `INSERT INTO tasks (id,title,status,created_at,updated_at)
+       VALUES ('t1','写周报','pending','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await a.sync();
+    await b.sync();
+    expect(await b.rows("SELECT title FROM tasks WHERE id='t1'")).toEqual([
+      { title: "写周报" },
+    ]);
+
+    // 模拟 A 的日志 header 停留在旧 schema_v（升版前写的）：下一轮同步
+    // 应重排 header 并落回本地文件。
+    const before = a.readLocalLog();
+    const oldHeader = JSON.parse(before.split("\n", 1)[0]);
+    oldHeader.schema_v = 1;
+    const downgraded = [JSON.stringify(oldHeader), ...before.split("\n").slice(1)].join("\n");
+    await a.rewriteLocal(downgraded);
+
+    const s = await a.sync();
+    expect(s.errors).toEqual([]);
+    const header = JSON.parse(a.readLocalLog().split("\n", 1)[0]);
+    expect(header.schema_v).toBe(3);
+
+    // 新对端从头消费：数据全量到达。
+    const c = createDevice("third", transport);
+    const s3 = await c.sync();
+    expect(s3.pulled).toBeGreaterThan(0);
+    expect(await c.rows("SELECT title FROM tasks WHERE id='t1'")).toEqual([
+      { title: "写周报" },
+    ]);
+    // 旧格式条目（schema_v ≤ 本端）也能解析，本地日志不再反复重排。
+    const pending = await a.rows("SELECT count(*) AS c FROM sync_outbox");
+    expect(pending[0]?.c ?? 0).toBe(0);
+  });
+
   it("项目标签回填后经 migration v11 重推，同步到对端", async () => {
     const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
     const i = src.indexOf("version: 11,");

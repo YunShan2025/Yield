@@ -141,7 +141,7 @@ describe("mergeEntries · schema 闸门", () => {
     const backend = memoryBackend();
     const entry: SyncLogEntry = {
       hlc: h(1),
-      schema_v: 3,
+      schema_v: 4,
       op: "upsert",
       table: "tasks",
       row_id: "x",

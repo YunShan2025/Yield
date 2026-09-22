@@ -81,13 +81,15 @@ export function parseEntryLine(line: string): SyncLogEntry | null {
   const v = raw as Record<string, unknown>;
   const hlc = parseHlc(v.hlc);
   if (!hlc) return null;
-  if (v.schema_v !== SYNC_SCHEMA_VERSION) return null;
+  // 接受 ≤ 自身版本的条目（旧格式列集是新格式的子集，白名单会滤掉
+  // 已删列）；更高的版本由引擎的 header 闸门整档拒绝。
+  if (typeof v.schema_v !== "number" || v.schema_v > SYNC_SCHEMA_VERSION) return null;
   if (v.op !== "upsert" && v.op !== "delete") return null;
   if (typeof v.table !== "string" || !isSyncTable(v.table)) return null;
   if (typeof v.row_id !== "string" || !v.row_id) return null;
   const entry: SyncLogEntry = {
     hlc,
-    schema_v: SYNC_SCHEMA_VERSION,
+    schema_v: v.schema_v,
     op: v.op,
     table: v.table,
     row_id: v.row_id,

@@ -790,6 +790,13 @@ html[data-shell="mobile"] .today-hero.guide-hero {
   min-height: fit-content;
 }
 
+/* 项目页内容超高（详情展开、项目卡片多行）时，grid 行同样会被压塌：
+   点击卡片展开详情后，「项目」标题行与卡片被挤没、详情标题直接贴上
+   引导框。给滚动容器的每个直接子项都顶回内在高度，超出部分交给滚动。 */
+html[data-shell="mobile"] .projects-scroll > * {
+  min-height: fit-content;
+}
+
 /* 自带 14px 左右 padding 的容器：框不再加横向 margin，与同页内容同列。
    （成长 12px、纪念日 16px 也一并归一到 14px，见下。） */
 html[data-shell="mobile"] .growth-page .today-hero.guide-hero,

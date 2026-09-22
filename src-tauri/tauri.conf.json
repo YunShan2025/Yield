@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Yield",
   "mainBinaryName": "有秋",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "identifier": "com.yunshan.yield",
   "build": {
     "frontendDist": "../dist",

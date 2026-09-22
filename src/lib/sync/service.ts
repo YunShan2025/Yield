@@ -13,7 +13,7 @@ import { getDb } from "@/lib/db/client";
 import { getSetting, setSetting } from "@/lib/db/settings";
 import { nowIso } from "@/lib/dates";
 import { runSync, type SyncSummary, type SyncTrigger } from "./engine";
-import { backfillOutbox } from "./outbox";
+import { backfillOutbox, REPAIR_KEY_PROJECT_TAGS, requeueTaggedProjects } from "./outbox";
 import { HlcClock } from "./hlc";
 import type { LogReadState } from "./log";
 import type { SyncTransport } from "./transport";
@@ -29,6 +29,7 @@ const KEY_CLOCK_P = "sync_clock_p";
 const KEY_CLOCK_L = "sync_clock_l";
 const KEY_REMOTE_STATES = "sync_remote_states";
 const KEY_LAST_SUMMARY = "sync_last_summary";
+const KEY_REPAIRS_DONE = "sync_repairs_done";
 
 export type SyncPhase = "idle" | "running" | "ok" | "error";
 
@@ -90,6 +91,11 @@ class FsLogStore {
       prev = "";
     }
     await writeTextFile(path, prev + lines.join("\n") + "\n");
+  }
+
+  async rewriteLocal(text: string): Promise<void> {
+    const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+    await writeTextFile(await this.path(), text);
   }
 }
 
@@ -163,6 +169,7 @@ export class SyncService {
       return { ok: true, pushed: 0, pulled: 0, errors: [], finishedAt: nowIso() };
     }
     if (!this.clock) await this.configure();
+    await this.runRepairs();
     this.running = true;
     useSyncStore.setState({ phase: "running", running: true });
     try {
@@ -233,6 +240,29 @@ export class SyncService {
   /** 存量数据首接入：全表回填进 outbox，随后正常同步推送。幂等，可重复执行。 */
   async backfillBaseline(): Promise<number> {
     return backfillOutbox(await getDb());
+  }
+
+  /**
+   * 升级后的一次性数据修复（登记在 sync_repairs_done，做过不重复）。
+   * 当前唯一一项：把带标签的项目重推 outbox——migration v11 只覆盖
+   * "从旧版本直接升上来"的设备；对端若已在旧列白名单下消费过补发
+   * 条目（水位推进），标签仍缺失，升级到带此修复的版本后补推一次。
+   */
+  private async runRepairs(): Promise<void> {
+    let done: string[] = [];
+    try {
+      done = ((await getSetting(KEY_REPAIRS_DONE)) ?? "").split(",").filter(Boolean);
+    } catch {
+      return;
+    }
+    if (done.includes(REPAIR_KEY_PROJECT_TAGS)) return;
+    try {
+      await requeueTaggedProjects(await getDb());
+      done.push(REPAIR_KEY_PROJECT_TAGS);
+      await setSetting(KEY_REPAIRS_DONE, done.join(","));
+    } catch {
+      // 修复失败不阻塞同步：下轮 run 重试。
+    }
   }
 
   private logStore(): FsLogStore {

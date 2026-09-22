@@ -23,6 +23,8 @@ export interface SyncFileStore {
   readLocal(): Promise<string | null>;
   /** 追加若干数据行（不含 header；实现保证换行与原子性）。 */
   appendLocal(lines: string[]): Promise<void>;
+  /** 整文件重写（header 升版重排用）。 */
+  rewriteLocal(text: string): Promise<void>;
 }
 
 export interface SyncPersistHooks {
@@ -117,10 +119,18 @@ export async function runSync(deps: SyncDeps): Promise<SyncSummary> {
     try {
       let local = (await deps.store.readLocal()) ?? "";
       const firstLine = local.split("\n", 1)[0] ?? "";
-      if (!parseHeaderLine(firstLine)) {
-        // 日志文件缺失或无 header（异常态）：补 header 重排，数据行不丢。
-        const entryLines = local.trim() ? local.replace(/\n+$/, "").split("\n") : [];
+      const ownHeader = parseHeaderLine(firstLine);
+      if (!ownHeader || ownHeader.schema_v < SYNC_SCHEMA_VERSION) {
+        // 日志文件缺失/无 header，或 header 还是升版前的旧格式：补写新
+        // header 重排并落回本地，数据行不丢。对端看到 header 变化会把
+        // 水位清零重读（合并幂等）；旧版本对端则被 schema 闸门拒收并
+        // 提示升级，避免其用旧列白名单消费新格式、静默丢掉新增字段
+        // （如 projects.tag_id）。
+        const entryLines = local.trim()
+          ? local.replace(/\n+$/, "").split("\n").slice(ownHeader ? 1 : 0)
+          : [];
         local = joinLogText(buildLogHeader(deps.clock.deviceId, nowIso()), entryLines);
+        await deps.store.rewriteLocal(local);
       }
       await deps.transport.upload(deps.ownFileName, encoder.encode(local));
     } catch (err) {
