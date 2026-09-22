@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runSync, type SyncSummary } from "./engine";
-import { captureSettingWrite, backfillOutbox, type SqlClient } from "./outbox";
+import { captureSettingWrite, backfillOutbox, remapDanglingProjectTags, type SqlClient } from "./outbox";
 import { HlcClock } from "./hlc";
 import { MemoryTransport } from "./transport";
 import type { LogReadState } from "./log";
@@ -19,12 +19,14 @@ import type { LogReadState } from "./log";
 let schemaSql = "";
 beforeAll(() => {
   const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
-  schemaSql = [1, 2, 3, 4, 5, 6]
+  schemaSql = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
       const a = src.indexOf('sql: r#"', i) + 8;
       const b = src.indexOf('"#,', i);
-      return src.slice(src.indexOf("\n", a) + 1, b);
+      // 单行 sql（如 v9 的 ALTER TABLE）没有换行起点，去掉开头换行即可
+      const raw = src.slice(a, b);
+      return raw.startsWith("\n") ? raw.slice(1) : raw;
     })
     .join("\n");
 });
@@ -199,9 +201,8 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     await a.sync();
     await b.sync();
 
-    // 双端升级：加列（v9），A 端回填标签——模拟 v10 的回填 UPDATE，不改 updated_at。
-    await a.run("ALTER TABLE projects ADD COLUMN tag_id TEXT");
-    await b.run("ALTER TABLE projects ADD COLUMN tag_id TEXT");
+    // 双端已在含 v9 的完整 schema 上（tag_id 列已存在）。A 端回填标签——
+    // 模拟 v10 的回填 UPDATE，不改 updated_at。
     await a.run("UPDATE projects SET tag_id = 'tagX' WHERE id = 'p1'");
     // 回归点：更新时间未变，触发器（WHEN updated_at 变化）不入箱——
     // 这正是 v1.1.0 标签同步丢失的根因。
@@ -442,6 +443,30 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
       { task_id: "ta2", tag_id: "tagB" },
       { task_id: "tb", tag_id: "tagB" },
     ]);
+
+    // 项目徽标同路改写：projects.tag_id 引用对端 id 时也要落到本地收养 id，
+    // 否则项目卡片查不到标签名（v1.1.2 事故：徽标一直显示「标签」兜底）。
+    await a.run(
+      `INSERT INTO projects (id,name,color,tag_id,created_at,updated_at)
+       VALUES ('pa','A项目','#f00','tagA','2026-09-16T02:30:00.000Z','2026-09-16T02:30:00.000Z')`,
+    );
+    await a.sync();
+    const sb3 = await b.sync();
+    expect(sb3.ok).toBe(true);
+    expect(await b.rows("SELECT id, tag_id FROM projects")).toEqual([
+      { id: "pa", tag_id: "tagB" },
+    ]);
+    // 对称：B 的项目带自己的标签 id，A 收养后落到 tagA
+    await b.run(
+      `INSERT INTO projects (id,name,color,tag_id,created_at,updated_at)
+       VALUES ('pb','B项目','#00f','tagB','2026-09-16T02:30:00.000Z','2026-09-16T02:30:00.000Z')`,
+    );
+    await b.sync();
+    await a.sync();
+    expect(await a.rows("SELECT id, tag_id FROM projects")).toEqual([
+      { id: "pa", tag_id: "tagA" },
+      { id: "pb", tag_id: "tagA" },
+    ]);
   });
 
   it("对端较新的同名标签内容经收养刷新本地行，且不产生回声", async () => {
@@ -479,6 +504,37 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     await b.sync();
     expect(await b.rows("SELECT id FROM tags WHERE id='tagB'")).toHaveLength(1);
     expect(await b.outboxCount()).toBe(0);
+  });
+
+  it("存量修复：悬空的 projects.tag_id 按收养映射改写并入 outbox", async () => {
+    const transport = new MemoryTransport();
+    const b = createDevice("android", transport);
+
+    // 模拟 v1.1.2 设备的存量状态：本地同名词标签 + 收养映射已建，
+    // 但项目 tag_id 还是对端 id（旧合并后端未改写），引用悬空。
+    await b.run(
+      `INSERT INTO tags (id,name,color,created_at,updated_at)
+       VALUES ('tagB','工作','#00f','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await b.run(
+      `INSERT INTO projects (id,name,color,tag_id,created_at,updated_at)
+       VALUES ('pa','悬空项目','#f00','tagA','2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await b.run(
+      `INSERT INTO sync_tag_alias (remote_row_id, local_id, ts_ms) VALUES ('tagA','tagB',0)`,
+    );
+
+    const changed = await remapDanglingProjectTags(b.client);
+    expect(changed).toBe(1);
+    expect(await b.rows("SELECT id, tag_id FROM projects")).toEqual([
+      { id: "pa", tag_id: "tagB" },
+    ]);
+    // 收养模型下改写是设备本地修复：projects 更新触发器带 updated_at 守卫，
+    // 不入箱广播；对端在引用条目到货时按自己的映射改写（见上一用例）。
+
+    // 无收养映射的真实孤儿引用不误动
+    await b.run("UPDATE projects SET tag_id = 'ghost' WHERE id = 'pa'");
+    expect(await remapDanglingProjectTags(b.client)).toBe(0);
   });
 
   it("特殊表触发器与全表基线回填在真实 schema 上跑通", async () => {

@@ -13,7 +13,13 @@ import { getDb } from "@/lib/db/client";
 import { getSetting, setSetting } from "@/lib/db/settings";
 import { nowIso } from "@/lib/dates";
 import { runSync, type SyncSummary, type SyncTrigger } from "./engine";
-import { backfillOutbox, REPAIR_KEY_PROJECT_TAGS, requeueTaggedProjects } from "./outbox";
+import {
+  backfillOutbox,
+  REPAIR_KEY_PROJECT_TAGS,
+  REPAIR_KEY_TAG_ALIAS_REMAP,
+  remapDanglingProjectTags,
+  requeueTaggedProjects,
+} from "./outbox";
 import { HlcClock } from "./hlc";
 import type { LogReadState } from "./log";
 import type { SyncTransport } from "./transport";
@@ -169,7 +175,7 @@ export class SyncService {
       return { ok: true, pushed: 0, pulled: 0, errors: [], finishedAt: nowIso() };
     }
     if (!this.clock) await this.configure();
-    await this.runRepairs();
+    const repaired = await this.runRepairs();
     this.running = true;
     useSyncStore.setState({ phase: "running", running: true });
     try {
@@ -202,9 +208,10 @@ export class SyncService {
         lastSummary: summary,
         lastError: summary.errors[0] ?? null,
       });
-      // 对端拉回了新写入：通知 UI 层重载，避免界面一直显示旧数据、
-      // 要重启应用才看得到同步结果。手动与自动触发（启动/回前台）都走这里。
-      if (summary.ok && summary.pulled > 0) {
+      // 对端拉回了新写入（或一次性修复改写了本机数据）：通知 UI 层重载，
+      // 避免界面一直显示旧数据、要重启应用才看得到同步结果。
+      // 手动与自动触发（启动/回前台）都走这里。
+      if ((summary.ok && summary.pulled > 0) || repaired) {
         window.dispatchEvent(new Event("youqiu:sync-applied"));
       }
       return summary;
@@ -244,25 +251,37 @@ export class SyncService {
 
   /**
    * 升级后的一次性数据修复（登记在 sync_repairs_done，做过不重复）。
-   * 当前唯一一项：把带标签的项目重推 outbox——migration v11 只覆盖
-   * "从旧版本直接升上来"的设备；对端若已在旧列白名单下消费过补发
-   * 条目（水位推进），标签仍缺失，升级到带此修复的版本后补推一次。
+   * - project_tags_v3：把带标签的项目重推 outbox——migration v11 只覆盖
+   *   "从旧版本直接升上来"的设备；对端若已在旧列白名单下消费过补发
+   *   条目（水位推进），标签仍缺失，升级到带此修复的版本后补推一次。
+   * - tag_alias_remap_v1：v1.1.2 合并后端未改写 projects.tag_id，存量
+   *   项目按收养映射改写回本地标签 id（徽标才能解析出名字）。
+   * 返回是否有修复实际改动了数据（调用方据此通知 UI 重载）。
    */
-  private async runRepairs(): Promise<void> {
+  private async runRepairs(): Promise<boolean> {
     let done: string[] = [];
     try {
       done = ((await getSetting(KEY_REPAIRS_DONE)) ?? "").split(",").filter(Boolean);
     } catch {
-      return;
+      return false;
     }
-    if (done.includes(REPAIR_KEY_PROJECT_TAGS)) return;
-    try {
-      await requeueTaggedProjects(await getDb());
-      done.push(REPAIR_KEY_PROJECT_TAGS);
-      await setSetting(KEY_REPAIRS_DONE, done.join(","));
-    } catch {
-      // 修复失败不阻塞同步：下轮 run 重试。
+    let changed = false;
+    const repairs: [string, () => Promise<number>][] = [
+      [REPAIR_KEY_PROJECT_TAGS, async () => requeueTaggedProjects(await getDb())],
+      [REPAIR_KEY_TAG_ALIAS_REMAP, async () => remapDanglingProjectTags(await getDb())],
+    ];
+    for (const [key, repair] of repairs) {
+      if (done.includes(key)) continue;
+      try {
+        const affected = await repair();
+        done.push(key);
+        await setSetting(KEY_REPAIRS_DONE, done.join(","));
+        if (affected > 0) changed = true;
+      } catch {
+        // 修复失败不阻塞同步：下轮 run 重试。
+      }
     }
+    return changed;
   }
 
   private logStore(): FsLogStore {

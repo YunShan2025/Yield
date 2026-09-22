@@ -224,6 +224,28 @@ export async function requeueTaggedProjects(db: SqlClient): Promise<number> {
   );
 }
 
+/** 一次性修复的登记键：收养别名改写 projects.tag_id（v1.1.2 存量悬空引用）。 */
+export const REPAIR_KEY_TAG_ALIAS_REMAP = "tag_alias_remap_v1";
+
+/**
+ * 一次性修复：v1.1.2 的合并后端只改写 task_tags 的 tag_id，projects 条目
+ * 落库时保留了对端标签 id——本端 tags 表里没有该 id，项目徽标查不到名字。
+ * 此处按 sync_tag_alias 把悬空的 projects.tag_id 改写成本地收养 id。
+ * 收养模型下各端各自保留自己的标签 id、到货引用各自改写，改写无需广播：
+ * projects 更新触发器带 updated_at 守卫，本修复也不动 updated_at，改动
+ * 只落本机。只动「引用不存在且已有收养映射」的行，真实孤儿引用不误清。
+ */
+export async function remapDanglingProjectTags(db: SqlClient): Promise<number> {
+  return rowsAffected(
+    await db.execute(
+      `UPDATE projects SET tag_id = (SELECT local_id FROM sync_tag_alias WHERE remote_row_id = projects.tag_id)
+       WHERE tag_id IS NOT NULL
+         AND tag_id NOT IN (SELECT id FROM tags)
+         AND tag_id IN (SELECT remote_row_id FROM sync_tag_alias)`,
+    ),
+  );
+}
+
 /**
  * 真实 SQLite 的合并后端。upsert 前登记 sync_merge_seen 抑制触发器回声；
  * 已应用 HLC 写入 sync_state。cleanupSeen 在合并完成后清掉登记
@@ -231,10 +253,11 @@ export async function requeueTaggedProjects(db: SqlClient): Promise<number> {
  *
  * tags 同名词收养：tags.name 有 UNIQUE 约束，双端各自种出的同名标签（随机
  * id 不同）合并时必撞键。策略是零本地删除——保留本地同名词行，把对端 id
- * 收养为该行（映射存 sync_tag_alias，跨轮持久化），后续 task_tags 条目经
- * 映射改写 tag_id。绝不 DELETE 本地行：tags/task_tags 的删除触发器无 WHEN
- * 守卫且 ts 取当前时间，收养路径的任何删除都会产生回声墓碑，误删对端的
- * 真实数据。两端按相同规则各自保留自己的 id，名称/颜色/关联自然收敛。
+ * 收养为该行（映射存 sync_tag_alias，跨轮持久化），后续引用对端 id 的条目
+ * （task_tags、projects.tag_id）经映射改写成本地 id。绝不 DELETE 本地行：
+ * tags/task_tags 的删除触发器无 WHEN 守卫且 ts 取当前时间，收养路径的任何
+ * 删除都会产生回声墓碑，误删对端的真实数据。两端按相同规则各自保留自己的
+ * id，名称/颜色/关联自然收敛。
  */
 export function createSqliteMergeBackend(db: SqlClient): {
   backend: MergeBackend;
@@ -292,6 +315,15 @@ export function createSqliteMergeBackend(db: SqlClient): {
           );
           await adoptTagUpdate(db, localId, data, tsMs);
           return;
+        }
+      }
+      if (table === "projects") {
+        // 项目条目里的 tag_id 可能是对端已被收养的标签 id：改写成本地 id
+        // 再落库，否则项目徽标的 tag 查询悬空（与 task_tags 同一规则）。
+        const ref = typeof data.tag_id === "string" ? data.tag_id : "";
+        if (ref) {
+          const localTagId = tagAliases.get(ref) ?? (await loadTagAlias(ref));
+          if (localTagId) data = { ...data, tag_id: localTagId };
         }
       }
       if (table === "task_tags") {
