@@ -11,6 +11,8 @@ export default defineConfig({
   },
   clearScreen: false,
   server: {
+    // 安卓开发模式由 CLI 注入 TAURI_DEV_HOST（本机局域网 IP），模拟器/真机经该地址访问 dev server。
+    host: process.env.TAURI_DEV_HOST || "localhost",
     port: 1420,
     strictPort: true,
     watch: {
