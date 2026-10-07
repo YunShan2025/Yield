@@ -21,13 +21,16 @@ import {
   isActiveTask,
 } from "@/lib/tasks";
 import { formatDueDate, formatTimeRange, todayDateString, addDays, formatLongDate, formatStamp, weekDates, parseDate, startOfWeek, parseTimeToMinutes } from "@/lib/dates";
-import type { Task } from "@/types";
+import type { Project, Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { confirmAction } from "@/components/AppConfirm";
 import {
+  fetchDeletedProjects,
   fetchLedgerTrash,
   formatLedgerMoney,
   purgeLedgerTransaction,
+  purgeProject,
+  restoreDeletedProject,
   restoreLedgerTransaction,
   type LedgerTransaction,
 } from "@/lib/db";
@@ -496,8 +499,11 @@ function TrashView() {
   const restoreTask = useAppStore((s) => s.restoreTask);
   const purgeTask = useAppStore((s) => s.purgeTask);
   const purgeTrash = useAppStore((s) => s.purgeTrash);
+  const refreshAll = useAppStore((s) => s.refreshAll);
   // 账本回收站：软删的账目行（页内本地状态，与收支总览一致）。
   const [ledgerTrash, setLedgerTrash] = useState<LedgerTransaction[]>([]);
+  // 项目回收站：软删的项目行（同样走本地状态，任务回收站来自 store）。
+  const [projectTrash, setProjectTrash] = useState<Project[]>([]);
   const loadLedgerTrash = async () => {
     try {
       setLedgerTrash(await fetchLedgerTrash());
@@ -505,13 +511,24 @@ function TrashView() {
       /* 回收站里账目加载失败不阻塞任务列表 */
     }
   };
+  const loadProjectTrash = async () => {
+    try {
+      setProjectTrash(await fetchDeletedProjects());
+    } catch {
+      /* 回收站里项目加载失败不阻塞任务列表 */
+    }
+  };
   useEffect(() => {
     void loadLedgerTrash();
-    const reload = () => void loadLedgerTrash();
+    void loadProjectTrash();
+    const reload = () => {
+      void loadLedgerTrash();
+      void loadProjectTrash();
+    };
     window.addEventListener("youqiu:sync-applied", reload);
     return () => window.removeEventListener("youqiu:sync-applied", reload);
   }, []);
-  const total = trashTasks.length + ledgerTrash.length;
+  const total = trashTasks.length + ledgerTrash.length + projectTrash.length;
 
   const restoreLedger = async (id: number) => {
     if (await restoreLedgerTransaction(id)) await loadLedgerTrash();
@@ -538,10 +555,17 @@ function TrashView() {
               danger: true,
             }).then(async (ok) => {
               if (!ok) return;
+              if (projectTrash.length) {
+                for (const item of projectTrash) await purgeProject(item.id);
+                await refreshAll();
+                void loadProjectTrash();
+              }
               if (ledgerTrash.length) {
                 for (const item of ledgerTrash) await purgeLedgerTransaction(item.id);
               }
               void purgeTrash();
+              void loadProjectTrash();
+              void loadLedgerTrash();
             });
           }}
         >
@@ -586,6 +610,57 @@ function TrashView() {
                       danger: true,
                     }).then((ok) => {
                       if (ok) void purgeTask(task.id);
+                    });
+                  }}
+                >
+                  永久删除
+                </button>
+              </div>
+            </article>
+          ))}
+          {projectTrash.map((project) => (
+            <article key={`project-${project.id}`} className="trash-item">
+              <div className="trash-item-main">
+                <p className="task-title">
+                  <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
+                  {project.name}
+                </p>
+                <div className="trash-item-meta">
+                  {project.deleted_at ? <span>删除于 {formatStamp(project.deleted_at)}</span> : null}
+                  <span>项目</span>
+                </div>
+              </div>
+              <div className="trash-item-actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() =>
+                    void restoreDeletedProject(project.id).then(async () => {
+                      // 项目回到进行中列表依赖 store 刷新，与任务恢复同款。
+                      await refreshAll();
+                      await loadProjectTrash();
+                    })
+                  }
+                >
+                  恢复
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost danger"
+                  onClick={() => {
+                    void confirmAction({
+                      title: `永久删除项目「${project.name}」？`,
+                      description: "不可恢复；项目下的任务会保留但不再归属该项目。",
+                      confirmText: "永久删除",
+                      danger: true,
+                    }).then((ok) => {
+                      if (ok) {
+                        void purgeProject(project.id).then(async () => {
+                          // 永久删除会摘除任务/目标的 project_id，需刷新 store。
+                          await refreshAll();
+                          await loadProjectTrash();
+                        });
+                      }
                     });
                   }}
                 >

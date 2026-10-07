@@ -219,6 +219,8 @@ export interface Project {
   color: string;
   due_date: string | null;
   archived: number;
+  /** 项目回收站：非空即已删除，可在回收站恢复；永久删除后行消失。 */
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
   /** 项目自带的标签：选中该项目的任务默认打上此标签。 */

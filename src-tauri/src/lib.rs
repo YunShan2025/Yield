@@ -1259,6 +1259,15 @@ FROM projects WHERE tag_id IS NOT NULL;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 12,
+            description: "projects_soft_delete",
+            // 项目进回收站：deleted_at 置时间戳即视为已删除，行保留可恢复；
+            // 软删走 updated_at 变化经 trg_projects_upd 入箱，对端按行 LWW
+            // 收敛；永久删除走 trg_projects_del 的 delete 操作。
+            sql: r#"ALTER TABLE projects ADD COLUMN deleted_at TEXT;"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

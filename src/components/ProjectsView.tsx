@@ -2,17 +2,20 @@ import { useRef, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
 import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
+import { confirmAction } from "@/components/AppConfirm";
 import type { Project } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import { formatDayStamp } from "@/lib/dates";
-import { updateProject } from "@/lib/db";
+import { softDeleteProject, updateProject } from "@/lib/db";
 
 export function ProjectsView() {
   const projects = useAppStore((state) => state.projects);
+  const archivedProjects = useAppStore((state) => state.archivedProjects);
   const tags = useAppStore((state) => state.tags);
   const tasks = useAppStore((state) => state.tasks);
   const addProject = useAppStore((state) => state.addProject);
   const archiveProject = useAppStore((state) => state.archiveProject);
+  const restoreProject = useAppStore((state) => state.restoreProject);
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createColor, setCreateColor] = useState("#7D9BE8");
@@ -74,6 +77,21 @@ export function ProjectsView() {
 
   const activeProject = projects.find((p) => p.id === activeProjectId) ?? null;
 
+  const deleteActiveProject = async () => {
+    if (!activeProject) return;
+    const ok = await confirmAction({
+      title: `将项目「${activeProject.name}」移入回收站？`,
+      description: "可在回收站中恢复；项目下的任务会保留。",
+      confirmText: "删除",
+      danger: true,
+    });
+    if (!ok) return;
+    await softDeleteProject(activeProject.id);
+    setActiveProjectId(null);
+    await useAppStore.getState().refreshAll();
+    useAppStore.getState().setToast("项目已移入回收站");
+  };
+
   return (
     <main className="main-workspace projects-view">
       <div className="workspace-top">
@@ -103,7 +121,7 @@ export function ProjectsView() {
         </section>
         <section>
           <div className="section-title-row">
-            <h3>项目</h3>
+            <h3>进行中</h3>
           </div>
 
           {/* 与标签页同构：上方紧凑卡片，点击卡片在下方展开具体任务 */}
@@ -150,11 +168,54 @@ export function ProjectsView() {
             tags={tags}
             onEdit={() => beginEditProject(activeProject)}
             onArchive={() => void archiveProject(activeProject.id)}
+            onDelete={() => void deleteActiveProject()}
             onClose={() => setActiveProjectId(null)}
           />
         ) : (
           <p className="projects-hint">点击上方项目卡片，可查看对应的任务与进度。</p>
         )}
+
+        {archivedProjects.length ? (
+          <section aria-label="已归档项目">
+            <div className="section-title-row">
+              <h3>已归档</h3>
+              <span className="tags-filtered-count">{archivedProjects.length}</span>
+            </div>
+            <div className="projects-grid projects-grid-archived">
+              {archivedProjects.map((project) => {
+                const projectTasks = selectProjectTasks(tasks, project.id);
+                const done = projectTasks.filter(
+                  (task) => task.status === "completed",
+                ).length;
+                return (
+                  <article
+                    key={project.id}
+                    className="tag-card project-tile is-archived"
+                    style={{ "--tag-accent": project.color } as CSSProperties}
+                  >
+                    <div className="tag-card-main is-static">
+                      <span className="tag-card-dot" aria-hidden />
+                      <strong>{project.name}</strong>
+                      <span className="tag-card-count">
+                        {projectTasks.length
+                          ? `${projectTasks.length} 项任务 · 已完成 ${done}`
+                          : "暂无任务"}
+                      </span>
+                      <button
+                        type="button"
+                        className="project-card-restore"
+                        title="恢复到进行中"
+                        onClick={() => void restoreProject(project.id)}
+                      >
+                        恢复
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
       </div>
 
       {creating ? (
@@ -278,6 +339,7 @@ function ProjectDetail({
   tags,
   onEdit,
   onArchive,
+  onDelete,
   onClose,
 }: {
   project: Project;
@@ -285,6 +347,7 @@ function ProjectDetail({
   tags: ReturnType<typeof useAppStore.getState>["tags"];
   onEdit: () => void;
   onArchive: () => void;
+  onDelete: () => void;
   onClose: () => void;
 }) {
   const selectTask = useAppStore((s) => s.selectTask);
@@ -316,6 +379,9 @@ function ProjectDetail({
           </button>
           <button type="button" className="project-card-archive" onClick={onArchive}>
             归档
+          </button>
+          <button type="button" className="project-card-delete" onClick={onDelete}>
+            删除
           </button>
           <button type="button" className="btn-ghost" onClick={onClose}>
             关闭

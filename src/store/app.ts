@@ -39,6 +39,7 @@ interface AppStore {
   timers: Timer[];
   attachments: Attachment[];
   projects: Project[];
+  archivedProjects: Project[];
   settings: AppSettings;
   nav: NavId;
   viewMode: ViewMode;
@@ -87,6 +88,7 @@ interface AppStore {
   setTaskTags: (taskId: string, tagIds: string[]) => Promise<void>;
   addProject: (name: string, tagId?: string | null) => Promise<void>;
   archiveProject: (id: string) => Promise<void>;
+  restoreProject: (id: string) => Promise<void>;
 
 
   addAttachment: (
@@ -149,6 +151,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   timers: [],
   attachments: [],
   projects: [],
+  archivedProjects: [],
   settings: {
     theme: "system",
     notifyAhead: 30,
@@ -215,6 +218,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       timers,
       settings,
       projects,
+      archivedProjects,
     ] = await Promise.all([
       db.fetchTasks(),
       db.fetchTrashTasks(),
@@ -225,6 +229,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       db.fetchTimers(),
       db.loadAppSettings(),
       db.fetchProjects(),
+      db.fetchArchivedProjects(),
     ]);
     set((s) => ({
       tasks,
@@ -241,6 +246,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           s.settings.onboardingComplete || settings.onboardingComplete,
       },
       projects,
+      archivedProjects,
     }));
   },
 
@@ -523,6 +529,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
     await db.archiveProject(id);
     await get().refreshAll();
     set({ toast: "项目已归档" });
+  },
+
+  restoreProject: async (id) => {
+    await db.restoreProject(id);
+    await get().refreshAll();
+    set({ toast: "项目已恢复" });
   },
 
   addAttachment: async (taskId, data) => {

@@ -757,6 +757,30 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   box-shadow: none;
 }
 
+/* 已归档项目：整体降透明度，右侧提供「恢复」按钮 */
+.tag-card.project-tile.is-archived {
+  opacity: 0.62;
+}
+
+.tag-card.project-tile.is-archived .tag-card-main {
+  cursor: default;
+}
+
+.project-card-restore {
+  flex: none;
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: #fff;
+  color: #1f2328;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-card-restore:hover {
+  background: #f2f3f5;
+}
+
 .projects-hint {
   margin: 16px 0 0;
   color: var(--text-muted);
@@ -824,6 +848,21 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .projects-detail .project-card-archive:hover {
   background: color-mix(in srgb, var(--danger) 86%, #000);
+}
+
+/* 删除按钮：与归档同形，描边幽灵样式区分危险级别（删除可进回收站恢复） */
+.projects-detail .project-card-delete {
+  padding: 3px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--danger);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.projects-detail .project-card-delete:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
 .projects-detail-actions {

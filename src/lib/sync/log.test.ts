@@ -44,7 +44,7 @@ describe("条目序列化与解析", () => {
     // schema_v 高于自身 → 拒绝；低于自身的旧格式接受（列子集，白名单滤列）。
     // 版本闸门在传输侧另有整档判断，这里挡脏行。
     expect(
-      parseEntryLine(JSON.stringify({ hlc: h(1, 0), schema_v: 4, op: "upsert", table: "tasks", row_id: "x", data: {} })),
+      parseEntryLine(JSON.stringify({ hlc: h(1, 0), schema_v: 5, op: "upsert", table: "tasks", row_id: "x", data: {} })),
     ).toBeNull();
     expect(
       parseEntryLine(JSON.stringify({ hlc: h(1, 0), schema_v: 1, op: "upsert", table: "tasks", row_id: "x", data: {} })),

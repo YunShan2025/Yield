@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runSync, type SyncSummary } from "./engine";
+import { SYNC_SCHEMA_VERSION } from "./tables";
 import { captureSettingWrite, backfillOutbox, remapDanglingProjectTags, type SqlClient } from "./outbox";
 import { HlcClock } from "./hlc";
 import { MemoryTransport } from "./transport";
@@ -167,7 +168,7 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     const s = await a.sync();
     expect(s.errors).toEqual([]);
     const header = JSON.parse(a.readLocalLog().split("\n", 1)[0]);
-    expect(header.schema_v).toBe(3);
+    expect(header.schema_v).toBe(SYNC_SCHEMA_VERSION);
 
     // 新对端从头消费：数据全量到达。
     const c = createDevice("third", transport);

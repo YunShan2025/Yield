@@ -72,8 +72,9 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
  * 推进水位，数据从此缺失。升版后旧端在 header 闸门被整体拒收并明确
  * 提示升级，不再静默丢字段；本版本解析时接受 ≤ 自身版本的条目（旧格式
  * 是新格式的列子集，白名单会滤掉已删列），保证升级顺序无关的收敛。
+ * v4（v1.1.4）：projects.deleted_at（项目回收站）进入日志，同理升版。
  */
-export const SYNC_SCHEMA_VERSION = 3;
+export const SYNC_SCHEMA_VERSION = 4;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);

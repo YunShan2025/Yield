@@ -29,7 +29,7 @@ const TASK_COLUMNS = [
 export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> = {
   projects: {
     idColumns: ["id"],
-    columns: ["name", "color", "due_date", "archived", "tag_id", "created_at", "updated_at"],
+    columns: ["name", "color", "due_date", "archived", "deleted_at", "tag_id", "created_at", "updated_at"],
   },
   goals: {
     idColumns: ["id"],

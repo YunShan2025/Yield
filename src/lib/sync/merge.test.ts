@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Hlc } from "./hlc";
 import { mergeEntries, SchemaGateError, type MergeBackend } from "./merge";
 import type { SyncLogEntry } from "./log";
-import { SYNC_TABLES } from "./tables";
+import { SYNC_TABLES, SYNC_SCHEMA_VERSION } from "./tables";
 
 /** 内存后端：行数据 + 已应用 HLC，模拟 sync_state 语义。 */
 function memoryBackend() {
@@ -141,7 +141,7 @@ describe("mergeEntries · schema 闸门", () => {
     const backend = memoryBackend();
     const entry: SyncLogEntry = {
       hlc: h(1),
-      schema_v: 4,
+      schema_v: SYNC_SCHEMA_VERSION + 1,
       op: "upsert",
       table: "tasks",
       row_id: "x",

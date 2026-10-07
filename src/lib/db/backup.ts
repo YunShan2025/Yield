@@ -239,14 +239,15 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   for (const project of payload.projects ?? []) {
     await db.execute(
       `INSERT INTO projects
-       (id, name, color, due_date, archived, created_at, updated_at, tag_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+       (id, name, color, due_date, archived, deleted_at, created_at, updated_at, tag_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
         project.id,
         project.name,
         project.color,
         project.due_date,
         project.archived,
+        project.deleted_at ?? null,
         project.created_at,
         project.updated_at,
         project.tag_id ?? null,
