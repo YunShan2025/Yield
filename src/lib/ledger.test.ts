@@ -20,9 +20,10 @@ describe("ledger month range", () => {
   it("crosses year boundaries", () => {
     expect(monthRange("2026-12")).toEqual(["2026-12-01", "2027-01-01"]);
   });
-  it("validates future dates and category kind on both write paths", () => {
+  it("allows future dates and validates category kind on both write paths", () => {
     const source = readFileSync("src/lib/db/ledger.ts", "utf8");
-    expect(source.match(/记账日期不能晚于今天/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(source.match(/记账日期不能晚于今天/g)?.length ?? 0).toBe(0);
+    expect(source.match(/记账日期格式无效/g)?.length).toBeGreaterThanOrEqual(2);
     expect(source.match(/category\[0\]\.kind !== draft\.kind/g)?.length).toBeGreaterThanOrEqual(2);
   });
 });

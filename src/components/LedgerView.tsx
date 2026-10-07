@@ -187,7 +187,6 @@ export function LedgerView() {
     const cents = parseAmountToCents(draft.amount);
     if (!cents) { setError("请输入 0.01～99,999,999.99 的有效金额，最多两位小数"); amountRef.current?.focus(); return; }
     if (!draft.categoryId || !draft.accountId) { setError("请选择分类和账户"); return; }
-    if (draft.date > today()) { setError("记账日期不能晚于今天"); return; }
     const selectedCategory = categories.find((item) => item.id === draft.categoryId);
     if (!selectedCategory || selectedCategory.kind !== draft.kind) { setError("所选分类与收支类型不一致，请重新选择"); return; }
     try {

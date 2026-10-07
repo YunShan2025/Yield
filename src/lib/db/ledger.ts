@@ -155,9 +155,7 @@ export async function fetchLedgerCategorySummary(month: string) {
 
 export async function createLedgerTransaction(draft: LedgerDraft) {
   if (!Number.isSafeInteger(draft.amountCents) || draft.amountCents <= 0) throw new Error("金额无效");
-  const nowDate = new Date();
-  const localToday = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, "0")}-${String(nowDate.getDate()).padStart(2, "0")}`;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.occurredOn) || draft.occurredOn > localToday) throw new Error("记账日期不能晚于今天");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.occurredOn)) throw new Error("记账日期格式无效");
   return withTransaction(async () => {
     const db = await getDb();
     const category = await db.select<{ kind: LedgerKind; is_enabled: number }[]>("SELECT kind,is_enabled FROM ledger_categories WHERE id=$1 LIMIT 1", [draft.categoryId]);
@@ -176,9 +174,7 @@ export async function createLedgerTransaction(draft: LedgerDraft) {
 }
 
 export async function updateLedgerTransaction(id: number, version: number, draft: LedgerDraft) {
-  const nowDate = new Date();
-  const localToday = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, "0")}-${String(nowDate.getDate()).padStart(2, "0")}`;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.occurredOn) || draft.occurredOn > localToday) throw new Error("记账日期不能晚于今天");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.occurredOn)) throw new Error("记账日期格式无效");
   return withTransaction(async () => {
     const db = await getDb();
     const category = await db.select<{ kind: LedgerKind; is_enabled: number }[]>("SELECT kind,is_enabled FROM ledger_categories WHERE id=$1 LIMIT 1", [draft.categoryId]);
