@@ -392,6 +392,7 @@ export function DetailDrawer() {
               />
             </div>
             <div>
+              <label className="field-label">重复</label>
               <SelectMenu
                 className="field"
                 ariaLabel="重复"
