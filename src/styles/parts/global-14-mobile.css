@@ -833,3 +833,213 @@ html[data-shell="mobile"] .moments-body {
   padding-left: 0;
   padding-right: 0;
 }
+
+/* ---------- 9) 弹窗移动化（2026-10-07：安卓端弹窗原样沿用桌面居中卡片） ---------- */
+
+/* 桌面的表单弹窗是 440-620px 居中卡片 + 毛玻璃遮罩，手机上观感就是「桌面
+   窗口」：标题栏小字、触控目标 36px、动作按钮被裁出屏幕外。移动壳里一律
+   全屏化（与「记一笔」抽屉同构）：内容滚动、页头钉顶、动作条钉底。
+   AppConfirm 复用了 .create-task-modal 类，小确认框保持居中卡片不跟随。 */
+html[data-shell="mobile"] .modal-backdrop {
+  padding: 0;
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal),
+html[data-shell="mobile"] .project-edit-modal,
+html[data-shell="mobile"] .goal-create-modal,
+html[data-shell="mobile"] .day-activity-modal,
+html[data-shell="mobile"] .completed-time-modal,
+html[data-shell="mobile"] .anni-composer-dialog,
+html[data-shell="mobile"] .anni-detail-dialog {
+  width: 100vw;
+  max-width: none;
+  /* Chrome 83 无 dvh：先给 vh 兜底，支持的浏览器取后值（键盘弹出时随视口收缩）。 */
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  padding: 20px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overscroll-behavior: contain;
+}
+
+/* 弹窗改纵向 flex：动作条的 margin-top:auto 在内容不足一屏时把它推到
+   底部（sticky 只在内容溢出时才钉住，短表单会悬在内容后），内容溢出时
+   auto 归零、动作条随内容流并由 sticky 钉底——两种情况都贴屏底。
+   Chrome 83 无 flex gap，grid 弹窗的间距改由「相邻子元素 margin」提供。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal),
+html[data-shell="mobile"] .project-edit-modal,
+html[data-shell="mobile"] .goal-create-modal,
+html[data-shell="mobile"] .day-activity-modal,
+html[data-shell="mobile"] .completed-time-modal,
+html[data-shell="mobile"] .anni-detail-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) > * + *,
+html[data-shell="mobile"] .project-edit-modal > * + *,
+html[data-shell="mobile"] .completed-time-modal > * + * {
+  margin-top: 16px;
+}
+
+/* flex 子项不参与收缩：内容超高时靠弹窗 overflow 滚动，而不是把
+   输入框/文本域压扁。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) > *,
+html[data-shell="mobile"] .project-edit-modal > *,
+html[data-shell="mobile"] .goal-create-modal > *,
+html[data-shell="mobile"] .completed-time-modal > *,
+html[data-shell="mobile"] .anni-detail-dialog > * {
+  flex: none;
+}
+
+/* 页头钉顶：top 为负抵消弹窗自身 20px padding，钉住后与屏幕顶齐平；
+   负 margin 拉通到全屏宽，再由自身 padding 恢复内容缩进。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head,
+html[data-shell="mobile"] .project-edit-modal .modal-head,
+html[data-shell="mobile"] .goal-create-modal .modal-head,
+html[data-shell="mobile"] .day-activity-modal .modal-head,
+html[data-shell="mobile"] .completed-time-modal .modal-head {
+  position: sticky;
+  top: -20px;
+  z-index: 2;
+  margin: -20px -20px 0;
+  padding: 14px 20px 10px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 关闭按钮从 30px 垫到 40px 触控目标。 */
+html[data-shell="mobile"] .modal-head > button {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+/* 动作条钉底（两种情形都盖住）：内容不足一屏时 margin-top:auto 把它推到
+   弹窗底部；内容溢出时 auto 归零、动作条随内容流走，由 sticky bottom
+   钉在可视区底（负偏移抵消弹窗 20px padding，负 margin 拉通全屏宽）。
+   弹窗的 padding-bottom 给滚动到底时被动作条盖住的末尾字段让位。 */
+html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions),
+html[data-shell="mobile"] .project-edit-actions,
+html[data-shell="mobile"] .completed-time-actions,
+html[data-shell="mobile"] .anni-detail-dialog > footer {
+  position: sticky;
+  bottom: -20px;
+  margin: auto -20px calc(-20px - env(safe-area-inset-bottom, 0px));
+  padding: 12px 20px env(safe-area-inset-bottom, 0px);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+
+/* 目标创建弹窗的提交是裸按钮：同上钉底，保留按钮自身的强调色。
+   （button 的 width:100% 以内容盒为基准，负 margin 下要显式加宽
+   才能拉通到屏幕两缘。） */
+html[data-shell="mobile"] .goal-create-modal > .btn-primary {
+  position: sticky;
+  bottom: -20px;
+  width: calc(100% + 40px);
+  margin: auto -20px calc(-20px - env(safe-area-inset-bottom, 0px));
+  min-height: 52px;
+  padding: 12px 20px env(safe-area-inset-bottom, 0px);
+  border-radius: 0;
+}
+
+/* 动作条改双等宽列：桌面 min-width:112px 靠右的两个按钮在手机上偏小。
+   不用 flex:1——button 的 flex 基准受内容/padding 影响分不匀（实测差 6dp），
+   网格两列天然等宽。btn-ghost 桌面上是纯 hover 反馈（无常态边框），
+   触摸屏没有 hover，钉底动作条里必须给常态边框才看得出是按钮。 */
+html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions),
+html[data-shell="mobile"] .project-edit-actions,
+html[data-shell="mobile"] .completed-time-actions,
+html[data-shell="mobile"] .anni-detail-dialog > footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .btn-primary,
+html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .btn-ghost,
+html[data-shell="mobile"] .project-edit-actions .btn-primary,
+html[data-shell="mobile"] .project-edit-actions .btn-ghost,
+html[data-shell="mobile"] .completed-time-actions .btn-primary,
+html[data-shell="mobile"] .completed-time-actions .btn-ghost,
+html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
+  width: auto;
+  min-width: 0;
+  min-height: 48px;
+}
+
+html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .btn-ghost,
+html[data-shell="mobile"] .project-edit-actions .btn-ghost,
+html[data-shell="mobile"] .completed-time-actions .btn-ghost,
+html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
+  border: 1px solid var(--border);
+  background: var(--bg-root);
+  color: var(--text-primary);
+}
+
+/* 表单触控目标垫到 48px（select/日期/时间触发器是按钮，min-height 可直接撑高）。 */
+html[data-shell="mobile"] .create-task-modal input,
+html[data-shell="mobile"] .create-task-modal .select-btn,
+html[data-shell="mobile"] .create-task-modal .date-picker-trigger,
+html[data-shell="mobile"] .create-task-modal .time-picker-trigger,
+html[data-shell="mobile"] .project-edit-modal input,
+html[data-shell="mobile"] .project-edit-modal .select-btn,
+html[data-shell="mobile"] .goal-create-modal input,
+html[data-shell="mobile"] .goal-create-modal .select-btn,
+html[data-shell="mobile"] .goal-create-modal .date-picker-trigger,
+html[data-shell="mobile"] .completed-time-modal .date-picker-trigger,
+html[data-shell="mobile"] .completed-time-modal .time-picker-trigger {
+  min-height: 48px;
+}
+
+/* 重复星期小方块 34px → 40px。 */
+html[data-shell="mobile"] .repeat-weekday-chip {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+/* 纪念日新增/详情弹窗也是桌面居中卡片，一并全屏化（页头/页脚同一套钉边）。 */
+html[data-shell="mobile"] .anni-composer-dialog,
+html[data-shell="mobile"] .anni-detail-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  padding: 20px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overscroll-behavior: contain;
+}
+
+html[data-shell="mobile"] .anni-composer-dialog > header,
+html[data-shell="mobile"] .anni-detail-dialog > header {
+  position: sticky;
+  top: -20px;
+  z-index: 2;
+  margin: -20px -20px 14px;
+  padding: 14px 20px 10px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-shell="mobile"] .anni-composer-dialog > header > button,
+html[data-shell="mobile"] .anni-detail-dialog > header > button {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+html[data-shell="mobile"] .anni-composer input,
+html[data-shell="mobile"] .anni-composer .select-btn,
+html[data-shell="mobile"] .anni-composer .seg button,
+html[data-shell="mobile"] .anni-composer .date-picker-trigger,
+html[data-shell="mobile"] .anni-composer-row .btn-primary {
+  min-height: 48px;
+}
