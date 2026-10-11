@@ -11,21 +11,6 @@
   }
 }
 
-.chart-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 120px;
-}
-
-.chart-bars span {
-  flex: 1;
-  background: var(--accent);
-  border-radius: 4px 4px 0 0;
-  min-height: 4px;
-  opacity: 0.85;
-}
-
 .danger {
   color: var(--text-overdue);
 }
