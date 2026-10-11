@@ -22,7 +22,6 @@ html[data-shell="mobile"] [role="button"] {
 
 /* inset 简写在 Chrome 87 才支持，全部补长手；新浏览器下与原值相同。 */
 .modal-backdrop,
-.row-menu-backdrop,
 .command-backdrop,
 .onboarding-backdrop {
   top: 0;
@@ -158,8 +157,7 @@ html[data-shell="mobile"] .app-body {
 
 /* 触控目标：主要按钮垫到 44px 上下，避免误触。 */
 html[data-shell="mobile"] .btn-ghost,
-html[data-shell="mobile"] .btn-primary,
-html[data-shell="mobile"] .primary-btn {
+html[data-shell="mobile"] .btn-primary {
   min-height: 40px;
 }
 
@@ -589,16 +587,22 @@ html[data-shell="mobile"] .desktop-notification-stack {
 
 /* ---------- 4) 验收修复（2026-09-15）：创建行自适应 / 页头操作区靠右 / 纪念日 CTA ---------- */
 
-/* .field 与 .btn-primary 基础都是 width:100%，在页头 flex 行里互抢宽度：
-   习惯/项目/标签的名称输入框显示为固定 200px、按钮被挤压——
-   这三个带名称输入框的页面让操作区独占一行，输入吃满剩余宽度。
-   复盘/纪念日/周清单为验收定稿样式（操作区独占一行并靠右）。
-   其余页面（今日/待办箱/成长/备忘录/记账）不能独占行：
-   独占后新建按钮会落到第二行左侧，不再与标题同行靠右（实测回归）。 */
-html[data-shell="mobile"] .habits-view .top-controls,
+/* 页头操作区与标题同行并靠右（2026-10-11 全站统一）：此前只有标签/项目页
+   同行靠右，其余页面独占一行后按钮落在标题下方第二行，观感不一致。
+   逐页核对 393px 可用宽度（标题 + 控件 + 留白）后，除记账页外全部
+   改为同行：习惯（输入+按钮）、成长、纪念日、备忘录、复盘（完成数+
+   周切换）、周清单、提醒（tabs+新建）。记账页是月份切换器 + 两个按钮，
+   控件总宽 >340px，与标题同行必然折行/溢出，保持独占一行并靠右。 */
 html[data-shell="mobile"] .tags-view .top-controls,
-html[data-shell="mobile"] .projects-view .top-controls {
-  flex: 1 1 100%;
+html[data-shell="mobile"] .projects-view .top-controls,
+html[data-shell="mobile"] .growth-page .top-controls,
+html[data-shell="mobile"] .anniversaries-page .top-controls,
+html[data-shell="mobile"] .memo-page .top-controls,
+html[data-shell="mobile"] .habits-view .top-controls,
+html[data-shell="mobile"] .review-workspace .top-controls,
+html[data-shell="mobile"] .weekly-checklist .top-controls {
+  flex: 1;
+  justify-content: flex-end;
 }
 
 html[data-shell="mobile"] .top-controls .field {
@@ -607,22 +611,20 @@ html[data-shell="mobile"] .top-controls .field {
   min-width: 0;
 }
 
-html[data-shell="mobile"] .top-controls .btn-primary,
-html[data-shell="mobile"] .top-controls .primary-btn {
+html[data-shell="mobile"] .top-controls .btn-primary {
   width: auto;
   flex: 0 0 auto;
   white-space: nowrap;
 }
 
-html[data-shell="mobile"] .review-workspace .top-controls,
-html[data-shell="mobile"] .anniversaries-page .top-controls,
-html[data-shell="mobile"] .weekly-checklist .top-controls {
-  flex: 1 1 100%;
-  justify-content: flex-end;
-}
-
 html[data-shell="mobile"] .review-workspace .top-controls {
   gap: 6px;
+}
+
+/* 周切换按钮（‹ 上周 / 本周 / 下周 ›）在同行里不许逐字断行。 */
+html[data-shell="mobile"] .review-workspace .top-controls .btn-ghost,
+html[data-shell="mobile"] .weekly-checklist .top-controls .btn-ghost {
+  white-space: nowrap;
 }
 
 /* 复盘:完成数挪到「‹上周 本周 下周›」右侧,发丝线分隔。 */
@@ -985,14 +987,12 @@ html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
 html[data-shell="mobile"] .create-task-modal input,
 html[data-shell="mobile"] .create-task-modal .select-btn,
 html[data-shell="mobile"] .create-task-modal .date-picker-trigger,
-html[data-shell="mobile"] .create-task-modal .time-picker-trigger,
 html[data-shell="mobile"] .project-edit-modal input,
 html[data-shell="mobile"] .project-edit-modal .select-btn,
 html[data-shell="mobile"] .goal-create-modal input,
 html[data-shell="mobile"] .goal-create-modal .select-btn,
 html[data-shell="mobile"] .goal-create-modal .date-picker-trigger,
-html[data-shell="mobile"] .completed-time-modal .date-picker-trigger,
-html[data-shell="mobile"] .completed-time-modal .time-picker-trigger {
+html[data-shell="mobile"] .completed-time-modal .date-picker-trigger {
   min-height: 48px;
 }
 
@@ -1042,4 +1042,117 @@ html[data-shell="mobile"] .anni-composer .seg button,
 html[data-shell="mobile"] .anni-composer .date-picker-trigger,
 html[data-shell="mobile"] .anni-composer-row .btn-primary {
   min-height: 48px;
+}
+
+/* ---------- 10) 新增功能移动化（2026-10-11：标签色板 / 提醒弹窗 / 时分下拉 / 备忘录卡片） ---------- */
+
+/* 标签色板：桌面 30×26 的色块在触摸屏上太小，垫到 40×36 的触控目标。 */
+html[data-shell="mobile"] .tag-color-palette {
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .tag-color-palette .color-swatch {
+  width: 40px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+/* 时/分下拉组在窄弹窗里的间距压缩；触发按钮已由上面的 48px 规则垫高。 */
+html[data-shell="mobile"] .time-dropdown-group {
+  gap: 5px;
+}
+
+html[data-shell="mobile"] .time-dropdown-unit {
+  font-size: 11px;
+}
+
+/* 修改完成时间弹窗：时间下拉（select-btn）此前不在 48px 触控清单里，补上。 */
+html[data-shell="mobile"] .completed-time-modal .select-btn,
+html[data-shell="mobile"] .completed-time-modal input {
+  min-height: 48px;
+}
+
+/* 提醒页新建弹窗里的 − / ＋ 步进按钮：24px 桌面尺寸改 36px 触控目标，
+   数字输入同步垫高，整个步进行保持等高。 */
+html[data-shell="mobile"] .countdown-custom-step {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  font-size: 16px;
+}
+
+html[data-shell="mobile"] .countdown-custom-time input {
+  min-height: 36px;
+}
+
+/* 触摸屏没有 hover：备忘录卡片不做悬浮位移，改为按压反馈。 */
+html[data-shell="mobile"] .memo-list-item:hover {
+  transform: none;
+}
+
+html[data-shell="mobile"] .memo-list-item:active {
+  background: var(--bg-hover);
+}
+
+/* 备忘录卡片网格在手机上收成单列，卡片高度垫到舒适触控行。 */
+html[data-shell="mobile"] .memo-list {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+html[data-shell="mobile"] .memo-list-item {
+  min-height: 60px;
+}
+
+/* 提醒计时卡片：单列（minmax(300px) 在手机上自然成一列），触控内距微调。 */
+html[data-shell="mobile"] .reminders-stack {
+  grid-template-columns: 1fr;
+}
+
+html[data-shell="mobile"] .timer-card {
+  padding: 14px;
+}
+
+/* 触摸屏没有 hover：项目卡片同理不做悬浮位移。 */
+html[data-shell="mobile"] .tag-card:hover {
+  transform: none;
+}
+
+/* 提醒页头：tabs 与「＋ 新建倒计时/循环提醒」与标题同行并靠右
+   （393px 下 tabs+按钮约 294px，与标题同行放得下）。 */
+html[data-shell="mobile"] .reminders-view .top-controls {
+  flex: 1;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+html[data-shell="mobile"] .reminders-view .top-controls .btn-primary {
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 通用窄屏（桌面窗口拉窄同理）：各页操作区与标题同行并靠右，
+   与移动壳一致；记账页控件过宽，保持独占一行。 */
+@media (max-width: 700px) {
+  .reminders-view .workspace-top .top-controls {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .reminders-view .top-controls .btn-primary {
+    white-space: nowrap;
+  }
+
+  .growth-page .workspace-top .top-controls,
+  .anniversaries-page .workspace-top .top-controls,
+  .memo-page .workspace-top .top-controls,
+  .habits-view .workspace-top .top-controls,
+  .review-workspace .workspace-top .top-controls,
+  .weekly-checklist .workspace-top .top-controls,
+  .tags-view .workspace-top .top-controls {
+    flex: 1;
+    justify-content: flex-end;
+  }
 }
