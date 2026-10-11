@@ -48,9 +48,10 @@ select:focus {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  align-content: start;
 }
 
 .memo-list-tabs {
@@ -89,17 +90,21 @@ select:focus {
 
 .memo-list-item {
   text-align: left;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  padding: 13px 15px;
+  border-radius: 14px;
   border: 1px solid transparent;
   background: var(--bg-panel);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  transition: transform var(--transition), border-color var(--transition), background var(--transition), box-shadow var(--transition);
 }
 
 .memo-list-item:hover {
   border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 .memo-list-item.active {
@@ -115,20 +120,19 @@ select:focus {
   white-space: nowrap;
 }
 
-.memo-list-preview {
-  font-size: 12px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* 列表卡片：标题一行、时间一行，正文点击后才在抽屉里展示 */
+.memo-list-title-copy {
+  width: 100%;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
-.memo-list-meta {
-  font-size: 11px;
+.memo-list-time {
   color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .memo-title-input {
@@ -227,7 +231,7 @@ select:focus {
 
 .memo-toolbar .memo-search { flex: 1; min-width: 180px; }
 .memo-toolbar .memo-list-tabs { margin-left: auto; }
-.memo-list { margin-inline: -4px; padding-inline: 4px; }
+.memo-list { margin: -6px -4px; padding: 6px 4px; }
 .memo-new-wrap { position: relative; }
 .memo-create-menu {
   position: absolute;
@@ -258,20 +262,16 @@ select:focus {
 }
 .memo-search input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--text-primary); background: transparent; font: inherit; }
 .memo-list { margin-inline: -4px; padding-inline: 4px; }
-.memo-list-item { position: relative; padding: 13px 12px 13px 15px; border-color: transparent; background: transparent; }
-.memo-list-item::before { content: ""; position: absolute; left: 4px; top: 16px; bottom: 16px; width: 2px; border-radius: 4px; background: transparent; }
+.memo-list-item { position: relative; padding: 13px 14px 13px 16px; border-color: transparent; background: var(--bg-panel); }
+.memo-list-item::before { content: ""; position: absolute; left: 4px; top: 14px; bottom: 14px; width: 2px; border-radius: 4px; background: transparent; }
 .memo-list-item:hover { background: var(--bg-hover); }
 .memo-list-item.active { border-color: color-mix(in srgb, var(--accent) 20%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 55%, var(--bg-panel)); box-shadow: 0 6px 18px color-mix(in srgb, var(--text-primary) 4%, transparent); }
 .memo-list-item.active::before { background: var(--accent); }
-.memo-list-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .memo-list-title-copy { min-width: 0; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; }
-.memo-format-badge,
+.memo-list-time { flex: 0 0 auto; color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .memo-document-format { flex: 0 0 auto; padding: 2px 5px; border-radius: 5px; font: 750 9px/1.2 var(--font-body); letter-spacing: .03em; }
-.memo-format-badge.is-richtext,
 .memo-document-format.is-richtext { color: var(--accent); background: var(--accent-soft); }
-.memo-format-badge.is-markdown,
 .memo-document-format.is-markdown { color: var(--text-secondary); background: var(--bg-rail); }
-.memo-list-preview { line-height: 1.55; }
 .memo-empty-list { padding: 28px 14px; color: var(--text-muted); font-size: 12px; line-height: 1.7; text-align: center; }
 
 /* 详情抽屉:复用任务详情的 .detail-panel 骨架,略放宽以适合阅读。 */

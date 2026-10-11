@@ -70,7 +70,7 @@ function DayTaskRow({
     const target = event.target as HTMLElement | null;
     if (
       target?.closest(
-        "button, input, textarea, select, a, .task-quick-actions, .row-menu",
+        "button, input, textarea, select, a, .task-quick-actions",
       )
     ) {
       return;

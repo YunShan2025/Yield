@@ -18,20 +18,21 @@ export function ProjectsView() {
   const restoreProject = useAppStore((state) => state.restoreProject);
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
-  const [createColor, setCreateColor] = useState("#7D9BE8");
   const [createTagId, setCreateTagId] = useState("");
   const [savingCreate, setSavingCreate] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [editColor, setEditColor] = useState("#7D9BE8");
   const [editDueDate, setEditDueDate] = useState("");
   const [editTagId, setEditTagId] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
 
+  /** 项目颜色不自选：跟随所选标签的颜色；无标签时保留原色兜底。 */
+  const projectColor = (project: Project) =>
+    tags.find((tag) => tag.id === project.tag_id)?.color ?? project.color;
+
   const openCreate = () => {
     setCreateName("");
-    setCreateColor("#7D9BE8");
     setCreateTagId("");
     setCreating(true);
   };
@@ -54,7 +55,6 @@ export function ProjectsView() {
   const beginEditProject = (project: Project) => {
     setEditingProject(project);
     setEditName(project.name);
-    setEditColor(project.color);
     setEditDueDate(project.due_date ?? "");
     setEditTagId(project.tag_id ?? "");
   };
@@ -66,7 +66,10 @@ export function ProjectsView() {
     }
     await updateProject(editingProject.id, {
       name: editName.trim(),
-      color: editColor,
+      // 颜色与标签同步：改标签时颜色随之更新，未选标签则保持不变。
+      color:
+        tags.find((tag) => tag.id === (editTagId || null))?.color ??
+        editingProject.color,
       due_date: editDueDate || null,
       tag_id: editTagId || null,
     });
@@ -119,47 +122,88 @@ export function ProjectsView() {
             <p className="today-hero-note">项目是长期事项的工坊：相关任务都在这里聚拢。</p>
           </div>
         </section>
-        <section>
-          <div className="section-title-row">
-            <h3>进行中</h3>
-          </div>
+        {/* 未开始：还没有任务的项目；进行中：已挂上任务的项目。 */}
+        {(() => {
+          const notStarted = projects.filter(
+            (project) => !selectProjectTasks(tasks, project.id).length,
+          );
+          const inProgress = projects.filter((project) =>
+            selectProjectTasks(tasks, project.id).length,
+          );
+          return (
+            <>
+              <section>
+                <div className="section-title-row">
+                  <h3>进行中</h3>
+                  <span className="tags-filtered-count">{inProgress.length}</span>
+                </div>
+                <div className="projects-grid">
+                  {inProgress.map((project) => {
+                    const projectTasks = selectProjectTasks(tasks, project.id);
+                    const on = activeProjectId === project.id;
+                    return (
+                      <article
+                        key={project.id}
+                        className={`tag-card project-tile ${on ? "is-active" : ""}`}
+                        style={{ "--tag-accent": projectColor(project) } as CSSProperties}
+                      >
+                        <button
+                          type="button"
+                          className="tag-card-main"
+                          title={on ? "收起该项目" : "查看该项目的任务"}
+                          onClick={() => setActiveProjectId(on ? null : project.id)}
+                        >
+                          <span className="tag-card-dot" aria-hidden />
+                          <strong>{project.name}</strong>
+                          <span className="tag-card-count">
+                            {`${projectTasks.length} 项任务 · 已完成 ${
+                              projectTasks.filter((task) => task.status === "completed").length
+                            }`}
+                          </span>
+                        </button>
+                      </article>
+                    );
+                  })}
+                  {!projects.length ? (
+                    <div className="scope-empty">创建第一个项目来组织相关任务。</div>
+                  ) : null}
+                </div>
+              </section>
 
-          {/* 与标签页同构：上方紧凑卡片，点击卡片在下方展开具体任务 */}
-          <div className="projects-grid">
-            {projects.map((project) => {
-              const projectTasks = selectProjectTasks(tasks, project.id);
-              const done = projectTasks.filter(
-                (task) => task.status === "completed",
-              ).length;
-              const on = activeProjectId === project.id;
-              return (
-                <article
-                  key={project.id}
-                  className={`tag-card project-tile ${on ? "is-active" : ""}`}
-                  style={{ "--tag-accent": project.color } as CSSProperties}
-                >
-                  <button
-                    type="button"
-                    className="tag-card-main"
-                    title={on ? "收起该项目" : "查看该项目的任务"}
-                    onClick={() => setActiveProjectId(on ? null : project.id)}
-                  >
-                    <span className="tag-card-dot" aria-hidden />
-                    <strong>{project.name}</strong>
-                    <span className="tag-card-count">
-                      {projectTasks.length
-                        ? `${projectTasks.length} 项任务 · 已完成 ${done}`
-                        : "暂无任务"}
-                    </span>
-                  </button>
-                </article>
-              );
-            })}
-            {!projects.length ? (
-              <div className="scope-empty">创建第一个项目来组织相关任务。</div>
-            ) : null}
-          </div>
-        </section>
+              {notStarted.length ? (
+                <section aria-label="未开始项目">
+                  <div className="section-title-row">
+                    <h3>未开始</h3>
+                    <span className="tags-filtered-count">{notStarted.length}</span>
+                  </div>
+                  <div className="projects-grid projects-grid-archived">
+                    {notStarted.map((project) => {
+                      const on = activeProjectId === project.id;
+                      return (
+                        <article
+                          key={project.id}
+                          className={`tag-card project-tile ${on ? "is-active" : ""}`}
+                          style={{ "--tag-accent": projectColor(project) } as CSSProperties}
+                        >
+                          <button
+                            type="button"
+                            className="tag-card-main"
+                            title={on ? "收起该项目" : "查看该项目的任务"}
+                            onClick={() => setActiveProjectId(on ? null : project.id)}
+                          >
+                            <span className="tag-card-dot" aria-hidden />
+                            <strong>{project.name}</strong>
+                            <span className="tag-card-count">暂无任务</span>
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+            </>
+          );
+        })()}
 
         {activeProject ? (
           <ProjectDetail
@@ -191,7 +235,7 @@ export function ProjectsView() {
                   <article
                     key={project.id}
                     className="tag-card project-tile is-archived"
-                    style={{ "--tag-accent": project.color } as CSSProperties}
+                    style={{ "--tag-accent": projectColor(project) } as CSSProperties}
                   >
                     <div className="tag-card-main is-static">
                       <span className="tag-card-dot" aria-hidden />
@@ -248,13 +292,6 @@ export function ProjectsView() {
               />
             </label>
             <label>
-              项目标识色
-              <div className="project-color-field">
-                <input type="color" value={createColor} onChange={(event) => setCreateColor(event.target.value)} />
-                <span>{createColor.toUpperCase()}</span>
-              </div>
-            </label>
-            <label>
               项目标签
               <SelectMenu
                 ariaLabel="项目标签"
@@ -297,13 +334,6 @@ export function ProjectsView() {
             <label>
               项目名称
               <input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} />
-            </label>
-            <label>
-              项目标识色
-              <div className="project-color-field">
-                <input type="color" value={editColor} onChange={(event) => setEditColor(event.target.value)} />
-                <span>{editColor.toUpperCase()}</span>
-              </div>
             </label>
             <label>
               项目标签
@@ -358,6 +388,7 @@ function ProjectDetail({
     ? Math.round((done / projectTasks.length) * 100)
     : 0;
   const tagName = tags.find((tag) => tag.id === project.tag_id)?.name;
+  const displayColor = tags.find((tag) => tag.id === project.tag_id)?.color ?? project.color;
   // 完成时间倒序（未完成在后）；默认只展示前五条，可展开全部
   const sortedTasks = [...projectTasks].sort(
     (a, b) =>
@@ -369,7 +400,7 @@ function ProjectDetail({
     <section className="tags-filtered projects-detail" aria-label={`${project.name} 的任务`}>
       <header>
         <h3>
-          <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
+          <span className="tag-card-dot" style={{ background: displayColor }} aria-hidden />
           「{project.name}」的任务
           <span className="tags-filtered-count">{projectTasks.length}</span>
         </h3>

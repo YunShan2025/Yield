@@ -82,8 +82,8 @@ interface AppStore {
   purgeTask: (id: string) => Promise<void>;
   reorder: (ids: string[]) => Promise<void>;
 
-  addTag: (name: string) => Promise<void>;
-  updateTag: (id: string, name: string) => Promise<void>;
+  addTag: (name: string, color?: string) => Promise<void>;
+  updateTag: (id: string, updates: { name?: string; color?: string }) => Promise<void>;
   removeTag: (id: string) => Promise<void>;
   setTaskTags: (taskId: string, tagIds: string[]) => Promise<void>;
   addProject: (name: string, tagId?: string | null) => Promise<void>;
@@ -499,13 +499,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     await get().refreshAll();
   },
 
-  addTag: async (name) => {
-    await db.createTag(name);
+  addTag: async (name, color) => {
+    await db.createTag(name, color);
     await get().refreshAll();
   },
 
-  updateTag: async (id, name) => {
-    await db.updateTag(id, { name });
+  updateTag: async (id, updates) => {
+    await db.updateTag(id, updates);
     await get().refreshAll();
   },
 
@@ -520,7 +520,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   addProject: async (name, tagId) => {
-    await db.createProject(name, undefined, tagId ?? null);
+    // 项目颜色不自选：创建时直接继承所选标签的颜色。
+    const tagColor = tagId
+      ? get().tags.find((tag) => tag.id === tagId)?.color
+      : undefined;
+    await db.createProject(name, tagColor, tagId ?? null);
     await get().refreshAll();
     set({ toast: "项目已创建" });
   },

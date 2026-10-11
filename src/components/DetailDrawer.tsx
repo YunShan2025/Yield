@@ -165,7 +165,7 @@ export function DetailDrawer() {
       if (event.target.closest(".detail-panel")) return;
       if (
         event.target.closest(
-          ".modal-backdrop, .row-menu, .row-menu-backdrop, .select-menu, .date-picker-pop, .time-picker-pop",
+          ".modal-backdrop, .select-menu, .date-picker-pop",
         )
       ) {
         return;

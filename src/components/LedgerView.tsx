@@ -138,7 +138,7 @@ export function LedgerView() {
     const onPointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
       if (event.target.closest(".ledger-drawer")) return;
-      if (event.target.closest(".modal-backdrop, .row-menu, .row-menu-backdrop, .select-menu, .date-picker-pop, .time-picker-pop")) return;
+      if (event.target.closest(".modal-backdrop, .select-menu, .date-picker-pop")) return;
       setDrawer(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {

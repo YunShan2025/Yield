@@ -120,15 +120,13 @@
   box-shadow: var(--shadow-soft);
 }
 
-.btn-primary,
-.primary-btn {
+.btn-primary {
   color: var(--text-on-accent);
   background: var(--accent);
   box-shadow: 0 8px 20px rgba(47, 111, 237, 0.18);
 }
 
-.btn-primary:hover,
-.primary-btn:hover {
+.btn-primary:hover {
   background: var(--accent-hover);
 }
 
@@ -161,29 +159,6 @@
 
 .scope-summary .scope-card strong {
   color: var(--accent);
-}
-
-.reminders-context {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 34px;
-  padding: 0 4px;
-  color: #758096;
-  font-size: 12px;
-}
-
-.reminders-context > i {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #b5bdcb;
-}
-
-.reminders-context > small {
-  margin-left: auto;
-  color: #a0a8b7;
-  font-size: 11px;
 }
 
 .today-timeline {
@@ -423,8 +398,7 @@
   grid-auto-rows: max-content;
 }
 
-.section-title-row,
-.project-card-head {
+.section-title-row {
   display: flex;
   align-items: center;
 }
@@ -444,32 +418,12 @@
   font-size: 11px;
 }
 
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
-
 .project-card {
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--bg-panel);
   box-shadow: var(--shadow-soft);
-}
-
-.project-card-head {
-  gap: 8px;
-}
-
-.project-card-head > span {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.project-card-head > strong {
-  flex: 1;
 }
 
 .project-card p {
@@ -701,80 +655,6 @@
   }
 }
 
-.project-goal {
-  color: var(--text-secondary) !important;
-  line-height: 1.5;
-}
-
-.project-inline-action {
-  padding: 4px 0;
-  color: var(--accent);
-  font-size: 11px;
-  text-align: left;
-}
-
-.milestone-list {
-  display: grid;
-  gap: 5px;
-  margin-top: 11px;
-  padding-top: 9px;
-  border-top: 1px solid var(--border);
-}
-
-.milestone-list label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-.milestone-item { display: flex; align-items: center; gap: 8px; }
-.milestone-item > label { min-width: 0; flex: 1; }
-.milestone-item label span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.milestone-item label small { margin-left: auto; color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
-.milestone-edit-trigger { width: 28px; height: 28px; display: grid; flex: 0 0 auto; place-items: center; padding: 0; border: 0; border-radius: 8px; color: var(--text-muted); background: transparent; opacity: .45; }
-.milestone-item:hover .milestone-edit-trigger,
-.milestone-edit-trigger:focus-visible { opacity: 1; color: var(--accent); background: var(--accent-soft); }
-.milestone-edit { display: grid; grid-template-columns: minmax(150px,1fr) auto auto; gap: 8px; align-items: center; padding: 8px; border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border)); border-radius: 12px; background: var(--bg-soft); }
-.milestone-edit > .field { min-width: 0; }
-.milestone-edit > input[type="date"] { width: 145px; }
-.milestone-edit > div { display: flex; gap: 6px; }
-.milestone-edit .btn-primary,
-.milestone-edit .btn-ghost { width: auto; min-height: 34px; padding: 0 10px; }
-@media (max-width: 720px) { .milestone-edit { grid-template-columns: 1fr; } .milestone-edit > input[type="date"] { width: 100%; } .milestone-edit > div { justify-content: flex-end; } }
-
-.milestone-list input {
-  width: auto;
-}
-
-.milestone-compose {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.milestone-list .milestone-compose input {
-  width: 100%;
-  min-width: 0;
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text-primary);
-  background: var(--surface);
-  font: inherit;
-  font-size: 12px;
-}
-
-.milestone-compose .btn-primary,
-.milestone-compose .btn-ghost {
-  width: auto;
-  min-width: 52px;
-  height: 32px;
-  padding: 0 10px;
-  font-size: 12px;
-}
-
 .onboarding-backdrop {
   position: fixed;
   inset: 0;
@@ -902,71 +782,10 @@
   background: var(--text-overdue, #c0392b);
 }
 
-/* ---- Today agenda: row "more" menu ---- */
-.row-more-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
 /* 按钮文字一律横排:按钮在窄容器里被压缩时,禁止逐字竖排换行(如记账抽屉「取消」、习惯页「添加」)。 */
 .btn-primary,
-.primary-btn,
 .btn-ghost {
   white-space: nowrap;
-}
-
-/* 与同行「详情/删除」(高 31px)对齐,避免 ⋯ 按钮偏矮。 */
-.row-more {
-  min-height: 31px;
-}
-
-.row-menu {
-  position: fixed;
-  z-index: 60;
-  min-width: 200px;
-  padding: 8px;
-  display: grid;
-  gap: 4px;
-  background: #ffffff; /* 纯白不透明,不随主题表面色变化 */
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
-}
-.row-menu button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 13px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.row-menu button:hover {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-.row-menu .row-menu-date {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-.row-menu .row-menu-date .field {
-  padding: 5px 8px;
-  font-size: 12px;
-}
-.row-menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  background: transparent;
-  border: 0;
-  cursor: default;
 }
 
 /* ---- Timeline: all-day lane ---- */

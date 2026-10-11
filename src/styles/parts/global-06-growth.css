@@ -175,7 +175,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 .settings-card,
-.review-card,
 .habits-card {
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -210,7 +209,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .habits-view { overflow: auto; }
 .habits-body { display: flex; flex-direction: column; gap: 12px; padding: 0 28px 28px; }
 .habits-name-input { width: 200px; }
-.tags-name-input { width: 200px; }
 
 /* 设置页「命名缘起」:品牌标 + 题铭 + 四词出处卡片 */
 .brand-origin-title { display: flex; align-items: center; gap: 8px; }
@@ -382,103 +380,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .create-task-time-state.warn { background: color-mix(in srgb, var(--warning) 16%, transparent); color: var(--warning); }
 .create-task-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .create-task-actions .btn-primary, .create-task-actions .btn-ghost { width: auto; min-width: 112px; }
-.morning-plan-modal,
-.morning-plan-modal button,
-.morning-plan-modal label {
-  app-region: no-drag;
-  -webkit-app-region: no-drag;
-}
-.morning-plan-toolbar {
-  display: flex;
-  gap: 8px;
-}
-.morning-plan-toolbar .btn-ghost {
-  min-width: 0;
-  padding: 6px 10px;
-}
-.morning-plan-compose {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.morning-plan-modal .morning-plan-compose input {
-  width: 100%;
-  min-width: 0;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--text-primary);
-  background: var(--surface);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 500;
-}
-.morning-plan-compose .btn-primary {
-  width: auto;
-  min-width: 64px;
-  height: 38px;
-  padding: 0 12px;
-}
-.morning-plan-list {
-  display: grid;
-  gap: 6px;
-  max-height: min(52vh, 420px);
-  overflow: auto;
-}
-.morning-plan-modal .morning-plan-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text-primary);
-  font-weight: 500;
-  cursor: pointer;
-}
-.morning-plan-modal .morning-plan-row.is-on {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-}
-.morning-plan-modal .morning-plan-row input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  accent-color: var(--accent);
-}
-.morning-plan-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.morning-plan-copy strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
-  font-weight: 700;
-}
-.morning-plan-copy small {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-.morning-plan-modal .morning-plan-row em {
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-.morning-plan-modal .morning-plan-row em.p1 { color: #e11d48; }
-.morning-plan-modal .morning-plan-row em.p2 { color: #ea580c; }
 @media (max-width: 620px) { .create-task-grid { grid-template-columns: 1fr; } .create-task-time-head { flex-wrap: wrap; } }
 
 .project-edit-modal label {
@@ -498,24 +399,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   color: var(--text-primary);
   background: var(--surface);
   font: inherit;
-}
-
-.project-edit-modal textarea {
-  min-height: 76px;
-  resize: vertical;
-}
-
-.project-color-field {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.project-color-field input {
-  width: 52px;
-  height: 40px;
-  padding: 4px;
-  cursor: pointer;
 }
 
 .project-edit-actions {
@@ -665,6 +548,33 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   background: color-mix(in srgb, var(--danger) 86%, #000);
 }
 
+/* 标签新建/修改弹窗里的十色色板 */
+.tag-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.tag-color-palette .color-swatch {
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.tag-color-palette .color-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.tag-color-palette .color-swatch.is-selected {
+  outline: 2px solid color-mix(in srgb, var(--text-primary) 60%, transparent);
+  outline-offset: 1px;
+}
+
 .tags-filtered header {
   display: flex;
   align-items: center;
@@ -764,6 +674,21 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .tag-card.project-tile.is-archived .tag-card-main {
   cursor: default;
+}
+
+/* 项目卡片行内允许名称收缩，避免「恢复」等尾部按钮被挤出卡片 */
+.tag-card.project-tile .tag-card-main {
+  min-width: 0;
+}
+
+.tag-card.project-tile .tag-card-main strong {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.tag-card.project-tile .tag-card-count,
+.tag-card.project-tile .project-card-restore {
+  flex: none;
 }
 
 .project-card-restore {

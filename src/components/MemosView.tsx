@@ -16,6 +16,7 @@ function formatMemoTime(iso: string): string {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+/** 搜索时仍按正文匹配；列表展示不再使用。 */
 function memoPreview(memo: Memo): string {
   const text = memo.format === "richtext" ? richTextToPlainText(memo.content) : memo.content.replace(/[#*_>`\[\]()-]/g, " ").replace(/\s+/g, " ").trim();
   return text.slice(0, 80) || "暂无内容";
@@ -125,7 +126,7 @@ export function MemosView() {
     if (!selectedId) return;
     const onPointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
-      if (event.target.closest(".detail-panel, .modal-backdrop, .memo-create-menu, .row-menu, .row-menu-backdrop")) return;
+      if (event.target.closest(".detail-panel, .modal-backdrop, .memo-create-menu")) return;
       closeRef.current();
     };
     document.addEventListener("pointerdown", onPointerDown);
@@ -207,7 +208,7 @@ export function MemosView() {
       </div>
       <div className="top-controls">
         <div className="memo-new-wrap">
-          <button type="button" className="btn-primary" aria-expanded={showTypeChooser} onClick={() => setShowTypeChooser((value) => !value)}>＋ 新建</button>
+          <button type="button" className="btn-primary" aria-expanded={showTypeChooser} onClick={() => setShowTypeChooser((value) => !value)}>＋ 新建备忘录</button>
           {showTypeChooser ? <div className="memo-create-menu"><button type="button" onClick={() => void createNew("richtext")}><strong>富文本</strong><span>适合日常记录和排版</span></button><button type="button" onClick={() => void createNew("markdown")}><strong>Markdown</strong><span>适合技术笔记和纯文本</span></button></div> : null}
         </div>
       </div>
@@ -227,7 +228,7 @@ export function MemosView() {
         <div className="memo-search"><AppIcon name="search" size={16} /><input placeholder="搜索备忘录" value={keyword} onChange={(event) => setKeyword(event.target.value)} /></div>
         <div className="memo-list-tabs" aria-label="备忘录分类"><button type="button" className={listMode === "active" ? "active" : ""} onClick={() => switchList("active")}>全部 <span>{activeCount}</span></button><button type="button" className={listMode === "archived" ? "active" : ""} onClick={() => switchList("archived")}>已归档 <span>{archivedCount}</span></button></div>
       </div>
-      <div className="memo-list">{visibleMemos.map((memo) => <button key={memo.id} type="button" className={`memo-list-item ${selectedId === memo.id ? "active" : ""}`} onClick={() => void selectMemo(memo)}><div className="memo-list-title"><span className="memo-list-title-copy">{memo.pinned ? <AppIcon name="pin" size={13} /> : null}{memo.title || "无标题备忘"}</span><span className={`memo-format-badge is-${memo.format}`}>{memo.format === "richtext" ? "RT" : "MD"}</span></div><div className="memo-list-preview">{memoPreview(memo)}</div><div className="memo-list-meta"><span>{formatMemoTime(memo.updated_at)}</span>{memo.archived ? <span>已归档</span> : null}</div></button>)}{!visibleMemos.length ? <div className="memo-empty-list">{keyword ? "没有找到相关备忘录" : listMode === "archived" ? "还没有归档内容" : "新建一条备忘录，记录需要长期保存的内容"}</div> : null}</div>
+      <div className="memo-list">{visibleMemos.map((memo) => <button key={memo.id} type="button" className={`memo-list-item ${selectedId === memo.id ? "active" : ""}`} onClick={() => void selectMemo(memo)}><span className="memo-list-title-copy">{memo.pinned ? <AppIcon name="pin" size={13} /> : null}{memo.title || "无标题备忘"}</span><span className="memo-list-time">{formatMemoTime(memo.updated_at)}</span></button>)}{!visibleMemos.length ? <div className="memo-empty-list">{keyword ? "没有找到相关备忘录" : listMode === "archived" ? "还没有归档内容" : "新建一条备忘录，记录需要长期保存的内容"}</div> : null}</div>
     </div>
 
     {selected ? <aside className="detail-panel memo-detail-panel">

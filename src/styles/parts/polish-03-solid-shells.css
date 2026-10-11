@@ -47,12 +47,6 @@
   background: transparent;
 }
 
-:root[data-theme="light"] .detail-drawer,
-:root[data-theme="dark"] .detail-drawer {
-  border-left: 1px solid var(--border);
-  border-radius: 0;
-}
-
 :root[data-theme="light"] .glass-titlebar,
 :root[data-theme="dawn"] .glass-titlebar {
   color: #1d2b45;

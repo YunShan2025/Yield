@@ -1,18 +1,53 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
-import { confirmAction, promptAction } from "@/components/AppConfirm";
+import { confirmAction } from "@/components/AppConfirm";
 import { filterTasksByView, taskRowClassName } from "@/lib/tasks";
 import { formatDueDate, formatDayStamp } from "@/lib/dates";
+import type { Tag } from "@/types";
 
 const TAG_PALETTE = [
   "#5B8FF9",
-  "#f0a05a",
-  "#8b7cf6",
+  "#3BB3C3",
   "#3ecf8e",
+  "#8FBF4D",
+  "#F0A05A",
+  "#EAB308",
   "#f472b6",
-  "#3bb3c3",
-  "#e05d5d",
+  "#E05D5D",
+  "#8B7CF6",
+  "#8A94A6",
 ];
+
+// 统一成大写，方便与存量颜色值比对高亮。
+const COLOR_SWATCHES = TAG_PALETTE.map((color) => color.toUpperCase());
+
+/** 标签色板：新建/修改共用的十个默认颜色。 */
+function ColorPalette({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <div className="tag-color-palette" role="radiogroup" aria-label={ariaLabel}>
+      {COLOR_SWATCHES.map((color) => (
+        <button
+          key={color}
+          type="button"
+          role="radio"
+          aria-checked={value.toUpperCase() === color}
+          aria-label={color}
+          className={`color-swatch${value.toUpperCase() === color ? " is-selected" : ""}`}
+          style={{ background: color }}
+          onClick={() => onChange(color)}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function TagsView() {
   const tasks = useAppStore((s) => s.tasks);
@@ -26,7 +61,13 @@ export function TagsView() {
   const removeTag = useAppStore((s) => s.removeTag);
   const selectTask = useAppStore((s) => s.selectTask);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
-  const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createColor, setCreateColor] = useState(COLOR_SWATCHES[0]);
+  const [savingCreate, setSavingCreate] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState("");
 
   const counts = useMemo(() => {
     // 统计口径：项目优先——先数带该标签的项目数，再数「无所属项目」且带
@@ -65,11 +106,41 @@ export function TagsView() {
   );
   const activeTag = tags.find((tag) => tag.id === activeTagId) ?? null;
 
-  const submit = () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    void addTag(trimmed);
-    setName("");
+  const openCreate = () => {
+    setCreateName("");
+    setCreateColor(COLOR_SWATCHES[0]);
+    setCreating(true);
+  };
+
+  const submitCreate = async () => {
+    const trimmed = createName.trim();
+    if (!trimmed || savingCreate) return;
+    setSavingCreate(true);
+    try {
+      await addTag(trimmed, createColor);
+      setCreating(false);
+    } finally {
+      setSavingCreate(false);
+    }
+  };
+
+  const beginEditTag = (tag: Tag) => {
+    setEditingTag(tag);
+    setEditName(tag.name);
+    setEditColor(tag.color || COLOR_SWATCHES[0]);
+  };
+
+  const saveTag = async () => {
+    if (!editingTag || !editName.trim()) {
+      useAppStore.getState().setToast("标签名称不能为空");
+      return;
+    }
+    await updateTag(editingTag.id, {
+      name: editName.trim(),
+      color: editColor,
+    });
+    setEditingTag(null);
+    useAppStore.getState().setToast("标签已更新");
   };
 
   return (
@@ -82,26 +153,12 @@ export function TagsView() {
           </p>
         </div>
         <div className="top-controls">
-          <input
-            className="field tags-name-input"
-            placeholder="新标签名称"
-            value={name}
-            maxLength={16}
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                submit();
-              }
-            }}
-          />
           <button
             type="button"
             className="btn-primary"
-            disabled={!name.trim()}
-            onClick={submit}
+            onClick={openCreate}
           >
-            添加标签
+            ＋ 新建标签
           </button>
         </div>
       </div>
@@ -148,21 +205,9 @@ export function TagsView() {
                       <button
                         type="button"
                         className="btn-ghost"
-                        onClick={() => {
-                          void promptAction({
-                            title: `重命名标签「${tag.name}」`,
-                            initial: tag.name,
-                            maxLength: 16,
-                            confirmText: "重命名",
-                          }).then((next) => {
-                            const trimmed = next?.trim();
-                            if (trimmed && trimmed !== tag.name) {
-                              void updateTag(tag.id, trimmed);
-                            }
-                          });
-                        }}
+                        onClick={() => beginEditTag(tag)}
                       >
-                        重命名
+                        修改
                       </button>
                       <button
                         type="button"
@@ -277,6 +322,101 @@ export function TagsView() {
           <p className="tags-hint">点击上方标签卡片，可查看对应的项目与任务。</p>
         )}
       </div>
+
+      {creating ? (
+        <div className="modal-backdrop" onMouseDown={() => setCreating(false)}>
+          <form
+            className="project-edit-modal"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitCreate();
+            }}
+          >
+            <div className="modal-head">
+              <div>
+                <span>标签</span>
+                <h3>新建标签</h3>
+              </div>
+              <button type="button" onClick={() => setCreating(false)}>×</button>
+            </div>
+            <label>
+              标签名称
+              <input
+                autoFocus
+                value={createName}
+                placeholder="这个标签叫什么？"
+                maxLength={16}
+                onChange={(event) => setCreateName(event.target.value)}
+              />
+            </label>
+            <label>
+              标签颜色
+              <ColorPalette
+                ariaLabel="标签颜色"
+                value={createColor}
+                onChange={setCreateColor}
+              />
+            </label>
+            <div className="project-edit-actions">
+              <button type="button" className="btn-ghost" onClick={() => setCreating(false)}>取消</button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={!createName.trim() || savingCreate}
+              >
+                {savingCreate ? "创建中…" : "创建标签"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {editingTag ? (
+        <div className="modal-backdrop" onMouseDown={() => setEditingTag(null)}>
+          <form
+            className="project-edit-modal"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveTag();
+            }}
+          >
+            <div className="modal-head">
+              <div>
+                <span>标签设置</span>
+                <h3>修改标签</h3>
+              </div>
+              <button type="button" onClick={() => setEditingTag(null)}>×</button>
+            </div>
+            <label>
+              标签名称
+              <input
+                autoFocus
+                value={editName}
+                maxLength={16}
+                onChange={(event) => setEditName(event.target.value)}
+              />
+            </label>
+            <label>
+              标签颜色
+              <ColorPalette
+                ariaLabel="标签颜色"
+                value={editColor}
+                onChange={setEditColor}
+              />
+            </label>
+            <div className="project-edit-actions">
+              <button type="button" className="btn-ghost" onClick={() => setEditingTag(null)}>取消</button>
+              <button type="submit" className="btn-primary">保存修改</button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
 import type { RepeatRule, TaskPriority } from "@/types";
-import { TimeRangeFields } from "@/components/TimePicker";
+import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
@@ -57,8 +57,9 @@ export function CreateTaskDialog() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(createTaskInbox ? "" : initialDate);
-  const [dueTime, setDueTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  // 时间默认给具体值（现在 / +1 小时），避免下拉框显示空占位。
+  const [dueTime, setDueTime] = useState(() => defaultTimeRange().start);
+  const [endTime, setEndTime] = useState(() => defaultTimeRange().end);
   const [priority, setPriority] = useState<TaskPriority>(3);
   const [projectId, setProjectId] = useState("");
   const [selectedTagId, setSelectedTagId] = useState("");
@@ -223,8 +224,9 @@ export function CreateTaskDialog() {
             setDueDate(next);
             if (!next) {
               setRepeat(null);
-              setDueTime("");
-              setEndTime("");
+              const range = defaultTimeRange();
+              setDueTime(range.start);
+              setEndTime(range.end);
               setTimeManual(false);
             } else if (repeat?.frequency === "weekly") {
               setRepeat(weeklyRuleFromDate(next));

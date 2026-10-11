@@ -43,8 +43,7 @@
 }
 
 :root[data-theme="dawn"] .nav-side,
-:root[data-theme="dawn"] .main-workspace,
-:root[data-theme="dawn"] .detail-drawer {
+:root[data-theme="dawn"] .main-workspace {
   border: none;
   border-radius: 0;
   box-shadow: none;
@@ -57,11 +56,6 @@
 :root[data-theme="dawn"] .nav-side {
   border-right: 1px solid rgba(54, 82, 129, 0.12);
   background: rgba(255, 255, 255, 0.42);
-}
-
-:root[data-theme="dawn"] .detail-drawer {
-  border-left: 1px solid rgba(54, 82, 129, 0.12);
-  background: rgba(255, 255, 255, 0.36);
 }
 
 :root[data-theme="dawn"] .main-workspace {
@@ -89,7 +83,6 @@
 :root[data-theme="dawn"] .expand-task,
 :root[data-theme="dawn"] .settings-card,
 :root[data-theme="dawn"] .project-card,
-:root[data-theme="dawn"] .template-card,
 :root[data-theme="dawn"] .timeline-task-popover {
   border-color: rgba(54, 82, 129, 0.12);
   border-radius: 18px;
@@ -124,7 +117,6 @@
 }
 
 :root[data-theme="dawn"] .btn-primary,
-:root[data-theme="dawn"] .primary-btn,
 :root[data-theme="dawn"] .seg button.active {
   color: #fff;
   background: linear-gradient(135deg, #4e8ff5, #3478ee);

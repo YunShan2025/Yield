@@ -4,7 +4,7 @@ import { useAppStore } from "@/store/app";
 import { getSubtasks, subtaskProgress } from "@/lib/tasks";
 import { priorityLabel } from "@/lib/dates";
 import { DatePicker } from "@/components/DatePicker";
-import { TimePicker } from "@/components/TimePicker";
+import { TimeDropdown } from "@/components/TimePicker";
 import type { Task } from "@/types";
 
 /** 把完成时刻（ISO）拆成本地日期 + 时间供表单编辑。 */
@@ -64,7 +64,7 @@ function CompletedTimeEditor({
           </label>
           <label>
             完成时间
-            <TimePicker value={time} onChange={setTime} />
+            <TimeDropdown ariaLabel="完成时间" value={time} onChange={setTime} />
           </label>
         </div>
         <div className="completed-time-actions">

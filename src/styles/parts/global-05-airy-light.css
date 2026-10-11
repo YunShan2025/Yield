@@ -35,15 +35,13 @@ select {
   background: #fbfcfe;
 }
 
-.btn-primary,
-.primary-btn {
+.btn-primary {
   color: #fff;
   background: #7b91d8;
   box-shadow: 0 7px 16px rgba(113, 136, 212, 0.16);
 }
 
-.btn-primary:hover,
-.primary-btn:hover {
+.btn-primary:hover {
   background: #6d84cd;
   box-shadow: 0 8px 18px rgba(113, 136, 212, 0.2);
 }
@@ -282,6 +280,27 @@ select {
   gap: 7px;
 }
 
+/* 任务表单的开始/截止时间：时、分两个紧凑下拉 */
+.time-dropdown-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-dropdown-group .time-dropdown {
+  min-width: 0;
+  flex: 1 1 0;
+  padding-left: 10px;
+  padding-right: 22px;
+  text-align: center;
+}
+
+.time-dropdown-unit {
+  color: var(--text-muted);
+  font-size: 12px;
+  user-select: none;
+}
+
 .time-range-arrow {
   padding-bottom: 12px;
   color: var(--text-muted);
@@ -302,41 +321,6 @@ select {
   color: var(--text-overdue);
 }
 
-.time-picker {
-  position: relative;
-}
-
-.time-picker-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-input);
-  cursor: pointer;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
-
-.time-picker-trigger:hover {
-  border-color: var(--accent);
-}
-
-.time-picker-trigger > span {
-  flex: 1;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.time-picker-trigger.is-empty {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
 .time-picker-glyph,
 .time-picker-caret {
   flex: none;
@@ -345,110 +329,6 @@ select {
 
 .time-picker-caret {
   transition: transform var(--transition);
-}
-
-.time-picker-trigger[aria-expanded="true"] .time-picker-caret {
-  transform: rotate(180deg);
-}
-
-.time-picker-trigger:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
-.time-picker-pop {
-  position: fixed;
-  z-index: 120;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface-elevated);
-  box-shadow: var(--shadow-soft);
-  display: grid;
-  gap: 10px;
-  animation: time-picker-in 0.14s ease-out;
-}
-
-@keyframes time-picker-in {
-  from { opacity: 0; transform: translateY(-3px); }
-  to { opacity: 1; transform: none; }
-}
-
-.time-picker-section {
-  display: grid;
-  gap: 6px;
-}
-
-.time-picker-section-label {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-
-.time-picker-grid {
-  display: grid;
-  gap: 5px;
-}
-
-.time-picker-grid.hours {
-  grid-template-columns: repeat(6, 1fr);
-}
-
-.time-picker-grid.minutes {
-  grid-template-columns: repeat(6, 1fr);
-}
-
-.time-picker-precise {
-  display: flex;
-  gap: 7px;
-  padding-top: 9px;
-  border-top: 1px solid var(--border);
-}
-
-.time-picker-precise input {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 10px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.time-picker-precise input.is-invalid {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 14%, transparent);
-}
-
-.time-picker-precise .btn-ghost {
-  flex: none;
-  width: auto;
-  min-height: 36px;
-}
-
-.time-chip {
-  padding: 7px 0;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-secondary);
-  font-size: 12.5px;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition: border-color var(--transition), background-color var(--transition), color var(--transition);
-}
-
-.time-chip:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.time-chip.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--text-on-accent);
 }
 
 .btn-primary:hover {
@@ -551,13 +431,6 @@ select {
 .seg button.active {
   background: var(--accent);
   color: white;
-}
-
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 0 22px 12px;
 }
 
 .chip {
@@ -692,29 +565,6 @@ select {
   margin: 0 0 10px;
   font-size: 13px;
   color: var(--text-secondary);
-}
-
-.board-card {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  cursor: grab;
-  background: var(--bg-root);
-  margin-bottom: 8px;
-  box-shadow: 0 1px 0 var(--border);
-}
-
-.board-card:hover {
-  border-color: var(--border-strong);
-}
-
-.board-card .task-title {
-  overflow-wrap: anywhere;
-  word-break: normal;
-  white-space: normal;
 }
 
 .calendar-grid {
@@ -1016,15 +866,13 @@ select {
   background: #ea580c;
 }
 
-.timeline-h-event.p4,
-.timeline-h-event.p5 {
+.timeline-h-event.p4 {
   background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
   border-color: rgba(31, 42, 55, 0.1);
   box-shadow: 0 4px 12px rgba(31, 42, 55, 0.06);
 }
 
-.timeline-h-event.p4::before,
-.timeline-h-event.p5::before {
+.timeline-h-event.p4::before {
   background: var(--text-muted);
 }
 
@@ -1459,28 +1307,6 @@ select {
   margin-top: 4px;
 }
 
-.day-item {
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  gap: 10px;
-  align-items: start;
-  padding: 12px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  cursor: pointer;
-  margin-bottom: 6px;
-  background: var(--bg-panel);
-}
-
-.day-item:hover {
-  border-color: var(--border-strong);
-}
-
-.day-item.is-done .task-title {
-  color: var(--text-muted);
-  text-decoration: line-through;
-}
-
 .week-board {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1836,11 +1662,6 @@ select {
   gap: 10px;
 }
 
-.detail-view-tags {
-  display: grid;
-  gap: 8px;
-}
-
 .detail-meta {
   display: flex;
   flex-direction: column;
@@ -1872,12 +1693,6 @@ select {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
-}
-
-.tag-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
 }
 
 .tag-pill {
