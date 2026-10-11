@@ -315,12 +315,12 @@ export async function createAchievement(
   const db = await getDb();
   await db.execute(
     `INSERT OR IGNORE INTO achievements
-     (id,goal_id,title,description,achieved_at,image_path,source_type,source_id,pinned,created_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+     (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
     [
       createId(), input.goal_id ?? null, input.title.trim(),
       input.description?.trim() ?? "", input.achieved_at,
-      input.image_path ?? null, input.source_type, input.source_id ?? null,
+      input.source_type, input.source_id ?? null,
       input.pinned ?? 0, nowIso(),
     ],
   );

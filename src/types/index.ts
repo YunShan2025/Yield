@@ -68,7 +68,6 @@ export interface Task {
   energy_level: "low" | "medium" | "high";
   flexible: number;
   schedule_locked: number;
-  actual_minutes: number;
   goal_id: string | null;
   goal_contribution: number;
   /** Repeat occurrence spawned when completing another task. */
@@ -129,7 +128,6 @@ export interface Timer {
   remaining_sec: number;
   running: number;
   enabled: number;
-  task_id: string | null;
   ends_at: string | null;
   last_fired_at: string | null;
   created_at: string;
@@ -140,7 +138,6 @@ export interface TimerDraft {
   kind: TimerKind;
   title: string;
   interval_sec: number;
-  task_id?: string | null;
   /** If true, start running immediately. */
   start?: boolean;
 }
@@ -190,7 +187,6 @@ export interface TaskUpdate {
   energy_level?: Task["energy_level"];
   flexible?: number;
   schedule_locked?: number;
-  actual_minutes?: number;
   goal_id?: string | null;
   goal_contribution?: number;
   sort_order?: number;
@@ -324,7 +320,6 @@ export interface Achievement {
   title: string;
   description: string;
   achieved_at: string;
-  image_path: string | null;
   source_type: "manual" | "milestone" | "goal";
   source_id: string | null;
   pinned: number;

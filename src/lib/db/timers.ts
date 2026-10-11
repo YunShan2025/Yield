@@ -7,7 +7,6 @@ function mapTimer(row: Timer): Timer {
   return {
     ...row,
     kind: row.kind === "task" ? "task" : "interval",
-    task_id: row.task_id ?? null,
     ends_at: row.ends_at ?? null,
     last_fired_at: row.last_fired_at ?? null,
     running: Number(row.running) ? 1 : 0,
@@ -38,7 +37,6 @@ export async function createTimer(draft: TimerDraft): Promise<Timer> {
     remaining_sec: Math.max(5, Math.floor(draft.interval_sec)),
     running: start ? 1 : 0,
     enabled: 1,
-    task_id: draft.task_id ?? null,
     ends_at: endsAt,
     last_fired_at: null,
     created_at: now,
@@ -47,8 +45,8 @@ export async function createTimer(draft: TimerDraft): Promise<Timer> {
   await db.execute(
     `INSERT INTO timers (
       id, kind, title, interval_sec, remaining_sec, running, enabled,
-      task_id, ends_at, last_fired_at, created_at, updated_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      ends_at, last_fired_at, created_at, updated_at
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
     [
       timer.id,
       timer.kind,
@@ -57,7 +55,6 @@ export async function createTimer(draft: TimerDraft): Promise<Timer> {
       timer.remaining_sec,
       timer.running,
       timer.enabled,
-      timer.task_id,
       timer.ends_at,
       timer.last_fired_at,
       timer.created_at,
@@ -79,7 +76,6 @@ export async function updateTimer(
       | "enabled"
       | "ends_at"
       | "last_fired_at"
-      | "task_id"
     >
   >,
 ): Promise<Timer | null> {
@@ -98,15 +94,14 @@ export async function updateTimer(
   await db.execute(
     `UPDATE timers SET
       title=$1, interval_sec=$2, remaining_sec=$3, running=$4, enabled=$5,
-      task_id=$6, ends_at=$7, last_fired_at=$8, updated_at=$9
-    WHERE id=$10`,
+      ends_at=$6, last_fired_at=$7, updated_at=$8
+    WHERE id=$9`,
     [
       next.title,
       next.interval_sec,
       next.remaining_sec,
       next.running,
       next.enabled,
-      next.task_id,
       next.ends_at,
       next.last_fired_at,
       next.updated_at,

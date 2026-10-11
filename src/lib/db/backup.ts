@@ -155,8 +155,8 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         completed_at, deleted_at, parent_id, repeat_rule,
         project_id,
         blocked_by_id, completion_criteria, energy_level, flexible, schedule_locked,
-        actual_minutes, goal_id, goal_contribution, generated_from_id
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)`,
+        goal_id, goal_contribution, generated_from_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
       [
         task.id,
         task.title,
@@ -180,7 +180,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         task.energy_level ?? "medium",
         task.flexible ?? 1,
         task.schedule_locked ?? 0,
-        task.actual_minutes ?? 0,
         task.goal_id ?? null,
         task.goal_contribution ?? 1,
         task.generated_from_id ?? null,
@@ -324,22 +323,22 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   for (const achievement of payload.achievements ?? []) {
     await db.execute(
       `INSERT INTO achievements
-       (id,goal_id,title,description,achieved_at,image_path,source_type,source_id,pinned,created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [achievement.id,achievement.goal_id,achievement.title,achievement.description,
-       achievement.achieved_at,achievement.image_path,achievement.source_type,
+       achievement.achieved_at,achievement.source_type,
        achievement.source_id,achievement.pinned,achievement.created_at],
     );
   }
   for (const timer of payload.timers ?? []) {
     await db.execute(
       `INSERT INTO timers
-       (id,kind,title,interval_sec,remaining_sec,running,enabled,task_id,ends_at,
+       (id,kind,title,interval_sec,remaining_sec,running,enabled,ends_at,
         last_fired_at,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
       [
         timer.id, timer.kind, timer.title, timer.interval_sec,
-        timer.remaining_sec, timer.running, timer.enabled, timer.task_id,
+        timer.remaining_sec, timer.running, timer.enabled,
         timer.ends_at, timer.last_fired_at, timer.created_at, timer.updated_at,
       ],
     );

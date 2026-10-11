@@ -1,5 +1,5 @@
 /**
- * 双端同步集成测试：两台"设备"各自持有真实内存 SQLite（含 migration v1–v3
+ * 双端同步集成测试：两台"设备"各自持有真实内存 SQLite（含 migration v1–v13
  * 全部触发器）+ 临时目录日志文件，通过内存传输交换日志，驱动真实 runSync。
  * 覆盖：对账闭环（建/改/删）、离线交错与同键并发收敛、回声抑制、
  * settings 白名单、水位增量、基线回填。
@@ -20,7 +20,7 @@ import type { LogReadState } from "./log";
 let schemaSql = "";
 beforeAll(() => {
   const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
-  schemaSql = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  schemaSql = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
       const a = src.indexOf('sql: r#"', i) + 8;
@@ -180,6 +180,78 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     // 旧格式条目（schema_v ≤ 本端）也能解析，本地日志不再反复重排。
     const pending = await a.rows("SELECT count(*) AS c FROM sync_outbox");
     expect(pending[0]?.c ?? 0).toBe(0);
+  });
+
+  it("混合 schema：旧端条目携带已删列，新端白名单投影后正常应用", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    // 双端都在 v13 schema（冗余列已 DROP）。A 建一条任务并同步，水位推进。
+    await a.run(
+      `INSERT INTO tasks (id,title,status,created_at,updated_at)
+       VALUES ('t1','旧任务','pending','2026-09-16T03:00:00.000Z','2026-09-16T03:00:00.000Z')`,
+    );
+    await a.sync();
+    await b.sync();
+
+    // 模拟旧端（schema_v=4，actual_minutes 列仍在）发来的条目：data 携带
+    // 新 schema 已删除的键。新端应过滤掉未知键后应用，而不是整条失败。
+    const oldTask = JSON.stringify({
+      hlc: { p: Date.parse("2026-09-16T03:10:00.000Z"), l: 0, d: "legacy" },
+      schema_v: 4,
+      op: "upsert",
+      table: "tasks",
+      row_id: "t1",
+      data: {
+        id: "t1",
+        title: "旧端改题",
+        status: "pending",
+        created_at: "2026-09-16T03:00:00.000Z",
+        updated_at: "2026-09-16T03:10:00.000Z",
+        actual_minutes: 42,
+      },
+    });
+    await a.rewriteLocal(a.readLocalLog() + oldTask + "\n");
+    // A 上传整文件，旧条目才会到达对端。
+    await a.sync();
+
+    const s = await b.sync();
+    expect(s.errors).toEqual([]);
+    expect(await b.rows("SELECT title FROM tasks WHERE id='t1'")).toEqual([
+      { title: "旧端改题" },
+    ]);
+    // 对端 v13 schema 已无 actual_minutes 列，被投影过滤的键不会落库。
+    const taskCols = await b.rows("PRAGMA table_info(tasks)");
+    expect(taskCols.map((c) => c.name)).not.toContain("actual_minutes");
+
+    // 同样覆盖 timers.task_id：旧端条目带 task_id，新端过滤后应用。
+    const oldTimer = JSON.stringify({
+      hlc: { p: Date.parse("2026-09-16T03:20:00.000Z"), l: 0, d: "legacy" },
+      schema_v: 4,
+      op: "upsert",
+      table: "timers",
+      row_id: "tm1",
+      data: {
+        id: "tm1",
+        kind: "countdown",
+        title: "旧端倒计时",
+        interval_sec: 1500,
+        remaining_sec: 1500,
+        created_at: "2026-09-16T03:20:00.000Z",
+        updated_at: "2026-09-16T03:20:00.000Z",
+        task_id: "t-gone",
+      },
+    });
+    await a.rewriteLocal(a.readLocalLog() + oldTimer + "\n");
+    await a.sync();
+    const s2 = await b.sync();
+    expect(s2.errors).toEqual([]);
+    expect(await b.rows("SELECT title FROM timers WHERE id='tm1'")).toEqual([
+      { title: "旧端倒计时" },
+    ]);
+    const timerCols = await b.rows("PRAGMA table_info(timers)");
+    expect(timerCols.map((c) => c.name)).not.toContain("task_id");
   });
 
   it("项目标签回填后经 migration v11 重推，同步到对端", async () => {

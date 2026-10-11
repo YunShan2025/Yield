@@ -88,7 +88,6 @@ export function mapTask(row: Task): Task {
     energy_level: row.energy_level ?? "medium",
     flexible: row.flexible ?? 1,
     schedule_locked: row.schedule_locked ?? 0,
-    actual_minutes: row.actual_minutes ?? 0,
     goal_id: row.goal_id ?? null,
     goal_contribution: row.goal_contribution ?? 1,
     generated_from_id: row.generated_from_id ?? null,

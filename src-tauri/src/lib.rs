@@ -1268,6 +1268,22 @@ FROM projects WHERE tag_id IS NOT NULL;
             sql: r#"ALTER TABLE projects ADD COLUMN deleted_at TEXT;"#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 13,
+            description: "drop_dead_columns",
+            // 三个零值/恒空冗余列下线：tasks.actual_minutes（「实际用时」
+            // 从未落地，恒 0）、timers.task_id（任务关联提醒未落地，
+            // 恒 NULL）、achievements.image_path（成就配图未落地，恒 NULL）。
+            // 同步列白名单同步收窄，SYNC_SCHEMA_VERSION 升至 5：旧端条目
+            // 带这些键时经 projectRowData 白名单投影自然丢弃；新端条目在
+            // 旧端被 schema 闸门整体拒收并提示升级，不存在静默丢列。
+            sql: r#"
+ALTER TABLE tasks DROP COLUMN actual_minutes;
+ALTER TABLE timers DROP COLUMN task_id;
+ALTER TABLE achievements DROP COLUMN image_path;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

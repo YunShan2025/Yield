@@ -269,7 +269,6 @@ export function isRecyclableGeneratedTask(
     | "due_date"
     | "due_time"
     | "repeat_rule"
-    | "actual_minutes"
     | "notes"
     | "description"
   >,
@@ -280,7 +279,6 @@ export function isRecyclableGeneratedTask(
   if (generated.status === "completed" || generated.status === "cancelled") {
     return false;
   }
-  if ((generated.actual_minutes ?? 0) > 0) return false;
   if (generated.title !== source.title) return false;
   if ((generated.notes ?? "") !== (source.notes ?? "")) return false;
   if ((generated.description ?? "") !== (source.description ?? "")) return false;

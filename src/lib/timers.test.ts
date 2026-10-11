@@ -11,7 +11,6 @@ function timer(partial: Partial<Timer>): Timer {
     remaining_sec: 60,
     running: 0,
     enabled: 1,
-    task_id: null,
     ends_at: null,
     last_fired_at: null,
     created_at: "",

@@ -73,8 +73,11 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
  * 提示升级，不再静默丢字段；本版本解析时接受 ≤ 自身版本的条目（旧格式
  * 是新格式的列子集，白名单会滤掉已删列），保证升级顺序无关的收敛。
  * v4（v1.1.4）：projects.deleted_at（项目回收站）进入日志，同理升版。
+ * v5（v1.1.5+）：tasks.actual_minutes / timers.task_id / achievements.image_path
+ * 下线（migration v13 删列），日志不再携带；旧格式条目（schema_v ≤ 5）
+ * 的同名键经列白名单投影自然丢弃。
  */
-export const SYNC_SCHEMA_VERSION = 4;
+export const SYNC_SCHEMA_VERSION = 5;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);

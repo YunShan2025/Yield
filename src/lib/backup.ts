@@ -121,7 +121,7 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
     if (!isYmd(task.due_date)) {
       errors.push(`任务 ${task.id} 的日期不合法`);
     }
-    for (const value of [task.sort_order, task.actual_minutes, task.goal_contribution, task.flexible]) {
+    for (const value of [task.sort_order, task.goal_contribution, task.flexible]) {
       if (typeof value === "number" && !Number.isFinite(value)) {
         errors.push(`任务 ${task.id} 含有非有限数值`);
       }
@@ -200,7 +200,7 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
       (item) => !item.task_id || taskIds.has(item.task_id),
     ),
     taskEvents: payload.taskEvents?.filter((item) => taskIds.has(item.task_id)),
-    timers: payload.timers?.filter((item) => !item.task_id || taskIds.has(item.task_id)),
+    timers: payload.timers,
     goalEntries: payload.goalEntries?.filter((item) => {
       if (hasGoals && !goalIds.has(item.goal_id)) return false;
       if (item.source_type === "task" && item.source_id && !taskIds.has(item.source_id)) {

@@ -22,7 +22,6 @@ function task(partial: Partial<Task> & Pick<Task, "id" | "title">): Task {
     flexible: 1,
     schedule_locked: 0,
     completion_criteria: "",
-    actual_minutes: 0,
     completed_at: null,
     deleted_at: null,
     parent_id: null,

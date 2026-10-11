@@ -26,7 +26,6 @@ function makeTask(patch: Partial<Task> & { id: string }): Task {
     energy_level: "medium",
     flexible: 1,
     schedule_locked: 0,
-    actual_minutes: 0,
     goal_id: null,
     goal_contribution: 0,
     generated_from_id: null,

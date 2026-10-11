@@ -12,9 +12,6 @@ export const KEY_SYNC_FEISHU_APP_ID = "sync_feishu_app_id";
 export const KEY_SYNC_FEISHU_APP_SECRET = "sync_feishu_app_secret";
 export const KEY_SYNC_FEISHU_FOLDER_TOKEN = "sync_feishu_folder_token";
 
-/** 同步引擎节流：两次自动同步的最小间隔（毫秒），防止编辑风暴期间反复整文件上传。 */
-export const SYNC_DEBOUNCE_MS = 30_000;
-
 /** 设备本地键判定：backup 导出时剔除，同步白名单天然不含。 */
 export function isSyncLocalOnlyKey(key: string): boolean {
   return key.startsWith("sync_");

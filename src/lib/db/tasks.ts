@@ -88,7 +88,6 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
     energy_level: draft.energy_level ?? "medium",
     flexible: draft.flexible ?? 1,
     schedule_locked: draft.schedule_locked ?? 0,
-    actual_minutes: 0,
     goal_id: draft.goal_id ?? null,
     goal_contribution: draft.goal_contribution ?? 1,
     generated_from_id: draft.generated_from_id ?? null,
@@ -101,8 +100,8 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
       completed_at, deleted_at, parent_id, repeat_rule,
       project_id,
       blocked_by_id, completion_criteria, energy_level, flexible, schedule_locked,
-      actual_minutes, goal_id, goal_contribution, generated_from_id
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)`,
+      goal_id, goal_contribution, generated_from_id
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
     [
       task.id,
       task.title,
@@ -126,7 +125,6 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
       task.energy_level,
       task.flexible,
       task.schedule_locked,
-      task.actual_minutes,
       task.goal_id,
       task.goal_contribution,
       task.generated_from_id,
@@ -231,8 +229,8 @@ async function updateTaskWithinTransaction(
       parent_id=$11, repeat_rule=$12, sort_order=$13,
       project_id=$14, blocked_by_id=$15,
       completion_criteria=$16, energy_level=$17, flexible=$18,
-      schedule_locked=$19, actual_minutes=$20, goal_id=$21, goal_contribution=$22
-    WHERE id=$23`,
+      schedule_locked=$19, goal_id=$20, goal_contribution=$21
+    WHERE id=$22`,
     [
       next.title,
       next.description,
@@ -253,7 +251,6 @@ async function updateTaskWithinTransaction(
       next.energy_level,
       next.flexible,
       next.schedule_locked,
-      next.actual_minutes,
       next.goal_id,
       next.goal_contribution,
       id,

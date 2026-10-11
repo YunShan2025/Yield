@@ -42,8 +42,6 @@ export function hlcFromString(s: string): Hlc | null {
   return { p: Number(m[1]), l: Number(m[2]), d: m[3] };
 }
 
-export type HlcState = { p: number; l: number };
-
 /**
  * 单设备的 HLC 时钟。状态必须跨重启持久化（见 snapshot/restore），
  * 否则重启后 l 归零、p 回落到当前墙钟，会破坏单调性。

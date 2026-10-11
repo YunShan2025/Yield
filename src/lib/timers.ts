@@ -1,11 +1,5 @@
 import type { Timer } from "@/types";
 
-export const TIMER_PRESETS: { title: string; interval_sec: number }[] = [
-  { title: "喝水", interval_sec: 30 * 60 },
-  { title: "站起来活动", interval_sec: 50 * 60 },
-  { title: "护眼休息", interval_sec: 45 * 60 },
-];
-
 export function formatCountdown(totalSec: number): string {
   const sec = Math.max(0, Math.floor(totalSec));
   const h = Math.floor(sec / 3600);

@@ -46,7 +46,6 @@ describe("backup coverage", () => {
     }
     expect(source).toContain("reminder_minutes_json");
     expect(source).toContain("completion_criteria");
-    expect(source).toContain("actual_minutes");
     expect(source).toContain("goal_contribution");
     expect(source).toContain("task.flexible ?? 1");
     expect(source).toContain("schedule_locked");
@@ -145,7 +144,6 @@ describe("backup pure helpers", () => {
               energy_level: "medium",
               flexible: 1,
               schedule_locked: 0,
-              actual_minutes: 0,
               goal_id: null,
               goal_contribution: 1,
               generated_from_id: null,
@@ -174,7 +172,6 @@ describe("backup pure helpers", () => {
               energy_level: "medium",
               flexible: 1,
               schedule_locked: 0,
-              actual_minutes: 0,
               goal_id: null,
               goal_contribution: 1,
               generated_from_id: null,
@@ -210,7 +207,6 @@ describe("backup pure helpers", () => {
             energy_level: "medium",
             flexible: 1,
             schedule_locked: 0,
-            actual_minutes: 0,
             goal_id: null,
             goal_contribution: 1,
             generated_from_id: null,
@@ -259,7 +255,6 @@ describe("backup pure helpers", () => {
       energy_level: "medium" as const,
       flexible: 1,
       schedule_locked: 0,
-      actual_minutes: 0,
       goal_id: null,
       goal_contribution: 1,
       generated_from_id: "missing-source",

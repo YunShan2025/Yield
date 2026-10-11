@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -105,6 +105,23 @@ describe("database migration declarations", () => {
     expect(match?.[1] ?? "").toContain(
       "ALTER TABLE task_planning_metadata DROP COLUMN estimated_minutes",
     );
+  });
+
+  it("drops dead zero-value columns via migration v13", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*13,\s*description:\s*"drop_dead_columns",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 三个从未被功能消费的恒 0/NULL 列下线；不参与任何索引/约束，
+    // 列删后同步白名单（SYNC_SCHEMA_VERSION 5）负责旧格式条目兼容。
+    expect(sql).toContain("ALTER TABLE tasks DROP COLUMN actual_minutes");
+    expect(sql).toContain("ALTER TABLE timers DROP COLUMN task_id");
+    expect(sql).toContain("ALTER TABLE achievements DROP COLUMN image_path");
   });
 
   it("drops project goal/criteria/milestones via migration v10", () => {

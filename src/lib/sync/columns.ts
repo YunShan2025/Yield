@@ -22,7 +22,7 @@ const TASK_COLUMNS = [
   "title", "description", "notes", "priority", "status", "due_date", "due_time",
   "end_time", "sort_order", "created_at", "updated_at", "completed_at", "deleted_at",
   "parent_id", "repeat_rule", "project_id", "blocked_by_id", "completion_criteria",
-  "energy_level", "flexible", "schedule_locked", "actual_minutes", "goal_id",
+  "energy_level", "flexible", "schedule_locked", "goal_id",
   "goal_contribution", "generated_from_id",
 ];
 
@@ -81,7 +81,7 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   },
   achievements: {
     idColumns: ["id"],
-    columns: ["goal_id", "title", "description", "achieved_at", "image_path", "source_type", "source_id", "pinned", "created_at"],
+    columns: ["goal_id", "title", "description", "achieved_at", "source_type", "source_id", "pinned", "created_at"],
   },
   memos: {
     idColumns: ["id"],
@@ -91,7 +91,7 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
     idColumns: ["id"],
     columns: [
       "kind", "title", "interval_sec", "remaining_sec", "running", "enabled",
-      "task_id", "ends_at", "last_fired_at", "created_at", "updated_at",
+      "ends_at", "last_fired_at", "created_at", "updated_at",
     ],
   },
   ledger_categories: {
@@ -120,9 +120,6 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
     columns: ["month", "amount_cents", "created_at", "updated_at"],
   },
 };
-
-/** settings 特例：键值表，键级 LWW。 */
-export const SETTINGS_SPEC = { keyColumn: "key", valueColumn: "value" };
 
 /**
  * task_tags 的复合 row_id 分隔符。task/tag id 都是 UUID（hex 与连字符），
