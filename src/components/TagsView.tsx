@@ -3,6 +3,7 @@ import { useAppStore } from "@/store/app";
 import { confirmAction } from "@/components/AppConfirm";
 import { filterTasksByView, taskRowClassName } from "@/lib/tasks";
 import { formatDueDate, formatDayStamp } from "@/lib/dates";
+import { AppIcon } from "@/components/AppIcon";
 import type { Tag } from "@/types";
 
 const TAG_PALETTE = [
@@ -204,14 +205,15 @@ export function TagsView() {
                     <div className="tag-card-actions">
                       <button
                         type="button"
-                        className="btn-ghost"
+                        className="item-action-btn item-action-edit"
                         onClick={() => beginEditTag(tag)}
                       >
-                        修改
+                        <AppIcon name="edit" size={14} />
+                        <span>编辑</span>
                       </button>
                       <button
                         type="button"
-                        className="btn-ghost danger"
+                        className="item-action-btn item-action-danger"
                         onClick={() => {
                           void confirmAction({
                             title: `删除标签「${tag.name}」？`,
@@ -223,7 +225,8 @@ export function TagsView() {
                           });
                         }}
                       >
-                        删除
+                        <AppIcon name="trash" size={14} />
+                        <span>删除</span>
                       </button>
                     </div>
                   </article>
@@ -361,10 +364,10 @@ export function TagsView() {
               />
             </label>
             <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={() => setCreating(false)}>取消</button>
+              <button type="button" className="btn-ghost item-action-btn" onClick={() => setCreating(false)}>取消</button>
               <button
                 type="submit"
-                className="btn-primary"
+                className="btn-primary item-action-btn item-action-primary"
                 disabled={!createName.trim() || savingCreate}
               >
                 {savingCreate ? "创建中…" : "创建标签"}
@@ -411,8 +414,8 @@ export function TagsView() {
               />
             </label>
             <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={() => setEditingTag(null)}>取消</button>
-              <button type="submit" className="btn-primary">保存修改</button>
+              <button type="button" className="btn-ghost item-action-btn" onClick={() => setEditingTag(null)}>取消</button>
+              <button type="submit" className="btn-primary item-action-btn item-action-primary">保存修改</button>
             </div>
           </form>
         </div>

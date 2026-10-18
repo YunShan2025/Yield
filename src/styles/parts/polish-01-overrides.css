@@ -346,11 +346,6 @@
   background: var(--accent);
 }
 
-/* 行级删除按钮:与「详情」同层级,字号对齐详情按钮。 */
-.expand-task-row > .expand-delete {
-  font-size: 12px;
-}
-
 .reminder-chip {
   padding: 2px 6px;
   border-radius: 999px;

@@ -21,16 +21,20 @@ import {
   isActiveTask,
 } from "@/lib/tasks";
 import { formatDueDate, formatTimeRange, todayDateString, addDays, formatLongDate, formatStamp, weekDates, parseDate, startOfWeek, parseTimeToMinutes } from "@/lib/dates";
-import type { Project, Task } from "@/types";
+import type { Habit, Project, Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
+import { AppIcon } from "@/components/AppIcon";
 import { confirmAction } from "@/components/AppConfirm";
 import {
   fetchDeletedProjects,
+  fetchDeletedHabits,
   fetchLedgerTrash,
   formatLedgerMoney,
   purgeLedgerTransaction,
   purgeProject,
+  purgeHabit,
   restoreDeletedProject,
+  restoreDeletedHabit,
   restoreLedgerTransaction,
   type LedgerTransaction,
 } from "@/lib/db";
@@ -504,6 +508,7 @@ function TrashView() {
   const [ledgerTrash, setLedgerTrash] = useState<LedgerTransaction[]>([]);
   // 项目回收站：软删的项目行（同样走本地状态，任务回收站来自 store）。
   const [projectTrash, setProjectTrash] = useState<Project[]>([]);
+  const [habitTrash, setHabitTrash] = useState<Habit[]>([]);
   const loadLedgerTrash = async () => {
     try {
       setLedgerTrash(await fetchLedgerTrash());
@@ -518,17 +523,26 @@ function TrashView() {
       /* 回收站里项目加载失败不阻塞任务列表 */
     }
   };
+  const loadHabitTrash = async () => {
+    try {
+      setHabitTrash(await fetchDeletedHabits());
+    } catch {
+      /* 回收站里习惯加载失败不阻塞任务列表 */
+    }
+  };
   useEffect(() => {
     void loadLedgerTrash();
     void loadProjectTrash();
+    void loadHabitTrash();
     const reload = () => {
       void loadLedgerTrash();
       void loadProjectTrash();
+      void loadHabitTrash();
     };
     window.addEventListener("youqiu:sync-applied", reload);
     return () => window.removeEventListener("youqiu:sync-applied", reload);
   }, []);
-  const total = trashTasks.length + ledgerTrash.length + projectTrash.length;
+  const total = trashTasks.length + ledgerTrash.length + projectTrash.length + habitTrash.length;
 
   const restoreLedger = async (id: number) => {
     if (await restoreLedgerTransaction(id)) await loadLedgerTrash();
@@ -563,9 +577,15 @@ function TrashView() {
               if (ledgerTrash.length) {
                 for (const item of ledgerTrash) await purgeLedgerTransaction(item.id);
               }
+              if (habitTrash.length) {
+                for (const item of habitTrash) await purgeHabit(item.id);
+                await refreshAll();
+                void loadHabitTrash();
+              }
               void purgeTrash();
               void loadProjectTrash();
               void loadLedgerTrash();
+              void loadHabitTrash();
             });
           }}
         >
@@ -594,14 +614,15 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="btn-ghost"
+                  className="item-action-btn item-action-archive"
                   onClick={() => void restoreTask(task.id)}
                 >
-                  恢复
+                  <AppIcon name="review" size={14} />
+                  <span>恢复</span>
                 </button>
                 <button
                   type="button"
-                  className="btn-ghost danger"
+                  className="item-action-btn item-action-danger"
                   onClick={() => {
                     void confirmAction({
                       title: `永久删除「${task.title}」？`,
@@ -613,7 +634,56 @@ function TrashView() {
                     });
                   }}
                 >
-                  永久删除
+                  <AppIcon name="trash" size={14} />
+                  <span>永久删除</span>
+                </button>
+              </div>
+            </article>
+          ))}
+          {habitTrash.map((habit) => (
+            <article key={`habit-${habit.id}`} className="trash-item">
+              <div className="trash-item-main">
+                <p className="task-title">{habit.title}</p>
+                <div className="trash-item-meta">
+                  {habit.deleted_at ? <span>删除于 {formatStamp(habit.deleted_at)}</span> : null}
+                  <span>习惯</span>
+                </div>
+              </div>
+              <div className="trash-item-actions">
+                <button
+                  type="button"
+                  className="item-action-btn item-action-archive"
+                  onClick={() =>
+                    void restoreDeletedHabit(habit.id).then(async () => {
+                      await refreshAll();
+                      await loadHabitTrash();
+                    })
+                  }
+                >
+                  <AppIcon name="review" size={14} />
+                  <span>恢复</span>
+                </button>
+                <button
+                  type="button"
+                  className="item-action-btn item-action-danger"
+                  onClick={() => {
+                    void confirmAction({
+                      title: `永久删除习惯「${habit.title}」？`,
+                      description: "不可恢复。",
+                      confirmText: "永久删除",
+                      danger: true,
+                    }).then((ok) => {
+                      if (ok) {
+                        void purgeHabit(habit.id).then(async () => {
+                          await refreshAll();
+                          await loadHabitTrash();
+                        });
+                      }
+                    });
+                  }}
+                >
+                  <AppIcon name="trash" size={14} />
+                  <span>永久删除</span>
                 </button>
               </div>
             </article>
@@ -633,7 +703,7 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="btn-ghost"
+                  className="item-action-btn item-action-archive"
                   onClick={() =>
                     void restoreDeletedProject(project.id).then(async () => {
                       // 项目回到进行中列表依赖 store 刷新，与任务恢复同款。
@@ -642,11 +712,12 @@ function TrashView() {
                     })
                   }
                 >
-                  恢复
+                  <AppIcon name="review" size={14} />
+                  <span>恢复</span>
                 </button>
                 <button
                   type="button"
-                  className="btn-ghost danger"
+                  className="item-action-btn item-action-danger"
                   onClick={() => {
                     void confirmAction({
                       title: `永久删除项目「${project.name}」？`,
@@ -664,7 +735,8 @@ function TrashView() {
                     });
                   }}
                 >
-                  永久删除
+                  <AppIcon name="trash" size={14} />
+                  <span>永久删除</span>
                 </button>
               </div>
             </article>
@@ -695,14 +767,15 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="btn-ghost"
+                  className="item-action-btn item-action-archive"
                   onClick={() => void restoreLedger(item.id)}
                 >
-                  恢复
+                  <AppIcon name="review" size={14} />
+                  <span>恢复</span>
                 </button>
                 <button
                   type="button"
-                  className="btn-ghost danger"
+                  className="item-action-btn item-action-danger"
                   onClick={() => {
                     void confirmAction({
                       title: `永久删除「${item.category_name} ${formatLedgerMoney(item.amount_cents)}」？`,
@@ -716,7 +789,8 @@ function TrashView() {
                     });
                   }}
                 >
-                  永久删除
+                  <AppIcon name="trash" size={14} />
+                  <span>永久删除</span>
                 </button>
               </div>
             </article>

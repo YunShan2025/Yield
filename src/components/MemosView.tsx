@@ -228,7 +228,31 @@ export function MemosView() {
         <div className="memo-search"><AppIcon name="search" size={16} /><input placeholder="搜索备忘录" value={keyword} onChange={(event) => setKeyword(event.target.value)} /></div>
         <div className="memo-list-tabs" aria-label="备忘录分类"><button type="button" className={listMode === "active" ? "active" : ""} onClick={() => switchList("active")}>全部 <span>{activeCount}</span></button><button type="button" className={listMode === "archived" ? "active" : ""} onClick={() => switchList("archived")}>已归档 <span>{archivedCount}</span></button></div>
       </div>
-      <div className="memo-list">{visibleMemos.map((memo) => <button key={memo.id} type="button" className={`memo-list-item ${selectedId === memo.id ? "active" : ""}`} onClick={() => void selectMemo(memo)}><span className="memo-list-title-copy">{memo.pinned ? <AppIcon name="pin" size={13} /> : null}{memo.title || "无标题备忘"}</span><span className="memo-list-time">{formatMemoTime(memo.updated_at)}</span></button>)}{!visibleMemos.length ? <div className="memo-empty-list">{keyword ? "没有找到相关备忘录" : listMode === "archived" ? "还没有归档内容" : "新建一条备忘录，记录需要长期保存的内容"}</div> : null}</div>
+      <div className="memo-list">
+        {visibleMemos.map((memo) => (
+          <button
+            key={memo.id}
+            type="button"
+            className={`memo-list-item ${selectedId === memo.id ? "active" : ""}`}
+            onClick={() => void selectMemo(memo)}
+          >
+            <span className="memo-list-title-copy">
+              {memo.pinned ? <AppIcon name="pin" size={13} /> : null}
+              {memo.title || "无标题备忘"}
+            </span>
+            <span className="memo-list-time">{formatMemoTime(memo.updated_at)}</span>
+          </button>
+        ))}
+        {!visibleMemos.length ? (
+          <div className="memo-empty-list">
+            {keyword
+              ? "没有找到相关备忘录"
+              : listMode === "archived"
+                ? "还没有归档内容"
+                : "新建一条备忘录，记录需要长期保存的内容"}
+          </div>
+        ) : null}
+      </div>
     </div>
 
     {selected ? <aside className="detail-panel memo-detail-panel">
@@ -256,17 +280,17 @@ export function MemosView() {
       <div className="detail-footer">
         {editing ? (
           <>
-            <button type="button" className="btn-primary" onClick={() => void save()}>保存并返回</button>
-            <button type="button" className="btn-ghost" onClick={() => applyMemo(selected)}>取消</button>
+            <button type="button" className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存并返回</button>
+            <button type="button" className="btn-ghost item-action-btn" onClick={() => applyMemo(selected)}>取消</button>
           </>
         ) : (
           <>
-            <button type="button" className="btn-primary" onClick={startEditing}>编辑</button>
-            <button type="button" className="btn-ghost" onClick={() => void togglePinned()}>{selected.pinned ? "取消置顶" : "置顶"}</button>
-            <button type="button" className="btn-ghost" onClick={() => void archiveSelected()}>{selected.archived ? "恢复" : "归档"}</button>
+            <button type="button" className="item-action-btn item-action-primary" onClick={startEditing}><AppIcon name="edit" size={14} /><span>编辑</span></button>
+            <button type="button" className="item-action-btn" onClick={() => void togglePinned()}><AppIcon name="pin" size={14} /><span>{selected.pinned ? "取消置顶" : "置顶"}</span></button>
+            <button type="button" className="item-action-btn item-action-archive" onClick={() => void archiveSelected()}><AppIcon name="archive" size={14} /><span>{selected.archived ? "恢复" : "归档"}</span></button>
           </>
         )}
-        <button type="button" className="btn-ghost danger" onClick={() => void removeSelected()}>删除备忘</button>
+        <button type="button" className="item-action-btn item-action-danger" onClick={() => void removeSelected()}><AppIcon name="trash" size={14} /><span>删除</span></button>
       </div>
     </aside> : null}
   </main>;

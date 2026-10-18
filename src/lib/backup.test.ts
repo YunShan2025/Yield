@@ -47,6 +47,7 @@ describe("backup coverage", () => {
     expect(source).toContain("reminder_minutes_json");
     expect(source).toContain("completion_criteria");
     expect(source).toContain("goal_contribution");
+    expect(source).toContain("fetchAllHabits");
     expect(source).toContain("task.flexible ?? 1");
     expect(source).toContain("schedule_locked");
     expect(source).toContain("version: 1");
@@ -97,6 +98,30 @@ describe("backup pure helpers", () => {
         tasks: undefined as never,
       }),
     ).toThrow(/任务或标签/);
+  });
+
+  it("accepts legacy habits without target_days and rejects invalid values", () => {
+    const legacyHabit = {
+      id: "habit-1",
+      title: "每日阅读",
+      target_per_week: 3,
+      goal_id: null,
+      goal_contribution: 1,
+      created_at: "2026-08-01T00:00:00.000Z",
+      updated_at: "2026-08-01T00:00:00.000Z",
+    };
+    expect(
+      inspectBackupPayload(
+        minimalPayload({ habits: [legacyHabit] as never }),
+      ).errors,
+    ).toEqual([]);
+    expect(
+      inspectBackupPayload(
+        minimalPayload({
+          habits: [{ ...legacyHabit, target_days: 0 }] as never,
+        }),
+      ).errors.some((item) => item.includes("目标打卡日数无效")),
+    ).toBe(true);
   });
 
   it("summarizes preserved sections when optional collections are missing", () => {

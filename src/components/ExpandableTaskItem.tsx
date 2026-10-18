@@ -5,6 +5,7 @@ import { getSubtasks, subtaskProgress } from "@/lib/tasks";
 import { priorityLabel } from "@/lib/dates";
 import { DatePicker } from "@/components/DatePicker";
 import { TimeDropdown } from "@/components/TimePicker";
+import { AppIcon } from "@/components/AppIcon";
 import type { Task } from "@/types";
 
 /** 把完成时刻（ISO）拆成本地日期 + 时间供表单编辑。 */
@@ -68,10 +69,10 @@ function CompletedTimeEditor({
           </label>
         </div>
         <div className="completed-time-actions">
-          <button type="button" className="btn-ghost" onClick={onClose}>
+          <button type="button" className="btn-ghost item-action-btn" onClick={onClose}>
             取消
           </button>
-          <button type="submit" className="btn-primary" disabled={!date || !time}>
+          <button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!date || !time}>
             保存
           </button>
         </div>
@@ -173,26 +174,28 @@ export function ExpandableTaskItem({
         {task.status === "completed" ? (
           <button
             type="button"
-            className="btn-ghost expand-detail"
+            className="item-action-btn item-action-edit"
             title="修改完成时间"
             onClick={(e) => {
               e.stopPropagation();
               setEditCompletedAt(true);
             }}
           >
-            修改完成时间
+            <AppIcon name="edit" size={14} />
+            <span>修改完成时间</span>
           </button>
         ) : null}
         <button
           type="button"
-          className="btn-ghost expand-detail"
+          className="item-action-btn"
           title="打开详情"
           onClick={(e) => {
             e.stopPropagation();
             selectTask(task.id);
           }}
         >
-          详情
+          <AppIcon name="panel" size={14} />
+          <span>详情</span>
         </button>
         {rowAction}
         {actions ? (

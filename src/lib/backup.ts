@@ -159,6 +159,12 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
     }
   }
 
+  for (const habit of payload.habits ?? []) {
+    if (habit.target_days != null && (!Number.isInteger(habit.target_days) || habit.target_days < 1)) {
+      errors.push(`习惯 ${habit.id} 的目标打卡日数无效`);
+    }
+  }
+
   return { errors, warnings: [...new Set(warnings)] };
 }
 

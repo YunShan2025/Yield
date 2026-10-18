@@ -17,6 +17,7 @@ import { useAppStore } from "@/store/app";
 import { isMobileShell } from "@/lib/platform";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
+import { AppIcon } from "@/components/AppIcon";
 import { formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
 import { confirmAction } from "@/components/AppConfirm";
 import type { Task } from "@/types";
@@ -161,29 +162,15 @@ function DayTaskRow({
           !selecting && isActiveTask(task) ? (
             <button
               type="button"
-              className="btn-ghost danger expand-delete"
+              className="item-action-btn item-action-danger expand-delete"
               title="移入回收站"
               onClick={(e) => {
                 e.stopPropagation();
                 void onDelete();
               }}
             >
-              删除
-            </button>
-          ) : null
-        }
-        actions={
-          !selecting && isActiveTask(task) && mobile ? (
-            <button
-              type="button"
-              className="btn-ghost drag-handle"
-              title="拖动排序"
-              aria-label="拖动排序"
-              onClick={(e) => e.stopPropagation()}
-              {...sortable.attributes}
-              {...sortable.listeners}
-            >
-              ⋮⋮
+              <AppIcon name="trash" size={14} />
+              <span>删除</span>
             </button>
           ) : null
         }

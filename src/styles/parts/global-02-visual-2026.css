@@ -227,16 +227,6 @@ button:active:not(:disabled) {
   font-size: 11px;
 }
 
-.expand-detail {
-  opacity: 0;
-  color: var(--accent);
-}
-
-.expand-task:hover .expand-detail,
-.expand-task:focus-within .expand-detail {
-  opacity: 1;
-}
-
 .board {
   gap: 15px;
   padding: 0 28px 28px;

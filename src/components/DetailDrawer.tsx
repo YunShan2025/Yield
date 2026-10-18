@@ -12,6 +12,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
+import { AppIcon } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import {
@@ -526,10 +527,11 @@ export function DetailDrawer() {
                 </span>
                 <button
                   type="button"
-                  className="btn-ghost danger"
+                  className="item-action-btn item-action-danger"
                   onClick={() => void removeAttachment(a.id)}
                 >
-                  删除
+                  <AppIcon name="trash" size={14} />
+                  <span>删除</span>
                 </button>
               </div>
             ))}

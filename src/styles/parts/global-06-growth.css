@@ -208,7 +208,196 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* 习惯页:与「今日」同构的页头 + 统一 28px 内容边距。 */
 .habits-view { overflow: auto; }
 .habits-body { display: flex; flex-direction: column; gap: 12px; padding: 0 28px 28px; }
-.habits-name-input { width: 200px; }
+.habits-section { display: grid; gap: 12px; }
+.habits-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+}
+.habits-card { display: grid; gap: 10px; }
+.habit-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  transition: border-color var(--transition), background var(--transition);
+}
+.habit-card:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-selected);
+}
+.habit-card-main { min-width: 0; display: grid; gap: 6px; }
+/* 列表/卡片动作按钮组：习惯卡先落地，今日/待办行、标签、项目、回收站、
+   计时器等复用同一套 .item-action-* 观感。 */
+.habit-card-actions,
+.item-action-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+.habit-action-btn,
+.item-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  min-width: 60px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text-secondary);
+  background: var(--bg-panel);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text-primary) 5%, transparent);
+  font-size: 12.5px;
+  font-weight: 650;
+  transition: transform var(--transition), color var(--transition), border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.item-action-cluster .item-action-btn { flex: none; }
+.habit-action-btn:hover:not(:disabled),
+.item-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.habit-action-btn:active:not(:disabled),
+.item-action-btn:active:not(:disabled) { transform: translateY(0); }
+.habit-action-btn:disabled,
+.item-action-btn:disabled { opacity: .42; cursor: not-allowed; }
+.habits-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.habits-card-head strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-heading);
+  font: 700 14.5px/1.4 var(--font-display);
+}
+.habits-card-meta { margin: 0; color: var(--text-muted); font-size: 12px; }
+.habit-check-btn,
+.item-action-primary {
+  min-width: 78px;
+  border-color: transparent;
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 2px 7px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.habit-check-btn:hover:not(:disabled),
+.item-action-primary:hover:not(:disabled) {
+  border-color: transparent;
+  color: #fff;
+  background: var(--accent-hover);
+}
+.habit-check-btn.is-done,
+.item-action-primary.is-done {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, .3);
+}
+.habit-edit-btn:hover:not(:disabled),
+.item-action-edit:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.habit-archive-btn:hover:not(:disabled),
+.item-action-archive:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--brand-gold) 38%, var(--border));
+  color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
+  background: color-mix(in srgb, var(--brand-gold) 10%, var(--bg-panel));
+}
+.habit-delete-btn,
+.item-action-danger {
+  border-color: color-mix(in srgb, var(--danger) 24%, var(--border));
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 5%, var(--bg-panel));
+}
+.habit-delete-btn:hover:not(:disabled),
+.item-action-danger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
+  color: #fff;
+  background: var(--danger);
+}
+.item-action-primary.danger,
+.item-action-primary.danger:hover:not(:disabled) {
+  border-color: transparent;
+  color: #fff;
+  background: var(--danger);
+}
+.habit-card.is-checked {
+  border-color: rgba(217, 119, 6, .28);
+  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  box-shadow: 0 1px 0 rgba(217, 119, 6, .12);
+}
+.habit-card.is-checked:hover {
+  border-color: rgba(217, 119, 6, .38);
+  background: linear-gradient(135deg, #fffbeb 0%, #fce9b8 100%);
+}
+.habit-card.is-checked .habits-card-head strong { color: #b45309; }
+.habit-card.is-checked .habits-card-meta { color: #a16207; }
+.habit-card.is-archived { opacity: .72; }
+/* 备忘录详情底部沿用列表动作观感；抽屉较窄，等分列会在 420px 下挤出文字，
+   改为内容自适应 + 换行。 */
+.memo-detail-panel .detail-footer {
+  flex-wrap: wrap;
+}
+.memo-detail-panel .detail-footer .item-action-btn {
+  flex: 1 1 auto;
+}
+/* 二级弹窗底部动作区沿用列表动作按钮的观感：统一按钮高度与内边距，
+   列表动作组仍由 .item-action-cluster 单独收紧尺寸。 */
+.create-task-actions .item-action-btn,
+.completed-time-actions .item-action-btn,
+.project-edit-actions .item-action-btn,
+.ledger-drawer-footer .item-action-btn,
+.goal-create-actions .item-action-btn {
+  min-height: 38px;
+  padding: 9px 13px;
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  .habit-card { grid-template-columns: 1fr; }
+  .habit-card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .habit-action-btn { width: 100%; }
+  .memo-detail-panel .detail-footer .item-action-btn {
+    flex: 1 1 calc(50% - 4px);
+  }
+}
+:root[data-theme="dark"] .habit-card.is-checked {
+  border-color: rgba(245, 158, 11, .25);
+  background: rgba(245, 158, 11, .08);
+}
+:root[data-theme="dark"] .habit-card.is-checked .habits-card-head strong { color: #fbbf24; }
+:root[data-theme="dark"] .habit-card.is-checked .habits-card-meta { color: #fcd34d; }
+.habit-unlimited-toggle { margin: -6px 0 0; }
+.project-edit-modal .habit-unlimited-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.project-edit-modal .habit-unlimited-toggle input {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  accent-color: var(--accent);
+}
+.project-edit-modal .habit-unlimited-toggle span { display: grid; gap: 2px; }
+.project-edit-modal .habit-unlimited-toggle strong { color: var(--text-heading); font-size: 13px; }
 
 /* 设置页「命名缘起」:品牌标 + 题铭 + 四词出处卡片 */
 .brand-origin-title { display: flex; align-items: center; gap: 8px; }
@@ -516,36 +705,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .tag-card-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.tag-card-actions .btn-ghost {
-  min-height: 26px;
-  padding: 3px 10px;
-  font-size: 12px;
-}
-
-/* 重命名：白底黑字；删除：红底白字 */
-.tag-card-actions .btn-ghost {
-  border: 1px solid var(--border);
-  background: #fff;
-  color: #1f2328;
-}
-
-.tag-card-actions .btn-ghost:hover {
-  background: #f2f3f5;
-}
-
-.tag-card-actions .btn-ghost.danger {
-  border-color: transparent;
-  background: var(--danger);
-  color: #fff;
-}
-
-.tag-card-actions .btn-ghost.danger:hover {
-  background: color-mix(in srgb, var(--danger) 86%, #000);
+  justify-content: flex-end;
+  gap: 7px;
 }
 
 /* 标签新建/修改弹窗里的十色色板 */
@@ -687,23 +850,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 .tag-card.project-tile .tag-card-count,
-.tag-card.project-tile .project-card-restore {
+.tag-card.project-tile .item-action-btn {
   flex: none;
-}
-
-.project-card-restore {
-  flex: none;
-  padding: 3px 12px;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  background: #fff;
-  color: #1f2328;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.project-card-restore:hover {
-  background: #f2f3f5;
 }
 
 .projects-hint {
@@ -729,22 +877,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .project-card-tag .tag-card-dot { width: 8px; height: 8px; }
 
-/* 详情区头部按钮：编辑白底黑字、归档红底白字 */
-.projects-detail .project-card-edit {
-  flex: none;
-  padding: 3px 12px;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  background: #fff;
-  color: #1f2328;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.projects-detail .project-card-edit:hover {
-  background: #f2f3f5;
-}
-
 /* 统计行：任务数靠左，标签徽标靠右 */
 .project-card-meta {
   display: flex;
@@ -761,53 +893,11 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   margin-left: auto;
 }
 
-.projects-detail .project-card-archive {
-  padding: 4px 14px;
-  border: none;
-  border-radius: 99px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.projects-detail .project-card-archive:hover {
-  background: color-mix(in srgb, var(--danger) 86%, #000);
-}
-
-/* 删除按钮：与归档同形，描边幽灵样式区分危险级别（删除可进回收站恢复） */
-.projects-detail .project-card-delete {
-  padding: 3px 12px;
-  border: 1px solid var(--danger);
-  border-radius: 99px;
-  background: transparent;
-  color: var(--danger);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.projects-detail .project-card-delete:hover {
-  background: color-mix(in srgb, var(--danger) 10%, transparent);
-}
-
 .projects-detail-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-}
-
-/* 详情区头部「关闭」按钮：与编辑/归档同款胶囊观感（白底黑字） */
-.projects-detail-actions .btn-ghost {
-  padding: 3px 12px;
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  background: #fff;
-  color: #1f2328;
-  font-size: 12px;
-}
-
-.projects-detail-actions .btn-ghost:hover {
-  background: #f2f3f5;
+  gap: 7px;
 }
 
 /* 任务链接区：默认只展示前五条（倒序），可展开全部，不做高度截断 */
@@ -944,12 +1034,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .trash-item-actions {
   display: flex;
-  gap: 6px;
-}
-
-.trash-item-actions .btn-ghost {
-  min-height: 28px;
-  padding: 4px 11px;
-  font-size: 12px;
-  white-space: nowrap;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
 }

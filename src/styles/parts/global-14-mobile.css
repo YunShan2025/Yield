@@ -171,11 +171,7 @@ html[data-shell="mobile"] .task-check {
   flex-basis: 26px;
 }
 
-/* 悬停交互在触摸屏上不存在：详情按钮常显，卡片不做悬浮位移。 */
-html[data-shell="mobile"] .expand-detail {
-  opacity: 1;
-}
-
+/* 悬停交互在触摸屏上不存在：卡片不做悬浮位移。 */
 html[data-shell="mobile"] .expand-task:hover {
   transform: none;
 }
@@ -187,20 +183,59 @@ html[data-shell="mobile"] .task-quick-actions {
 }
 
 /* 账本明细行的编辑/删除:窄屏规则把它们藏了,触摸屏没有 hover,
- * 必须常显才可达;网格加一列容纳金额与按钮并排。 */
+ * 必须常显才可达。金额与两个操作按钮共用一行,按钮收窄但保留图标和文字。 */
 html[data-shell="mobile"] .ledger-row {
-  grid-template-columns: 38px minmax(0, 1fr) auto auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  gap: 6px;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+html[data-shell="mobile"] .ledger-row-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+html[data-shell="mobile"] .ledger-row-main {
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .ledger-row-main strong,
+html[data-shell="mobile"] .ledger-row-main small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-shell="mobile"] .ledger-row > strong {
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 html[data-shell="mobile"] .ledger-row-actions {
+  grid-column: auto;
   display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  justify-content: flex-end;
   opacity: 1;
 }
 
-html[data-shell="mobile"] .ledger-row-actions button {
-  min-width: 34px;
-  min-height: 34px;
-  font-size: 12px;
+html[data-shell="mobile"] .ledger-row-actions .item-action-btn {
+  min-width: 0;
+  min-height: 28px;
+  padding: 4px 6px;
+  gap: 3px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+html[data-shell="mobile"] .ledger-row-actions .item-action-btn svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* 账本每日折叠行:日期+合计整行是手柄,触摸目标加高。 */
@@ -468,9 +503,10 @@ html[data-shell="mobile"] .desktop-notification-stack {
     justify-content: flex-end;
   }
 
-  .projects-detail .project-card-edit,
-  .projects-detail .project-card-archive,
-  .projects-detail .projects-detail-actions .btn-ghost,
+  .projects-detail .projects-detail-actions .item-action-btn {
+    flex: none;
+  }
+
   .project-tasks-toggle {
     flex: none;
     min-height: 0;
@@ -936,14 +972,21 @@ html[data-shell="mobile"] .anni-detail-dialog > footer {
   border-top: 1px solid var(--border);
 }
 
-/* 目标创建弹窗的提交是裸按钮：同上钉底，保留按钮自身的强调色。
+/* 目标创建弹窗的提交动作条：按钮沿用通用动作观感，动作条负责钉底。
    （button 的 width:100% 以内容盒为基准，负 margin 下要显式加宽
    才能拉通到屏幕两缘。） */
-html[data-shell="mobile"] .goal-create-modal > .btn-primary {
+html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
   position: sticky;
   bottom: -20px;
-  width: calc(100% + 40px);
+  display: flex;
   margin: auto -20px calc(-20px - env(safe-area-inset-bottom, 0px));
+  padding: 12px 20px env(safe-area-inset-bottom, 0px);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+
+html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-action-btn {
+  width: calc(100% + 40px);
   min-height: 52px;
   padding: 12px 20px env(safe-area-inset-bottom, 0px);
   border-radius: 0;
@@ -964,11 +1007,15 @@ html[data-shell="mobile"] .anni-detail-dialog > footer {
 
 html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .btn-primary,
 html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .btn-ghost,
+html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .item-action-btn,
 html[data-shell="mobile"] .project-edit-actions .btn-primary,
 html[data-shell="mobile"] .project-edit-actions .btn-ghost,
+html[data-shell="mobile"] .project-edit-actions .item-action-btn,
 html[data-shell="mobile"] .completed-time-actions .btn-primary,
 html[data-shell="mobile"] .completed-time-actions .btn-ghost,
-html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
+html[data-shell="mobile"] .completed-time-actions .item-action-btn,
+html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost,
+html[data-shell="mobile"] .anni-detail-dialog > footer .item-action-btn {
   width: auto;
   min-width: 0;
   min-height: 48px;
@@ -987,7 +1034,7 @@ html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
 html[data-shell="mobile"] .create-task-modal input,
 html[data-shell="mobile"] .create-task-modal .select-btn,
 html[data-shell="mobile"] .create-task-modal .date-picker-trigger,
-html[data-shell="mobile"] .project-edit-modal input,
+html[data-shell="mobile"] .project-edit-modal input:not([type="checkbox"]),
 html[data-shell="mobile"] .project-edit-modal .select-btn,
 html[data-shell="mobile"] .goal-create-modal input,
 html[data-shell="mobile"] .goal-create-modal .select-btn,

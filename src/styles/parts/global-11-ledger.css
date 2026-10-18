@@ -314,16 +314,22 @@
 }
 .ledger-row > strong.income { color: var(--ledger-income); }
 .ledger-row > strong.expense { color: var(--ledger-expense); }
-.ledger-row-actions { display: flex; opacity: 0; transition: opacity 0.15s; }
+.ledger-row-actions { opacity: 0; transition: opacity 0.15s; }
 .ledger-row:hover .ledger-row-actions,
 .ledger-row:focus-within .ledger-row-actions { opacity: 1; }
-.ledger-row-actions button {
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font-size: 11px;
-  cursor: pointer;
-  padding: 5px;
+.ledger-row-actions button { padding: 5px 9px; font-size: 12px; }
+/* 明细行的编辑/删除比通用按钮再收一档，在 62px 行高里留出明显上下余量。 */
+html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn {
+  min-width: 54px;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  line-height: 1.1;
+}
+html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
+  width: 12px;
+  height: 12px;
 }
 .ledger-empty { text-align: center; padding: 52px 15px; }
 .ledger-empty span { font-size: 18px; font-weight: 800; color: var(--text-heading); }

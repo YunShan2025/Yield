@@ -95,6 +95,11 @@ export interface Habit {
   id: string;
   title: string;
   target_per_week: number;
+  /** 目标累计打卡天数；null 表示无限期。 */
+  target_days: number | null;
+  archived: number;
+  /** 习惯回收站：非空即已删除，可在回收站恢复。 */
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
   goal_id: string | null;
@@ -165,6 +170,13 @@ export interface TaskDraft {
   goal_contribution?: number;
   tagIds?: string[];
   generated_from_id?: string | null;
+}
+
+export interface HabitDraft {
+  title: string;
+  goal_id?: string | null;
+  goal_contribution?: number;
+  target_days?: number | null;
 }
 
 export interface TaskUpdate {

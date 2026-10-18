@@ -5,6 +5,7 @@ import { formatCountdown, intervalLabel, liveRemaining } from "@/lib/timers";
 import { isMobileShell } from "@/lib/platform";
 import { confirmAction } from "@/components/AppConfirm";
 import { TimeDropdown } from "@/components/TimePicker";
+import { AppIcon } from "@/components/AppIcon";
 
 /** 当前时刻起 sec 秒后的钟点（HH:MM），用于「预计几点提醒」预览。 */
 function finishClockIn(seconds: number): string {
@@ -300,10 +301,10 @@ export function RemindersView() {
             )}
             {finishHint ? <small className="countdown-create-hint">{finishHint}</small> : null}
             <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={closeCreate}>取消</button>
+              <button type="button" className="btn-ghost item-action-btn" onClick={closeCreate}>取消</button>
               <button
                 type="submit"
-                className="btn-primary"
+                className="btn-primary item-action-btn item-action-primary"
                 disabled={timeMode === "finish" && !finishAt}
               >
                 开始倒计时
@@ -377,10 +378,10 @@ export function RemindersView() {
               </div>
             </label>
             <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={() => void submitInterval(false)}>
+              <button type="button" className="btn-ghost item-action-btn" onClick={() => void submitInterval(false)}>
                 仅保存
               </button>
-              <button type="submit" className="btn-primary">开始提醒</button>
+              <button type="submit" className="btn-primary item-action-btn item-action-primary">开始提醒</button>
             </div>
           </form>
         </div>
@@ -481,24 +482,29 @@ function TimerCard({
       </div>
       <div className="timer-actions">
         {running ? (
-          <button type="button" className="btn-ghost" onClick={onPause}>
-            暂停
+          <button type="button" className="item-action-btn item-action-primary" onClick={onPause}>
+            <AppIcon name="pause" size={14} />
+            <span>暂停</span>
           </button>
         ) : (
-          <button type="button" className="btn-ghost" onClick={onStart}>
-            {finished ? "再次开始" : "继续"}
+          <button type="button" className="item-action-btn item-action-primary" onClick={onStart}>
+            <AppIcon name="play" size={14} />
+            <span>{finished ? "再次开始" : "继续"}</span>
           </button>
         )}
         {onExtend && remaining > 0 ? (
-          <button type="button" className="btn-ghost" onClick={onExtend}>
-            +5 分钟
+          <button type="button" className="item-action-btn" onClick={onExtend}>
+            <AppIcon name="timer" size={14} />
+            <span>+5 分钟</span>
           </button>
         ) : null}
-        <button type="button" className="btn-ghost" onClick={onReset}>
-          重置
+        <button type="button" className="item-action-btn" onClick={onReset}>
+          <AppIcon name="review" size={14} />
+          <span>重置</span>
         </button>
-        <button type="button" className="btn-ghost danger" onClick={onRemove}>
-          删除
+        <button type="button" className="item-action-btn item-action-danger" onClick={onRemove}>
+          <AppIcon name="trash" size={14} />
+          <span>删除</span>
         </button>
       </div>
     </article>

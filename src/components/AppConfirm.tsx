@@ -134,7 +134,7 @@ export function AppConfirmHost() {
         <div className="create-task-actions app-confirm-actions">
           <button
             type="button"
-            className="btn-ghost"
+            className="btn-ghost item-action-btn"
             onClick={() => {
               if (isPrompt) promptPending.resolve(null);
               else (pending as PendingConfirm).resolve(false);
@@ -145,7 +145,7 @@ export function AppConfirmHost() {
           </button>
           <button
             type="button"
-            className={options.danger ? "btn-primary danger" : "btn-primary"}
+            className={`btn-primary item-action-btn ${options.danger ? "danger item-action-danger" : "item-action-primary"}`}
             autoFocus={!isPrompt}
             onClick={() => {
               if (isPrompt) promptPending.resolve(draft);

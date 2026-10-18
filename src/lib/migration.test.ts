@@ -10,7 +10,7 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -122,6 +122,29 @@ describe("database migration declarations", () => {
     expect(sql).toContain("ALTER TABLE tasks DROP COLUMN actual_minutes");
     expect(sql).toContain("ALTER TABLE timers DROP COLUMN task_id");
     expect(sql).toContain("ALTER TABLE achievements DROP COLUMN image_path");
+  });
+
+  it("adds target check-in days via migration v14", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*14,\s*description:\s*"habit_target_days",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match?.[1] ?? "").toContain("ALTER TABLE habits ADD COLUMN target_days INTEGER");
+  });
+
+  it("adds habit archive/trash columns via migration v15", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*15,\s*description:\s*"habit_archive_and_trash",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match?.[1] ?? "").toContain("ALTER TABLE habits ADD COLUMN archived INTEGER NOT NULL DEFAULT 0");
+    expect(match?.[1] ?? "").toContain("ALTER TABLE habits ADD COLUMN deleted_at TEXT");
   });
 
   it("drops project goal/criteria/milestones via migration v10", () => {

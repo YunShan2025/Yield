@@ -45,7 +45,7 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   },
   habits: {
     idColumns: ["id"],
-    columns: ["title", "target_per_week", "goal_id", "goal_contribution", "created_at", "updated_at"],
+    columns: ["title", "target_per_week", "target_days", "archived", "deleted_at", "goal_id", "goal_contribution", "created_at", "updated_at"],
   },
   anniversaries: {
     idColumns: ["id"],

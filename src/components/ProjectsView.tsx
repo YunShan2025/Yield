@@ -3,6 +3,7 @@ import { useAppStore } from "@/store/app";
 import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
+import { AppIcon } from "@/components/AppIcon";
 import type { Project } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import { formatDayStamp } from "@/lib/dates";
@@ -247,11 +248,12 @@ export function ProjectsView() {
                       </span>
                       <button
                         type="button"
-                        className="project-card-restore"
+                        className="item-action-btn item-action-archive"
                         title="恢复到进行中"
                         onClick={() => void restoreProject(project.id)}
                       >
-                        恢复
+                        <AppIcon name="review" size={14} />
+                        <span>恢复</span>
                       </button>
                     </div>
                   </article>
@@ -305,8 +307,8 @@ export function ProjectsView() {
               <small className="project-field-hint">选中此项目的任务会默认带上这个标签。</small>
             </label>
             <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={() => setCreating(false)}>取消</button>
-              <button type="submit" className="btn-primary" disabled={!createName.trim() || savingCreate}>
+              <button type="button" className="btn-ghost item-action-btn" onClick={() => setCreating(false)}>取消</button>
+              <button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!createName.trim() || savingCreate}>
                 {savingCreate ? "创建中…" : "创建项目"}
               </button>
             </div>
@@ -352,8 +354,8 @@ export function ProjectsView() {
               <DatePicker value={editDueDate} onChange={setEditDueDate} allowClear ariaLabel="项目截止日期" />
             </label>
             <div className="project-edit-actions">
-              <button type="button" className="btn-ghost" onClick={() => setEditingProject(null)}>取消</button>
-              <button type="submit" className="btn-primary">保存修改</button>
+              <button type="button" className="btn-ghost item-action-btn" onClick={() => setEditingProject(null)}>取消</button>
+              <button type="submit" className="btn-primary item-action-btn item-action-primary">保存修改</button>
             </div>
           </form>
         </div>
@@ -405,16 +407,19 @@ function ProjectDetail({
           <span className="tags-filtered-count">{projectTasks.length}</span>
         </h3>
         <div className="projects-detail-actions">
-          <button type="button" className="project-card-edit" onClick={onEdit}>
-            编辑
+          <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
+            <AppIcon name="edit" size={14} />
+            <span>编辑</span>
           </button>
-          <button type="button" className="project-card-archive" onClick={onArchive}>
-            归档
+          <button type="button" className="item-action-btn item-action-archive" onClick={onArchive}>
+            <AppIcon name="archive" size={14} />
+            <span>归档</span>
           </button>
-          <button type="button" className="project-card-delete" onClick={onDelete}>
-            删除
+          <button type="button" className="item-action-btn item-action-danger" onClick={onDelete}>
+            <AppIcon name="trash" size={14} />
+            <span>删除</span>
           </button>
-          <button type="button" className="btn-ghost" onClick={onClose}>
+          <button type="button" className="item-action-btn" onClick={onClose}>
             关闭
           </button>
         </div>

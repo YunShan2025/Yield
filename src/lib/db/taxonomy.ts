@@ -2,6 +2,7 @@ import type {
   Attachment,
   Habit,
   HabitCheck,
+  HabitDraft,
   Tag,
 } from "@/types";
 import { createId, nowIso } from "@/lib/dates";
@@ -165,38 +166,121 @@ export async function removeAttachment(id: string): Promise<void> {
 
 
 /* Habits */
-export async function fetchHabits(): Promise<Habit[]> {
-  const db = await getDb();
-  const rows = await db.select<Habit[]>("SELECT * FROM habits ORDER BY created_at DESC");
-  return rows.map((habit) => ({
+function normalizeHabit(habit: Habit): Habit {
+  return {
     ...habit,
+    target_days: habit.target_days ?? null,
+    archived: habit.archived ?? 0,
+    deleted_at: habit.deleted_at ?? null,
     goal_id: habit.goal_id ?? null,
     goal_contribution: habit.goal_contribution ?? 1,
-  }));
+  };
+}
+
+/** 备份/同步等完整性场景读取全部习惯，不排除归档与回收站记录。 */
+export async function fetchAllHabits(): Promise<Habit[]> {
+  const db = await getDb();
+  const rows = await db.select<Habit[]>("SELECT * FROM habits ORDER BY created_at DESC");
+  return rows.map(normalizeHabit);
+}
+
+export async function fetchHabits(): Promise<Habit[]> {
+  const db = await getDb();
+  const rows = await db.select<Habit[]>(
+    "SELECT * FROM habits WHERE archived = 0 AND deleted_at IS NULL ORDER BY created_at DESC",
+  );
+  return rows.map(normalizeHabit);
+}
+
+export async function fetchArchivedHabits(): Promise<Habit[]> {
+  const db = await getDb();
+  const rows = await db.select<Habit[]>(
+    "SELECT * FROM habits WHERE archived = 1 AND deleted_at IS NULL ORDER BY updated_at DESC",
+  );
+  return rows.map(normalizeHabit);
+}
+
+export async function fetchDeletedHabits(): Promise<Habit[]> {
+  const db = await getDb();
+  const rows = await db.select<Habit[]>(
+    "SELECT * FROM habits WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC",
+  );
+  return rows.map(normalizeHabit);
 }
 
 export async function createHabit(
-  title: string,
-  targetPerWeek = 3,
+  draft: HabitDraft,
 ): Promise<Habit> {
   const db = await getDb();
+  const rawTargetDays = Number(draft.target_days);
+  const targetDays =
+    typeof draft.target_days === "number" &&
+    Number.isFinite(rawTargetDays) &&
+    rawTargetDays >= 1
+      ? Math.floor(rawTargetDays)
+      : null;
   const habit: Habit = {
     id: createId(),
-    title: title.trim(),
-    target_per_week: targetPerWeek,
+    title: draft.title.trim(),
+    target_per_week: 0,
+    target_days: targetDays,
+    archived: 0,
+    deleted_at: null,
     created_at: nowIso(),
     updated_at: nowIso(),
-    goal_id: null,
-    goal_contribution: 1,
+    goal_id: draft.goal_id ?? null,
+    goal_contribution: draft.goal_contribution ?? 1,
   };
   await db.execute(
-    "INSERT INTO habits (id, title, target_per_week, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)",
-    [habit.id, habit.title, habit.target_per_week, habit.created_at, habit.updated_at],
+    "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+    [
+      habit.id,
+      habit.title,
+      habit.target_per_week,
+      habit.target_days,
+      habit.archived,
+      habit.goal_id,
+      habit.goal_contribution,
+      habit.created_at,
+      habit.updated_at,
+    ],
   );
   return habit;
 }
 
-export async function deleteHabit(id: string): Promise<void> {
+export async function archiveHabit(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE habits SET archived = 1, updated_at = $1 WHERE id = $2 AND deleted_at IS NULL",
+    [nowIso(), id],
+  );
+}
+
+export async function restoreHabit(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE habits SET archived = 0, updated_at = $1 WHERE id = $2 AND deleted_at IS NULL",
+    [nowIso(), id],
+  );
+}
+
+export async function softDeleteHabit(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE habits SET deleted_at = $1, updated_at = $1 WHERE id = $2 AND deleted_at IS NULL",
+    [nowIso(), id],
+  );
+}
+
+export async function restoreDeletedHabit(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE habits SET deleted_at = NULL, updated_at = $1 WHERE id = $2 AND deleted_at IS NOT NULL",
+    [nowIso(), id],
+  );
+}
+
+export async function purgeHabit(id: string): Promise<void> {
   const db = await getDb();
   const habits = await db.select<Habit[]>("SELECT * FROM habits WHERE id=$1", [id]);
   const checks = await db.select<HabitCheck[]>("SELECT * FROM habit_checks WHERE habit_id=$1", [id]);
@@ -229,8 +313,8 @@ export async function toggleHabitCheck(
       "DELETE FROM habit_checks WHERE habit_id=$1 AND check_date=$2",
       [habitId, date],
     );
-    const habits = await fetchHabits();
-    const habit = habits.find((item) => item.id === habitId);
+    const habits = await db.select<Habit[]>("SELECT * FROM habits WHERE id=$1", [habitId]);
+    const habit = habits[0];
     if (habit?.goal_id) {
       await removeGoalEntryBySource(habit.goal_id, "habit", `${habitId}:${date}`);
     }
@@ -239,8 +323,8 @@ export async function toggleHabitCheck(
       "INSERT INTO habit_checks (id, habit_id, check_date) VALUES ($1,$2,$3)",
       [createId(), habitId, date],
     );
-    const habits = await fetchHabits();
-    const habit = habits.find((item) => item.id === habitId);
+    const habits = await db.select<Habit[]>("SELECT * FROM habits WHERE id=$1", [habitId]);
+    const habit = habits[0];
     if (habit?.goal_id) {
       await addGoalEntry({
         goal_id: habit.goal_id,
@@ -284,6 +368,62 @@ export async function updateHabitGoal(
         source_type: "habit",
         source_id: `${habitId}:${check.check_date}`,
         note: currentRows[0]?.title ?? "习惯打卡",
+      });
+    }
+  }
+}
+
+export async function updateHabit(
+  habitId: string,
+  draft: HabitDraft,
+): Promise<void> {
+  const db = await getDb();
+  const currentRows = await db.select<Habit[]>(
+    "SELECT * FROM habits WHERE id=$1 AND deleted_at IS NULL",
+    [habitId],
+  );
+  const current = currentRows[0];
+  if (!current) return;
+
+  const rawTargetDays = Number(draft.target_days);
+  const targetDays =
+    typeof draft.target_days === "number" &&
+    Number.isFinite(rawTargetDays) &&
+    rawTargetDays >= 1
+      ? Math.floor(rawTargetDays)
+      : null;
+  const goalId = draft.goal_id ?? null;
+  const contribution = Math.max(0.1, Number(draft.goal_contribution) || 1);
+  const title = draft.title.trim();
+  const checks = await db.select<HabitCheck[]>(
+    "SELECT * FROM habit_checks WHERE habit_id=$1",
+    [habitId],
+  );
+
+  if (current.goal_id) {
+    for (const check of checks) {
+      await removeGoalEntryBySource(
+        current.goal_id,
+        "habit",
+        `${habitId}:${check.check_date}`,
+      );
+    }
+  }
+
+  await db.execute(
+    "UPDATE habits SET title=$1, target_days=$2, goal_id=$3, goal_contribution=$4, updated_at=$5 WHERE id=$6",
+    [title, targetDays, goalId, contribution, nowIso(), habitId],
+  );
+
+  if (goalId) {
+    for (const check of checks) {
+      await addGoalEntry({
+        goal_id: goalId,
+        entry_date: check.check_date,
+        value: contribution,
+        source_type: "habit",
+        source_id: `${habitId}:${check.check_date}`,
+        note: title,
       });
     }
   }

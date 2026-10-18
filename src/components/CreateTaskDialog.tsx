@@ -6,6 +6,7 @@ import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
 import { findFirstAvailableTimeSlot } from "@/lib/planning";
+import { sortProjectsByName } from "@/lib/projects";
 import {
   ensureEndAfterStart,
   nowTimeString,
@@ -54,6 +55,10 @@ export function CreateTaskDialog() {
   const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(calendarCursor)
     ? calendarCursor
     : todayDateString();
+  const projectOptions = useMemo(
+    () => sortProjectsByName(projects.filter((project) => !project.archived)),
+    [projects],
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(createTaskInbox ? "" : initialDate);
@@ -189,7 +194,7 @@ export function CreateTaskDialog() {
                 const nextProject = projects.find((project) => project.id === value);
                 setSelectedTagId(nextProject?.tag_id ?? "");
               }}
-              options={[{ value: "", label: "无项目" }, ...projects.filter((project) => !project.archived).map((project) => ({ value: project.id, label: project.name }))]}
+              options={[{ value: "", label: "无项目" }, ...projectOptions.map((project) => ({ value: project.id, label: project.name }))]}
             />
           </label>
           <label>标签<SelectMenu ariaLabel="标签" value={selectedTagId} onChange={setSelectedTagId} options={[{ value: "", label: "无标签" }, ...tags.map((tag) => ({ value: tag.id, label: tag.name }))]} /></label>
@@ -245,7 +250,7 @@ export function CreateTaskDialog() {
             }}
           />
         </div>
-        <div className="create-task-actions"><button type="button" className="btn-ghost" onClick={close}>取消</button><button type="submit" className="btn-primary" disabled={!title.trim() || (Boolean(dueDate) && (!dueTime || !endTime)) || saving}>{saving ? "创建中…" : "创建任务"}</button></div>
+        <div className="create-task-actions"><button type="button" className="btn-ghost item-action-btn" onClick={close}>取消</button><button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!title.trim() || (Boolean(dueDate) && (!dueTime || !endTime)) || saving}>{saving ? "创建中…" : "创建任务"}</button></div>
       </form>
     </div>
   );

@@ -12,8 +12,8 @@ import { saveTaskPlanningMetadata } from "./client";
 import { fetchTasks } from "./tasks";
 import {
   fetchAllAttachments,
+  fetchAllHabits,
   fetchHabitChecks,
-  fetchHabits,
   fetchTags,
 } from "./taxonomy";
 import { fetchMemos } from "./memos";
@@ -39,7 +39,7 @@ export async function exportBackup(): Promise<BackupPayload> {
     "SELECT task_id, tag_id, updated_at FROM task_tags",
   );
   const attachments = await fetchAllAttachments();
-  const habits = await fetchHabits();
+  const habits = await fetchAllHabits();
   const habitChecks = await fetchHabitChecks();
   const memos = await fetchMemos({ archived: "all" });
   const projects = await db.select<Project[]>("SELECT * FROM projects");
@@ -210,8 +210,19 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   }
   for (const h of payload.habits) {
     await db.execute(
-      "INSERT INTO habits (id, title, target_per_week, created_at, updated_at, goal_id, goal_contribution) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-      [h.id, h.title, h.target_per_week, h.created_at, h.updated_at ?? h.created_at, h.goal_id ?? null, h.goal_contribution ?? 1],
+      "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, created_at, updated_at, deleted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+      [
+        h.id,
+        h.title,
+        h.target_per_week,
+        h.target_days ?? null,
+        h.archived ?? 0,
+        h.goal_id ?? null,
+        h.goal_contribution ?? 1,
+        h.created_at,
+        h.updated_at ?? h.created_at,
+        h.deleted_at ?? null,
+      ],
     );
   }
   for (const c of payload.habitChecks) {

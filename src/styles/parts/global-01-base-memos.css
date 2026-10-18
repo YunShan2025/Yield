@@ -49,8 +49,8 @@ select:focus {
   min-height: 0;
   overflow: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
   align-content: start;
 }
 
@@ -90,21 +90,20 @@ select:focus {
 
 .memo-list-item {
   text-align: left;
-  padding: 13px 15px;
-  border-radius: 14px;
-  border: 1px solid transparent;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   background: var(--bg-panel);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   min-width: 0;
-  transition: transform var(--transition), border-color var(--transition), background var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
 }
 
 .memo-list-item:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
+  background: var(--bg-selected);
 }
 
 .memo-list-item.active {
@@ -122,11 +121,15 @@ select:focus {
 
 /* 列表卡片：标题一行、时间一行，正文点击后才在抽屉里展示 */
 .memo-list-title-copy {
-  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .memo-list-time {
@@ -262,7 +265,7 @@ select:focus {
 }
 .memo-search input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--text-primary); background: transparent; font: inherit; }
 .memo-list { margin-inline: -4px; padding-inline: 4px; }
-.memo-list-item { position: relative; padding: 13px 14px 13px 16px; border-color: transparent; background: var(--bg-panel); }
+.memo-list-item { position: relative; padding: 12px 14px 12px 16px; border-color: var(--border); background: var(--bg-panel); }
 .memo-list-item::before { content: ""; position: absolute; left: 4px; top: 14px; bottom: 14px; width: 2px; border-radius: 4px; background: transparent; }
 .memo-list-item:hover { background: var(--bg-hover); }
 .memo-list-item.active { border-color: color-mix(in srgb, var(--accent) 20%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 55%, var(--bg-panel)); box-shadow: 0 6px 18px color-mix(in srgb, var(--text-primary) 4%, transparent); }

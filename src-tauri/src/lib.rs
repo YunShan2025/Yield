@@ -1284,6 +1284,24 @@ ALTER TABLE achievements DROP COLUMN image_path;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 14,
+            description: "habit_target_days",
+            // 习惯从每周次数改为可跟踪的累计目标天数；null 表示无限期，
+            // 旧习惯迁移后保持无限期，不猜测目标。
+            sql: r#"ALTER TABLE habits ADD COLUMN target_days INTEGER;"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 15,
+            description: "habit_archive_and_trash",
+            // 习惯与项目对齐：可归档；删除走回收站，行保留可恢复。
+            sql: r#"
+ALTER TABLE habits ADD COLUMN archived INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE habits ADD COLUMN deleted_at TEXT;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

@@ -4,6 +4,7 @@ import type {
   Attachment,
   Habit,
   HabitCheck,
+  HabitDraft,
   NavId,
   Project,
   Tag,
@@ -36,6 +37,7 @@ interface AppStore {
   tagMap: Record<string, string[]>;
   habits: Habit[];
   habitChecks: HabitCheck[];
+  archivedHabits: Habit[];
   timers: Timer[];
   attachments: Attachment[];
   projects: Project[];
@@ -98,7 +100,10 @@ interface AppStore {
   removeAttachment: (id: string) => Promise<void>;
   loadAttachments: (taskId: string) => Promise<void>;
 
-  addHabit: (title: string, target?: number) => Promise<void>;
+  addHabit: (draft: HabitDraft) => Promise<void>;
+  updateHabit: (id: string, draft: HabitDraft) => Promise<void>;
+  archiveHabit: (id: string) => Promise<void>;
+  restoreHabit: (id: string) => Promise<void>;
   removeHabit: (id: string) => Promise<void>;
   toggleHabitDay: (habitId: string, date: string) => Promise<void>;
 
@@ -148,6 +153,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   tagMap: {},
   habits: [],
   habitChecks: [],
+  archivedHabits: [],
   timers: [],
   attachments: [],
   projects: [],
@@ -215,6 +221,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       tagMap,
       habits,
       habitChecks,
+      archivedHabits,
       timers,
       settings,
       projects,
@@ -226,6 +233,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       db.fetchTaskTagMap(),
       db.fetchHabits(),
       db.fetchHabitChecks(),
+      db.fetchArchivedHabits(),
       db.fetchTimers(),
       db.loadAppSettings(),
       db.fetchProjects(),
@@ -238,6 +246,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       tagMap,
       habits,
       habitChecks,
+      archivedHabits,
       timers,
       // Don't regress onboarding if a concurrent refresh raced ahead of persist.
       settings: {
@@ -557,14 +566,34 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ attachments });
   },
 
-  addHabit: async (title, target = 3) => {
-    await db.createHabit(title, target);
+  addHabit: async (draft) => {
+    await db.createHabit(draft);
     await get().refreshAll();
+    set({ toast: "习惯已创建" });
+  },
+
+  updateHabit: async (id, draft) => {
+    await db.updateHabit(id, draft);
+    await get().refreshAll();
+    set({ toast: "习惯已更新" });
+  },
+
+  archiveHabit: async (id) => {
+    await db.archiveHabit(id);
+    await get().refreshAll();
+    set({ toast: "习惯已归档" });
+  },
+
+  restoreHabit: async (id) => {
+    await db.restoreHabit(id);
+    await get().refreshAll();
+    set({ toast: "习惯已恢复" });
   },
 
   removeHabit: async (id) => {
-    await db.deleteHabit(id);
+    await db.softDeleteHabit(id);
     await get().refreshAll();
+    set({ toast: "习惯已移入回收站" });
   },
 
   toggleHabitDay: async (habitId, date) => {

@@ -340,7 +340,7 @@
 
 .timer-actions {
   display: flex;
-  gap: 6px;
+  gap: 7px;
   flex-wrap: wrap;
   margin-top: 10px;
 }

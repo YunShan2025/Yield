@@ -20,6 +20,8 @@ export type AppIconName =
   | "edit"
   | "pin"
   | "archive"
+  | "play"
+  | "pause"
   | "wallet";
 
 const paths: Record<AppIconName, ReactNode> = {
@@ -51,6 +53,8 @@ const paths: Record<AppIconName, ReactNode> = {
   edit: <><path d="M4 14.8 4.45 12l7.9-7.9a1.55 1.55 0 0 1 2.2 0l1.35 1.35a1.55 1.55 0 0 1 0 2.2L8 15.55z" /><path d="m11.4 5.05 3.55 3.55M10.5 16H16" /></>,
   pin: <><path d="m7 3 6 1-1 4 2 2-3 1-2 6-1-5-3-1 2-2z" /><path d="m6 14-2 2" /></>,
   archive: <><path d="M3.5 5.5h13v10h-13zM2.5 3h15v3h-15z" /><path d="M8 9h4" /></>,
+  play: <path d="M7.25 5.5 15 10l-7.75 4.5z" />,
+  pause: <path d="M7.75 5.5v9M12.25 5.5v9" />,
   wallet: <><path d="M3.5 5.5h12.25A1.75 1.75 0 0 1 17.5 7.25v8.25H5.25A1.75 1.75 0 0 1 3.5 13.75z" /><path d="M3.5 6V4.8A1.8 1.8 0 0 1 5.3 3h9.2v2.5M13 9h4.5v3H13a1.5 1.5 0 0 1 0-3Z" /></>,
 };
 
