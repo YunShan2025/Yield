@@ -124,6 +124,32 @@ export async function fetchLedgerTransactions(month: string) {
   );
 }
 
+/** 跨月份检索账目：匹配备注、分类、账户，输入为纯金额时同时匹配金额。 */
+export async function searchLedgerTransactions(keyword: string, limit = 6) {
+  const term = keyword.trim();
+  if (!term) return [] as LedgerTransaction[];
+  const escaped = term.replace(/[\\%_]/g, (char) => `\\${char}`);
+  const like = `%${escaped}%`;
+  const cents = /^\d+(?:\.\d{1,2})?$/.test(term)
+    ? parseAmountToCents(term)
+    : null;
+  const db = await getDb();
+  const amountClause = cents === null ? "" : " OR t.amount_cents = $3";
+  return db.select<LedgerTransaction[]>(
+    `SELECT t.*, c.name category_name, c.icon category_icon, c.color category_color,
+      a.name account_name, a.color account_color
+     FROM ledger_transactions t
+     JOIN ledger_categories c ON c.id = t.category_id
+     JOIN ledger_accounts a ON a.id = t.account_id
+     WHERE t.is_deleted=0 AND (
+       t.note LIKE $1 ESCAPE '\\' OR c.name LIKE $1 ESCAPE '\\'
+       OR a.name LIKE $1 ESCAPE '\\'${amountClause}
+     )
+     ORDER BY t.date DESC, t.id DESC LIMIT $2`,
+    cents === null ? [like, limit] : [like, limit, cents],
+  );
+}
+
 export async function fetchLedgerTrend(endMonth: string) {
   const [endStart, endExclusive] = monthRange(endMonth);
   const cursor = new Date(`${endStart}T00:00:00`);

@@ -147,7 +147,7 @@ export function RemindersView() {
             </button>
           </div>
           <button type="button" className="btn-primary" onClick={() => setCreating(true)}>
-            ＋ {tab === "countdown" ? "新建倒计时" : "新建循环提醒"}
+            {tab === "countdown" ? "新建倒计时" : "新建循环提醒"}
           </button>
         </div>
       </div>
@@ -224,7 +224,6 @@ export function RemindersView() {
           >
             <div className="modal-head">
               <div>
-                <span>提醒</span>
                 <h3>新建倒计时</h3>
               </div>
               <button type="button" onClick={closeCreate}>×</button>
@@ -329,7 +328,6 @@ export function RemindersView() {
           >
             <div className="modal-head">
               <div>
-                <span>提醒</span>
                 <h3>新建循环提醒</h3>
               </div>
               <button type="button" onClick={closeCreate}>×</button>

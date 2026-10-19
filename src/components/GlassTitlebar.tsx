@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { AppIcon } from "@/components/AppIcon";
+import { useAppStore } from "@/store/app";
 import { isMacOS } from "@/lib/platform";
 
 /** In-app drag strip. macOS keeps traffic lights; Windows uses custom controls. */
 export function GlassTitlebar() {
   const [maximized, setMaximized] = useState(false);
+  const openCommandPalette = useAppStore((state) => state.openCommandPalette);
   const mac = isMacOS();
 
   useEffect(() => {
@@ -57,6 +60,15 @@ export function GlassTitlebar() {
         <strong data-tauri-drag-region>有秋</strong>
         <small data-tauri-drag-region>Yield</small>
       </div>
+      {/* 命令面板入口：全局检索只保留标题栏这一处入口。 */}
+      <button
+        type="button"
+        className="titlebar-command"
+        onClick={openCommandPalette}
+      >
+        <AppIcon name="search" size={14} />
+        <span>搜索</span>
+      </button>
       {mac ? null : (
         <div className="glass-titlebar-controls">
           <button type="button" aria-label="最小化" onClick={() => void run("minimize")}>

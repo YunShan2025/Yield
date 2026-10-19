@@ -8,7 +8,6 @@ import { nowIso } from "@/lib/dates";
 import { backupPayloadHas, sanitizeBackupPayload, validateBackupPayload } from "@/lib/backup";
 import { sanitizeImportedMemoContent } from "@/lib/richText";
 import { getDb, withTransaction } from "./client";
-import { saveTaskPlanningMetadata } from "./client";
 import { fetchTasks } from "./tasks";
 import {
   fetchAllAttachments,
@@ -128,7 +127,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     await db.execute("DELETE FROM attachments");
     await db.execute("DELETE FROM task_tags");
     await db.execute("DELETE FROM tags");
-    await db.execute("DELETE FROM task_planning_metadata");
     await db.execute("DELETE FROM tasks");
     if (has("memos")) await db.execute("DELETE FROM memos");
     if (has("notifications")) await db.execute("DELETE FROM app_notifications");
@@ -154,9 +152,8 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         due_date, due_time, end_time, sort_order, created_at, updated_at,
         completed_at, deleted_at, parent_id, repeat_rule,
         project_id,
-        blocked_by_id, completion_criteria, energy_level, flexible, schedule_locked,
         goal_id, goal_contribution, generated_from_id
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
       [
         task.id,
         task.title,
@@ -175,19 +172,11 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         task.parent_id ?? null,
         task.repeat_rule ?? null,
         task.project_id ?? null,
-        task.blocked_by_id ?? null,
-        task.completion_criteria ?? "",
-        task.energy_level ?? "medium",
-        task.flexible ?? 1,
-        task.schedule_locked ?? 0,
         task.goal_id ?? null,
         task.goal_contribution ?? 1,
         task.generated_from_id ?? null,
       ],
     );
-    // Backup tasks already carry the normalized multi-reminder array. Persist
-    // it directly instead of re-parsing a database-only JSON column.
-    await saveTaskPlanningMetadata(task);
   }
 
   for (const tag of payload.tags) {

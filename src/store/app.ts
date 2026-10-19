@@ -16,6 +16,7 @@ import type {
   TimerDraft,
   ViewMode,
   DateScope,
+  FocusRequest,
 } from "@/types";
 import * as db from "@/lib/db";
 import { nowIso, todayDateString } from "@/lib/dates";
@@ -52,6 +53,8 @@ interface AppStore {
   createTaskOpen: boolean;
   /** 新建任务是否从待办箱发起:截止日期默认不填,不自动排时间。 */
   createTaskInbox: boolean;
+  commandPaletteOpen: boolean;
+  focusRequest: FocusRequest | null;
   activeTagId: string | null;
   reminderSync: ReminderSyncStatus;
   toast: string | null;
@@ -67,6 +70,10 @@ interface AppStore {
   selectTask: (id: string | null, opts?: { edit?: boolean }) => void;
   openCreateTask: (opts?: { inbox?: boolean }) => void;
   closeCreateTask: () => void;
+  openCommandPalette: () => void;
+  closeCommandPalette: () => void;
+  requestFocus: (request: FocusRequest) => void;
+  clearFocus: () => void;
   setActiveTag: (id: string | null) => void;
   setToast: (msg: string | null) => void;
   undo: () => Promise<void>;
@@ -178,6 +185,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   detailPreferEdit: false,
   createTaskOpen: false,
   createTaskInbox: false,
+  commandPaletteOpen: false,
+  focusRequest: null,
   activeTagId: null,
   reminderSync: EMPTY_REMINDER_SYNC,
   toast: null,
@@ -298,6 +307,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
       createTaskInbox: Boolean(opts?.inbox),
     }),
   closeCreateTask: () => set({ createTaskOpen: false, createTaskInbox: false }),
+  openCommandPalette: () => set({ commandPaletteOpen: true }),
+  closeCommandPalette: () => set({ commandPaletteOpen: false }),
+  requestFocus: (focusRequest) => set({ focusRequest }),
+  clearFocus: () => set({ focusRequest: null }),
   setActiveTag: (activeTagId) => {
     set({ activeTagId, nav: "tags" });
   },

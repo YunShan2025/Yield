@@ -53,7 +53,6 @@ function CompletedTimeEditor({
       >
         <div className="modal-head">
           <div>
-            <span>{task.title}</span>
             <h3>修改完成时间</h3>
           </div>
           <button type="button" onClick={onClose}>×</button>
@@ -88,10 +87,14 @@ export function ExpandableTaskItem({
   selection,
   actions,
   rowAction,
+  primaryAction,
   expandable = true,
+  checkable = true,
 }: {
   task: Task;
   meta?: ReactNode;
+  /** 行级主操作（如今日事项的「完成」），替换默认的左侧完成圆钮。 */
+  primaryAction?: ReactNode;
   actions?: ReactNode;
   /** 行级动作:与「详情」按钮同层级直接挂在行网格上(快捷操作区之外,窄屏不随其隐藏)。 */
   rowAction?: ReactNode;
@@ -102,6 +105,8 @@ export function ExpandableTaskItem({
   };
   /** false = plain display row: no subtask panel/add input, row click opens detail. */
   expandable?: boolean;
+  /** false = 左侧不再显示完成圆钮，完成动作交给 primaryAction。 */
+  checkable?: boolean;
 }) {
   const tasks = useAppStore((s) => s.tasks);
   const selectTask = useAppStore((s) => s.selectTask);
@@ -119,12 +124,14 @@ export function ExpandableTaskItem({
     setExpanded((v) => !v);
   };
 
+  const showCheck = selection?.active ? true : checkable;
+
   return (
     <div
       className={`expand-task ${task.status === "completed" ? "is-done" : ""} ${expanded ? "is-open" : ""}`}
     >
       <div
-        className="expand-task-row"
+        className={`expand-task-row${showCheck ? "" : " no-check"}`}
         onClick={expandable ? toggleExpand : () => selectTask(task.id)}
       >
         {selection?.active ? (
@@ -139,7 +146,7 @@ export function ExpandableTaskItem({
           >
             {selection.selected ? "✓" : ""}
           </button>
-        ) : (
+        ) : checkable ? (
           <button
             type="button"
             className="task-check"
@@ -151,16 +158,11 @@ export function ExpandableTaskItem({
           >
             {task.status === "completed" ? "✓" : ""}
           </button>
-        )}
+        ) : null}
         <div className="expand-task-main">
           <p className="task-title">{task.title}</p>
           <div className="task-meta">
             {meta}
-            {task.reminder_minutes.length > 1 ? (
-              <span className="reminder-chip">
-                {task.reminder_minutes.length} 个提醒
-              </span>
-            ) : null}
             {subs.length ? (
               <span className="subtask-count">
                 子任务 {doneCount}/{subs.length}
@@ -171,6 +173,7 @@ export function ExpandableTaskItem({
             ) : null}
           </div>
         </div>
+        {primaryAction}
         {task.status === "completed" ? (
           <button
             type="button"

@@ -34,7 +34,6 @@ import {
 import { privacySafeNotification } from "@/lib/privacy";
 import { useAppStore } from "@/store/app";
 import { syncService } from "@/lib/sync/service";
-import { filterTasksByView } from "@/lib/tasks";
 import { todayDateString } from "@/lib/dates";
 import {
   applyPrivacyToReminderPlans,
@@ -82,16 +81,12 @@ export function MainApp() {
   const selectedTaskId = useAppStore((s) => s.selectedTaskId);
   const createTaskOpen = useAppStore((s) => s.createTaskOpen);
   const selectTask = useAppStore((s) => s.selectTask);
-  const deleteTask = useAppStore((s) => s.deleteTask);
   const toast = useAppStore((s) => s.toast);
   const setToast = useAppStore((s) => s.setToast);
   const canUndo = useAppStore((s) => s.canUndo);
   const undo = useAppStore((s) => s.undo);
   const setNav = useAppStore((s) => s.setNav);
   const tasks = useAppStore((s) => s.tasks);
-  const nav = useAppStore((s) => s.nav);
-  const tagMap = useAppStore((s) => s.tagMap);
-  const activeTagId = useAppStore((s) => s.activeTagId);
   const settings = useAppStore((s) => s.settings);
   const timers = useAppStore((s) => s.timers);
   const settleTimers = useAppStore((s) => s.settleTimers);
@@ -439,49 +434,11 @@ export function MainApp() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const typing =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.tagName === "SELECT";
-
-      if (e.key === "Escape") {
-        selectTask(null);
-        return;
-      }
-      if (typing) return;
-
-      const visible = filterTasksByView(tasks, nav, tagMap, activeTagId);
-      const idx = visible.findIndex((t) => t.id === selectedTaskId);
-
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        const next = visible[Math.min(visible.length - 1, Math.max(0, idx + 1))];
-        if (next) selectTask(next.id);
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        const prev = visible[Math.max(0, idx <= 0 ? 0 : idx - 1)];
-        if (prev) selectTask(prev.id);
-      }
-      if (e.key === "Enter" && selectedTaskId) {
-        /* already open */
-      }
-      if (e.key === "Delete" && selectedTaskId) {
-        void deleteTask(selectedTaskId);
-      }
+      if (e.key === "Escape") selectTask(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [
-    tasks,
-    nav,
-    tagMap,
-    activeTagId,
-    selectedTaskId,
-    selectTask,
-    deleteTask,
-  ]);
+  }, [selectTask]);
 
   useEffect(() => {
     if (!ready) return;
@@ -742,7 +699,8 @@ export function MainApp() {
     </>
   );
 
-  // 移动端壳:无侧栏/标题栏/命令面板,底部导航承载页面切换;其余浮层复用桌面组件。
+  // 移动端壳:无侧栏/标题栏,底部导航承载页面切换;搜索面板入口收在「更多」页,
+  // 其余浮层复用桌面组件。返回键语义统一走 mobileBack。
   if (isMobileShell()) {
     return (
       <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
@@ -752,6 +710,7 @@ export function MainApp() {
         </div>
         <MobileNav moreActive={moreOpen} onMore={toggleMore} onNavigate={navigateMobile} />
         {moreOpen ? <MobileMoreSheet onNavigate={navigateFromMore} /> : null}
+        <CommandPalette />
         {createTaskOpen ? <CreateTaskDialog /> : null}
         <AppConfirmHost />
         <OnboardingGuide />

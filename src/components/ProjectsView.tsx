@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
 import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
@@ -17,6 +17,8 @@ export function ProjectsView() {
   const addProject = useAppStore((state) => state.addProject);
   const archiveProject = useAppStore((state) => state.archiveProject);
   const restoreProject = useAppStore((state) => state.restoreProject);
+  const focusRequest = useAppStore((state) => state.focusRequest);
+  const clearFocus = useAppStore((state) => state.clearFocus);
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createTagId, setCreateTagId] = useState("");
@@ -27,10 +29,35 @@ export function ProjectsView() {
   const [editDueDate, setEditDueDate] = useState("");
   const [editTagId, setEditTagId] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+  // 命令面板定位过来的项目需要滚到详情；手动点卡片时保持原位。
+  const pendingDetailScrollRef = useRef(false);
 
   /** 项目颜色不自选：跟随所选标签的颜色；无标签时保留原色兜底。 */
   const projectColor = (project: Project) =>
     tags.find((tag) => tag.id === project.tag_id)?.color ?? project.color;
+
+  const activeProject =
+    projects.find((p) => p.id === activeProjectId) ??
+    archivedProjects.find((p) => p.id === activeProjectId) ??
+    null;
+  const activeProjectArchived = archivedProjects.some(
+    (p) => p.id === activeProject?.id,
+  );
+
+  // 命令面板选中项目后：展开该项目的任务详情（已归档项目也能定位）。
+  useEffect(() => {
+    if (focusRequest?.kind !== "project") return;
+    pendingDetailScrollRef.current = true;
+    setActiveProjectId(focusRequest.id);
+    clearFocus();
+  }, [focusRequest, clearFocus]);
+
+  useEffect(() => {
+    if (!activeProject || !pendingDetailScrollRef.current) return;
+    pendingDetailScrollRef.current = false;
+    detailRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [activeProject]);
 
   const openCreate = () => {
     setCreateName("");
@@ -79,8 +106,6 @@ export function ProjectsView() {
     useAppStore.getState().setToast("项目已更新");
   };
 
-  const activeProject = projects.find((p) => p.id === activeProjectId) ?? null;
-
   const deleteActiveProject = async () => {
     if (!activeProject) return;
     const ok = await confirmAction({
@@ -109,7 +134,7 @@ export function ProjectsView() {
             className="btn-primary"
             onClick={openCreate}
           >
-            ＋ 新建项目
+            新建项目
           </button>
         </div>
       </div>
@@ -207,15 +232,19 @@ export function ProjectsView() {
         })()}
 
         {activeProject ? (
-          <ProjectDetail
-            project={activeProject}
-            tasks={tasks}
-            tags={tags}
-            onEdit={() => beginEditProject(activeProject)}
-            onArchive={() => void archiveProject(activeProject.id)}
-            onDelete={() => void deleteActiveProject()}
-            onClose={() => setActiveProjectId(null)}
-          />
+          <div ref={detailRef}>
+            <ProjectDetail
+              project={activeProject}
+              tasks={tasks}
+              tags={tags}
+              archived={activeProjectArchived}
+              onEdit={() => beginEditProject(activeProject)}
+              onArchive={() => void archiveProject(activeProject.id)}
+              onRestore={() => void restoreProject(activeProject.id)}
+              onDelete={() => void deleteActiveProject()}
+              onClose={() => setActiveProjectId(null)}
+            />
+          </div>
         ) : (
           <p className="projects-hint">点击上方项目卡片，可查看对应的任务与进度。</p>
         )}
@@ -235,7 +264,9 @@ export function ProjectsView() {
                 return (
                   <article
                     key={project.id}
-                    className="tag-card project-tile is-archived"
+                    className={`tag-card project-tile is-archived ${
+                      activeProjectId === project.id ? "is-active" : ""
+                    }`}
                     style={{ "--tag-accent": projectColor(project) } as CSSProperties}
                   >
                     <div className="tag-card-main is-static">
@@ -278,7 +309,6 @@ export function ProjectsView() {
           >
             <div className="modal-head">
               <div>
-                <span>项目</span>
                 <h3>新建项目</h3>
               </div>
               <button type="button" onClick={() => setCreating(false)}>×</button>
@@ -309,7 +339,7 @@ export function ProjectsView() {
             <div className="project-edit-actions">
               <button type="button" className="btn-ghost item-action-btn" onClick={() => setCreating(false)}>取消</button>
               <button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!createName.trim() || savingCreate}>
-                {savingCreate ? "创建中…" : "创建项目"}
+                {savingCreate ? "新建中…" : "新建项目"}
               </button>
             </div>
           </form>
@@ -328,7 +358,6 @@ export function ProjectsView() {
           >
             <div className="modal-head">
               <div>
-                <span>项目设置</span>
                 <h3>编辑项目</h3>
               </div>
               <button type="button" onClick={() => setEditingProject(null)}>×</button>
@@ -369,16 +398,20 @@ function ProjectDetail({
   project,
   tasks,
   tags,
+  archived,
   onEdit,
   onArchive,
+  onRestore,
   onDelete,
   onClose,
 }: {
   project: Project;
   tasks: ReturnType<typeof useAppStore.getState>["tasks"];
   tags: ReturnType<typeof useAppStore.getState>["tags"];
+  archived: boolean;
   onEdit: () => void;
   onArchive: () => void;
+  onRestore: () => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -411,10 +444,17 @@ function ProjectDetail({
             <AppIcon name="edit" size={14} />
             <span>编辑</span>
           </button>
-          <button type="button" className="item-action-btn item-action-archive" onClick={onArchive}>
-            <AppIcon name="archive" size={14} />
-            <span>归档</span>
-          </button>
+          {archived ? (
+            <button type="button" className="item-action-btn item-action-archive" onClick={onRestore}>
+              <AppIcon name="review" size={14} />
+              <span>恢复</span>
+            </button>
+          ) : (
+            <button type="button" className="item-action-btn item-action-archive" onClick={onArchive}>
+              <AppIcon name="archive" size={14} />
+              <span>归档</span>
+            </button>
+          )}
           <button type="button" className="item-action-btn item-action-danger" onClick={onDelete}>
             <AppIcon name="trash" size={14} />
             <span>删除</span>

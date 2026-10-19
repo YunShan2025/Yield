@@ -319,7 +319,7 @@ export function SettingsView() {
 
       <section className="settings-card settings-version-card" style={{ marginTop: 12 }}>
         <div><span>应用版本</span><h3>有秋 v{appVersion}</h3><p>启动后会静默检查一次；只有发现新版本时才会提醒。</p></div>
-        <button type="button" className="btn-ghost" onClick={() => window.dispatchEvent(new Event("version:check"))}>检查更新</button>
+        <button type="button" className="btn-ghost item-action-btn" onClick={() => window.dispatchEvent(new Event("version:check"))}>检查更新</button>
       </section>
 
       <section className="settings-card" style={{ marginTop: 12 }}>
@@ -372,17 +372,17 @@ export function SettingsView() {
               : "尚未运行"}
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button type="button" className="btn-primary" onClick={() => void exportJson()}>
+          <button type="button" className="btn-primary item-action-btn item-action-primary" onClick={() => void exportJson()}>
             导出 JSON
           </button>
-          <button type="button" className="btn-ghost" onClick={() => void exportCsv()}>
+          <button type="button" className="btn-ghost item-action-btn" onClick={() => void exportCsv()}>
             导出 CSV
           </button>
-          <button type="button" className="btn-ghost" onClick={() => void importJson()}>
+          <button type="button" className="btn-ghost item-action-btn" onClick={() => void importJson()}>
             导入恢复
           </button>
           {!isMobileShell() ? (
-            <button type="button" className="btn-ghost" onClick={() => void invoke("open_data_directory")}>
+            <button type="button" className="btn-ghost item-action-btn" onClick={() => void invoke("open_data_directory")}>
               打开数据目录
             </button>
           ) : null}
@@ -402,7 +402,7 @@ export function SettingsView() {
             </div>
             <button
               type="button"
-              className="btn-ghost"
+              className="btn-ghost item-action-btn"
               disabled={checkingData}
               onClick={() => void refreshDataHealth()}
             >
@@ -432,7 +432,7 @@ export function SettingsView() {
                   {!isMobileShell() ? (
                     <button
                       type="button"
-                      className="btn-ghost"
+                      className="btn-ghost item-action-btn"
                       onClick={() => void restoreDatabaseBackup(backup)}
                     >
                       恢复此版本
@@ -586,7 +586,7 @@ function SyncSettingsCard() {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
         <button
           type="button"
-          className="btn-primary"
+          className="btn-primary item-action-btn item-action-primary"
           disabled={busy !== "idle" || !appId.trim() || (!secretInput.trim() && !secretSet)}
           onClick={() => void saveCredentials()}
         >
@@ -594,7 +594,7 @@ function SyncSettingsCard() {
         </button>
         <button
           type="button"
-          className="btn-ghost"
+          className="btn-ghost item-action-btn"
           disabled={busy !== "idle" || !configured}
           onClick={() => void runSyncNow()}
         >
@@ -602,7 +602,7 @@ function SyncSettingsCard() {
         </button>
         <button
           type="button"
-          className="btn-ghost"
+          className="btn-ghost item-action-btn"
           disabled={busy !== "idle" || !configured}
           onClick={() => void runBackfill()}
         >
@@ -665,7 +665,7 @@ function ReminderSyncStatusCard() {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
         <button
           type="button"
-          className="btn-primary"
+          className="btn-primary item-action-btn item-action-primary"
           onClick={() => {
             window.dispatchEvent(new Event("reminders:resync"));
             setToast("正在重新同步系统提醒…");
@@ -676,7 +676,7 @@ function ReminderSyncStatusCard() {
         {sync.permissionGranted === false && !isMobileShell() ? (
           <button
             type="button"
-            className="btn-ghost"
+            className="btn-ghost item-action-btn"
             onClick={() => void invoke("open_notification_settings")}
           >
             打开系统通知设置

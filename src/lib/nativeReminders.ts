@@ -27,20 +27,17 @@ export function buildNativeReminderPlans(
     const due = new Date(
       `${task.due_date}T${task.due_time ?? "23:59"}:00`,
     ).getTime();
-    const reminders = task.reminder_minutes.length
-      ? task.reminder_minutes
-      : [defaultAhead];
-    for (const remind of reminders) {
-      const fireAtMs = due - remind * 60 * 1000;
-      if (fireAtMs <= nowMs) continue;
-      plans.push({
-        reminderId: `${task.id}:${task.due_date}:${task.due_time ?? "23:59"}:${remind}`,
-        taskId: task.id,
-        title: "任务提醒",
-        body: `${task.title} 将在 ${remind} 分钟内到期`,
-        fireAtMs,
-      });
-    }
+    // 任务级提醒时间已随死字段清理下线：统一使用设置里的全局提前量。
+    const remind = defaultAhead;
+    const fireAtMs = due - remind * 60 * 1000;
+    if (fireAtMs <= nowMs) continue;
+    plans.push({
+      reminderId: `${task.id}:${task.due_date}:${task.due_time ?? "23:59"}:${remind}`,
+      taskId: task.id,
+      title: "任务提醒",
+      body: `${task.title} 将在 ${remind} 分钟内到期`,
+      fireAtMs,
+    });
   }
   return plans;
 }

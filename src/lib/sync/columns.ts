@@ -21,8 +21,7 @@ export interface TableSpec {
 const TASK_COLUMNS = [
   "title", "description", "notes", "priority", "status", "due_date", "due_time",
   "end_time", "sort_order", "created_at", "updated_at", "completed_at", "deleted_at",
-  "parent_id", "repeat_rule", "project_id", "blocked_by_id", "completion_criteria",
-  "energy_level", "flexible", "schedule_locked", "goal_id",
+  "parent_id", "repeat_rule", "project_id", "goal_id",
   "goal_contribution", "generated_from_id",
 ];
 
@@ -62,10 +61,6 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
     idColumns: ["task_id", "tag_id"],
     deleteWhere: ["task_id", "tag_id"],
     columns: ["updated_at"],
-  },
-  task_planning_metadata: {
-    idColumns: ["task_id"],
-    columns: ["reminder_minutes_json", "updated_at"],
   },
   goal_entries: {
     idColumns: ["id"],

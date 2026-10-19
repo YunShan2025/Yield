@@ -75,6 +75,21 @@
   background: #c42b1c;
 }
 
+/* 标题栏搜索入口跟随浅色外壳，避免白字落在浅底上。 */
+:root[data-theme="light"] .titlebar-command,
+:root[data-theme="dawn"] .titlebar-command {
+  color: rgba(29, 43, 69, 0.72);
+  border-color: rgba(34, 55, 91, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="light"] .titlebar-command:hover,
+:root[data-theme="dawn"] .titlebar-command:hover {
+  color: #1d2b45;
+  border-color: rgba(34, 55, 91, 0.28);
+  background: rgba(255, 255, 255, 0.95);
+}
+
 :root[data-theme="dawn"] .glass-titlebar {
   border-bottom: 1px solid rgba(255, 255, 255, 0.48);
   background: rgba(255, 255, 255, 0.28);
@@ -124,6 +139,13 @@
   }
   :root[data-theme="system"] .glass-titlebar-brand small { color: rgba(29, 43, 69, 0.5); }
   :root[data-theme="system"] .glass-titlebar-controls button { color: rgba(29, 43, 69, 0.78); }
+
+  :root[data-theme="system"] .titlebar-command {
+    color: rgba(29, 43, 69, 0.72);
+    border-color: rgba(34, 55, 91, 0.16);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
 }
 
 @media (prefers-color-scheme: dark) {
@@ -143,4 +165,10 @@
   }
   :root[data-theme="system"] .glass-titlebar-brand small { color: rgba(232, 238, 248, 0.5); }
   :root[data-theme="system"] .glass-titlebar-controls button { color: rgba(232, 238, 248, 0.86); }
+
+  :root[data-theme="system"] .titlebar-command {
+    color: rgba(232, 238, 248, 0.72);
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.09);
+  }
 }

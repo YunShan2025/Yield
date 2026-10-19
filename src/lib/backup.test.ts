@@ -44,16 +44,12 @@ describe("backup coverage", () => {
       expect(source).toContain(`SELECT * FROM ${table}`);
       expect(source).toContain(`INSERT INTO ${table}`);
     }
-    expect(source).toContain("reminder_minutes_json");
-    expect(source).toContain("completion_criteria");
     expect(source).toContain("goal_contribution");
     expect(source).toContain("fetchAllHabits");
-    expect(source).toContain("task.flexible ?? 1");
-    expect(source).toContain("schedule_locked");
     expect(source).toContain("version: 1");
     expect(source).toContain("ledgerTransactions");
     expect(source).toContain("DELETE FROM goal_entries WHERE source_type IN ('task','habit')");
-    // 已下线的历史表不得回流备份/恢复链路。
+    // 已下线的历史表与死字段不得回流备份/恢复链路。
     for (const legacy of [
       "day_snapshots",
       "daily_reflections",
@@ -63,11 +59,19 @@ describe("backup coverage", () => {
       "my_day_date",
       "remind_minutes",
       "focus_sessions",
+      "task_planning_metadata",
+      "reminder_minutes_json",
+      "completion_criteria",
+      "blocked_by_id",
+      "energy_level",
+      "schedule_locked",
+      "delay_reason",
+      "saveTaskPlanningMetadata",
     ]) {
       expect(source).not.toContain(legacy);
     }
-    expect(source).toContain("saveTaskPlanningMetadata(task)");
-    expect(source).not.toContain("saveTaskPlanningMetadata(mapTask(task))");
+    // flexible 只在任务字段里作为死字段出现，不得再写回备份/恢复链路。
+    expect(source).not.toContain("task.flexible");
     expect(source).toContain("txQueue");
     expect(source).toContain("withTransaction");
     expect(source).toContain("sanitizeBackupPayload");
@@ -162,13 +166,7 @@ describe("backup pure helpers", () => {
               deleted_at: null,
               parent_id: "missing-parent",
               repeat_rule: null,
-              reminder_minutes: [],
-                        project_id: null,
-              blocked_by_id: null,
-              completion_criteria: "",
-              energy_level: "medium",
-              flexible: 1,
-              schedule_locked: 0,
+              project_id: null,
               goal_id: null,
               goal_contribution: 1,
               generated_from_id: null,
@@ -190,13 +188,7 @@ describe("backup pure helpers", () => {
               deleted_at: null,
               parent_id: null,
               repeat_rule: null,
-              reminder_minutes: [],
-                        project_id: null,
-              blocked_by_id: null,
-              completion_criteria: "",
-              energy_level: "medium",
-              flexible: 1,
-              schedule_locked: 0,
+              project_id: null,
               goal_id: null,
               goal_contribution: 1,
               generated_from_id: null,
@@ -225,13 +217,7 @@ describe("backup pure helpers", () => {
             deleted_at: null,
             parent_id: "missing-parent",
             repeat_rule: null,
-            reminder_minutes: [],
-                    project_id: null,
-            blocked_by_id: null,
-            completion_criteria: "",
-            energy_level: "medium",
-            flexible: 1,
-            schedule_locked: 0,
+            project_id: null,
             goal_id: null,
             goal_contribution: 1,
             generated_from_id: null,
@@ -273,13 +259,7 @@ describe("backup pure helpers", () => {
       deleted_at: null,
       parent_id: "missing-parent",
       repeat_rule: null,
-      reminder_minutes: [],
-        project_id: "missing-project",
-      blocked_by_id: "missing-blocker",
-      completion_criteria: "",
-      energy_level: "medium" as const,
-      flexible: 1,
-      schedule_locked: 0,
+      project_id: "missing-project",
       goal_id: null,
       goal_contribution: 1,
       generated_from_id: "missing-source",
@@ -314,13 +294,11 @@ describe("backup pure helpers", () => {
     });
     const report = inspectBackupPayload(payload);
     expect(report.warnings.some((item) => item.includes("恢复时将跳过"))).toBe(true);
-    expect(report.warnings.some((item) => item.includes("前置任务不存在"))).toBe(true);
     const sanitized = sanitizeBackupPayload(payload);
     expect(sanitized.taskTags).toEqual([{ task_id: "task-1", tag_id: "tag-1" }]);
     expect(sanitized.attachments).toEqual([]);
     expect(sanitized.tasks[0].parent_id).toBeNull();
     expect(sanitized.tasks[0].generated_from_id).toBeNull();
     expect(sanitized.tasks[0].project_id).toBeNull();
-    expect(sanitized.tasks[0].blocked_by_id).toBeNull();
   });
 });

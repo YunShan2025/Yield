@@ -30,6 +30,16 @@ export type NavId =
   | "projects"
   | "ledger";
 
+/** 命令面板跳转到页内实体时携带的聚焦目标。 */
+export type FocusKind = "memo" | "goal" | "project" | "anniversary" | "ledger";
+
+export interface FocusRequest {
+  kind: FocusKind;
+  id: string;
+  /** 账本条目所在日期（YYYY-MM-DD），用于切到对应月份。 */
+  date?: string;
+}
+
 export type RepeatFrequency = "daily" | "weekly" | "monthly" | "custom";
 
 export interface RepeatRule {
@@ -61,13 +71,7 @@ export interface Task {
   deleted_at: string | null;
   parent_id: string | null;
   repeat_rule: string | null;
-  reminder_minutes: number[];
   project_id: string | null;
-  blocked_by_id: string | null;
-  completion_criteria: string;
-  energy_level: "low" | "medium" | "high";
-  flexible: number;
-  schedule_locked: number;
   goal_id: string | null;
   goal_contribution: number;
   /** Repeat occurrence spawned when completing another task. */
@@ -157,15 +161,9 @@ export interface TaskDraft {
   end_time?: string | null;
   parent_id?: string | null;
   repeat_rule?: string | null;
-  reminder_minutes?: number[];
   project_id?: string | null;
   relative_due_days?: number;
   subtasks?: TaskDraft[];
-  blocked_by_id?: string | null;
-  completion_criteria?: string;
-  energy_level?: Task["energy_level"];
-  flexible?: number;
-  schedule_locked?: number;
   goal_id?: string | null;
   goal_contribution?: number;
   tagIds?: string[];
@@ -176,6 +174,8 @@ export interface HabitDraft {
   title: string;
   goal_id?: string | null;
   goal_contribution?: number;
+  /** 每周目标打卡次数，1–7；缺省按 3 处理。 */
+  target_per_week?: number;
   target_days?: number | null;
 }
 
@@ -192,13 +192,7 @@ export interface TaskUpdate {
   end_time?: string | null;
   parent_id?: string | null;
   repeat_rule?: string | null;
-  reminder_minutes?: number[];
   project_id?: string | null;
-  blocked_by_id?: string | null;
-  completion_criteria?: string;
-  energy_level?: Task["energy_level"];
-  flexible?: number;
-  schedule_locked?: number;
   goal_id?: string | null;
   goal_contribution?: number;
   sort_order?: number;

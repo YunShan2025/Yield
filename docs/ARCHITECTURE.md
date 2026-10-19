@@ -88,9 +88,9 @@ src-tauri/
 ## 7. 数据层
 
 - **存储位置**：桌面 `%APPDATA%\com.yunshan.yield\app.db`（SQLite 单库），WebView2 配置在 `%LOCALAPPDATA%\com.yunshan.yield`；Android 为应用私有数据目录。
-- **24 张表**，按域分组：
-  - 任务域：`tasks`、`tags`、`task_tags`、`attachments`、`task_events`、`task_planning_metadata`（提醒时间唯一权威存储 `reminder_minutes_json`）、`projects`；
-  - 目标与成长：`goals`、`goal_milestones`、`goal_entries`、`milestones`、`achievements`、`habit_checks`、`habits`、`focus_sessions`；
+- **21 张表**，按域分组（已下线功能的表随 migration v7 / v10 / v16 删除，不再列出）：
+  - 任务域：`tasks`、`tags`、`task_tags`、`attachments`、`task_events`、`projects`；
+  - 目标与成长：`goals`、`goal_milestones`、`goal_entries`、`achievements`、`habit_checks`、`habits`；
   - 收支（观流账本）：`ledger_accounts`、`ledger_categories`、`ledger_budgets`、`ledger_transactions`；
   - 回望：`memos`、`anniversaries`；
   - 提醒与通知：`app_notifications`；计时：`timers`；系统：`settings`（含 `schema_contract='1'` 契约种子）。

@@ -20,11 +20,30 @@ if (!/^[\x20-\x7E]+$/.test(String(tauri.productName ?? ""))) {
 if (String(tauri.productName ?? "") !== "Yield") {
   failures.push('productName 应为 "Yield"，以保持安装包命名稳定');
 }
-if (!migrationTest.includes("anniversaries") || !migrationTest.includes("task_planning_metadata")) {
-  failures.push("migration 测试未覆盖纪念日 / 任务规划元数据");
+if (!migrationTest.includes("anniversaries") || !migrationTest.includes("drop_dead_task_planning_fields")) {
+  failures.push("migration 测试未覆盖纪念日 / 任务级提醒死字段清理");
 }
 if (!backupTest.includes("anniversaries")) {
   failures.push("备份测试未覆盖纪念日数据");
+}
+/* README 功能描述与代码一致（P0-2）：已下线功能词汇不得回流。 */
+const retiredFeatureWords = [
+  "预计时长",
+  "预计耗时",
+  "实际耗时",
+  "多次提醒",
+  "前置依赖",
+  "精力等级",
+  "灵活排程",
+  "专注会话",
+  "专注时间",
+  "专注计时",
+];
+const readmeRetiredHits = retiredFeatureWords.filter((word) => readme.includes(word));
+if (readmeRetiredHits.length) {
+  failures.push(
+    `README 含已下线功能描述（${readmeRetiredHits.join("、")}），请与当前 UI/代码对齐`,
+  );
 }
 if (tauri.bundle?.windows?.webviewInstallMode?.type !== "skip") {
   failures.push("Windows 安装包不得捆绑或下载 WebView2（webviewInstallMode 必须为 skip）");
@@ -54,7 +73,7 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`发布静态检查通过：v${pkg.version} · README / Cargo / Tauri / 数据迁移与备份覆盖一致`);
+console.log(`发布静态检查通过：v${pkg.version} · README 功能一致 / Cargo / Tauri / 数据迁移与备份覆盖一致`);
 
 const cargoCheck = spawnSync(
   "cargo",

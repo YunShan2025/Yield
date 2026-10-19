@@ -159,7 +159,7 @@ export function TagsView() {
             className="btn-primary"
             onClick={openCreate}
           >
-            ＋ 新建标签
+            新建标签
           </button>
         </div>
       </div>
@@ -340,7 +340,6 @@ export function TagsView() {
           >
             <div className="modal-head">
               <div>
-                <span>标签</span>
                 <h3>新建标签</h3>
               </div>
               <button type="button" onClick={() => setCreating(false)}>×</button>
@@ -370,7 +369,7 @@ export function TagsView() {
                 className="btn-primary item-action-btn item-action-primary"
                 disabled={!createName.trim() || savingCreate}
               >
-                {savingCreate ? "创建中…" : "创建标签"}
+                {savingCreate ? "新建中…" : "新建标签"}
               </button>
             </div>
           </form>
@@ -391,7 +390,6 @@ export function TagsView() {
           >
             <div className="modal-head">
               <div>
-                <span>标签设置</span>
                 <h3>修改标签</h3>
               </div>
               <button type="button" onClick={() => setEditingTag(null)}>×</button>

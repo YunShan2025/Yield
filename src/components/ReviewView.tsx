@@ -4,16 +4,31 @@ import { fetchGoalEntries, fetchGoals } from "@/lib/db";
 import { todayDateString } from "@/lib/dates";
 import type { Goal, GoalEntry } from "@/types";
 import { localDateKey } from "@/lib/growth";
-import { countFullDays, mondayWeekDates, shiftWeek } from "@/lib/weeklyChecklist";
+import {
+  aggregateReviewByGoal,
+  aggregateReviewByProject,
+  aggregateReviewByTag,
+  computeWeekReviewMetrics,
+  type ReviewDimension,
+} from "@/lib/review";
+import {
+  countFullDays,
+  mondayWeekDates,
+  shiftWeek,
+} from "@/lib/weeklyChecklist";
 
 export function ReviewView() {
   const tasks = useAppStore((s) => s.tasks);
+  const projects = useAppStore((s) => s.projects);
+  const tags = useAppStore((s) => s.tags);
+  const tagMap = useAppStore((s) => s.tagMap);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [goalEntries, setGoalEntries] = useState<GoalEntry[]>([]);
   const [anchor, setAnchor] = useState(() => todayDateString());
+  const [dimension, setDimension] = useState<ReviewDimension>("goal");
 
   useEffect(() => {
-    void Promise.all([fetchGoals(), fetchGoalEntries()]).then(([nextGoals, nextEntries]) => {
+    void Promise.all([fetchGoals(true), fetchGoalEntries()]).then(([nextGoals, nextEntries]) => {
       setGoals(nextGoals);
       setGoalEntries(nextEntries);
     });
@@ -22,6 +37,16 @@ export function ReviewView() {
   const weekDates = useMemo(() => mondayWeekDates(anchor), [anchor]);
   const weekStart = weekDates[0];
   const weekEnd = weekDates[6];
+
+  const breakdown = useMemo(() => {
+    if (dimension === "project") {
+      return aggregateReviewByProject(tasks, weekDates, projects);
+    }
+    if (dimension === "tag") {
+      return aggregateReviewByTag(tasks, weekDates, tags, tagMap);
+    }
+    return aggregateReviewByGoal(tasks, weekDates, goals);
+  }, [dimension, goals, projects, tagMap, tags, tasks, weekDates]);
 
   const stats = useMemo(() => {
     // 新增/完成都按当日计，已删除的任务不计入。
@@ -41,32 +66,12 @@ export function ReviewView() {
             localDateKey(new Date(t.completed_at)) === d,
         ).length,
     );
-    const roots = tasks.filter((t) => !t.parent_id);
-    const done = roots.filter((t) => t.status === "completed").length;
-    const rate = roots.length ? Math.round((done / roots.length) * 100) : 0;
-    const delayed = roots.filter(
-      (t) =>
-        t.status === "completed" &&
-        t.due_date &&
-        t.completed_at &&
-        localDateKey(new Date(t.completed_at)) > t.due_date,
-    ).length;
-    const delayRate = done ? Math.round((delayed / done) * 100) : 0;
-
-    const hours = Array.from({ length: 24 }, () => 0);
-    for (const t of roots) {
-      if (!t.completed_at) continue;
-      const h = new Date(t.completed_at).getHours();
-      hours[h] += 1;
-    }
-    const peak = hours.indexOf(Math.max(...hours));
+    const weekMetrics = computeWeekReviewMetrics(tasks, weekDates);
 
     return {
       created,
       completed,
-      rate,
-      delayRate,
-      peak,
+      ...weekMetrics,
       fullDays: countFullDays(tasks, weekDates),
       max: Math.max(1, ...created, ...completed),
     };
@@ -122,9 +127,8 @@ export function ReviewView() {
 
       <div className="review-body">
       <section className="review-metrics" aria-label="本周摘要">
-        <article><span>整体完成率</span><strong>{stats.rate}%</strong><small>全部任务累计表现</small></article>
-        <article><span>延期完成</span><strong>{stats.delayRate}%</strong><small>{stats.delayRate ? "可以留意计划余量" : "节奏保持得很好"}</small></article>
-        <article><span>高效时段</span><strong>{stats.peak}:00</strong><small>最常完成任务的时间</small></article>
+        <article><span>本周完成率</span><strong>{stats.rate}%</strong><small>本周 {stats.done}/{stats.total} 项已完成</small></article>
+        <article><span>本周高效时段</span><strong>{stats.peakHour === null ? "—" : `${stats.peakHour}:00`}</strong><small>{stats.peakHour === null ? "本周还没有完成记录" : "本周最常完成任务的时间"}</small></article>
         <article><span>满勤天数</span><strong>{stats.fullDays}</strong><small>本周中当日事项全部完成的天数</small></article>
       </section>
 
@@ -163,6 +167,57 @@ export function ReviewView() {
         </div>
         </section>
       </div>
+
+      <section className="review-story-card review-breakdown">
+        <div className="review-section-head">
+          <div>
+            <span>精力投向</span>
+            <h3>当周完成情况</h3>
+          </div>
+          <div className="review-dimension-tabs" role="tablist" aria-label="聚合维度">
+            {(
+              [
+                ["goal", "按目标"],
+                ["project", "按项目"],
+                ["tag", "按标签"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={dimension === value}
+                className={dimension === value ? "is-active" : ""}
+                onClick={() => setDimension(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="review-breakdown-list">
+          {breakdown.map((group) => (
+            <div key={group.key} className="review-breakdown-row">
+              <div className="review-breakdown-label">
+                <i style={group.color ? { background: group.color } : undefined} />
+                <span>{group.label}</span>
+              </div>
+              <div
+                className="review-breakdown-track"
+                title={`完成 ${group.done}/${group.total}`}
+              >
+                <i style={{ width: `${group.rate}%` }} />
+              </div>
+              <strong>{group.done}/{group.total}</strong>
+              <em>{group.rate}%</em>
+            </div>
+          ))}
+          {!breakdown.length ? (
+            <p className="review-soft-empty">本周还没有可聚合的任务。</p>
+          ) : null}
+        </div>
+      </section>
       </div>
     </main>
   );

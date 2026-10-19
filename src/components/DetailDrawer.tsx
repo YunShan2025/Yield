@@ -5,6 +5,7 @@ import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import type {
   Attachment,
+  Goal,
   RepeatRule,
   TaskPriority,
 } from "@/types";
@@ -15,6 +16,7 @@ import { DatePicker } from "@/components/DatePicker";
 import { AppIcon } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
+import { fetchGoals } from "@/lib/db";
 import {
   ensureEndAfterStart,
   formatTimeRange,
@@ -63,10 +65,17 @@ export function DetailDrawer() {
   const [dueTime, setDueTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [repeat, setRepeat] = useState<RepeatRule | null>(null);
+  const [goalId, setGoalId] = useState("");
+  const [goalContribution, setGoalContribution] = useState("1");
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const loadedId = useRef<string | null>(null);
+
+  useEffect(() => {
+    void fetchGoals(true).then(setGoals);
+  }, []);
 
   useEffect(() => {
     if (!task) {
@@ -96,6 +105,8 @@ export function DetailDrawer() {
         ensureEndAfterStart(task.due_time ?? range.start, null),
     );
     setRepeat(parseRepeatRule(task.repeat_rule));
+    setGoalId(task.goal_id ?? "");
+    setGoalContribution(String(task.goal_contribution || 1));
   };
 
   const enterEdit = () => {
@@ -192,6 +203,11 @@ export function DetailDrawer() {
     const nextTitle = title.trim() || "新任务";
     const start = dueTime || nowTimeString();
     const end = ensureEndAfterStart(start, endTime);
+    const contribution = Number(goalContribution);
+    if (goalId && (!Number.isFinite(contribution) || contribution <= 0)) {
+      setToast("目标贡献值需大于 0");
+      return false;
+    }
     setSaving(true);
     try {
       await saveTask(task.id, {
@@ -201,17 +217,12 @@ export function DetailDrawer() {
         due_date: dueDate || null,
         due_time: start,
         end_time: end,
-        // 备注/完成标准/提醒/预计/状态/精力/排程/前置任务已从编辑表单移除，
-        // 这里透传任务现有值，避免保存时被清掉。
+        // 备注已从编辑表单移除，透传现有值避免保存时被清掉。
         notes: task.notes,
-        reminder_minutes: task.reminder_minutes,
         status: task.status,
-        completion_criteria: task.completion_criteria,
-        energy_level: task.energy_level,
-        flexible: task.flexible,
-        schedule_locked: task.schedule_locked,
-        blocked_by_id: task.blocked_by_id,
         repeat_rule: stringifyRepeatRule(repeat),
+        goal_id: goalId || null,
+        goal_contribution: goalId ? contribution : 1,
       });
       setToast("已保存");
       setDirty(false);
@@ -232,6 +243,21 @@ export function DetailDrawer() {
     ? projects.find((item) => item.id === task.project_id) ?? null
     : null;
   const timeText = formatTimeRange(task.due_time, task.end_time);
+  const goal = task.goal_id
+    ? goals.find((item) => item.id === task.goal_id) ?? null
+    : null;
+  const contributionGoals = goals.filter(
+    (item) =>
+      item.status === "active" &&
+      (item.goal_type === "quantity" || item.goal_type === "frequency"),
+  );
+  const goalOptions = [
+    { value: "", label: "不关联目标" },
+    ...contributionGoals.map((item) => ({ value: item.id, label: item.title })),
+    ...(goal && !contributionGoals.some((item) => item.id === goal.id)
+      ? [{ value: goal.id, label: `${goal.title}（已归档/不适用）` }]
+      : []),
+  ];
 
   const pickFile = async () => {
     const selected = await open({ multiple: false });
@@ -307,6 +333,19 @@ export function DetailDrawer() {
               <span className="field-label">所属项目</span>
               <strong>{project ? project.name : "无项目"}</strong>
             </div>
+            <div className="detail-meta">
+              <span className="field-label">成长目标</span>
+              <strong>{goal ? goal.title : "未关联"}</strong>
+            </div>
+            {goal ? (
+              <div className="detail-meta">
+                <span className="field-label">目标贡献</span>
+                <strong>
+                  {Math.round(task.goal_contribution * 100) / 100}
+                  {goal.unit}
+                </strong>
+              </div>
+            ) : null}
             <div className="detail-meta">
               <span className="field-label">标签</span>
               <strong>
@@ -478,6 +517,39 @@ export function DetailDrawer() {
                 ]}
               />
             </div>
+          </div>
+
+          <div className="detail-form-row">
+            <div>
+              <label className="field-label">成长目标</label>
+              <SelectMenu
+                className="field"
+                ariaLabel="成长目标"
+                value={goalId}
+                onChange={(value) => {
+                  setGoalId(value);
+                  setDirty(true);
+                  if (!value) setGoalContribution("1");
+                }}
+                options={goalOptions}
+              />
+            </div>
+            {goalId ? (
+              <div>
+                <label className="field-label">目标贡献</label>
+                <input
+                  className="field"
+                  type="number"
+                  min={0.1}
+                  step={0.1}
+                  value={goalContribution}
+                  onChange={(event) => {
+                    setGoalContribution(event.target.value);
+                    setDirty(true);
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
 
           <div>

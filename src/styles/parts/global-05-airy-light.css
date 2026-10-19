@@ -951,16 +951,40 @@ select {
 }
 
 /* 今日/当日事项行:同一套成就式完成态。作用于 .day-agenda 作用域,
-   周历等其余列表的完成态不受影响。 */
-.day-agenda .expand-task.is-done {
+   周历等其余列表的完成态不受影响。金色用覆盖层渐显,与按钮落金同步;
+   悬停时行内背景不再整块盖掉金色。 */
+.day-agenda .expand-task {
+  position: relative;
+  isolation: isolate;
+  transition: border-color 260ms ease;
+}
+
+.day-agenda .expand-task::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms ease;
+}
+
+.day-agenda .expand-task > * {
+  position: relative;
+  z-index: 1;
+}
+
+.day-agenda .expand-task.is-done::before {
+  opacity: 1;
+}
+
+.day-agenda .expand-task.is-done {
   border-color: rgba(217, 119, 6, 0.28);
 }
 
-.day-agenda .expand-task.is-done .task-check {
-  border-color: transparent;
-  background: linear-gradient(135deg, #fbbf24, #d97706);
-  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.35);
+.day-agenda .expand-task.is-done .expand-task-row:hover {
+  background: rgba(217, 119, 6, 0.06);
 }
 
 .day-agenda .expand-task.is-done .task-title {
@@ -982,9 +1006,16 @@ select {
   white-space: nowrap;
 }
 
-:root[data-theme="dark"] .day-agenda .expand-task.is-done {
+:root[data-theme="dark"] .day-agenda .expand-task::before {
   background: rgba(245, 158, 11, 0.08);
+}
+
+:root[data-theme="dark"] .day-agenda .expand-task.is-done {
   border-color: rgba(245, 158, 11, 0.25);
+}
+
+:root[data-theme="dark"] .day-agenda .expand-task.is-done .expand-task-row:hover {
+  background: rgba(245, 158, 11, 0.08);
 }
 
 :root[data-theme="dark"] .day-agenda .expand-task.is-done .task-title {
@@ -1232,6 +1263,10 @@ select {
   align-items: center;
   padding: 12px 10px;
   cursor: pointer;
+}
+/* 今日事项行用右侧「完成/打卡」按钮，左侧不再留完成圆钮。 */
+.expand-task-row.no-check {
+  grid-template-columns: 1fr auto auto auto auto;
 }
 
 .expand-task-row:hover {

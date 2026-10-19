@@ -86,30 +86,20 @@ describe("repeat rules", () => {
     expect(result?.due_date).toBe("2026-08-28");
   });
 
-  it("preserves planning fields for the next repeated task", () => {
+  it("carries description, project and goal fields into the next repeated task", () => {
     const source = {
       ...task('{"frequency":"daily","interval":1}'),
       description: "details",
       notes: "notes",
       priority: 1,
       end_time: "10:00",
-      reminder_minutes: [60, 30, 10],
       project_id: "project-1",
-      blocked_by_id: "blocker-1",
-      completion_criteria: "reviewed",
-      energy_level: "high",
-      flexible: 0,
       goal_id: "goal-1",
       goal_contribution: 2,
     } as Task;
     expect(nextRepeatTaskDraft(source, new Date("2026-07-28T08:00:00"))).toMatchObject({
       due_date: "2026-07-29",
-      reminder_minutes: [60, 30, 10],
       project_id: "project-1",
-      blocked_by_id: "blocker-1",
-      completion_criteria: "reviewed",
-      energy_level: "high",
-      flexible: 0,
       goal_id: "goal-1",
       goal_contribution: 2,
       generated_from_id: "task",

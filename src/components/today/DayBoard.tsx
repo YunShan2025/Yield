@@ -20,6 +20,7 @@ import { TodayTimeline } from "../TodayTimeline";
  */
 export function DayBoard() {
   const allTasks = useAppStore((s) => s.tasks);
+  const habits = useAppStore((s) => s.habits);
   const nav = useAppStore((s) => s.nav);
   const cursor = useAppStore((s) => s.calendarCursor);
   const today = todayDateString();
@@ -59,6 +60,13 @@ export function DayBoard() {
   );
 
   const conflictIds = useMemo(() => findTimeConflictIds(dayTasks), [dayTasks]);
+
+  // 今日事项把习惯一并列出（任务 + 习惯）；习惯模型只按每周次数设目标，
+  // 没有星期字段，因此活跃习惯每天都出现在今日清单里。
+  const todayHabits = useMemo(
+    () => (isTodayView && cursor === today ? habits : []),
+    [habits, isTodayView, cursor, today],
+  );
 
   const pending = dayTasks.filter(isActiveTask).length;
   const done = dayTasks.filter((task) => task.status === "completed").length;
@@ -112,6 +120,7 @@ export function DayBoard() {
 
       <TodayAgenda
         tasks={orderedTasks}
+        habits={todayHabits}
         cursor={cursor}
         today={today}
         isTodayView={isTodayView}

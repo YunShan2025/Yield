@@ -93,10 +93,12 @@ export function GrowthView() {
   const projects = useAppStore((state) => state.projects);
   const addTask = useAppStore((state) => state.addTask);
   const allTasks = useAppStore((state) => state.tasks);
+  const focusRequest = useAppStore((state) => state.focusRequest);
+  const clearFocus = useAppStore((state) => state.clearFocus);
 
-  const refresh = async () => {
+  const refresh = async (includeArchived = false) => {
     const [nextGoals, nextEntries, nextMilestones, nextAchievements] = await Promise.all([
-      fetchGoals(),
+      fetchGoals(includeArchived),
       fetchGoalEntries(),
       fetchGoalMilestones(),
       fetchAchievements(),
@@ -110,6 +112,25 @@ export function GrowthView() {
   useEffect(() => {
     void refresh();
   }, []);
+
+  // 命令面板选中目标后：定位到「目标」页签并打开该目标详情（含已归档）。
+  useEffect(() => {
+    if (focusRequest?.kind !== "goal") return;
+    setTab("goals");
+    setSelectedGoalId(focusRequest.id);
+    clearFocus();
+    // 归档目标默认不在列表里；补拉一次并合并，保证详情页能正常渲染。
+    void fetchGoals(true).then((allGoals) =>
+      setGoals((current) => {
+        const byId = new Map(allGoals.map((goal) => [goal.id, goal]));
+        const merged = current.map((goal) => byId.get(goal.id) ?? goal);
+        for (const goal of allGoals) {
+          if (!merged.some((item) => item.id === goal.id)) merged.push(goal);
+        }
+        return merged;
+      }),
+    );
+  }, [focusRequest, clearFocus]);
 
   const selectedGoal = goals.find((goal) => goal.id === selectedGoalId) ?? null;
   useEffect(() => {
@@ -250,7 +271,7 @@ export function GrowthView() {
 
   return (
     <div className="growth-page">
-      {/* 与「今日/待办箱」同构的标题区:h2 标题 + 副标题,右侧直达「创建目标」。 */}
+      {/* 与「今日/待办箱」同构的标题区:h2 标题 + 副标题,右侧直达「新建目标」。 */}
       <div className="workspace-top growth-top">
         <div>
           <h2>成长</h2>
@@ -258,7 +279,7 @@ export function GrowthView() {
         </div>
         <div className="top-controls">
           <button className="btn-primary" type="button" onClick={openCreateGoal}>
-            创建目标
+            新建目标
           </button>
         </div>
       </div>
@@ -337,11 +358,11 @@ export function GrowthView() {
                   : `记录 +${entryValue}${selectedGoal.unit}`}
               </button>
               {selectedGoal.status === "active" ? <button className="btn-ghost" onClick={() => void addTask({ title: `推进：${selectedGoal.title}`, due_date: todayDateString(), goal_id: selectedGoal.id, goal_contribution: 1 }).then(() => useAppStore.getState().setToast("已创建今日截止的任务"))}>加入今日行动</button> : null}
-              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(refresh)}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
+              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
               <button className="btn-ghost" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
               <button className="btn-ghost" onClick={() => void reconcileGoalEntries(selectedGoal.id).then((count) => { useAppStore.getState().setToast(count ? `已清理 ${count} 条不兼容贡献` : "贡献记录无需清理"); return refresh(); })}>检查贡献</button>
-              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(refresh)}>完成</button> : null}
-              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost danger" onClick={() => void updateGoal(selectedGoal.id, { status: "abandoned" }).then(refresh)}>放弃</button> : null}
+              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(() => refresh())}>完成</button> : null}
+              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost danger" onClick={() => void updateGoal(selectedGoal.id, { status: "abandoned" }).then(() => refresh())}>放弃</button> : null}
               <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: "archived" }).then(() => { setSelectedGoalId(null); return refresh(); })}>归档</button>
             </div>
             <div className="growth-columns">
@@ -357,14 +378,14 @@ export function GrowthView() {
       {tab === "achievements" ? (
         <section>
           <div className="achievement-compose growth-panel"><input value={achievementTitle} placeholder="记录一个值得纪念的成就" onChange={(event) => setAchievementTitle(event.target.value)} /><input value={achievementDescription} placeholder="写下这件事为什么重要" onChange={(event) => setAchievementDescription(event.target.value)} /><SelectMenu ariaLabel="关联目标" value={selectedGoalId ?? ""} onChange={(value) => setSelectedGoalId(value || null)} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} /><button className="btn-primary" onClick={() => { if (!achievementTitle.trim()) return; void createAchievement({ title: achievementTitle, description: achievementDescription, achieved_at: todayDateString(), goal_id: selectedGoalId, source_type: "manual" }).then(() => { setAchievementTitle(""); setAchievementDescription(""); return refresh(); }); }}>保存成就</button></div>
-          <div className="achievement-grid">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(refresh)} />)}</div>
+          <div className="achievement-grid">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(() => refresh())} />)}</div>
           {!achievements.length ? <div className="empty-state">还没有成就记录。把今天值得纪念的一步留在这里。</div> : null}
         </section>
       ) : null}
 
-      {showCreate ? <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}><div className="goal-create-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><h3>创建长期目标</h3><button onClick={() => setShowCreate(false)}>×</button></div><label>目标名称<input autoFocus value={goalTitle} onChange={(event) => setGoalTitle(event.target.value)} /></label><div className="form-row"><label>目标类型<SelectMenu ariaLabel="目标类型" value={goalType} onChange={(value) => { const next = value as GoalType; setGoalType(next); setUnit(GOAL_TYPES.find((item) => item.value === next)?.unit ?? "次"); setStartValue("0"); }} options={GOAL_TYPES.map((item) => ({ value: item.value, label: item.label }))} /></label>{goalType !== "project" ? <label>{goalType === "change" ? "起始值" : "当前值"}<input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>目标值<input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>单位<input value={unit} onChange={(event) => setUnit(event.target.value)} /></label> : null}</div>{goalType === "frequency" ? <label>每周目标次数<input type="number" min="1" value={weeklyTarget} onChange={(event) => setWeeklyTarget(event.target.value)} /></label> : null}{goalType === "project" ? <label>关联项目<SelectMenu ariaLabel="关联项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "请选择项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} /></label> : null}<label>目标日期<DatePicker value={targetDate} onChange={setTargetDate} ariaLabel="目标日期" allowClear /></label><label>为什么想完成它<textarea value={motivation} onChange={(event) => setMotivation(event.target.value)} /></label><div className="goal-color-picker">{COLORS.map((item) => <button key={item} className={color === item ? "active" : ""} style={{ background: item }} onClick={() => setColor(item)} />)}</div><div className="goal-create-actions"><button className="btn-primary item-action-btn item-action-primary" onClick={() => void submitGoal()}>创建目标</button></div></div></div> : null}
+      {showCreate ? <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}><div className="goal-create-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><h3>新建目标</h3><button onClick={() => setShowCreate(false)}>×</button></div><label>目标名称<input autoFocus value={goalTitle} onChange={(event) => setGoalTitle(event.target.value)} /></label><div className="form-row"><label>目标类型<SelectMenu ariaLabel="目标类型" value={goalType} onChange={(value) => { const next = value as GoalType; setGoalType(next); setUnit(GOAL_TYPES.find((item) => item.value === next)?.unit ?? "次"); setStartValue("0"); }} options={GOAL_TYPES.map((item) => ({ value: item.value, label: item.label }))} /></label>{goalType !== "project" ? <label>{goalType === "change" ? "起始值" : "当前值"}<input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>目标值<input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>单位<input value={unit} onChange={(event) => setUnit(event.target.value)} /></label> : null}</div>{goalType === "frequency" ? <label>每周目标次数<input type="number" min="1" value={weeklyTarget} onChange={(event) => setWeeklyTarget(event.target.value)} /></label> : null}{goalType === "project" ? <label>关联项目<SelectMenu ariaLabel="关联项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "请选择项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} /></label> : null}<label>目标日期<DatePicker value={targetDate} onChange={setTargetDate} ariaLabel="目标日期" allowClear /></label><label>为什么想完成它<textarea value={motivation} onChange={(event) => setMotivation(event.target.value)} /></label><div className="goal-color-picker">{COLORS.map((item) => <button key={item} className={color === item ? "active" : ""} style={{ background: item }} onClick={() => setColor(item)} />)}</div><div className="goal-create-actions"><button className="btn-primary item-action-btn item-action-primary" onClick={() => void submitGoal()}>新建目标</button></div></div></div> : null}
 
-      {selectedDate ? <div className="modal-backdrop" onMouseDown={() => setSelectedDate(null)}><div className="day-activity-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><div><span>成长回看</span><h3>{selectedDate}</h3></div><button onClick={() => setSelectedDate(null)}>×</button></div>{(completedTasksByDate.get(selectedDate) ?? []).map((task) => <div className="day-activity-row" key={task.id}><i className="done" /><div><strong>{task.title}</strong><span>完成任务{task.due_time ? ` · ${task.due_time}` : ""}</span></div></div>)}{(entriesByDate.get(selectedDate) ?? []).map((entry) => { const goal = goals.find((item) => item.id === entry.goal_id); const valueLabel = goal?.goal_type === "change" ? `当前 ${entry.value}` : `+${entry.value}`; return <div className="day-activity-row" key={entry.id}><i style={{ background: goal?.color }} /><div><strong>{entry.note || "记录了一次成长"}</strong><span>{goal?.title} · {valueLabel}{goal?.unit}</span></div></div>; })}{!(entriesByDate.get(selectedDate) ?? []).length && !(completedTasksByDate.get(selectedDate) ?? []).length ? <div className="empty-state">这一天没有记录。空白不是失败，只是尚未留下足迹。</div> : null}</div></div> : null}
+      {selectedDate ? <div className="modal-backdrop" onMouseDown={() => setSelectedDate(null)}><div className="day-activity-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><h3>成长回看</h3><button onClick={() => setSelectedDate(null)}>×</button></div><p className="day-activity-date">{selectedDate}</p>{(completedTasksByDate.get(selectedDate) ?? []).map((task) => <div className="day-activity-row" key={task.id}><i className="done" /><div><strong>{task.title}</strong><span>完成任务{task.due_time ? ` · ${task.due_time}` : ""}</span></div></div>)}{(entriesByDate.get(selectedDate) ?? []).map((entry) => { const goal = goals.find((item) => item.id === entry.goal_id); const valueLabel = goal?.goal_type === "change" ? `当前 ${entry.value}` : `+${entry.value}`; return <div className="day-activity-row" key={entry.id}><i style={{ background: goal?.color }} /><div><strong>{entry.note || "记录了一次成长"}</strong><span>{goal?.title} · {valueLabel}{goal?.unit}</span></div></div>; })}{!(entriesByDate.get(selectedDate) ?? []).length && !(completedTasksByDate.get(selectedDate) ?? []).length ? <div className="empty-state">这一天没有记录。空白不是失败，只是尚未留下足迹。</div> : null}</div></div> : null}
     </div>
   );
 }

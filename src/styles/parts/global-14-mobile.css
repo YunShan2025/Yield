@@ -459,6 +459,175 @@ html[data-shell="mobile"] .modal-backdrop {
   padding: 12px;
 }
 
+/* ---------- 10.5) 全局搜索面板移动化（2026-10-19：桌面端改为全局搜索） ---------- */
+
+/* 桌面是「贴顶居中 + 620px 上限」的窄卡片；手机上让它落在拇指区上方、
+   占满宽度，并给底部留出安全区，结果列表在被软键盘顶起的视口里可滚。
+   高度用 dvh：Chrome 83 无 dvh 时先由前面的 vh 兜底（键盘弹出时随视口收缩）。 */
+html[data-shell="mobile"] .command-backdrop {
+  place-items: start stretch;
+  padding: 8px 0 0;
+}
+
+html[data-shell="mobile"] .command-palette {
+  width: 100%;
+  max-height: 78vh;
+  max-height: min(78dvh, calc(100dvh - 16px));
+  border: 0;
+  border-radius: 0 0 16px 16px;
+  /* 底部导航在面板之下，但滚动到底时最后一行仍要与屏幕下沿留白。 */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overscroll-behavior: contain;
+}
+
+html[data-shell="mobile"] .command-search {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 10px 12px 11px;
+  background: var(--bg-panel);
+}
+
+html[data-shell="mobile"] .command-search-field {
+  min-height: 48px;
+  padding: 0 13px;
+  border-radius: 14px;
+}
+
+html[data-shell="mobile"] .command-search input {
+  /* 16px 是 Android WebView 的输入框防缩放下限，比桌面同值。 */
+  min-height: 46px;
+  font-size: 16px;
+}
+
+html[data-shell="mobile"] .command-search-hint {
+  display: none;
+}
+
+html[data-shell="mobile"] .command-label {
+  margin: 12px 16px 6px;
+}
+
+/* 触摸端没有 ↑↓ / Enter：组头右侧改挂「点按打开」，键盘提示只在桌面出现。 */
+html[data-shell="mobile"] .command-label-hint {
+  display: none;
+}
+
+html[data-shell="mobile"] .command-label-tap {
+  display: inline;
+}
+
+html[data-shell="mobile"] .command-results {
+  padding: 0 8px 8px;
+}
+
+/* 结果行触摸目标垫到 48px，行内两行文本（标题/摘要）不再压缩。 */
+html[data-shell="mobile"] .command-results button {
+  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 2px 8px;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+
+html[data-shell="mobile"] .command-results button svg {
+  grid-row: 1 / span 2;
+}
+
+html[data-shell="mobile"] .command-results button strong,
+html[data-shell="mobile"] .command-results button small {
+  grid-column: 2;
+}
+
+/* 触摸屏没有 hover，按压反馈承担选中态；键盘高亮态仍在（外接键盘可用）。 */
+html[data-shell="mobile"] .command-results button:hover {
+  background: transparent;
+}
+
+html[data-shell="mobile"] .command-results button:active {
+  background: var(--bg-hover);
+}
+
+html[data-shell="mobile"] .command-empty {
+  margin: 4px 16px 16px;
+}
+
+/* 今日事项行操作区：44px 大按钮会把标题挤到折行、删除钮挤出卡片。
+   这里把整组动作收小并贴着行右侧，标题拿回更多宽度。
+   只作用于今日/当日事项行——.item-action-primary 同时是各弹窗主按钮的
+   共用类，那里已由第 9 节的弹窗规则单独定尺寸，不能跟着改。 */
+html[data-shell="mobile"] .day-agenda .expand-task-row {
+  gap: 6px;
+  padding: 10px;
+}
+
+html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-btn:not(.item-action-primary) {
+  min-width: 0;
+  min-height: 30px;
+  padding: 5px 8px;
+  gap: 3px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-btn:not(.item-action-primary) svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* 主按钮（完成/打卡）固定 64×30，与详情/删除等高对齐；宽度靠 min-width 保底，
+   图标与文字保持一行不再撑高。 */
+html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-primary {
+  min-width: 64px;
+  min-height: 30px;
+  padding: 5px 9px;
+  gap: 4px;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* 长标题（含无空格的长串）必须完整折行显示：1fr 列虽然能收缩，
+   但默认不在词中断行，会画到右侧按钮下面形成覆盖。 */
+html[data-shell="mobile"] .day-agenda .expand-task-row .task-title {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 已完成行最多四个动作钮：六字标签会把行撑爆，铅笔钮在手机端只留图标，
+   含义由 title 与桌面端文案保持一份。 */
+html[data-shell="mobile"] .day-agenda .expand-task-row > .item-action-edit {
+  min-width: 30px;
+  padding: 6px;
+}
+
+html[data-shell="mobile"] .day-agenda .expand-task-row > .item-action-edit > span {
+  display: none;
+}
+
+/* 习惯卡片动作区：两列换行会把「删除」甩到第二行，改成三钮等分一行。 */
+html[data-shell="mobile"] .habit-card-actions {
+  display: flex;
+  grid-template-columns: none;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+}
+
+html[data-shell="mobile"] .habit-card-actions .habit-action-btn {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  gap: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 /* 应用内通知卡叠层：窄屏锚定在底部导航上方——顶部悬浮会盖住
    日/周/月切换器与「新建任务」按钮（实测发现）。 */
 html[data-shell="mobile"] .desktop-notification-stack {
@@ -713,7 +882,6 @@ html[data-shell="mobile"] .task-meta {
   flex-wrap: wrap;
 }
 
-html[data-shell="mobile"] .reminder-chip,
 html[data-shell="mobile"] .done-at-chip {
   white-space: nowrap;
 }
@@ -1149,6 +1317,17 @@ html[data-shell="mobile"] .memo-list {
 
 html[data-shell="mobile"] .memo-list-item {
   min-height: 60px;
+}
+
+/* 习惯卡片周进度：窄屏下进度条与「本周 x/y 次」分两行，不再横向压缩。 */
+html[data-shell="mobile"] .habit-week-progress {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+html[data-shell="mobile"] .habit-week-track {
+  flex: 1 1 100%;
+  order: 2;
 }
 
 /* 提醒计时卡片：单列（minmax(300px) 在手机上自然成一列），触控内距微调。 */

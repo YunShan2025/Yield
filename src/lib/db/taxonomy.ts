@@ -166,9 +166,21 @@ export async function removeAttachment(id: string): Promise<void> {
 
 
 /* Habits */
+/** 每周目标次数的合法区间：1–7 的整数；越界/缺失回到默认 3（migration v18 同口径）。 */
+export const DEFAULT_HABIT_TARGET_PER_WEEK = 3;
+
+export function normalizeTargetPerWeek(value: unknown): number {
+  const parsed = Math.floor(Number(value));
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 7) {
+    return DEFAULT_HABIT_TARGET_PER_WEEK;
+  }
+  return parsed;
+}
+
 function normalizeHabit(habit: Habit): Habit {
   return {
     ...habit,
+    target_per_week: normalizeTargetPerWeek(habit.target_per_week),
     target_days: habit.target_days ?? null,
     archived: habit.archived ?? 0,
     deleted_at: habit.deleted_at ?? null,
@@ -222,7 +234,7 @@ export async function createHabit(
   const habit: Habit = {
     id: createId(),
     title: draft.title.trim(),
-    target_per_week: 0,
+    target_per_week: normalizeTargetPerWeek(draft.target_per_week),
     target_days: targetDays,
     archived: 0,
     deleted_at: null,
@@ -394,6 +406,11 @@ export async function updateHabit(
       : null;
   const goalId = draft.goal_id ?? null;
   const contribution = Math.max(0.1, Number(draft.goal_contribution) || 1);
+  // 未显式传入时保留原值，避免其他调用点顺手把每周目标重置为默认值。
+  const targetPerWeek =
+    draft.target_per_week === undefined
+      ? normalizeTargetPerWeek(current.target_per_week)
+      : normalizeTargetPerWeek(draft.target_per_week);
   const title = draft.title.trim();
   const checks = await db.select<HabitCheck[]>(
     "SELECT * FROM habit_checks WHERE habit_id=$1",
@@ -411,8 +428,8 @@ export async function updateHabit(
   }
 
   await db.execute(
-    "UPDATE habits SET title=$1, target_days=$2, goal_id=$3, goal_contribution=$4, updated_at=$5 WHERE id=$6",
-    [title, targetDays, goalId, contribution, nowIso(), habitId],
+    "UPDATE habits SET title=$1, target_per_week=$2, target_days=$3, goal_id=$4, goal_contribution=$5, updated_at=$6 WHERE id=$7",
+    [title, targetPerWeek, targetDays, goalId, contribution, nowIso(), habitId],
   );
 
   if (goalId) {

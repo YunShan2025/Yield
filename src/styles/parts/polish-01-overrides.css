@@ -346,13 +346,6 @@
   background: var(--accent);
 }
 
-.reminder-chip {
-  padding: 2px 6px;
-  border-radius: 999px;
-  color: #667dbb;
-  background: #eef3ff;
-}
-
 .plan-warning {
   display: inline-flex;
   margin-top: 10px;
@@ -462,32 +455,95 @@
 }
 
 .command-search {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 17px;
+  padding: 14px 17px 13px;
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
 }
 
+.command-search-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.command-search-field:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border-strong));
+  background: var(--bg-input);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.command-search-field > svg {
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.command-search-field:focus-within > svg {
+  color: var(--accent);
+}
+
 .command-search input {
+  width: 100%;
+  min-width: 0;
   padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
   font-size: 16px;
+  line-height: 1.5;
 }
 
-.command-search kbd {
-  padding: 3px 6px;
+.command-search input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.command-search-clear {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-muted) 11%, transparent);
+  cursor: pointer;
+  transition:
+    color var(--transition),
+    background var(--transition);
+}
+
+.command-search-clear:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.command-search-hint {
+  padding: 2px 6px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--bg-root);
-  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-panel);
+  font: 650 10px/1.4 var(--font-body);
+  letter-spacing: 0.02em;
 }
 
 .command-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin: 14px 17px 7px;
   color: var(--text-muted);
   font-size: 10px;
@@ -496,19 +552,18 @@
   text-transform: uppercase;
 }
 
-.command-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  padding: 0 17px 4px;
+.command-label small {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.75;
 }
 
-.command-grid button {
-  padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  background: var(--bg-root);
+/* 触摸端专用的「点按打开」提示：桌面只有键盘导航，默认不显示。 */
+.command-label-tap {
+  display: none;
 }
 
 .command-results {
@@ -532,12 +587,96 @@
   background: var(--bg-hover);
 }
 
+.command-results button.active {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
 .command-results strong {
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .command-results small {
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-empty {
+  margin: 4px 17px 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* 玻璃主题的输入框底色/内阴影会带圆角，这里统一压平，避免文字被圆角裁切。 */
+:root[data-theme="dawn"] .command-search input,
+:root[data-theme="glass"] .command-search input {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* 列表内搜索沿用同一套边界与聚焦反馈，避免同一应用出现两种搜索框语言。 */
+.memo-search {
+  min-height: 38px;
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.memo-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border-strong));
+  background: var(--bg-input);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.memo-search input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+/* 命令面板入口：只保留标题栏中间一处。 */
+.titlebar-command {
+  display: inline-flex;
+  flex: 0 1 320px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 340px;
+  height: 26px;
+  margin: 0 10px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: rgba(232, 238, 248, 0.72);
+  background: rgba(255, 255, 255, 0.09);
+  font-size: 12px;
+}
+
+.titlebar-command span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titlebar-command:hover {
+  color: #e8eef8;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 900px) {
+  .titlebar-command {
+    flex-basis: 160px;
+  }
 }
 
 .batch-date-action {

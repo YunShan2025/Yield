@@ -121,7 +121,7 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
     if (!isYmd(task.due_date)) {
       errors.push(`任务 ${task.id} 的日期不合法`);
     }
-    for (const value of [task.sort_order, task.goal_contribution, task.flexible]) {
+    for (const value of [task.sort_order, task.goal_contribution]) {
       if (typeof value === "number" && !Number.isFinite(value)) {
         errors.push(`任务 ${task.id} 含有非有限数值`);
       }
@@ -137,9 +137,6 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
     }
     if (task.generated_from_id && !taskIds.has(task.generated_from_id)) {
       warnings.push(`任务 ${task.id} 的重复来源不存在`);
-    }
-    if (task.blocked_by_id && !taskIds.has(task.blocked_by_id)) {
-      warnings.push(`任务 ${task.id} 的前置任务不存在`);
     }
   }
 
@@ -185,10 +182,6 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
       generated_from_id:
         task.generated_from_id && taskIds.has(task.generated_from_id)
           ? task.generated_from_id
-          : null,
-      blocked_by_id:
-        task.blocked_by_id && taskIds.has(task.blocked_by_id)
-          ? task.blocked_by_id
           : null,
       project_id:
         task.project_id && (!hasProjects || projectIds.has(task.project_id))

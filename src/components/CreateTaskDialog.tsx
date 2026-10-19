@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
-import type { RepeatRule, TaskPriority } from "@/types";
+import type { Goal, RepeatRule, TaskPriority } from "@/types";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
 import { findFirstAvailableTimeSlot } from "@/lib/planning";
 import { sortProjectsByName } from "@/lib/projects";
+import { fetchGoals } from "@/lib/db";
 import {
   ensureEndAfterStart,
   nowTimeString,
@@ -50,6 +51,7 @@ export function CreateTaskDialog() {
   const createTaskInbox = useAppStore((s) => s.createTaskInbox);
   const addTask = useAppStore((s) => s.addTask);
   const setTaskTags = useAppStore((s) => s.setTaskTags);
+  const setToast = useAppStore((s) => s.setToast);
   const close = useAppStore((s) => s.closeCreateTask);
   const selectTask = useAppStore((s) => s.selectTask);
   const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(calendarCursor)
@@ -68,11 +70,27 @@ export function CreateTaskDialog() {
   const [priority, setPriority] = useState<TaskPriority>(3);
   const [projectId, setProjectId] = useState("");
   const [selectedTagId, setSelectedTagId] = useState("");
+  const [goalId, setGoalId] = useState("");
+  const [goalContribution, setGoalContribution] = useState("1");
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [repeat, setRepeat] = useState<RepeatRule | null>(null);
   const [saving, setSaving] = useState(false);
   const [timeManual, setTimeManual] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const autoKeyRef = useRef(createTaskInbox ? "-" : initialDate);
+  const contributionGoals = useMemo(
+    () =>
+      goals.filter(
+        (goal) =>
+          goal.status === "active" &&
+          (goal.goal_type === "quantity" || goal.goal_type === "frequency"),
+      ),
+    [goals],
+  );
+
+  useEffect(() => {
+    void fetchGoals().then(setGoals);
+  }, []);
 
   const suggestedSlot = useMemo(() => {
     if (!dueDate) return null;
@@ -116,6 +134,11 @@ export function CreateTaskDialog() {
   const submit = async () => {
     if (!title.trim() || saving) return;
     if (dueDate && (!dueTime || !endTime)) return;
+    const contribution = Number(goalContribution);
+    if (goalId && (!Number.isFinite(contribution) || contribution <= 0)) {
+      setToast("目标贡献值需大于 0");
+      return;
+    }
     const repeatAnchor = dueDate || todayDateString();
     let finalDue = dueDate;
     let finalRepeat = repeat;
@@ -135,9 +158,9 @@ export function CreateTaskDialog() {
       end_time: endTime ? ensureEndAfterStart(dueTime, endTime) : null,
       priority,
       project_id: projectId || null,
+      goal_id: goalId || null,
+      goal_contribution: goalId ? contribution : 1,
       repeat_rule: stringifyRepeatRule(finalRepeat),
-      flexible: dueDate ? 0 : 1,
-      schedule_locked: dueDate ? 1 : 0,
     });
     if (task && selectedTagId) {
       await setTaskTags(task.id, [selectedTagId]);
@@ -198,6 +221,42 @@ export function CreateTaskDialog() {
             />
           </label>
           <label>标签<SelectMenu ariaLabel="标签" value={selectedTagId} onChange={setSelectedTagId} options={[{ value: "", label: "无标签" }, ...tags.map((tag) => ({ value: tag.id, label: tag.name }))]} /></label>
+          <label>
+            成长目标
+            <SelectMenu
+              ariaLabel="成长目标"
+              value={goalId}
+              onChange={(value) => {
+                setGoalId(value);
+                if (!value) setGoalContribution("1");
+              }}
+              options={[
+                { value: "", label: "不关联目标" },
+                ...contributionGoals.map((goal) => ({
+                  value: goal.id,
+                  label: goal.title,
+                })),
+              ]}
+            />
+          </label>
+          {goalId ? (
+            <label>
+              目标贡献
+              <input
+                type="number"
+                min={0.1}
+                step={0.1}
+                value={goalContribution}
+                onChange={(event) => setGoalContribution(event.target.value)}
+              />
+              <small className="create-task-hint">
+                完成后计入目标
+                {contributionGoals.find((goal) => goal.id === goalId)?.unit
+                  ? `（${contributionGoals.find((goal) => goal.id === goalId)?.unit}）`
+                  : ""}
+              </small>
+            </label>
+          ) : null}
         </div>
         {repeat?.frequency === "weekly" ? (
           <div className="create-task-weekdays">
@@ -250,7 +309,7 @@ export function CreateTaskDialog() {
             }}
           />
         </div>
-        <div className="create-task-actions"><button type="button" className="btn-ghost item-action-btn" onClick={close}>取消</button><button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!title.trim() || (Boolean(dueDate) && (!dueTime || !endTime)) || saving}>{saving ? "创建中…" : "创建任务"}</button></div>
+        <div className="create-task-actions"><button type="button" className="btn-ghost item-action-btn" onClick={close}>取消</button><button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!title.trim() || (Boolean(dueDate) && (!dueTime || !endTime)) || saving}>{saving ? "新建中…" : "新建任务"}</button></div>
       </form>
     </div>
   );

@@ -10,7 +10,9 @@ describe("database migration declarations", () => {
     const versions = [...source.matchAll(/version:\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    expect(versions).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
     expect(source).toContain("generated_from_id");
@@ -145,6 +147,82 @@ describe("database migration declarations", () => {
     );
     expect(match?.[1] ?? "").toContain("ALTER TABLE habits ADD COLUMN archived INTEGER NOT NULL DEFAULT 0");
     expect(match?.[1] ?? "").toContain("ALTER TABLE habits ADD COLUMN deleted_at TEXT");
+  });
+
+  it("drops dead task planning fields via migration v16", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*16,\s*description:\s*"drop_dead_task_planning_fields",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 无入口字段永久下线（P0-2 选②）：先删依赖索引，再逐列/整表删除，
+    // 并清掉可能滞留的同步簿记。
+    expect(sql).toContain("DROP INDEX IF EXISTS idx_tasks_schedule_locked");
+    for (const column of [
+      "blocked_by_id",
+      "completion_criteria",
+      "energy_level",
+      "flexible",
+      "schedule_locked",
+    ]) {
+      expect(sql).toContain(`ALTER TABLE tasks DROP COLUMN ${column}`);
+    }
+    for (const trigger of ["ins", "upd", "del"]) {
+      expect(sql).toContain(`DROP TRIGGER IF EXISTS trg_task_planning_metadata_${trigger}`);
+    }
+    expect(sql).toContain("DROP TABLE IF EXISTS task_planning_metadata");
+    for (const table of ["sync_outbox", "sync_state", "sync_merge_seen"]) {
+      expect(sql).toContain(
+        `DELETE FROM ${table} WHERE table_name = 'task_planning_metadata'`,
+      );
+    }
+  });
+
+  it("adds task delay reason via migration v17", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*17,\s*description:\s*"task_delay_reason",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    // 可空文本列：旧任务保持 NULL，复盘页显示「未标注原因」。
+    expect(match?.[1] ?? "").toContain("ALTER TABLE tasks ADD COLUMN delay_reason TEXT");
+  });
+
+  it("backfills habit weekly targets via migration v18", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*18,\s*description:\s*"habit_target_per_week_default",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 历史行落库恒为 0（UI 无入口）：统一回填默认 3 次/周并归一越界值。
+    expect(sql).toContain("UPDATE habits SET target_per_week = 3");
+    expect(sql).toContain("target_per_week < 1 OR target_per_week > 7");
+    // 不触碰 updated_at，避免本地回填被同步触发器当成用户编辑。
+    expect(sql).not.toContain("updated_at");
+  });
+
+  it("drops task delay reason via migration v19", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*19,\s*description:\s*"drop_task_delay_reason",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    // 延期功能下线（P1-2 后续）：可空备注列无保留价值，直接删列。
+    expect(match?.[1] ?? "").toContain("ALTER TABLE tasks DROP COLUMN delay_reason");
   });
 
   it("drops project goal/criteria/milestones via migration v10", () => {

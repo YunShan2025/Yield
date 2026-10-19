@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { todayDateString, toDateString } from "@/lib/dates";
-import { fetchGoals } from "@/lib/db";
+import { DEFAULT_HABIT_TARGET_PER_WEEK, fetchGoals } from "@/lib/db";
+import { mondayWeekDates } from "@/lib/weeklyChecklist";
 import type { Goal, Habit } from "@/types";
 import { AppIcon } from "@/components/AppIcon";
 import { SelectMenu } from "@/components/SelectMenu";
@@ -16,12 +17,14 @@ export function HabitsView() {
   const archiveHabit = useAppStore((s) => s.archiveHabit);
   const restoreHabit = useAppStore((s) => s.restoreHabit);
   const removeHabit = useAppStore((s) => s.removeHabit);
-  const toggleHabitDay = useAppStore((s) => s.toggleHabitDay);
   const [creating, setCreating] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [title, setTitle] = useState("");
   const [goalId, setGoalId] = useState("");
   const [goalContribution, setGoalContribution] = useState("1");
+  const [targetPerWeek, setTargetPerWeek] = useState(
+    String(DEFAULT_HABIT_TARGET_PER_WEEK),
+  );
   const [targetDays, setTargetDays] = useState("30");
   const [unlimitedDays, setUnlimitedDays] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,6 +52,7 @@ export function HabitsView() {
     setTitle("");
     setGoalId("");
     setGoalContribution("1");
+    setTargetPerWeek(String(DEFAULT_HABIT_TARGET_PER_WEEK));
     setTargetDays("30");
     setUnlimitedDays(false);
     setSaving(false);
@@ -61,6 +65,7 @@ export function HabitsView() {
     setTitle(habit.title);
     setGoalId(habit.goal_id ?? "");
     setGoalContribution(String(habit.goal_contribution || 1));
+    setTargetPerWeek(String(habit.target_per_week || DEFAULT_HABIT_TARGET_PER_WEEK));
     setTargetDays(habit.target_days ? String(habit.target_days) : "30");
     setUnlimitedDays(habit.target_days === null);
     setSaving(false);
@@ -88,12 +93,22 @@ export function HabitsView() {
       useAppStore.getState().setToast("目标打卡日数至少为 1 天");
       return;
     }
+    const rawTargetPerWeek = Number(targetPerWeek);
+    if (
+      !Number.isInteger(rawTargetPerWeek) ||
+      rawTargetPerWeek < 1 ||
+      rawTargetPerWeek > 7
+    ) {
+      useAppStore.getState().setToast("每周目标次数需为 1–7 的整数");
+      return;
+    }
     setSaving(true);
     try {
       const draft = {
         title: habitTitle,
         goal_id: goalId || null,
         goal_contribution: contribution,
+        target_per_week: rawTargetPerWeek,
         target_days: unlimitedDays ? null : rawTargetDays,
       };
       if (editingHabit) {
@@ -126,7 +141,7 @@ export function HabitsView() {
         </div>
         <div className="top-controls">
           <button type="button" className="btn-primary" onClick={openCreate}>
-            ＋ 新建习惯
+            新建习惯
           </button>
         </div>
       </div>
@@ -152,7 +167,6 @@ export function HabitsView() {
                 habit={habit}
                 checks={checksFor(habit.id)}
                 today={today}
-                onCheck={() => void toggleHabitDay(habit.id, today)}
                 onEdit={() => openEdit(habit)}
                 onArchive={() => void archiveHabit(habit.id)}
                 onDelete={() => void removeHabitWithConfirm(habit)}
@@ -176,7 +190,6 @@ export function HabitsView() {
                 habit={habit}
                 checks={[]}
                 today={today}
-                onCheck={() => void toggleHabitDay(habit.id, today)}
                 onEdit={() => openEdit(habit)}
                 onArchive={() => void archiveHabit(habit.id)}
                 onDelete={() => void removeHabitWithConfirm(habit)}
@@ -202,7 +215,6 @@ export function HabitsView() {
                   checks={habitChecks.filter((item) => item.habit_id === habit.id)}
                   today={today}
                   archived
-                  onCheck={() => void toggleHabitDay(habit.id, today)}
                   onEdit={() => openEdit(habit)}
                   onRestore={() => void restoreHabit(habit.id)}
                   onDelete={() => void removeHabitWithConfirm(habit)}
@@ -227,7 +239,6 @@ export function HabitsView() {
           >
             <div className="modal-head">
               <div>
-                <span>有恒</span>
                 <h3>{editingHabit ? "编辑习惯" : "新建习惯"}</h3>
               </div>
               <button type="button" onClick={closeEditor}>×</button>
@@ -240,6 +251,20 @@ export function HabitsView() {
                 placeholder="想每天坚持做什么？"
                 onChange={(event) => setTitle(event.target.value)}
               />
+            </label>
+            <label>
+              每周目标次数
+              <input
+                type="number"
+                min={1}
+                max={7}
+                step={1}
+                value={targetPerWeek}
+                onChange={(event) => setTargetPerWeek(event.target.value)}
+              />
+              <small className="project-field-hint">
+                1–7 次，今日事项会显示本周进度。
+              </small>
             </label>
             <label>
               关联成长目标
@@ -307,10 +332,10 @@ export function HabitsView() {
                 {saving
                   ? editingHabit
                     ? "保存中…"
-                    : "创建中…"
+                    : "新建中…"
                   : editingHabit
                     ? "保存修改"
-                    : "创建习惯"}
+                    : "新建习惯"}
               </button>
             </div>
           </form>
@@ -325,7 +350,6 @@ function HabitCard({
   checks,
   today,
   archived = false,
-  onCheck,
   onEdit,
   onArchive,
   onRestore,
@@ -335,13 +359,19 @@ function HabitCard({
   checks: { check_date: string }[];
   today: string;
   archived?: boolean;
-  onCheck: () => void;
   onEdit: () => void;
   onArchive?: () => void;
   onRestore?: () => void;
   onDelete: () => void;
 }) {
   const checkedToday = checks.some((item) => item.check_date === today);
+  const weekDates = mondayWeekDates(today);
+  const weekDone = checks.filter(
+    (item) => item.check_date >= weekDates[0] && item.check_date <= weekDates[6],
+  ).length;
+  const weekTarget = habit.target_per_week;
+  const weekPercent = Math.min(100, Math.round((weekDone / weekTarget) * 100));
+  const weekFull = weekDone >= weekTarget;
   const streak = (() => {
     const dates = new Set(checks.map((item) => item.check_date));
     let count = 0;
@@ -367,21 +397,19 @@ function HabitCard({
             : `已打卡 ${checks.length} 天`}
           <span> · 连续 {streak} 天</span>
         </p>
+        <div
+          className={`habit-week-progress${weekFull ? " is-full" : ""}`}
+          aria-label={`本周已打卡 ${weekDone}/${weekTarget} 次`}
+        >
+          <span className="habit-week-track">
+            <i style={{ width: `${weekPercent}%` }} />
+          </span>
+          <em>
+            本周 {weekDone}/{weekTarget} 次
+          </em>
+        </div>
       </div>
       <div className="habit-card-actions">
-        <button
-          type="button"
-          className={
-            checkedToday
-              ? "habit-action-btn habit-check-btn is-done"
-              : "habit-action-btn habit-check-btn"
-          }
-          disabled={archived}
-          onClick={onCheck}
-        >
-          <AppIcon name="check" size={15} />
-          <span>{checkedToday ? "已打卡" : "打卡"}</span>
-        </button>
         <button
           type="button"
           className="habit-action-btn habit-edit-btn"

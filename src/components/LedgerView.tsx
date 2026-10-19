@@ -28,6 +28,7 @@ import {
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
 import { confirmAction } from "@/components/AppConfirm";
+import { useAppStore } from "@/store/app";
 
 const ICONS: Record<string, string> = {
   food: "餐", car: "行", bag: "购", home: "住", play: "娱", medical: "医",
@@ -63,6 +64,8 @@ function accountGlyph(kind: string) {
 type DraftState = { kind: LedgerKind; amount: string; categoryId: number; accountId: number; date: string; note: string };
 
 export function LedgerView() {
+  const focusRequest = useAppStore((state) => state.focusRequest);
+  const clearFocus = useAppStore((state) => state.clearFocus);
   const [month, setMonth] = useState(currentMonth);
   const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
   const [categories, setCategories] = useState<LedgerCategory[]>([]);
@@ -242,6 +245,20 @@ export function LedgerView() {
   const toggleDay = (date: string) =>
     setCollapsedDays((current) => ({ ...current, [date]: !current[date] }));
 
+  // 命令面板选中账目后：切到所在月份，数据加载完再打开这笔记录的抽屉。
+  useEffect(() => {
+    if (focusRequest?.kind !== "ledger") return;
+    const wantedMonth = focusRequest.date?.slice(0, 7);
+    if (wantedMonth && wantedMonth !== month) {
+      setMonth(wantedMonth);
+      return;
+    }
+    const target = transactions.find((item) => String(item.id) === focusRequest.id);
+    if (!target) return;
+    openDrawer(target);
+    clearFocus();
+  }, [focusRequest, transactions, month, categories, accounts, clearFocus]);
+
   return (
     <main className="main-workspace ledger-view">
       {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧为月份切换与记账入口。 */}
@@ -253,7 +270,7 @@ export function LedgerView() {
         <div className="top-controls">
           <div className="ledger-month-switcher" aria-label="选择月份"><button onClick={() => setMonth(moveMonth(month, -1))} aria-label="上个月">‹</button><strong>{monthLabel(month)}</strong><button onClick={() => setMonth(moveMonth(month, 1))} aria-label="下个月">›</button></div>
           <button className="btn-ghost" onClick={() => void toggleHidden()}>{hidden ? "显示金额" : "隐藏金额"}</button>
-          <button className="btn-primary" onClick={() => openDrawer()}>＋ 记一笔</button>
+          <button className="btn-primary" onClick={() => openDrawer()}>记一笔</button>
         </div>
       </div>
 
@@ -323,7 +340,7 @@ export function LedgerView() {
       </>
       </div>
 
-      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><p className="ledger-eyebrow">{editing ? "编辑记录" : "快速记账"}</p><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3></div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}>✕</button></header><div className="ledger-drawer-body"><div className="ledger-kind-tabs"><button className={draft.kind === "expense" ? "active" : ""} onClick={() => setKind("expense")}>支出</button><button className={draft.kind === "income" ? "active" : ""} onClick={() => setKind("income")}>收入</button></div><label className="ledger-amount"><span>金额</span><div><b>¥</b><input ref={amountRef} value={draft.amount} inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></div></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>分类</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><i style={{ color: item.color }}>{ICONS[item.icon] ?? "·"}</i>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({ value: String(item.id), label: `${accountGlyph(item.kind)} · ${item.name}` }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer"><button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存记录</button></footer></aside>}
+      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3></div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}>✕</button></header><div className="ledger-drawer-body"><div className="ledger-kind-tabs"><button className={draft.kind === "expense" ? "active" : ""} onClick={() => setKind("expense")}>支出</button><button className={draft.kind === "income" ? "active" : ""} onClick={() => setKind("income")}>收入</button></div><label className="ledger-amount"><span>金额</span><div><b>¥</b><input ref={amountRef} value={draft.amount} inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></div></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>分类</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><i style={{ color: item.color }}>{ICONS[item.icon] ?? "·"}</i>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({ value: String(item.id), label: `${accountGlyph(item.kind)} · ${item.name}` }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer"><button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存记录</button></footer></aside>}
       {notice && <div className="ledger-toast" role="status"><span>{notice.text}</span>{notice.undoId && <button onClick={() => void undoDelete(notice.undoId!)}>撤销</button>}</div>}
     </main>
   );

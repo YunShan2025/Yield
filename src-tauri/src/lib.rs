@@ -1302,6 +1302,67 @@ ALTER TABLE habits ADD COLUMN deleted_at TEXT;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 16,
+            description: "drop_dead_task_planning_fields",
+            // 任务"无入口字段"永久下线（评审 P0-2 选②：删文档描述并清理死字段）：
+            // - tasks.blocked_by_id（前置依赖）、completion_criteria（完成标准）、
+            //   energy_level（精力要求）、flexible / schedule_locked（灵活排程）
+            //   已在早期版本从编辑表单移除，仅剩透传，真实数据恒为空/默认值；
+            // - task_planning_metadata 只存任务级 reminder_minutes_json（多次提醒），
+            //   UI 无入口且全库为空，提醒统一走 settings 的全局提前量；
+            // - 同步范围同步收窄（列白名单 + 表注册 + outbox 基线），
+            //   SYNC_SCHEMA_VERSION 升至 8。
+            // drop 列前先删依赖索引；SQLite 的 DROP COLUMN 不允许列被索引引用。
+            // 数据库只向前升级：这些列/表无真实数据，删除不损失用户内容。
+            sql: r#"
+DROP INDEX IF EXISTS idx_tasks_schedule_locked;
+ALTER TABLE tasks DROP COLUMN blocked_by_id;
+ALTER TABLE tasks DROP COLUMN completion_criteria;
+ALTER TABLE tasks DROP COLUMN energy_level;
+ALTER TABLE tasks DROP COLUMN flexible;
+ALTER TABLE tasks DROP COLUMN schedule_locked;
+DROP TRIGGER IF EXISTS trg_task_planning_metadata_ins;
+DROP TRIGGER IF EXISTS trg_task_planning_metadata_upd;
+DROP TRIGGER IF EXISTS trg_task_planning_metadata_del;
+DROP TABLE IF EXISTS task_planning_metadata;
+DELETE FROM sync_outbox WHERE table_name = 'task_planning_metadata';
+DELETE FROM sync_state WHERE table_name = 'task_planning_metadata';
+DELETE FROM sync_merge_seen WHERE table_name = 'task_planning_metadata';
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 17,
+            description: "task_delay_reason",
+            // 复盘 P1-2：延期完成的任务可标注原因，复盘页按周展示归因。
+            // 列为可空文本，旧任务保持 NULL（显示「未标注原因」）；该列进入
+            // 同步列白名单，SYNC_SCHEMA_VERSION 升至 9。
+            sql: r#"ALTER TABLE tasks ADD COLUMN delay_reason TEXT;"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 18,
+            description: "habit_target_per_week_default",
+            // 复盘 P1-2：习惯的「每周目标次数」此前落库恒为 0（UI 无入口），
+            // 统一回填为默认 3 次/周；越界值一并归一，之后由新建/编辑表单维护。
+            // 不触碰 updated_at，避免把本地回填误当成用户编辑推给其他设备。
+            sql: r#"
+UPDATE habits SET target_per_week = 3
+WHERE target_per_week IS NULL OR target_per_week < 1 OR target_per_week > 7;
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 19,
+            description: "drop_task_delay_reason",
+            // 复盘 P1-2 下线：延期完成判定与归因从产品中移除。
+            // delay_reason 自 v17 起只承载复盘页的备注展示，UI 删除后真实
+            // 数据无需保留；同步日志里的同名键由列白名单投影自然丢弃。
+            // 数据库只向前升级：删列不损失用户内容。
+            sql: r#"ALTER TABLE tasks DROP COLUMN delay_reason;"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

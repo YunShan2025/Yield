@@ -12,7 +12,7 @@ import {
   todayDateString,
 } from "@/lib/dates";
 import { localDateKey } from "@/lib/growth";
-import { getDb, mapTask, saveTaskPlanningMetadata, TASK_SELECT, withTransaction } from "./client";
+import { getDb, mapTask, TASK_SELECT, withTransaction } from "./client";
 import { linkTag } from "./taxonomy";
 import { addGoalEntry, refreshGoalProgress, refreshProjectGoals, removeGoalEntryBySource } from "./growth";
 import { getSetting, setSetting } from "./settings";
@@ -81,13 +81,7 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
     deleted_at: null,
     parent_id: draft.parent_id ?? null,
     repeat_rule: draft.repeat_rule ?? null,
-    reminder_minutes: draft.reminder_minutes ?? [],
     project_id: draft.project_id ?? null,
-    blocked_by_id: draft.blocked_by_id ?? null,
-    completion_criteria: draft.completion_criteria ?? "",
-    energy_level: draft.energy_level ?? "medium",
-    flexible: draft.flexible ?? 1,
-    schedule_locked: draft.schedule_locked ?? 0,
     goal_id: draft.goal_id ?? null,
     goal_contribution: draft.goal_contribution ?? 1,
     generated_from_id: draft.generated_from_id ?? null,
@@ -99,9 +93,8 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
       due_date, due_time, end_time, sort_order, created_at, updated_at,
       completed_at, deleted_at, parent_id, repeat_rule,
       project_id,
-      blocked_by_id, completion_criteria, energy_level, flexible, schedule_locked,
       goal_id, goal_contribution, generated_from_id
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
     [
       task.id,
       task.title,
@@ -120,17 +113,11 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
       task.parent_id,
       task.repeat_rule,
       task.project_id,
-      task.blocked_by_id,
-      task.completion_criteria,
-      task.energy_level,
-      task.flexible,
-      task.schedule_locked,
       task.goal_id,
       task.goal_contribution,
       task.generated_from_id,
     ],
   );
-  await saveTaskPlanningMetadata(task);
   await recordTaskEvent(task.id, "created", null, task);
 
   if (draft.tagIds?.length) {
@@ -184,15 +171,6 @@ async function updateTaskWithinTransaction(
 
   const current = mapTask(existing[0]);
   if (updates.status === "completed" && current.status !== "completed") {
-    if (current.blocked_by_id) {
-      const blocker = await db.select<{ status: string; deleted_at: string | null }[]>(
-        "SELECT status, deleted_at FROM tasks WHERE id=$1 LIMIT 1",
-        [current.blocked_by_id],
-      );
-      if (blocker[0] && !blocker[0].deleted_at && blocker[0].status !== "completed") {
-        throw new Error("前置任务尚未完成，暂时不能完成此任务");
-      }
-    }
     const openChildren = await db.select<{ count: number }[]>(
       "SELECT COUNT(*) count FROM tasks WHERE parent_id=$1 AND deleted_at IS NULL AND status NOT IN ('completed','cancelled')",
       [id],
@@ -227,10 +205,9 @@ async function updateTaskWithinTransaction(
       title=$1, description=$2, notes=$3, priority=$4, status=$5,
       due_date=$6, due_time=$7, end_time=$8, updated_at=$9, completed_at=$10,
       parent_id=$11, repeat_rule=$12, sort_order=$13,
-      project_id=$14, blocked_by_id=$15,
-      completion_criteria=$16, energy_level=$17, flexible=$18,
-      schedule_locked=$19, goal_id=$20, goal_contribution=$21
-    WHERE id=$22`,
+      project_id=$14,
+      goal_id=$15, goal_contribution=$16
+    WHERE id=$17`,
     [
       next.title,
       next.description,
@@ -246,17 +223,11 @@ async function updateTaskWithinTransaction(
       next.repeat_rule,
       next.sort_order,
       next.project_id,
-      next.blocked_by_id,
-      next.completion_criteria,
-      next.energy_level,
-      next.flexible,
-      next.schedule_locked,
       next.goal_id,
       next.goal_contribution,
       id,
     ],
   );
-  await saveTaskPlanningMetadata(next);
   await recordTaskEvent(id, "updated", current, next);
   const goalLinkChanged =
     current.goal_id !== next.goal_id ||
@@ -526,7 +497,6 @@ async function recycleGeneratedOccurrences(source: Task): Promise<void> {
   for (const item of linked.map(mapTask)) {
     if (!isRecyclableGeneratedTask(item, source, expected)) continue;
     await db.execute("DELETE FROM task_tags WHERE task_id=$1", [item.id]);
-    await db.execute("DELETE FROM task_planning_metadata WHERE task_id=$1", [item.id]);
     await db.execute("DELETE FROM attachments WHERE task_id=$1", [item.id]);
     await db.execute("DELETE FROM tasks WHERE id=$1", [item.id]);
   }
@@ -562,9 +532,6 @@ export async function purgeTrash(): Promise<number> {
       `DELETE FROM task_tags WHERE task_id IN (${trash})`,
     );
     await db.execute(
-      `DELETE FROM task_planning_metadata WHERE task_id IN (${trash})`,
-    );
-    await db.execute(
       `DELETE FROM task_events WHERE task_id IN (${trash})`,
     );
     await db.execute(
@@ -572,10 +539,6 @@ export async function purgeTrash(): Promise<number> {
     );
     await db.execute(
       `UPDATE app_notifications SET task_id = NULL WHERE task_id IN (${trash})`,
-    );
-    await db.execute(
-      `UPDATE tasks SET blocked_by_id=NULL
-       WHERE deleted_at IS NULL AND blocked_by_id IN (${trash})`,
     );
     await db.execute(
       `UPDATE tasks SET generated_from_id=NULL
@@ -611,10 +574,6 @@ export async function purgeTask(id: string): Promise<void> {
     );
     await db.execute(`DELETE FROM attachments WHERE task_id IN (${placeholders})`, ids);
     await db.execute(`DELETE FROM task_tags WHERE task_id IN (${placeholders})`, ids);
-    await db.execute(
-      `DELETE FROM task_planning_metadata WHERE task_id IN (${placeholders})`,
-      ids,
-    );
     await db.execute(`DELETE FROM task_events WHERE task_id IN (${placeholders})`, ids);
     await db.execute(
       `DELETE FROM goal_entries WHERE source_type = 'task' AND source_id IN (${placeholders})`,
@@ -622,11 +581,6 @@ export async function purgeTask(id: string): Promise<void> {
     );
     await db.execute(
       `UPDATE app_notifications SET task_id = NULL WHERE task_id IN (${placeholders})`,
-      ids,
-    );
-    await db.execute(
-      `UPDATE tasks SET blocked_by_id=NULL
-       WHERE deleted_at IS NULL AND blocked_by_id IN (${placeholders})`,
       ids,
     );
     await db.execute(

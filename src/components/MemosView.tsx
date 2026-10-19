@@ -24,6 +24,8 @@ function memoPreview(memo: Memo): string {
 
 export function MemosView() {
   const setToast = useAppStore((state) => state.setToast);
+  const focusRequest = useAppStore((state) => state.focusRequest);
+  const clearFocus = useAppStore((state) => state.clearFocus);
   const [memos, setMemos] = useState<Memo[]>([]);
   const [keyword, setKeyword] = useState("");
   const [listMode, setListMode] = useState<"active" | "archived">("active");
@@ -57,6 +59,17 @@ export function MemosView() {
   };
 
   useEffect(() => { void refresh(); }, []);
+
+  // 命令面板选中备忘后：切到它所在的列表（含已归档）并打开详情抽屉。
+  useEffect(() => {
+    if (focusRequest?.kind !== "memo") return;
+    const target = memos.find((memo) => memo.id === focusRequest.id);
+    if (!target) return;
+    const mode: "active" | "archived" = target.archived === 1 ? "archived" : "active";
+    setListMode(mode);
+    applyMemo(target);
+    clearFocus();
+  }, [focusRequest, memos, clearFocus]);
 
   // 同步拉回新备忘后重载页内列表（备忘为页内本地状态，不进全局 store）。
   useEffect(() => {
@@ -200,7 +213,7 @@ export function MemosView() {
   };
 
   return <main className="main-workspace memo-page">
-    {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧直达「＋ 新建」。 */}
+    {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧直达「新建」。 */}
     <div className="workspace-top">
       <div>
         <h2>备忘录</h2>
@@ -208,7 +221,7 @@ export function MemosView() {
       </div>
       <div className="top-controls">
         <div className="memo-new-wrap">
-          <button type="button" className="btn-primary" aria-expanded={showTypeChooser} onClick={() => setShowTypeChooser((value) => !value)}>＋ 新建备忘录</button>
+          <button type="button" className="btn-primary" aria-expanded={showTypeChooser} onClick={() => setShowTypeChooser((value) => !value)}>新建备忘录</button>
           {showTypeChooser ? <div className="memo-create-menu"><button type="button" onClick={() => void createNew("richtext")}><strong>富文本</strong><span>适合日常记录和排版</span></button><button type="button" onClick={() => void createNew("markdown")}><strong>Markdown</strong><span>适合技术笔记和纯文本</span></button></div> : null}
         </div>
       </div>
@@ -267,10 +280,10 @@ export function MemosView() {
           <input className="memo-title-input" value={title} onChange={(event) => { setTitle(event.target.value); setDirty(true); }} placeholder="备忘录标题" autoFocus />
           {format === "richtext" ? <>
             <div className="memo-rich-toolbar" aria-label="富文本格式工具"><button type="button" title="正文" onClick={() => runCommand("formatBlock", "p")}>正文</button><button type="button" title="二级标题" onClick={() => runCommand("formatBlock", "h2")}>H2</button><button type="button" title="三级标题" onClick={() => runCommand("formatBlock", "h3")}>H3</button><i /><button type="button" title="粗体" onClick={() => runCommand("bold")}><b>B</b></button><button type="button" title="斜体" onClick={() => runCommand("italic")}><em>I</em></button><button type="button" title="引用" onClick={() => runCommand("formatBlock", "blockquote")}>❝</button><button type="button" title="无序列表" onClick={() => runCommand("insertUnorderedList")}>• 列表</button><button type="button" title="有序列表" onClick={() => runCommand("insertOrderedList")}>1. 列表</button><button type="button" title="添加链接" onClick={() => { void promptAction({ title: "添加链接", initial: "https://", placeholder: "链接地址", confirmText: "插入" }).then((url) => { if (url) runCommand("createLink", url); }); }}>链接</button></div>
-            <div ref={editorRef} className="memo-rich-editor" contentEditable suppressContentEditableWarning data-placeholder="从这里开始记录……" onInput={(event) => { setContent(event.currentTarget.innerHTML); setDirty(true); }} onKeyDown={(event) => { if (event.key === "s" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); void save(); } }} />
+            <div ref={editorRef} className="memo-rich-editor" contentEditable suppressContentEditableWarning data-placeholder="从这里开始记录……" onInput={(event) => { setContent(event.currentTarget.innerHTML); setDirty(true); }} />
           </> : <>
             <div className="memo-rich-toolbar memo-markdown-toolbar" aria-label="Markdown 快捷工具"><button type="button" onClick={() => insertMarkdown("## ", "", "标题")}>H2</button><button type="button" onClick={() => insertMarkdown("### ", "", "标题")}>H3</button><i /><button type="button" onClick={() => insertMarkdown("**", "**")}><b>B</b></button><button type="button" onClick={() => insertMarkdown("*", "*")}><em>I</em></button><button type="button" onClick={() => insertMarkdown("> ", "", "引用")}>❝</button><button type="button" onClick={() => insertMarkdown("- ", "", "列表项")}>• 列表</button><button type="button" onClick={() => insertMarkdown("- [ ] ", "", "待办")}>☐ 待办</button><button type="button" onClick={() => insertMarkdown("[", "](https://)", "链接文字")}>链接</button></div>
-            <textarea ref={markdownRef} className="memo-markdown-editor" value={content} onChange={(event) => { setContent(event.target.value); setDirty(true); }} onKeyDown={(event) => { if (event.key === "s" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); void save(); } }} placeholder="使用 Markdown 开始记录……" />
+            <textarea ref={markdownRef} className="memo-markdown-editor" value={content} onChange={(event) => { setContent(event.target.value); setDirty(true); }} placeholder="使用 Markdown 开始记录……" />
           </>}
         </> : <>
           <header className="memo-document-head"><div><span>{formatMemoTime(selected.updated_at)} <em className={`memo-document-format is-${format}`}>{format === "richtext" ? "富文本" : "Markdown"}</em></span><h1>{selected.title || "无标题备忘"}</h1></div></header>

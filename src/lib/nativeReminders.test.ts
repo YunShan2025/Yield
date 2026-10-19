@@ -16,7 +16,6 @@ const task = (patch: Partial<Task>): Task =>
     due_time: "10:00",
     parent_id: null,
     deleted_at: null,
-    reminder_minutes: [60, 30],
     ...patch,
   }) as Task;
 
@@ -35,14 +34,14 @@ describe("native reminder lifecycle", () => {
     ).toEqual([]);
   });
 
-  it("removes every previously scheduled reminder after completion", () => {
+  it("removes the scheduled reminder after completion", () => {
     const before = buildNativeReminderPlans([task({})], 30, now);
     const after = buildNativeReminderPlans(
       [task({ status: "completed", completed_at: "2026-07-29T09:30:00.000Z" })],
       30,
       now,
     );
-    expect(before.map((item) => item.reminderId)).toHaveLength(2);
+    expect(before.map((item) => item.reminderId)).toHaveLength(1);
     expect(after).toEqual([]);
   });
 
@@ -57,14 +56,17 @@ describe("native reminder lifecycle", () => {
     expect(after.every((item) => !beforeIds.has(item.reminderId))).toBe(true);
   });
 
-  it("keeps all reminder offsets and changes identity after rescheduling", () => {
+  it("uses the global offset and changes identity after rescheduling", () => {
     const original = buildNativeReminderPlans([task({})], 30, now);
     const moved = buildNativeReminderPlans(
       [task({ due_time: "11:00" })],
       30,
       now,
     );
-    expect(original).toHaveLength(2);
+    expect(original).toHaveLength(1);
+    expect(original[0].fireAtMs).toBe(
+      new Date("2026-07-30T09:30:00").getTime(),
+    );
     expect(original.map((item) => item.reminderId)).not.toEqual(
       moved.map((item) => item.reminderId),
     );
@@ -85,14 +87,12 @@ describe("native reminder lifecycle", () => {
         id: `task-${index}`,
         due_date: "2026-08-10",
         due_time: "10:00",
-        reminder_minutes: [60 - (index % 50)],
       }),
     );
     const far = task({
       id: "far",
       due_date: "2027-01-01",
       due_time: "10:00",
-      reminder_minutes: [30],
     });
     const window = selectOsReminderWindow(
       buildNativeReminderPlans([...many, far], 30, now),

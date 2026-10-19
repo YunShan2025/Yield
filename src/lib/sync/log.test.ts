@@ -56,6 +56,10 @@ describe("条目序列化与解析", () => {
     expect(
       parseEntryLine(JSON.stringify({ hlc: h(1, 0), schema_v: 2, op: "upsert", table: "nope", row_id: "x", data: {} })),
     ).toBeNull();
+    // 已下线表（任务级提醒元数据，migration v16 删表）在旧日志里按表名过滤。
+    expect(
+      parseEntryLine(JSON.stringify({ hlc: h(1, 0), schema_v: 2, op: "upsert", table: "task_planning_metadata", row_id: "x", data: {} })),
+    ).toBeNull();
     // upsert 缺 data
     expect(
       parseEntryLine(JSON.stringify({ hlc: h(1, 0), schema_v: 2, op: "upsert", table: "tasks", row_id: "x" })),
