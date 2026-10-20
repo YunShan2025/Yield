@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "release:check": "node scripts/release-check.mjs && npm test && npm run build",
+    "release:migration-dry-run": "node scripts/migration-dry-run.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },

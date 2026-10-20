@@ -95,6 +95,8 @@ src-tauri/
   - 回望：`memos`、`anniversaries`；
   - 提醒与通知：`app_notifications`；计时：`timers`；系统：`settings`（含 `schema_contract='1'` 契约种子）。
 - **迁移契约**：`lib.rs::migrations()` 为单一 `youqiu_baseline` v1（`_sqlx_migrations` 驱动）；**只向前升级**——已发布迁移不可删改重排，只能追加更高版本。
+- **迁移的校验和不可变**：sqlx 对每条**已应用**的 migration 记 SHA-384 校验和，启动时逐一比对；对不上就报 `migration N was previously applied but has been modified` 并**拒绝启动**。所以已发布的 migration 的 SQL **一个字都不能再改**——新语句一律追加成更高版本（v22 与 v23 拆开就是这个原因）。
+- **迁移演练**：`npm run release:migration-dry-run` 把待应用的 migration 跑在**真实数据库的副本**上（不碰原库），并复刻 sqlx 的校验和比对与行数/完整性校验。桌面端跑不起来、没法点着验收时，用它先证明"升级这一步"是安全的。
 - **备份体系**（三层）：
   1. JSON 业务备份（`src/lib/backup.ts` + `lib/db/backup.ts`）：payload `version: 1`，导出/导入含任务、习惯、目标、纪念日、账本、设置，事务 + 回滚标记；仅接受版本 1；Android 导入走系统文件选择器（content:// 经 JNI 读取）；
   2. 自动 JSON 备份：6 小时一次，保留最近 10 份（桌面 `$APPDATA/backups/auto-backup-*.json`，Android 在应用数据目录 `backups/`）；

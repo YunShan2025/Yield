@@ -1430,9 +1430,6 @@ UPDATE tasks SET deleted_at = updated_at, repeat_rule = NULL
 WHERE repeat_rule IS NOT NULL AND deleted_at IS NULL;
 
 ALTER TABLE tasks DROP COLUMN repeat_rule;
-DROP INDEX IF EXISTS uq_tasks_repeat_occurrence;
-DROP INDEX IF EXISTS idx_tasks_generated_from;
-ALTER TABLE tasks DROP COLUMN generated_from_id;
 ALTER TABLE goals DROP COLUMN weekly_target;
 ALTER TABLE goals DROP COLUMN project_id;
 
@@ -1458,6 +1455,21 @@ GROUP BY goal_id
 HAVING SUM(value) != 0;
 
 DELETE FROM goal_entries WHERE source_type IN ('task', 'habit', 'focus');
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 23,
+            description: "drop_task_generated_from_id",
+            // 重复任务下线后，tasks.generated_from_id 与它带的两个索引都成了死结构。
+            // 拆成独立的 v23，而不是塞进 v22：v22 可能已经被部分机器应用过，
+            // 改动已发布 migration 的 SQL 会让 sqlx 的校验和对不上，迁移直接失败
+            // （应用起不来）。v22 保留该列，v23 无条件删除——所有到达 v23 的库
+            // 都有这一列，两条路径（新装 / 升级）最终结构完全一致。
+            sql: r#"
+DROP INDEX IF EXISTS uq_tasks_repeat_occurrence;
+DROP INDEX IF EXISTS idx_tasks_generated_from;
+ALTER TABLE tasks DROP COLUMN generated_from_id;
 "#,
             kind: MigrationKind::Up,
         },

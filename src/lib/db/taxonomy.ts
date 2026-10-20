@@ -402,17 +402,21 @@ export async function updateHabit(
   const current = currentRows[0];
   if (!current) return;
 
+  // 未显式传入的字段保留原值：只改标题不该顺手把排期或目标打卡日数抹掉。
   const rawTargetDays = Number(draft.target_days);
   const targetDays =
-    typeof draft.target_days === "number" &&
-    Number.isFinite(rawTargetDays) &&
-    rawTargetDays >= 1
-      ? Math.floor(rawTargetDays)
-      : null;
+    draft.target_days === undefined
+      ? current.target_days
+      : typeof draft.target_days === "number" &&
+          Number.isFinite(rawTargetDays) &&
+          rawTargetDays >= 1
+        ? Math.floor(rawTargetDays)
+        : null;
   const goalId = draft.goal_id ?? null;
   // 0 = 只关联、不计数；>0 = 打卡时给目标加 N 个单位。
   const contribution = Math.max(0, Number(draft.goal_contribution) || 0);
-  const repeatRule = draft.repeat_rule ?? null;
+  const repeatRule =
+    draft.repeat_rule === undefined ? current.repeat_rule : draft.repeat_rule;
   // 未显式传入时保留原值，避免其他调用点顺手把每周目标重置为默认值。
   const targetPerWeek =
     draft.target_per_week === undefined

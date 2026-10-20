@@ -588,7 +588,7 @@
 | 习惯行可拖动 | **已实现**：今日清单改成任务与习惯混排的一张扁平列表 | 手动顺序现在同时容纳任务与习惯 |
 | 本周节拍器 | **已实现**（今日页顶部一行） | 三个数：本周打卡次数、完成任务数、连续天数 |
 | 首启引导加一步 | **已实现** | 「目标、习惯、任务各司其职」 |
-| migration v22 | **已实现** | 新增 `habits.repeat_rule`；删除 `tasks.repeat_rule` / `tasks.generated_from_id` / `goals.weekly_target` / `goals.project_id`；目标类型归并；历史贡献合并为一条手动记录 |
+| migration v22 / v23 | **已实现** | 新增 `habits.repeat_rule`；删除 `tasks.repeat_rule`（v22）/ `tasks.generated_from_id`（v23）/ `goals.weekly_target` / `goals.project_id`；目标类型归并；历史贡献合并为一条手动记录。**删列拆成 v23 是因为 v22 可能已被部分机器应用过，改动已发布 migration 的 SQL 会让 sqlx 校验和不符、应用起不来** |
 | 同步 schema 升版 | **v9 → v10** | 旧端读到 v10 条目会被 header 闸门整体拒收并提示升级，**两端需同时升级** |
 
 **顺带修掉的两个真 bug**（写回归测试时才暴露）：
@@ -597,3 +597,9 @@
 2. 频率型目标的周次数把任务完成也算进分子，而分母只算习惯——一次行动记两遍，显示 `5/3`。
 
 **仍未覆盖**：月度例行事务（见 §8）、Android 端专属交互的细节适配（长按操作面板里补"挂习惯"入口）。
+
+**一个真实的教训（v2.1）**：v22 发布后（本地已应用）又往 v22 的 SQL 里补了三行 `DROP COLUMN`，导致 sqlx 的迁移校验和与库里记录的不一致——**应用直接起不来**。sqlx 对已应用的 migration 做 SHA-384 校验和比对，改一个字都会让迁移失败。修法与工具：
+
+- 已应用的 migration **一个字都不能再改**；新增语句一律拆成更高版本的 migration；
+- `npm run release:migration-dry-run` 把待应用的 migration 跑在真实数据库的副本上，并复刻校验和比对——这类问题在点开应用之前就能发现；
+- `npm run release:check` 增加"migration 版本号必须严格升序且从 1 连续编号"的静态检查。

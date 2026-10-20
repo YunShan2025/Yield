@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -253,10 +253,8 @@ describe("database migration declarations", () => {
     const sql = match?.[1] ?? "";
     // 习惯接管重复能力：新增排期规则。
     expect(sql).toContain("ALTER TABLE habits ADD COLUMN repeat_rule TEXT");
-    // 任务不再重复：重复规则与实例来源列一并下线（索引也要先删）。
+    // 任务不再重复：重复规则列下线。
     expect(sql).toContain("ALTER TABLE tasks DROP COLUMN repeat_rule");
-    expect(sql).toContain("DROP INDEX IF EXISTS uq_tasks_repeat_occurrence");
-    expect(sql).toContain("ALTER TABLE tasks DROP COLUMN generated_from_id");
     // 周口径归习惯；项目型目标退役。
     expect(sql).toContain("ALTER TABLE goals DROP COLUMN weekly_target");
     expect(sql).toContain("ALTER TABLE goals DROP COLUMN project_id");
@@ -271,6 +269,21 @@ describe("database migration declarations", () => {
     // 带重复规则的任务转成习惯，原任务软删除进回收站（不丢用户数据）。
     expect(sql).toContain("INSERT INTO habits (id, title, target_per_week, goal_id, goal_contribution, repeat_rule");
     expect(sql).toContain("UPDATE tasks SET deleted_at = updated_at, repeat_rule = NULL");
+  });
+
+  it("删掉任务的重复实例来源列：migration v23", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*23,\s*description:\s*"drop_task_generated_from_id",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    const sql = match?.[1] ?? "";
+    // 索引先删，再删列——SQLite 不允许 DROP 一个被索引引用的列。
+    expect(sql).toContain("DROP INDEX IF EXISTS uq_tasks_repeat_occurrence");
+    expect(sql).toContain("DROP INDEX IF EXISTS idx_tasks_generated_from");
+    expect(sql).toContain("ALTER TABLE tasks DROP COLUMN generated_from_id");
   });
 
   it("adds the achievements update trigger via migration v21", () => {

@@ -45,6 +45,23 @@ if (readmeRetiredHits.length) {
     `README 含已下线功能描述（${readmeRetiredHits.join("、")}），请与当前 UI/代码对齐`,
   );
 }
+/* migration 列表必须严格升序且从 1 连续编号（sqlx 按顺序执行，乱序会直接跑飞）。 */
+const migrationSource = readFileSync("src-tauri/src/lib.rs", "utf8");
+const migrationVersions = [...migrationSource.matchAll(/version:\s*(\d+),\s*description:/g)].map(
+  (match) => Number(match[1]),
+);
+const ascending = migrationVersions.every(
+  (version, index) => index === 0 || version > migrationVersions[index - 1],
+);
+if (!ascending) {
+  failures.push(`migration 版本号必须严格升序，当前顺序：${migrationVersions.join(",")}`);
+}
+for (let i = 0; i < migrationVersions.length; i += 1) {
+  if (migrationVersions[i] !== i + 1) {
+    failures.push(`migration 版本号必须从 1 连续编号，第 ${i + 1} 条是 v${migrationVersions[i]}`);
+    break;
+  }
+}
 if (tauri.bundle?.windows?.webviewInstallMode?.type !== "skip") {
   failures.push("Windows 安装包不得捆绑或下载 WebView2（webviewInstallMode 必须为 skip）");
 }

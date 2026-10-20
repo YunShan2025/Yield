@@ -190,4 +190,10 @@ npm run tauri build -- --target aarch64-apple-darwin --bundles dmg
 npm run release:check
 ```
 
+改动过数据库结构时，再在**真实数据的副本**上演练一遍迁移（不动原库；顺带复核 sqlx 的迁移校验和是否还对得上）：
+
+```bash
+npm run release:migration-dry-run
+```
+
 - 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；开发与发布惯例见 [Git 惯例](docs/GIT_CONVENTIONS.md)；版本历史见 [版本记录](docs/CHANGES.md)
