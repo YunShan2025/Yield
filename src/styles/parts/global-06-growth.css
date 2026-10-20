@@ -99,22 +99,14 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-detail-hero h2 { margin: 6px 0; font-size: 28px; }
 .goal-detail-hero p { margin: 0; color: var(--text-secondary); }
 .goal-detail-hero > strong { color: var(--goal-color); font-size: 34px; }
-.goal-detail-actions, .goal-inline-form, .achievement-compose { display: flex; gap: 8px; margin-top: 14px; }
-.goal-detail-actions { flex-wrap: wrap; }
-.goal-detail-actions input, .goal-inline-form input, .achievement-compose input, .goal-create-modal input, .goal-create-modal select, .goal-create-modal textarea { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--bg-panel); color: var(--text-primary); }
-.goal-detail-actions input:first-child { width: 84px; }
-.goal-detail-actions input:nth-child(2) { flex: 1; }
-.goal-inline-form input:first-child { flex: 1; }
-.goal-inline-form input:nth-child(2) { width: 90px; }
-
-.milestone-row { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.milestone-row i { color: var(--accent); font-style: normal; }
-.milestone-row strong { color: var(--text-secondary); font-size: 12px; }
-.milestone-row.done span { color: var(--text-muted); text-decoration: line-through; }
-.growth-entry { display: grid; grid-template-columns: 86px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.growth-entry time { color: var(--text-muted); font-size: 11px; }
-.growth-entry strong { color: var(--accent); }
-.growth-entry p { margin: 3px 0 0; color: var(--text-secondary); font-size: 12px; }
+/* 详情页只留目标自身的状态管理（暂停 / 编辑 / 更多操作），统一靠右成组。 */
+.goal-detail-actions, .achievement-compose { display: flex; gap: 8px; margin-top: 14px; }
+.goal-detail-actions { align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.goal-manage-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* 详情区的动作按钮比列表内联动作大一档：这里是页面级操作，
+   用列表里 34px 的小按钮会显得缩手缩脚。 */
+.goal-detail-actions button.item-action-btn { min-height: 38px; padding: 9px 14px; font-size: 13px; }
+.achievement-compose input, .goal-create-modal input, .goal-create-modal select, .goal-create-modal textarea { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--bg-panel); color: var(--text-primary); }
 
 .achievement-compose { align-items: center; flex-wrap: wrap; margin: 0 0 14px; }
 .achievement-compose input { flex: 1 1 180px; }
@@ -135,11 +127,22 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .goal-create-modal, .day-activity-modal { width: min(520px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 40px)); padding: 22px; overflow: auto; border: 1px solid var(--border); border-radius: 18px; background: var(--bg-panel); box-shadow: var(--shadow-lg); }
 .day-activity-date { margin: -8px 0 12px; color: var(--text-muted); font-size: 12.5px; }
-.goal-create-modal label { display: grid; gap: 6px; margin-bottom: 13px; color: var(--text-secondary); font-size: 12px; }
-.goal-create-modal textarea { min-height: 80px; resize: vertical; }
-.goal-create-modal > .btn-primary { width: 100%; }
-.form-row { display: grid; grid-template-columns: 1.4fr 1fr .8fr; gap: 9px; }
-.goal-color-picker { display: flex; gap: 8px; margin: 3px 0 18px; }
+/* 目标表单沿用「新建任务」弹窗的排版语言：13px 加粗字段名、40px 等高控件、
+   两列网格，底部取消/主操作靠右。 */
+.goal-create-modal label { display: grid; gap: 7px; margin-bottom: 13px; color: var(--text-secondary); font-size: 13px; font-weight: 700; }
+.goal-create-modal .modal-head { margin-bottom: 15px; }
+.goal-create-modal input { height: 40px; padding: 0 12px; border-radius: 12px; }
+.goal-create-sub { margin: 3px 0 0; color: var(--text-muted); font-size: 12px; }
+.goal-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.goal-form-grid label { margin-bottom: 0; }
+.goal-form-color { display: grid; gap: 7px; color: var(--text-secondary); font-size: 13px; font-weight: 700; }
+.goal-form-color .goal-color-picker { margin: 0; min-height: 40px; align-items: center; }
+.goal-guide { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0 0; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-soft); color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; }
+.goal-guide svg { flex: none; margin-top: 2px; color: var(--accent); }
+.goal-create-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.goal-create-actions .item-action-btn { min-width: 108px; }
+.goal-create-actions .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.goal-color-picker { display: flex; gap: 8px; }
 .goal-color-picker button { width: 25px; height: 25px; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
 .goal-color-picker button.active { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 .day-activity-row { display: grid; grid-template-columns: 10px 1fr; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); }
@@ -151,6 +154,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-goal-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .review-goal-row i { width: 9px; height: 9px; border-radius: 50%; }
 .review-goal-row strong { color: var(--accent); }
+/* 习惯卡上的排期说明：每天 / 每周一三五 / 每周若干次。 */
+.habits-card-schedule { margin: 2px 0 0; color: var(--text-muted); font-size: 11.5px; }
+/* 目标行的推进构成：任务 / 打卡 / 手动记录，标明这周的数字是怎么来的。 */
+.review-goal-source { display: block; margin-top: 3px; color: var(--text-muted); font-size: 11px; font-style: normal; font-weight: 500; }
 
 @media (max-width: 900px) {
   .growth-metrics { grid-template-columns: repeat(2, 1fr); }
@@ -160,7 +167,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   .growth-panel-head .select-btn { width: 100%; }
   .goal-detail-hero { align-items: flex-start; padding: 20px; }
   .goal-detail-hero h2 { font-size: 23px; }
-  .form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 560px) {
@@ -172,7 +178,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   .goal-grid, .achievement-grid { grid-template-columns: 1fr; }
   .goal-detail-hero { flex-direction: column; gap: 14px; }
   .goal-detail-actions > *, .achievement-compose > * { width: 100% !important; flex: 1 0 100%; }
-  .form-row { grid-template-columns: 1fr; }
+  .goal-form-grid { grid-template-columns: 1fr; }
+  .goal-create-actions .item-action-btn { flex: 1 1 0; }
 }
 
 .settings-card,
@@ -642,7 +649,12 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .create-task-modal label { display: grid; gap: 7px; color: var(--text-secondary); font-size: 13px; font-weight: 700; }
 .create-task-modal input, .create-task-modal select, .create-task-modal textarea { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); background: var(--surface); font: inherit; }
 .create-task-modal textarea { min-height: 76px; resize: vertical; }
-.create-task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+/* 控件等高：input 与 select 原生高度不同（42/36），同行混排时底边不齐。
+   移动端另有 min-height:48，min-height 优先于 height，触控尺寸不受影响。 */
+.create-task-modal input, .create-task-modal .select-btn, .create-task-modal .date-picker-trigger { height: 40px; box-sizing: border-box; }
+/* align-items:start：关联目标后多出的「目标贡献」带提示行更高，
+   默认的 stretch 会把同行控件一起拉伸成不等高，看起来整行错位。 */
+.create-task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; align-items: start; }
 .create-task-hint { margin: -4px 0 0; color: var(--text-muted); font-size: 12px; line-height: 1.45; }
 .create-task-weekdays { display: grid; gap: 8px; }
 .repeat-weekday-picker { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -668,9 +680,13 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .create-task-time-head strong { font-size: 13.5px; letter-spacing: -0.01em; }
 .create-task-time-state { padding: 4px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
 .create-task-time-state.warn { background: color-mix(in srgb, var(--warning) 16%, transparent); color: var(--warning); }
+/* 日期 + 开始/截止时间排在同一行，省掉一整行高度；
+   窄屏（含手机全屏弹窗）仍各自独占一行。 */
+.create-task-schedule { display: grid; grid-template-columns: 152px minmax(0, 1fr); gap: 13px; align-items: start; }
+.create-task-schedule .time-range { gap: 8px; }
 .create-task-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .create-task-actions .btn-primary, .create-task-actions .btn-ghost { width: auto; min-width: 112px; }
-@media (max-width: 620px) { .create-task-grid { grid-template-columns: 1fr; } .create-task-time-head { flex-wrap: wrap; } }
+@media (max-width: 620px) { .create-task-grid { grid-template-columns: 1fr; } .create-task-schedule { grid-template-columns: 1fr; } .create-task-time-head { flex-wrap: wrap; } }
 
 .project-edit-modal label {
   display: grid;
@@ -1140,3 +1156,156 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   justify-content: flex-end;
   gap: 7px;
 }
+
+/* 成长目标联动（v1.4）：今日行内目标徽标、今日目标条、贡献构成。 */
+.goal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 200px;
+  padding: 2px 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--goal-color, var(--accent)) 13%, transparent);
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.goal-chip i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--goal-color, var(--accent));
+}
+
+.habit-day-dot {
+  background: linear-gradient(135deg, #86efac, #16a34a);
+}
+
+.today-goal-strip {
+  margin: 12px 0 2px;
+  padding: 13px 16px 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-panel);
+}
+
+.today-goal-strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.today-goal-strip-head span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.today-goal-strip-head button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.today-goal-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.today-goal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.today-goal-main {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 10px minmax(0, 1fr) auto minmax(90px, 160px);
+  gap: 10px;
+  align-items: center;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.today-goal-main > i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--goal-color, var(--accent));
+}
+
+.today-goal-name {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-goal-value {
+  flex: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.today-goal-track {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-soft);
+}
+
+.today-goal-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--goal-color, var(--accent));
+}
+
+.today-goal-row > .item-action-btn {
+  flex: none;
+}
+
+/* 目标详情：阶段清单与「正在推进」。 */
+.goal-stages, .goal-pushing { margin-top: 16px; }
+.goal-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.goal-section-head span { color: var(--text-secondary); font-size: 12px; font-weight: 650; }
+.goal-section-head b { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+.goal-stage-list, .goal-push-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.goal-stage-list li { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--border); }
+.goal-stage-list li span { flex: 1; min-width: 0; font-size: 13px; }
+.goal-stage-list li.is-done span { color: var(--text-muted); text-decoration: line-through; }
+.goal-stage-check, .goal-stage-remove { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 7px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.goal-stage-check.is-done, .goal-stage-list li.is-done .goal-stage-check { color: var(--accent); border-color: var(--accent); }
+.goal-stage-remove:hover { color: var(--danger, #C35D77); }
+.goal-stage-add { display: flex; gap: 8px; margin-top: 10px; }
+.goal-stage-add input { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-panel); color: var(--text-primary); font-size: 13px; }
+.goal-push-list li { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--border); font-size: 13px; }
+.goal-push-kind { flex: 0 0 auto; padding: 1px 6px; border-radius: 6px; background: var(--bg-rail); color: var(--text-secondary); font-size: 11px; }
+.goal-push-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.goal-push-list em { color: var(--text-muted); font-size: 11.5px; font-style: normal; }
+.goal-push-measure { flex: 0 0 auto; color: var(--accent); font-size: 11px; }
+.goal-empty { margin: 0; padding: 10px 2px; color: var(--text-muted); font-size: 12px; }
+/* 今日页的本周节拍器：把"今日"与"本周"两个坐标系对齐。 */
+.today-week-beat { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-panel); }
+.today-week-beat-label { color: var(--text-muted); font-size: 11.5px; font-weight: 650; letter-spacing: .04em; }
+.today-week-beat-stats { display: flex; gap: 16px; }
+.today-week-beat-stats span { display: inline-flex; align-items: baseline; gap: 4px; }
+.today-week-beat-stats strong { color: var(--text-primary); font-size: 15px; font-weight: 700; }
+.today-week-beat-stats em { color: var(--text-muted); font-size: 11.5px; font-style: normal; }
+/* 今日清单头部的目标筛选。 */
+.day-agenda-filters { display: flex; align-items: center; gap: 8px; }

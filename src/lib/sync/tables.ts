@@ -85,8 +85,12 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
  * v9（v1.2.1+）：tasks.delay_reason（延期原因标注）入列；后续该功能下线
  * （migration v19 删列），日志不再携带；旧格式条目（schema_v 9）的同名键
  * 经列白名单投影自然丢弃。
+ * v10（v1.4.0+）：目标·习惯·事项关系收口——tasks 的 repeat_rule 与
+ * generated_from_id 下线（migration v22 删列），goals 的 weekly_target 与
+ * project_id 下线，habits 新增 repeat_rule（排期规则）。旧端读到 v10 条目
+ * 会被 header 闸门整体拒收并提示升级，不做静默丢字段。
  */
-export const SYNC_SCHEMA_VERSION = 9;
+export const SYNC_SCHEMA_VERSION = 10;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);

@@ -53,6 +53,8 @@ interface AppStore {
   createTaskOpen: boolean;
   /** 新建任务是否从待办箱发起:截止日期默认不填,不自动排时间。 */
   createTaskInbox: boolean;
+  /** 从目标页/今日目标条发起时预关联的成长目标 id。 */
+  createTaskGoalId: string | null;
   commandPaletteOpen: boolean;
   focusRequest: FocusRequest | null;
   activeTagId: string | null;
@@ -68,7 +70,7 @@ interface AppStore {
   setDateScope: (scope: DateScope) => void;
   setCalendarCursor: (date: string) => void;
   selectTask: (id: string | null, opts?: { edit?: boolean }) => void;
-  openCreateTask: (opts?: { inbox?: boolean }) => void;
+  openCreateTask: (opts?: { inbox?: boolean; goalId?: string }) => void;
   closeCreateTask: () => void;
   openCommandPalette: () => void;
   closeCommandPalette: () => void;
@@ -113,7 +115,8 @@ interface AppStore {
   restoreHabit: (id: string) => Promise<void>;
   removeHabit: (id: string) => Promise<void>;
   toggleHabitDay: (habitId: string, date: string) => Promise<void>;
-
+  /** 改习惯与目标的关联计量：0 = 只关联不计数，>0 = 打卡时计入 N 个单位。 */
+  setHabitMeasurement: (habitId: string, contribution: number) => Promise<void>;
   addTimer: (draft: TimerDraft) => Promise<Timer | null>;
   startTimer: (id: string) => Promise<void>;
   pauseTimer: (id: string) => Promise<void>;
@@ -185,6 +188,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   detailPreferEdit: false,
   createTaskOpen: false,
   createTaskInbox: false,
+  createTaskGoalId: null,
   commandPaletteOpen: false,
   focusRequest: null,
   activeTagId: null,
@@ -196,8 +200,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   bootstrap: async () => {
     try {
       const today = todayDateString();
-      await db.backfillGeneratedFromIds();
-      await db.ensureDefaultTags();
+        await db.ensureDefaultTags();
       await get().refreshAll();
       applyTheme(get().settings.theme);
       set({
@@ -305,8 +308,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
       createTaskOpen: true,
       selectedTaskId: null,
       createTaskInbox: Boolean(opts?.inbox),
+      createTaskGoalId: opts?.goalId ?? null,
     }),
-  closeCreateTask: () => set({ createTaskOpen: false, createTaskInbox: false }),
+  closeCreateTask: () =>
+    set({ createTaskOpen: false, createTaskInbox: false, createTaskGoalId: null }),
   openCommandPalette: () => set({ commandPaletteOpen: true }),
   closeCommandPalette: () => set({ commandPaletteOpen: false }),
   requestFocus: (focusRequest) => set({ focusRequest }),
@@ -395,7 +400,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       ),
     }));
     try {
-      const { task, spawned } = await db.toggleTaskComplete(id);
+      const task = await db.toggleTaskComplete(id);
       if (task?.status === "completed" && task.id) {
         // Finish notification cleanup before refreshing reminder state. A
         // fire-and-forget cleanup could race with the reminder scan and make a
@@ -411,7 +416,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           await get().refreshAll();
         },
       });
-      if (spawned) await get().refreshAll();
+
     } catch (e) {
       const msg = errorMessage(e, "完成任务失败");
       set((state) => ({
@@ -611,6 +616,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   toggleHabitDay: async (habitId, date) => {
     await db.toggleHabitCheck(habitId, date);
+    await get().refreshAll();
+  },
+
+  setHabitMeasurement: async (habitId, contribution) => {
+    const habit = get().habits.find((item) => item.id === habitId);
+    if (!habit) return;
+    await db.updateHabitGoal(habitId, habit.goal_id, contribution);
     await get().refreshAll();
   },
 

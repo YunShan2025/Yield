@@ -1,19 +1,24 @@
 import type { Goal, GoalEntry } from "@/types";
 
+/**
+ * 这个目标接不接受某种来源的进度记录。
+ *
+ * 判定口径只有一条：**这条记录能不能代表目标的进度单位**。
+ * - 阶段型目标：进度只由阶段勾选推进，任何记录都不接受（否则阶段与计数
+ *   两套进度会互相打架）。
+ * - 数值变化型目标：只认手动测量。"读完一本书"推不动"体重从 80 到 75"。
+ * - 数值·次数型目标：任务完成与习惯打卡都可以，但必须是**显式声明的计量关联**
+ *   （goal_contribution > 0）。
+ */
 export function goalAcceptsSource(
   goal: Goal,
   source: GoalEntry["source_type"],
 ): boolean {
   if (goal.status !== "active") return false;
-  if (source === "manual") return goal.goal_type !== "project";
-  if (goal.goal_type === "quantity" || goal.goal_type === "frequency") {
-    return source === "task" || source === "habit";
-  }
-  if (goal.goal_type === "time") return source === "focus";
-  // Custom goals have no unambiguous automatic unit. Keep them manual-only so
-  // completing and focusing the same task can never count twice.
-  if (goal.goal_type === "custom") return false;
-  return false;
+  if (goal.goal_type === "staged") return false;
+  if (source === "manual") return true;
+  if (goal.goal_type === "measure") return false;
+  return source === "task" || source === "habit";
 }
 
 export function localDateKey(date: Date): string {
@@ -28,16 +33,66 @@ export function localWeekStartKey(date = new Date()): string {
   return localDateKey(start);
 }
 
+export interface GoalTarget {
+  /** 分母值。 */
+  value: number;
+  /** 分母单位。 */
+  unit: string;
+}
+
+/**
+ * 目标分母的唯一真源。
+ *
+ * 过去每个界面各自取分母（target_value / effectiveWeeklyTarget / weekly_target），
+ * 于是同一个目标在今日条和目标卡上出现两个分母。现在只有一个来源：
+ * 分母就是目标的 target_value。
+ * - 数值·次数型：target_value = 目标次数（"读完 21 本"）；
+ * - 数值变化型：target_value = 目标测量值（"体重 75kg"）；
+ * - 阶段型：target_value = 总阶段数（起点恒为 0）。
+ */
+export function resolveGoalTarget(goal: Goal): GoalTarget {
+  return { value: Number(goal.target_value), unit: goal.unit };
+}
+
+/**
+ * 目标进度（0–100）。分母一律走 resolveGoalTarget，不再各界面各取一套。
+ * 阶段型目标的起点是 0、当前值是已完成阶段数，天然落在同一套公式里。
+ */
 export function calculateGoalProgress(goal: Goal): number {
-  if (goal.goal_type === "frequency" && goal.weekly_target > 0) {
-    return Math.max(0, Math.min(100, (goal.current_value / goal.weekly_target) * 100));
-  }
-  const ascending = goal.target_value >= goal.start_value;
-  const span = Math.max(0.0001, Math.abs(goal.target_value - goal.start_value));
+  const ascending = Number(goal.target_value) >= Number(goal.start_value);
+  const span = Math.max(0.0001, Math.abs(Number(goal.target_value) - Number(goal.start_value)));
   const moved = ascending
-    ? goal.current_value - goal.start_value
-    : goal.start_value - goal.current_value;
+    ? Number(goal.current_value) - Number(goal.start_value)
+    : Number(goal.start_value) - Number(goal.current_value);
   return Math.max(0, Math.min(100, (moved / span) * 100));
+}
+
+export interface GoalDeadlineInfo {
+  /** 距目标日期的自然日数；0 表示今天到期。 */
+  daysLeft: number;
+  /** 按剩余时间与目标跨度的比例判断进度是否落后。 */
+  behind: boolean;
+}
+
+export function goalDeadlineInfo(
+  goal: Goal,
+  todayKey: string,
+): GoalDeadlineInfo | null {
+  if (!goal.target_date) return null;
+  const start = new Date(`${goal.start_date}T00:00:00`);
+  const target = new Date(`${goal.target_date}T00:00:00`);
+  const today = new Date(`${todayKey}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(target.getTime())) return null;
+  const spanDays = Math.round((target.getTime() - start.getTime()) / 86400000);
+  if (spanDays <= 0) return null;
+  const elapsed = Math.round((today.getTime() - start.getTime()) / 86400000);
+  const daysLeft = Math.max(0, Math.min(spanDays, spanDays - elapsed));
+  // 时间过半而进度明显不足时才提示，避免开局就报警。
+  const expected = (Math.min(Math.max(elapsed, 0), spanDays) / spanDays) * 100;
+  return {
+    daysLeft,
+    behind: elapsed > 0 && calculateGoalProgress(goal) < expected - 15,
+  };
 }
 
 export function activityLevelFromValue(value: number): 0 | 1 | 2 | 3 | 4 {

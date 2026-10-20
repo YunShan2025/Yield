@@ -185,7 +185,9 @@ function normalizeHabit(habit: Habit): Habit {
     archived: habit.archived ?? 0,
     deleted_at: habit.deleted_at ?? null,
     goal_id: habit.goal_id ?? null,
-    goal_contribution: habit.goal_contribution ?? 1,
+    // 0 = 只关联、不计数（默认）；>0 = 打卡时给目标加 N 个单位。
+    goal_contribution: habit.goal_contribution ?? 0,
+    repeat_rule: habit.repeat_rule ?? null,
   };
 }
 
@@ -241,10 +243,11 @@ export async function createHabit(
     created_at: nowIso(),
     updated_at: nowIso(),
     goal_id: draft.goal_id ?? null,
-    goal_contribution: draft.goal_contribution ?? 1,
+    goal_contribution: draft.goal_contribution ?? 0,
+    repeat_rule: draft.repeat_rule ?? null,
   };
   await db.execute(
-    "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+    "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, repeat_rule, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
     [
       habit.id,
       habit.title,
@@ -253,6 +256,7 @@ export async function createHabit(
       habit.archived,
       habit.goal_id,
       habit.goal_contribution,
+      habit.repeat_rule,
       habit.created_at,
       habit.updated_at,
     ],
@@ -337,11 +341,12 @@ export async function toggleHabitCheck(
     );
     const habits = await db.select<Habit[]>("SELECT * FROM habits WHERE id=$1", [habitId]);
     const habit = habits[0];
-    if (habit?.goal_id) {
+    // 计量关联（contribution > 0）才推进目标；只关联的习惯打卡不计数。
+    if (habit?.goal_id && (habit.goal_contribution ?? 0) > 0) {
       await addGoalEntry({
         goal_id: habit.goal_id,
         entry_date: date,
-        value: habit.goal_contribution || 1,
+        value: habit.goal_contribution,
         source_type: "habit",
         source_id: `${habitId}:${date}`,
         note: habit.title,
@@ -371,7 +376,7 @@ export async function updateHabitGoal(
     "UPDATE habits SET goal_id=$1, goal_contribution=$2, updated_at=$3 WHERE id=$4",
     [goalId, contribution, nowIso(), habitId],
   );
-  if (goalId) {
+  if (goalId && contribution > 0) {
     for (const check of checks) {
       await addGoalEntry({
         goal_id: goalId,
@@ -405,7 +410,9 @@ export async function updateHabit(
       ? Math.floor(rawTargetDays)
       : null;
   const goalId = draft.goal_id ?? null;
-  const contribution = Math.max(0.1, Number(draft.goal_contribution) || 1);
+  // 0 = 只关联、不计数；>0 = 打卡时给目标加 N 个单位。
+  const contribution = Math.max(0, Number(draft.goal_contribution) || 0);
+  const repeatRule = draft.repeat_rule ?? null;
   // 未显式传入时保留原值，避免其他调用点顺手把每周目标重置为默认值。
   const targetPerWeek =
     draft.target_per_week === undefined
@@ -428,11 +435,13 @@ export async function updateHabit(
   }
 
   await db.execute(
-    "UPDATE habits SET title=$1, target_per_week=$2, target_days=$3, goal_id=$4, goal_contribution=$5, updated_at=$6 WHERE id=$7",
-    [title, targetPerWeek, targetDays, goalId, contribution, nowIso(), habitId],
+    "UPDATE habits SET title=$1, target_per_week=$2, target_days=$3, goal_id=$4, goal_contribution=$5, repeat_rule=$6, updated_at=$7 WHERE id=$8",
+    [title, targetPerWeek, targetDays, goalId, contribution, repeatRule, nowIso(), habitId],
   );
 
-  if (goalId) {
+  // 只有显式声明了计量（contribution > 0）才把打卡写成目标的进度记录；
+  // 贡献值或关联目标变了，旧记录先撤掉再按新口径补齐。
+  if (goalId && contribution > 0) {
     for (const check of checks) {
       await addGoalEntry({
         goal_id: goalId,

@@ -4,7 +4,7 @@
 
 ## 1. 项目定位
 
-本地优先的个人成长与行动工具：任务、习惯、专注、目标、复盘、收支、备忘录一体化，数据全部存本地 SQLite，无账号、无云服务。同一份代码构建 **Windows 桌面端**与 **Android 端**；可选启用「桌面 ↔ Android」数据同步（飞书云盘日志 + HLC 合并，无自建服务器）。
+本地优先的个人成长与行动工具：任务、习惯、目标、复盘、收支、备忘录一体化，数据全部存本地 SQLite，无账号、无云服务。同一份代码构建 **Windows 桌面端**与 **Android 端**；可选启用「桌面 ↔ Android」数据同步（飞书云盘日志 + HLC 合并，无自建服务器）。
 
 ## 2. 架构总览
 
@@ -88,7 +88,7 @@ src-tauri/
 ## 7. 数据层
 
 - **存储位置**：桌面 `%APPDATA%\com.yunshan.yield\app.db`（SQLite 单库），WebView2 配置在 `%LOCALAPPDATA%\com.yunshan.yield`；Android 为应用私有数据目录。
-- **21 张表**，按域分组（已下线功能的表随 migration v7 / v10 / v16 删除，不再列出）：
+- **21 张表**，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 删除，不再列出）：
   - 任务域：`tasks`、`tags`、`task_tags`、`attachments`、`task_events`、`projects`；
   - 目标与成长：`goals`、`goal_milestones`、`goal_entries`、`achievements`、`habit_checks`、`habits`；
   - 收支（观流账本）：`ledger_accounts`、`ledger_categories`、`ledger_budgets`、`ledger_transactions`；
@@ -105,7 +105,7 @@ src-tauri/
 - **模型**：无服务器同步。两端各自写本地库，同时追加操作日志到用户自己的飞书云盘（JSONL，`src/lib/sync/log.ts`）；HLC（混合逻辑时钟）定序，`merge.ts` 按列级 LWW + 删除墓碑合并（`src/lib/sync/tables.ts` 维护 FK 顺序、`columns.ts` 维护列白名单，新增同步表/列三处一致：tables.ts + columns.ts + migration 触发器）。
 - **触发**：应用启动、回前台、手动触发；离线优先，无实时推送。
 - **凭据**：飞书 app_id/app_secret 只在应用设置页输入，存本地 settings（`sync_` 前缀键），不进代码、不进备份文件。
-- **纪律**：新增同步表/列必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。
+- **纪律**：新增同步表/列必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。当前同步日志格式为 **schema v10**（v1.4.0：任务的重复相关列与目标的周口径列下线，习惯新增排期规则；旧端读到 v10 条目会被 header 闸门整体拒收并提示升级）。
 
 ## 8. 关键横切机制
 

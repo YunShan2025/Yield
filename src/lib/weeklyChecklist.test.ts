@@ -21,14 +21,12 @@ function task(partial: Partial<Task> & Pick<Task, "id" | "title">): Task {
     completed_at: null,
     deleted_at: null,
     parent_id: null,
-    repeat_rule: null,
     project_id: null,
     created_at: "2026-08-10T00:00:00.000Z",
     updated_at: "2026-08-10T00:00:00.000Z",
     goal_id: null,
     goal_contribution: 1,
     ...partial,
-    generated_from_id: partial.generated_from_id ?? null,
   };
 }
 

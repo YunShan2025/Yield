@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
-import type { Goal, RepeatRule, TaskPriority } from "@/types";
+import type { Goal, TaskPriority } from "@/types";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
-import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
 import { findFirstAvailableTimeSlot } from "@/lib/planning";
@@ -16,32 +15,10 @@ import {
 } from "@/lib/dates";
 import { isMobileShell } from "@/lib/platform";
 import { pushBackHandler } from "@/lib/mobileBack";
-import {
-  nextDateMatchingWeekdays,
-  stringifyRepeatRule,
-  weeklyRuleFromDate,
-  monthlyRuleFromDate,
-} from "@/lib/repeat";
+import { goalAcceptsSource } from "@/lib/growth";
 
 // 新建任务不设预计时长，自动排程按默认 1 小时占位。
 const DEFAULT_SLOT_MINUTES = 60;
-
-function repeatFromFrequency(value: string, dueDate: string): RepeatRule | null {
-  if (!value) return null;
-  if (value === "custom") {
-    return {
-      frequency: "custom",
-      interval: 1,
-      nthWeekday: { n: -1, weekday: 5 },
-    };
-  }
-  if (value === "weekly") return weeklyRuleFromDate(dueDate);
-  if (value === "monthly") return monthlyRuleFromDate(dueDate);
-  return {
-    frequency: value as RepeatRule["frequency"],
-    interval: 1,
-  };
-}
 
 export function CreateTaskDialog() {
   const tasks = useAppStore((s) => s.tasks);
@@ -49,6 +26,7 @@ export function CreateTaskDialog() {
   const tags = useAppStore((s) => s.tags);
   const calendarCursor = useAppStore((s) => s.calendarCursor);
   const createTaskInbox = useAppStore((s) => s.createTaskInbox);
+  const presetGoalId = useAppStore((s) => s.createTaskGoalId);
   const addTask = useAppStore((s) => s.addTask);
   const setTaskTags = useAppStore((s) => s.setTaskTags);
   const setToast = useAppStore((s) => s.setToast);
@@ -63,30 +41,42 @@ export function CreateTaskDialog() {
   );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState(createTaskInbox ? "" : initialDate);
+  // 目标条/目标页发起的"安排今日行动"固定以今天为截止日。
+  const [dueDate, setDueDate] = useState(
+    createTaskInbox ? "" : presetGoalId ? todayDateString() : initialDate,
+  );
   // 时间默认给具体值（现在 / +1 小时），避免下拉框显示空占位。
   const [dueTime, setDueTime] = useState(() => defaultTimeRange().start);
   const [endTime, setEndTime] = useState(() => defaultTimeRange().end);
   const [priority, setPriority] = useState<TaskPriority>(3);
   const [projectId, setProjectId] = useState("");
   const [selectedTagId, setSelectedTagId] = useState("");
-  const [goalId, setGoalId] = useState("");
+  const [goalId, setGoalId] = useState(() => {
+    // 目标页/今日目标条发起时预关联目标；贡献值仍可在表单里调整。
+    return presetGoalId ?? "";
+  });
+  const [goalMeasure, setGoalMeasure] = useState<"none" | "one" | "custom">("none");
   const [goalContribution, setGoalContribution] = useState("1");
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [repeat, setRepeat] = useState<RepeatRule | null>(null);
   const [saving, setSaving] = useState(false);
   const [timeManual, setTimeManual] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
-  const autoKeyRef = useRef(createTaskInbox ? "-" : initialDate);
-  const contributionGoals = useMemo(
-    () =>
-      goals.filter(
-        (goal) =>
-          goal.status === "active" &&
-          (goal.goal_type === "quantity" || goal.goal_type === "frequency"),
-      ),
+  const autoKeyRef = useRef(
+    createTaskInbox ? "-" : presetGoalId ? todayDateString() : initialDate,
+  );
+  // 所有进行中的目标都能关联（服务关系）；能不能"完成任务即计量"由目标自己决定。
+  const linkableGoals = useMemo(
+    () => goals.filter((goal) => goal.status === "active"),
     [goals],
   );
+  const selectedGoal = goalId ? linkableGoals.find((goal) => goal.id === goalId) ?? null : null;
+  const canMeasure = selectedGoal ? goalAcceptsSource(selectedGoal, "task") : false;
+  const measuredContribution =
+    !goalId || goalMeasure === "none"
+      ? 0
+      : goalMeasure === "one"
+        ? 1
+        : Math.max(0, Number(goalContribution) || 0);
 
   useEffect(() => {
     void fetchGoals().then(setGoals);
@@ -134,33 +124,21 @@ export function CreateTaskDialog() {
   const submit = async () => {
     if (!title.trim() || saving) return;
     if (dueDate && (!dueTime || !endTime)) return;
-    const contribution = Number(goalContribution);
-    if (goalId && (!Number.isFinite(contribution) || contribution <= 0)) {
-      setToast("目标贡献值需大于 0");
+    if (goalMeasure === "custom" && (!Number.isFinite(Number(goalContribution)) || Number(goalContribution) < 0)) {
+      setToast("计入目标的单位数需为不小于 0 的数字");
       return;
-    }
-    const repeatAnchor = dueDate || todayDateString();
-    let finalDue = dueDate;
-    let finalRepeat = repeat;
-    if (repeat?.frequency === "weekly") {
-      const weekdays = repeat.weekdays?.length
-        ? repeat.weekdays
-        : weeklyRuleFromDate(repeatAnchor).weekdays!;
-      finalRepeat = { ...repeat, weekdays };
-      if (dueDate) finalDue = nextDateMatchingWeekdays(dueDate, weekdays);
     }
     setSaving(true);
     const task = await addTask({
       title: title.trim(),
       description: description.trim(),
-      due_date: finalDue || null,
+      due_date: dueDate || null,
       due_time: dueTime || null,
       end_time: endTime ? ensureEndAfterStart(dueTime, endTime) : null,
       priority,
       project_id: projectId || null,
       goal_id: goalId || null,
-      goal_contribution: goalId ? contribution : 1,
-      repeat_rule: stringifyRepeatRule(finalRepeat),
+      goal_contribution: measuredContribution,
     });
     if (task && selectedTagId) {
       await setTaskTags(task.id, [selectedTagId]);
@@ -189,23 +167,7 @@ export function CreateTaskDialog() {
         <label>任务说明<textarea value={description} placeholder="可选：补充背景或完成标准" onChange={(event) => setDescription(event.target.value)} /></label>
         <div className="create-task-grid">
           <label>优先级<SelectMenu ariaLabel="优先级" value={String(priority)} onChange={(value) => setPriority(Number(value) as TaskPriority)} options={[{ value: "1", label: "P1 紧急" }, { value: "2", label: "P2 高" }, { value: "3", label: "P3 普通" }, { value: "4", label: "P4 低" }]} /></label>
-          <label>
-            重复
-            <SelectMenu
-              ariaLabel="重复"
-              value={repeat?.frequency ?? ""}
-              onChange={(value) =>
-                setRepeat(repeatFromFrequency(value, dueDate || todayDateString()))
-              }
-              options={[
-                { value: "", label: "不重复" },
-                { value: "daily", label: "每天" },
-                { value: "weekly", label: "每周" },
-                { value: "monthly", label: "每月" },
-                { value: "custom", label: "每月最后周五" },
-              ]}
-            />
-          </label>
+
           <label>
             所属项目
             <SelectMenu
@@ -228,11 +190,11 @@ export function CreateTaskDialog() {
               value={goalId}
               onChange={(value) => {
                 setGoalId(value);
-                if (!value) setGoalContribution("1");
+                setGoalMeasure(value ? (presetGoalId ? "one" : "none") : "none");
               }}
               options={[
                 { value: "", label: "不关联目标" },
-                ...contributionGoals.map((goal) => ({
+                ...linkableGoals.map((goal) => ({
                   value: goal.id,
                   label: goal.title,
                 })),
@@ -241,36 +203,35 @@ export function CreateTaskDialog() {
           </label>
           {goalId ? (
             <label>
-              目标贡献
+              目标计量
+              <SelectMenu
+                ariaLabel="目标计量"
+                value={goalMeasure}
+                onChange={(value) => setGoalMeasure(value as "none" | "one" | "custom")}
+                options={canMeasure
+                  ? [
+                      { value: "none", label: "不计入（只关联）" },
+                      { value: "one", label: "算 1 个单位" },
+                      { value: "custom", label: "自定义单位数" },
+                    ]
+                  : [{ value: "none", label: "不计入（只关联）" }]}
+              />
+            </label>
+          ) : null}
+          {goalId && goalMeasure === "custom" ? (
+            <label>
+              计入的单位数
               <input
                 type="number"
-                min={0.1}
-                step={0.1}
+                min={0}
+                step={0.5}
                 value={goalContribution}
                 onChange={(event) => setGoalContribution(event.target.value)}
               />
-              <small className="create-task-hint">
-                完成后计入目标
-                {contributionGoals.find((goal) => goal.id === goalId)?.unit
-                  ? `（${contributionGoals.find((goal) => goal.id === goalId)?.unit}）`
-                  : ""}
-              </small>
             </label>
           ) : null}
         </div>
-        {repeat?.frequency === "weekly" ? (
-          <div className="create-task-weekdays">
-            <span className="create-task-hint">选择星期（可多选）</span>
-            <RepeatWeekdayPicker
-              weekdays={repeat.weekdays ?? weeklyRuleFromDate(dueDate || todayDateString()).weekdays!}
-              onChange={(weekdays) => {
-                setRepeat({ ...repeat, weekdays });
-                const anchor = dueDate || todayDateString();
-                setDueDate(nextDateMatchingWeekdays(anchor, weekdays));
-              }}
-            />
-          </div>
-        ) : null}
+
         <div className="create-task-time-card">
           <div className="create-task-time-head">
             <strong>时间安排</strong>
@@ -284,30 +245,33 @@ export function CreateTaskDialog() {
               </span>
             ) : null}
           </div>
-          <label>日期<DatePicker value={dueDate} onChange={(next) => {
-            setDueDate(next);
-            if (!next) {
-              setRepeat(null);
-              const range = defaultTimeRange();
-              setDueTime(range.start);
-              setEndTime(range.end);
-              setTimeManual(false);
-            } else if (repeat?.frequency === "weekly") {
-              setRepeat(weeklyRuleFromDate(next));
-            }
-          }} allowClear ariaLabel="任务日期" /></label>
-          <TimeRangeFields
-            start={dueTime}
-            end={endTime}
-            onStartChange={(value) => {
-              setTimeManual(true);
-              setDueTime(value);
-            }}
-            onEndChange={(value) => {
-              setTimeManual(true);
-              setEndTime(value);
-            }}
-          />
+          {/* 日期与开始/截止时间同一行：三个控件共用 .field-label 标签样式，等高对齐。 */}
+          <div className="create-task-schedule">
+            <label>
+              <span className="field-label">日期</span>
+              <DatePicker value={dueDate} onChange={(next) => {
+                setDueDate(next);
+                if (!next) {
+                  const range = defaultTimeRange();
+                  setDueTime(range.start);
+                  setEndTime(range.end);
+                  setTimeManual(false);
+                }
+              }} allowClear ariaLabel="任务日期" />
+            </label>
+            <TimeRangeFields
+              start={dueTime}
+              end={endTime}
+              onStartChange={(value) => {
+                setTimeManual(true);
+                setDueTime(value);
+              }}
+              onEndChange={(value) => {
+                setTimeManual(true);
+                setEndTime(value);
+              }}
+            />
+          </div>
         </div>
         <div className="create-task-actions"><button type="button" className="btn-ghost item-action-btn" onClick={close}>取消</button><button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!title.trim() || (Boolean(dueDate) && (!dueTime || !endTime)) || saving}>{saving ? "新建中…" : "新建任务"}</button></div>
       </form>

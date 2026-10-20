@@ -135,9 +135,7 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
     if (task.goal_id && payload.goals && !goalIds.has(task.goal_id)) {
       warnings.push(`任务 ${task.id} 引用了不存在的成长目标`);
     }
-    if (task.generated_from_id && !taskIds.has(task.generated_from_id)) {
-      warnings.push(`任务 ${task.id} 的重复来源不存在`);
-    }
+
   }
 
   for (const link of payload.taskTags ?? []) {
@@ -179,10 +177,7 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
     tasks: payload.tasks.map((task) => ({
       ...task,
       parent_id: task.parent_id && taskIds.has(task.parent_id) ? task.parent_id : null,
-      generated_from_id:
-        task.generated_from_id && taskIds.has(task.generated_from_id)
-          ? task.generated_from_id
-          : null,
+
       project_id:
         task.project_id && (!hasProjects || projectIds.has(task.project_id))
           ? task.project_id

@@ -14,9 +14,7 @@ import {
 import { localDateKey } from "@/lib/growth";
 import { getDb, mapTask, TASK_SELECT, withTransaction } from "./client";
 import { linkTag } from "./taxonomy";
-import { addGoalEntry, refreshGoalProgress, refreshProjectGoals, removeGoalEntryBySource } from "./growth";
-import { getSetting, setSetting } from "./settings";
-import { isRecyclableGeneratedTask, nextOccurrence, nextRepeatTaskDraft } from "@/lib/repeat";
+import { addGoalEntry, refreshGoalProgress, removeGoalEntryBySource } from "./growth";
 import { expandIdsWithChildren, selectRestoreIds } from "@/lib/taskTree";
 
 export async function fetchTasks(includeDeleted = false): Promise<Task[]> {
@@ -80,21 +78,19 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
     completed_at: null,
     deleted_at: null,
     parent_id: draft.parent_id ?? null,
-    repeat_rule: draft.repeat_rule ?? null,
     project_id: draft.project_id ?? null,
     goal_id: draft.goal_id ?? null,
-    goal_contribution: draft.goal_contribution ?? 1,
-    generated_from_id: draft.generated_from_id ?? null,
+    goal_contribution: draft.goal_contribution ?? 0,
   };
 
   await db.execute(
     `INSERT INTO tasks (
       id, title, description, notes, priority, status,
       due_date, due_time, end_time, sort_order, created_at, updated_at,
-      completed_at, deleted_at, parent_id, repeat_rule,
+      completed_at, deleted_at, parent_id,
       project_id,
-      goal_id, goal_contribution, generated_from_id
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+      goal_id, goal_contribution
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
     [
       task.id,
       task.title,
@@ -111,11 +107,9 @@ async function createTaskWithinTransaction(draft: TaskDraft): Promise<Task> {
       task.completed_at,
       task.deleted_at,
       task.parent_id,
-      task.repeat_rule,
       task.project_id,
       task.goal_id,
       task.goal_contribution,
-      task.generated_from_id,
     ],
   );
   await recordTaskEvent(task.id, "created", null, task);
@@ -134,16 +128,15 @@ export async function updateTask(
   updates: TaskUpdate,
 ): Promise<Task | null> {
   return withTransaction(async () => {
-    const { task } = await updateTaskWithinTransaction(id, updates);
-    return task;
+    return await updateTaskWithinTransaction(id, updates);
   });
 }
 
 /**
  * Apply many independent updates inside one serialized batch so callers (day
  * close, batch defer) pay one data-change emit instead of one per task.
- * Reuses updateTaskWithinTransaction so events, repeat spawning and goal
- * bookkeeping keep working; sqlx pooling prevents a real SQL transaction.
+ * Reuses updateTaskWithinTransaction so events and goal bookkeeping keep
+ * working; sqlx pooling prevents a real SQL transaction.
  */
 export async function applyTaskUpdatesBatch(
   items: { id: string; updates: TaskUpdate }[],
@@ -151,7 +144,7 @@ export async function applyTaskUpdatesBatch(
   return withTransaction(async () => {
     const updated: Task[] = [];
     for (const item of items) {
-      const { task } = await updateTaskWithinTransaction(item.id, item.updates);
+      const task = await updateTaskWithinTransaction(item.id, item.updates);
       if (task) updated.push(task);
     }
     return updated;
@@ -161,13 +154,13 @@ export async function applyTaskUpdatesBatch(
 async function updateTaskWithinTransaction(
   id: string,
   updates: TaskUpdate,
-): Promise<{ task: Task | null; spawned: Task | null }> {
+): Promise<Task | null> {
   const db = await getDb();
   const existing = await db.select<Task[]>(
     `${TASK_SELECT} WHERE tasks.id = $1 LIMIT 1`,
     [id],
   );
-  if (existing.length === 0) return { task: null, spawned: null };
+  if (existing.length === 0) return null;
 
   const current = mapTask(existing[0]);
   if (updates.status === "completed" && current.status !== "completed") {
@@ -204,10 +197,10 @@ async function updateTaskWithinTransaction(
     `UPDATE tasks SET
       title=$1, description=$2, notes=$3, priority=$4, status=$5,
       due_date=$6, due_time=$7, end_time=$8, updated_at=$9, completed_at=$10,
-      parent_id=$11, repeat_rule=$12, sort_order=$13,
-      project_id=$14,
-      goal_id=$15, goal_contribution=$16
-    WHERE id=$17`,
+      parent_id=$11, sort_order=$12,
+      project_id=$13,
+      goal_id=$14, goal_contribution=$15
+    WHERE id=$16`,
     [
       next.title,
       next.description,
@@ -220,7 +213,6 @@ async function updateTaskWithinTransaction(
       next.updated_at,
       next.completed_at,
       next.parent_id,
-      next.repeat_rule,
       next.sort_order,
       next.project_id,
       next.goal_id,
@@ -235,15 +227,18 @@ async function updateTaskWithinTransaction(
   if (current.status === "completed" && goalLinkChanged && current.goal_id) {
     await removeGoalEntryBySource(current.goal_id, "task", current.id);
   }
+  // 计量关联：只有显式声明了"完成时算 N 个单位"（contribution > 0）才写目标的
+  // 进度记录；只关联的任务不计数，避免同一件事被记两遍。
+  const measured = Boolean(next.goal_id) && (next.goal_contribution ?? 0) > 0;
   if (
-    next.goal_id &&
+    measured &&
     next.status === "completed" &&
     (current.status !== "completed" || goalLinkChanged)
   ) {
     await addGoalEntry({
-      goal_id: next.goal_id,
+      goal_id: next.goal_id!,
       entry_date: localDateKey(new Date(next.completed_at ?? nowIso())),
-      value: next.goal_contribution || 1,
+      value: next.goal_contribution,
       source_type: "task",
       source_id: next.id,
       note: next.title,
@@ -251,36 +246,22 @@ async function updateTaskWithinTransaction(
   } else if (current.goal_id && current.status === "completed" && next.status !== "completed") {
     await removeGoalEntryBySource(current.goal_id, "task", current.id);
   } else if (
-    next.goal_id &&
+    measured &&
     next.status === "completed" &&
     updates.completed_at !== undefined &&
     updates.completed_at !== current.completed_at
   ) {
     // 完成时间被修改：把目标贡献记录挪到新的完成日期。
-    await removeGoalEntryBySource(next.goal_id, "task", next.id);
+    await removeGoalEntryBySource(next.goal_id!, "task", next.id);
     await addGoalEntry({
-      goal_id: next.goal_id,
+      goal_id: next.goal_id!,
       entry_date: localDateKey(new Date(next.completed_at ?? nowIso())),
-      value: next.goal_contribution || 1,
+      value: next.goal_contribution,
       source_id: next.id,
       source_type: "task",
       note: next.title,
     });
   }
-  const affectedProjectIds = new Set(
-    [current.project_id, next.project_id].filter((value): value is string => Boolean(value)),
-  );
-  for (const projectId of affectedProjectIds) {
-    await refreshProjectGoals(projectId);
-  }
-
-  let spawned: Task | null = null;
-  if (current.status === "completed" && next.status !== "completed") {
-    await recycleGeneratedOccurrences(current);
-  } else if (current.status !== "completed" && next.status === "completed") {
-    spawned = await spawnRepeatOccurrence(current);
-  }
-
   if (next.parent_id && current.status !== next.status) {
     const parents = await db.select<Task[]>(`${TASK_SELECT} WHERE tasks.id=$1 LIMIT 1`, [next.parent_id]);
     const parent = parents[0] ? mapTask(parents[0]) : null;
@@ -297,7 +278,7 @@ async function updateTaskWithinTransaction(
     }
   }
 
-  return { task: next, spawned };
+  return next;
 }
 
 export async function recordTaskEvent(
@@ -435,71 +416,23 @@ export async function batchRestoreTasks(ids: string[]): Promise<void> {
 
 export async function toggleTaskComplete(
   id: string,
-): Promise<{ task: Task | null; spawned: Task | null }> {
+): Promise<Task | null> {
   return withTransaction(() => toggleTaskCompleteWithinTransaction(id));
 }
 
 async function toggleTaskCompleteWithinTransaction(
   id: string,
-): Promise<{ task: Task | null; spawned: Task | null }> {
+): Promise<Task | null> {
   const db = await getDb();
   const existing = await db.select<Task[]>(
     `${TASK_SELECT} WHERE tasks.id = $1 LIMIT 1`,
     [id],
   );
-  if (existing.length === 0) return { task: null, spawned: null };
+  if (existing.length === 0) return null;
   const current = mapTask(existing[0]);
   return updateTaskWithinTransaction(id, {
     status: current.status === "completed" ? "pending" : "completed",
   });
-}
-
-async function spawnRepeatOccurrence(source: Task): Promise<Task | null> {
-  if (!source.repeat_rule || source.parent_id !== null) return null;
-  const draft = nextRepeatTaskDraft(source, new Date());
-  if (!draft) return null;
-  const db = await getDb();
-  const tags = await db.select<{ tag_id: string }[]>(
-    "SELECT tag_id FROM task_tags WHERE task_id = $1",
-    [source.id],
-  );
-  const existing = await db.select<Task[]>(
-    `${TASK_SELECT} WHERE tasks.generated_from_id=$1 AND tasks.due_date=$2 AND tasks.deleted_at IS NULL LIMIT 1`,
-    [source.id, draft.due_date],
-  );
-  if (existing[0]) return mapTask(existing[0]);
-  try {
-    return await createTaskWithinTransaction({
-      ...draft,
-      generated_from_id: source.id,
-      tagIds: tags.map((row) => row.tag_id),
-    });
-  } catch (error) {
-    const raced = await db.select<Task[]>(
-      `${TASK_SELECT} WHERE tasks.generated_from_id=$1 AND tasks.due_date=$2 AND tasks.deleted_at IS NULL LIMIT 1`,
-      [source.id, draft.due_date],
-    );
-    if (raced[0]) return mapTask(raced[0]);
-    throw error;
-  }
-}
-
-async function recycleGeneratedOccurrences(source: Task): Promise<void> {
-  const reference = new Date(source.completed_at ?? nowIso());
-  const draft = nextRepeatTaskDraft(source, reference);
-  if (!draft?.due_date) return;
-  const expected = { due_date: draft.due_date, due_time: draft.due_time ?? null };
-  const db = await getDb();
-  const linked = await db.select<Task[]>(
-    `${TASK_SELECT} WHERE tasks.generated_from_id = $1 AND tasks.deleted_at IS NULL`,
-    [source.id],
-  );
-  for (const item of linked.map(mapTask)) {
-    if (!isRecyclableGeneratedTask(item, source, expected)) continue;
-    await db.execute("DELETE FROM task_tags WHERE task_id=$1", [item.id]);
-    await db.execute("DELETE FROM attachments WHERE task_id=$1", [item.id]);
-    await db.execute("DELETE FROM tasks WHERE id=$1", [item.id]);
-  }
 }
 
 export async function softDeleteTask(id: string): Promise<void> {
@@ -521,10 +454,7 @@ export async function purgeTrash(): Promise<number> {
       `SELECT DISTINCT goal_id FROM goal_entries
        WHERE source_type='task' AND source_id IN (${trash})`,
     );
-    const affectedProjects = await db.select<{ project_id: string }[]>(
-      `SELECT DISTINCT project_id FROM tasks
-       WHERE deleted_at IS NOT NULL AND project_id IS NOT NULL`,
-    );
+
     await db.execute(
       `DELETE FROM attachments WHERE task_id IN (${trash})`,
     );
@@ -540,13 +470,9 @@ export async function purgeTrash(): Promise<number> {
     await db.execute(
       `UPDATE app_notifications SET task_id = NULL WHERE task_id IN (${trash})`,
     );
-    await db.execute(
-      `UPDATE tasks SET generated_from_id=NULL
-       WHERE deleted_at IS NULL AND generated_from_id IN (${trash})`,
-    );
+
     await db.execute("DELETE FROM tasks WHERE deleted_at IS NOT NULL");
     for (const row of affectedGoals) await refreshGoalProgress(row.goal_id);
-    for (const row of affectedProjects) await refreshProjectGoals(row.project_id);
     return before[0]?.count ?? 0;
   });
 }
@@ -567,11 +493,7 @@ export async function purgeTask(id: string): Promise<void> {
        WHERE source_type='task' AND source_id IN (${placeholders})`,
       ids,
     );
-    const affectedProjects = await db.select<{ project_id: string }[]>(
-      `SELECT DISTINCT project_id FROM tasks
-       WHERE deleted_at IS NOT NULL AND project_id IS NOT NULL AND id IN (${placeholders})`,
-      ids,
-    );
+
     await db.execute(`DELETE FROM attachments WHERE task_id IN (${placeholders})`, ids);
     await db.execute(`DELETE FROM task_tags WHERE task_id IN (${placeholders})`, ids);
     await db.execute(`DELETE FROM task_events WHERE task_id IN (${placeholders})`, ids);
@@ -583,60 +505,12 @@ export async function purgeTask(id: string): Promise<void> {
       `UPDATE app_notifications SET task_id = NULL WHERE task_id IN (${placeholders})`,
       ids,
     );
-    await db.execute(
-      `UPDATE tasks SET generated_from_id=NULL
-       WHERE deleted_at IS NULL AND generated_from_id IN (${placeholders})`,
-      ids,
-    );
+
     await db.execute(
       `DELETE FROM tasks WHERE deleted_at IS NOT NULL AND id IN (${placeholders})`,
       ids,
     );
     for (const row of affectedGoals) await refreshGoalProgress(row.goal_id);
-    for (const row of affectedProjects) {
-      if (row.project_id) await refreshProjectGoals(row.project_id);
-    }
-  });
-}
 
-const GENERATED_FROM_BACKFILL_KEY = "generated_from_backfill_v1";
-
-export async function backfillGeneratedFromIds(): Promise<number> {
-  if ((await getSetting(GENERATED_FROM_BACKFILL_KEY)) === "1") return 0;
-  const tasks = await fetchTasks(true);
-  const db = await getDb();
-  let updated = 0;
-  const completedRepeats = tasks.filter(
-    (item) =>
-      item.status === "completed" &&
-      item.repeat_rule &&
-      !item.parent_id &&
-      !item.deleted_at,
-  );
-  await withTransaction(async () => {
-    for (const source of completedRepeats) {
-      const expected = nextOccurrence(source);
-      if (!expected) continue;
-      const matches = tasks.filter(
-        (item) =>
-          !item.generated_from_id &&
-          item.id !== source.id &&
-          !item.parent_id &&
-          !item.deleted_at &&
-          item.status !== "completed" &&
-          item.title === source.title &&
-          item.due_date === expected.due_date &&
-          (item.due_time ?? null) === (expected.due_time ?? null) &&
-          item.repeat_rule === source.repeat_rule,
-      );
-      if (matches.length !== 1) continue;
-      await db.execute(
-        "UPDATE tasks SET generated_from_id = $1 WHERE id = $2 AND generated_from_id IS NULL",
-        [source.id, matches[0].id],
-      );
-      updated += 1;
-    }
-    await setSetting(GENERATED_FROM_BACKFILL_KEY, "1");
   });
-  return updated;
 }

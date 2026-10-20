@@ -10,6 +10,13 @@ type SelectMenuProps = {
   ariaLabel?: string;
   className?: string;
   disabled?: boolean;
+  /**
+   * 外观变体：
+   * - "form"（默认）：表单下拉外观——输入框底色、边框与右侧下拉箭头；
+   * - "action"：动作按钮外观，不带箭头与表单底色，外观完全由 className 决定
+   *   （如 .item-action-btn），用于「更多操作」这类文案已说明用途的按钮。
+   */
+  variant?: "form" | "action";
 };
 
 // 替代原生 <select>:原生下拉展开后的选项列表是系统级弹层,CSS 无法定制,
@@ -22,6 +29,7 @@ export function SelectMenu({
   ariaLabel,
   className,
   disabled,
+  variant = "form",
 }: SelectMenuProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -128,7 +136,11 @@ export function SelectMenu({
       <button
         ref={btnRef}
         type="button"
-        className={`select-btn${className ? ` ${className}` : ""}`}
+        className={
+          variant === "action"
+            ? className
+            : `select-btn${className ? ` ${className}` : ""}`
+        }
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}

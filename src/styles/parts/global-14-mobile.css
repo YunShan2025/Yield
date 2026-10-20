@@ -1198,6 +1198,25 @@ html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
   color: var(--text-primary);
 }
 
+/* 目标弹窗也变成「取消 + 保存」两动作：同样改双等宽列，btn-ghost 补常态边框
+   （触摸屏没 hover），并覆盖上面那条单按钮满宽规则。 */
+html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-action-btn {
+  width: auto;
+  min-height: 48px;
+}
+
+html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-ghost {
+  border: 1px solid var(--border);
+  background: var(--bg-root);
+  color: var(--text-primary);
+}
+
 /* 表单触控目标垫到 48px（select/日期/时间触发器是按钮，min-height 可直接撑高）。 */
 html[data-shell="mobile"] .create-task-modal input,
 html[data-shell="mobile"] .create-task-modal .select-btn,

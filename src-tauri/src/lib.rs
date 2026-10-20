@@ -1363,6 +1363,104 @@ WHERE target_per_week IS NULL OR target_per_week < 1 OR target_per_week > 7;
             sql: r#"ALTER TABLE tasks DROP COLUMN delay_reason;"#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 20,
+            description: "slim_goal_fields_and_types",
+            // 成长目标模块收敛：time 型没有自动数据来源（focus 记录从未落库）、
+            // custom 与 quantity 的手动记录完全重合，统一转为 quantity；
+            // icon 全程无 UI 入口，description 从未被表单写入（语义由
+            // motivation 承担），一并删列。只向前升级，不触碰 updated_at。
+            sql: r#"
+UPDATE goals SET goal_type = 'quantity'
+WHERE goal_type IN ('time', 'custom');
+ALTER TABLE goals DROP COLUMN icon;
+ALTER TABLE goals DROP COLUMN description;
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 21,
+            description: "sync_fix_achievements_update_trigger",
+            // achievements 是追加型表：v3 只给了 ins/del 两个触发器，而它唯一
+            // 的可更新列 pinned（成就置顶）在同步白名单里——改了永远不入箱，
+            // 置顶状态因此在设备间各说各话。守卫只能盯 pinned 本身：该表没有
+            // updated_at，created_at 恒定不变。ts 仍取 created_at，与合并落库
+            // 时登记的 sync_merge_seen 同源，对端应用不会反弹回声；排水时
+            // HLC 的 p 由本端时钟单调推进（tick 取 max），不会被排到旧位置。
+            // 日志格式未变（pinned 一直都在），SYNC_SCHEMA_VERSION 不升版。
+            sql: r#"
+CREATE TRIGGER IF NOT EXISTS trg_achievements_upd AFTER UPDATE ON achievements
+WHEN NEW.pinned IS NOT OLD.pinned
+  AND NOT EXISTS (SELECT 1 FROM sync_merge_seen WHERE table_name = 'achievements' AND row_id = NEW.id AND ts_ms = COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0))
+BEGIN
+  INSERT INTO sync_outbox(table_name, row_id, op, ts_ms)
+  VALUES ('achievements', NEW.id, 'upsert', COALESCE(CAST(ROUND((julianday(NULLIF(NEW.created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0));
+END;
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 22,
+            description: "goal_habit_task_linkage_v2",
+            // 目标 / 习惯 / 任务三者的关系模型收口（v1.4.0）：
+            //
+            // 1. 习惯接管重复能力：新增 habits.repeat_rule（JSON 排期规则；
+            //    空 = 浮动次数模式，与旧行为一致）。
+            // 2. 任务不再重复：删除 tasks.repeat_rule。带重复规则的任务先转成
+            //    对应习惯，原任务软删除进回收站——不丢用户数据，可恢复。
+            // 3. 周口径归习惯：删除 goals.weekly_target。目标不再承载任何
+            //    周期口径，「每周 N 次」是习惯的事。
+            // 4. 目标类型归并：quantity/custom/frequency/time → milestone，
+            //    change → measure；项目型目标退役——完成率先固化成一条记录，
+            //    再转成 0→100% 的数值目标（项目本身与任务不受影响，进度仍在
+            //    项目页可见）。
+            // 5. 关联默认不计量：tasks/habits.goal_contribution 置 0
+            //    （0 = 只关联、不计数；>0 = 计量 N 个单位）。
+            // 6. 历史贡献合并：goal_entries 里 task/habit/focus 来源的记录按目标
+            //    合并成一条 manual 记录，进度数值不变，但之后不再被动变化。
+            sql: r#"
+ALTER TABLE habits ADD COLUMN repeat_rule TEXT;
+
+INSERT INTO habits (id, title, target_per_week, goal_id, goal_contribution, repeat_rule, created_at, updated_at)
+SELECT 'h_' || id, title, 3, goal_id, 0, repeat_rule, created_at, updated_at
+FROM tasks
+WHERE repeat_rule IS NOT NULL AND deleted_at IS NULL;
+
+UPDATE tasks SET deleted_at = updated_at, repeat_rule = NULL
+WHERE repeat_rule IS NOT NULL AND deleted_at IS NULL;
+
+ALTER TABLE tasks DROP COLUMN repeat_rule;
+DROP INDEX IF EXISTS uq_tasks_repeat_occurrence;
+DROP INDEX IF EXISTS idx_tasks_generated_from;
+ALTER TABLE tasks DROP COLUMN generated_from_id;
+ALTER TABLE goals DROP COLUMN weekly_target;
+ALTER TABLE goals DROP COLUMN project_id;
+
+INSERT INTO goal_entries (id, goal_id, entry_date, value, source_type, source_id, note, created_at, updated_at)
+SELECT 'gp_' || id, id, COALESCE(date(updated_at), date('now')), current_value, 'manual', NULL, '原项目完成率', updated_at, updated_at
+FROM goals
+WHERE goal_type = 'project' AND current_value != 0;
+
+UPDATE goals SET start_value = 0, target_value = 100, unit = '%', goal_type = 'milestone'
+WHERE goal_type = 'project';
+
+UPDATE goals SET goal_type = 'milestone' WHERE goal_type IN ('quantity', 'custom', 'frequency', 'time');
+UPDATE goals SET goal_type = 'measure' WHERE goal_type = 'change';
+
+UPDATE tasks SET goal_contribution = 0;
+UPDATE habits SET goal_contribution = 0;
+
+INSERT INTO goal_entries (id, goal_id, entry_date, value, source_type, source_id, note, created_at, updated_at)
+SELECT 'gm_' || goal_id || '_' || COUNT(*), goal_id, MAX(entry_date), SUM(value), 'manual', NULL, '历史贡献合并', MAX(updated_at), MAX(updated_at)
+FROM goal_entries
+WHERE source_type IN ('task', 'habit', 'focus')
+GROUP BY goal_id
+HAVING SUM(value) != 0;
+
+DELETE FROM goal_entries WHERE source_type IN ('task', 'habit', 'focus');
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

@@ -3,9 +3,10 @@ import type {
   Goal,
   GoalEntry,
   GoalMilestone,
+  GoalStatus,
 } from "@/types";
 import { createId, nowIso, todayDateString } from "@/lib/dates";
-import { goalAcceptsSource, localDateKey, localWeekStartKey } from "@/lib/growth";
+import { goalAcceptsSource, localDateKey } from "@/lib/growth";
 import { getDb } from "./client";
 
 /* Growth goals, contributions, milestones and achievements */
@@ -26,10 +27,8 @@ export async function createGoal(
   const goal: Goal = {
     id: createId(),
     title: draft.title.trim(),
-    description: draft.description?.trim() ?? "",
-    icon: draft.icon ?? "target",
     color: draft.color ?? "#2F6FED",
-    goal_type: draft.goal_type ?? "quantity",
+    goal_type: draft.goal_type ?? "milestone",
     start_date: draft.start_date ?? todayDateString(),
     target_date: draft.target_date ?? null,
     start_value: Number(draft.start_value ?? 0),
@@ -38,27 +37,24 @@ export async function createGoal(
     unit: draft.unit?.trim() || "次",
     status: draft.status ?? "active",
     motivation: draft.motivation?.trim() ?? "",
-    project_id: draft.project_id ?? null,
-    weekly_target: Math.max(0, Number(draft.weekly_target ?? 0)),
     manual_completion: draft.status === "completed" ? 1 : 0,
     created_at: stamp,
     updated_at: stamp,
   };
   await db.execute(
     `INSERT INTO goals
-     (id,title,description,icon,color,goal_type,start_date,target_date,start_value,
-      target_value,current_value,unit,status,motivation,project_id,weekly_target,
+     (id,title,color,goal_type,start_date,target_date,start_value,
+      target_value,current_value,unit,status,motivation,
       manual_completion,created_at,updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
     [
-      goal.id, goal.title, goal.description, goal.icon, goal.color,
+      goal.id, goal.title, goal.color,
       goal.goal_type, goal.start_date, goal.target_date, goal.start_value,
       goal.target_value, goal.current_value, goal.unit, goal.status,
-      goal.motivation, goal.project_id, goal.weekly_target, goal.manual_completion,
+      goal.motivation, goal.manual_completion,
       goal.created_at, goal.updated_at,
     ],
   );
-  if (goal.goal_type === "project") await refreshGoalProgress(goal.id);
   return goal;
 }
 
@@ -80,15 +76,15 @@ export async function updateGoal(
     updated_at: nowIso(),
   };
   await db.execute(
-    `UPDATE goals SET title=$1,description=$2,icon=$3,color=$4,goal_type=$5,
-     start_date=$6,target_date=$7,start_value=$8,target_value=$9,current_value=$10,
-     unit=$11,status=$12,motivation=$13,project_id=$14,weekly_target=$15,
-     manual_completion=$16,updated_at=$17 WHERE id=$18`,
+    `UPDATE goals SET title=$1,color=$2,goal_type=$3,
+     start_date=$4,target_date=$5,start_value=$6,target_value=$7,current_value=$8,
+     unit=$9,status=$10,motivation=$11,
+     manual_completion=$12,updated_at=$13 WHERE id=$14`,
     [
-      next.title, next.description, next.icon, next.color, next.goal_type,
+      next.title, next.color, next.goal_type,
       next.start_date, next.target_date, next.start_value, next.target_value,
       next.current_value, next.unit, next.status, next.motivation,
-      next.project_id, next.weekly_target, next.manual_completion, next.updated_at, id,
+      next.manual_completion, next.updated_at, id,
     ],
   );
 }
@@ -105,13 +101,48 @@ export async function fetchGoalEntries(goalId?: string): Promise<GoalEntry[]> {
       );
 }
 
+/** 与 tauri 连接池结构一致的最小 SQL 接口：同步层用自己的连接复算进度。 */
+export interface SqlDb {
+  select<T>(sql: string, params?: unknown[]): Promise<T>;
+  execute(sql: string, params?: unknown[]): Promise<unknown>;
+}
+
 export async function refreshGoalProgress(goalId: string): Promise<void> {
-  const db = await getDb();
+  await refreshGoalProgressOn(await getDb(), goalId);
+}
+
+/**
+ * 进度重算（可注入连接版）。
+ * skipUnchanged：派生值没变就整行不写。同步合并后的复算必须开着它——
+ * 否则每轮同步都给每个目标刷一次 updated_at，白更新的行会被推给对端，
+ * 两端互相刷新、永远静不下来。
+ * 返回是否真的改动了本机数据。
+ */
+export async function refreshGoalProgressOn(
+  db: SqlDb,
+  goalId: string,
+  opts: { skipUnchanged?: boolean } = {},
+): Promise<boolean> {
   const goalRows = await db.select<Goal[]>("SELECT * FROM goals WHERE id=$1", [goalId]);
-  if (!goalRows[0]) return;
+  if (!goalRows[0]) return false;
   const goal = goalRows[0];
+  let wrote = false;
   let current = Number(goal.start_value);
-  if (goal.goal_type === "change") {
+  let target = Number(goal.target_value);
+
+  if (goal.goal_type === "staged") {
+    // 阶段型目标：进度 = 已完成阶段数 / 总阶段数。阶段清单是唯一的刻度，
+    // 目标不再有"每周几次"或"累计多少次"的口径。
+    const counts = await db.select<{ total: number | null; done: number | null }[]>(
+      `SELECT COUNT(*) AS total,
+       SUM(CASE WHEN completed_at IS NOT NULL THEN 1 ELSE 0 END) AS done
+       FROM goal_milestones WHERE goal_id=$1`,
+      [goalId],
+    );
+    target = Number(counts[0]?.total ?? 0);
+    current = Number(counts[0]?.done ?? 0);
+  } else if (goal.goal_type === "measure") {
+    // 数值变化型目标：以最近一次手动测量为当前值。
     const latest = await db.select<{ value: number }[]>(
       `SELECT value FROM goal_entries
        WHERE goal_id=$1 AND source_type='manual'
@@ -119,80 +150,80 @@ export async function refreshGoalProgress(goalId: string): Promise<void> {
       [goalId],
     );
     current = latest.length ? Number(latest[0].value) : Number(goal.start_value);
-  } else if (goal.goal_type === "frequency") {
-    const sums = await db.select<{ total: number | null }[]>(
-      "SELECT SUM(value) AS total FROM goal_entries WHERE goal_id=$1 AND entry_date >= $2",
-      [goalId, localWeekStartKey()],
-    );
-    current = Number(sums[0]?.total ?? 0);
-  } else if (goal.goal_type === "project" && goal.project_id) {
-    const counts = await db.select<{ total: number; done: number }[]>(
-      `SELECT COUNT(*) AS total,
-       SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) AS done
-       FROM tasks
-       WHERE project_id=$1
-         AND deleted_at IS NULL
-         AND parent_id IS NULL
-         AND repeat_rule IS NULL`,
-      [goal.project_id],
-    );
-    current = counts[0]?.total
-      ? Math.round((Number(counts[0].done ?? 0) / Number(counts[0].total)) * 1000) / 10
-      : 0;
   } else {
+    // 数值·次数型目标：起点 + 记录之和。
     const sums = await db.select<{ total: number | null }[]>(
       "SELECT SUM(value) AS total FROM goal_entries WHERE goal_id=$1",
       [goalId],
     );
     current = Number(goal.start_value) + Number(sums[0]?.total ?? 0);
   }
-  const effectiveTarget = goal.goal_type === "frequency" && goal.weekly_target > 0
-    ? Number(goal.weekly_target)
-    : Number(goal.target_value);
-  const reached = goal.goal_type === "frequency"
-    ? false
-    : effectiveTarget >= Number(goal.start_value)
-      ? current >= effectiveTarget
-      : current <= effectiveTarget;
-  await db.execute(
-    `UPDATE goals SET current_value=$1,
-     status=CASE
-       WHEN $2=1 AND status='active' THEN 'completed'
-       WHEN $2=0 AND status='completed' AND manual_completion=0 THEN 'active'
-       ELSE status END,
-     updated_at=$3 WHERE id=$4`,
-    [current, reached ? 1 : 0, nowIso(), goalId],
-  );
+
+  const effectiveTarget = target;
+  const reached =
+    goal.goal_type === "staged"
+      ? target > 0 && current >= target
+      : effectiveTarget >= Number(goal.start_value)
+        ? current >= effectiveTarget
+        : current <= effectiveTarget;
+  // 与原先的 CASE 等价：只在 active/completed 之间按达成情况切换，其余状态不动。
+  const nextStatus: GoalStatus =
+    reached && goal.status === "active"
+      ? "completed"
+      : !reached && goal.status === "completed" && !goal.manual_completion
+        ? "active"
+        : goal.status;
+  if (
+    !opts.skipUnchanged ||
+    nextStatus !== goal.status ||
+    Math.abs(Number(goal.current_value) - current) > 1e-9 ||
+    Math.abs(Number(goal.target_value) - target) > 1e-9
+  ) {
+    await db.execute(
+      "UPDATE goals SET current_value=$1, target_value=$2, status=$3, updated_at=$4 WHERE id=$5",
+      [current, target, nextStatus, nowIso(), goalId],
+    );
+    wrote = true;
+  }
   const ascending = Number(goalRows[0].target_value) >= Number(goalRows[0].start_value);
   const allMilestones = await db.select<GoalMilestone[]>(
     "SELECT * FROM goal_milestones WHERE goal_id=$1",
     [goalId],
   );
-  const reverted = allMilestones.filter(
-    (milestone) => milestone.completed_at &&
-      (ascending ? current < milestone.target_value : current > milestone.target_value),
-  );
+  // 阶段型目标的阶段由用户逐个勾选，不按数值自动达成/回退——否则"已完成 1 个
+  // 阶段"会把所有阶段都算成达成。
+  const autoMilestones = goal.goal_type !== "staged";
+  const reverted = autoMilestones
+    ? allMilestones.filter(
+        (milestone) => milestone.completed_at &&
+          (ascending ? current < milestone.target_value : current > milestone.target_value),
+      )
+    : [];
   for (const milestone of reverted) {
     await db.execute(
       "UPDATE goal_milestones SET completed_at=NULL, updated_at=$1 WHERE id=$2",
       [nowIso(), milestone.id],
     );
-    await db.execute(
+    const undone = await db.execute(
       "DELETE FROM achievements WHERE source_type='milestone' AND source_id=$1",
       [milestone.id],
     );
+    wrote = wrote || changedRows(undone) > 0;
   }
-  const milestones = allMilestones.filter(
-    (milestone) => !milestone.completed_at &&
-      (ascending ? current >= milestone.target_value : current <= milestone.target_value),
-  );
+  const milestones = autoMilestones
+    ? allMilestones.filter(
+        (milestone) => !milestone.completed_at &&
+          (ascending ? current >= milestone.target_value : current <= milestone.target_value),
+      )
+    : [];
   for (const milestone of milestones) {
     const stamp = nowIso();
     await db.execute(
       "UPDATE goal_milestones SET completed_at=$1, updated_at=$2 WHERE id=$3",
       [stamp, stamp, milestone.id],
     );
-    await createAchievement({
+    wrote = true;
+    await createAchievementOn(db, {
       goal_id: goalId,
       title: milestone.title,
       description: `达成阶段目标：${milestone.target_value}${goalRows[0].unit}`,
@@ -202,7 +233,7 @@ export async function refreshGoalProgress(goalId: string): Promise<void> {
     });
   }
   if (reached) {
-    await createAchievement({
+    await createAchievementOn(db, {
       goal_id: goalId,
       title: `完成目标：${goalRows[0].title}`,
       description: `累计达到 ${current}${goalRows[0].unit}`,
@@ -211,11 +242,32 @@ export async function refreshGoalProgress(goalId: string): Promise<void> {
       source_id: goalId,
     });
   } else {
-    await db.execute(
+    const dropped = await db.execute(
       "DELETE FROM achievements WHERE source_type='goal' AND source_id=$1",
       [goalId],
     );
+    wrote = wrote || changedRows(dropped) > 0;
   }
+  return wrote;
+}
+export async function recomputeGoalsAfterSync(db: SqlDb): Promise<boolean> {
+  const goals = await db.select<{ id: string }[]>("SELECT id FROM goals");
+  let changed = false;
+  for (const goal of goals) {
+    if (await refreshGoalProgressOn(db, goal.id, { skipUnchanged: true })) {
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+/** tauri 返回 rowsAffected，测试用的 node:sqlite 返回 changes。 */
+function changedRows(result: unknown): number {
+  if (result && typeof result === "object") {
+    const r = result as { rowsAffected?: unknown; changes?: unknown };
+    return Number(r.rowsAffected ?? r.changes ?? 0) || 0;
+  }
+  return 0;
 }
 
 export async function addGoalEntry(
@@ -237,15 +289,6 @@ export async function addGoalEntry(
   );
   await refreshGoalProgress(input.goal_id);
   return result.rowsAffected > 0;
-}
-
-export async function refreshProjectGoals(projectId: string): Promise<void> {
-  const db = await getDb();
-  const goals = await db.select<{ id: string }[]>(
-    "SELECT id FROM goals WHERE goal_type='project' AND project_id=$1",
-    [projectId],
-  );
-  for (const goal of goals) await refreshGoalProgress(goal.id);
 }
 
 export async function reconcileGoalEntries(goalId: string): Promise<number> {
@@ -275,6 +318,43 @@ export async function removeGoalEntryBySource(
   await refreshGoalProgress(goalId);
 }
 
+/**
+ * 按用户输入校准累计型目标的「当前值」，返回是否补了记录。
+ *
+ * 累计型目标的进度是「基线 + 记录之和」，每次刷新都会按这个口径重算：
+ * 直接写 current_value 会被下一次复算覆盖回去，把基线压成负数又会让进度条
+ * 的起点跑到零以下。所以差额落成一条手动校准记录——数字改得准，历史上也
+ * 留得下这笔账（改小改大都有效）。change / frequency 型不走这套口径，勿用。
+ */
+export async function setGoalCurrentProgress(
+  goalId: string,
+  desired: number,
+): Promise<boolean> {
+  const db = await getDb();
+  const goals = await db.select<Goal[]>("SELECT * FROM goals WHERE id=$1 LIMIT 1", [goalId]);
+  const goal = goals[0];
+  if (!goal) return false;
+  const sums = await db.select<{ total: number | null }[]>(
+    "SELECT SUM(value) AS total FROM goal_entries WHERE goal_id=$1",
+    [goalId],
+  );
+  const derived = Number(goal.start_value) + Number(sums[0]?.total ?? 0);
+  const delta = Number(desired) - derived;
+  if (!Number.isFinite(delta) || Math.abs(delta) < 1e-9) return false;
+  const step = Math.round(delta * 100) / 100;
+  await db.execute(
+    `INSERT INTO goal_entries
+     (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
+     VALUES ($1,$2,$3,$4,'manual',NULL,$5,$6,$7)`,
+    [
+      createId(), goalId, todayDateString(), step,
+      `手动校准 ${step > 0 ? "+" : ""}${step}${goal.unit}`, nowIso(), nowIso(),
+    ],
+  );
+  await refreshGoalProgress(goalId);
+  return true;
+}
+
 export async function fetchGoalMilestones(goalId?: string): Promise<GoalMilestone[]> {
   const db = await getDb();
   return goalId
@@ -301,6 +381,93 @@ export async function createGoalMilestone(
   await refreshGoalProgress(goalId);
 }
 
+export async function updateGoalMilestone(
+  milestoneId: string,
+  updates: Partial<Pick<GoalMilestone, "title" | "target_value" | "target_date">>,
+): Promise<void> {
+  const db = await getDb();
+  const rows = await db.select<GoalMilestone[]>(
+    "SELECT * FROM goal_milestones WHERE id=$1",
+    [milestoneId],
+  );
+  const milestone = rows[0];
+  if (!milestone) return;
+  const next = {
+    title: updates.title?.trim() || milestone.title,
+    target_value: Number(updates.target_value ?? milestone.target_value),
+    target_date: updates.target_date !== undefined
+      ? updates.target_date
+      : milestone.target_date,
+  };
+  await db.execute(
+    `UPDATE goal_milestones
+     SET title=$1, target_value=$2, target_date=$3, completed_at=NULL, updated_at=$4
+     WHERE id=$5`,
+    [next.title, next.target_value, next.target_date, nowIso(), milestone.id],
+  );
+  // 目标值变了，旧的达成时间与成就不再可信，交由进度刷新重新推导。
+  await db.execute(
+    "DELETE FROM achievements WHERE source_type='milestone' AND source_id=$1",
+    [milestone.id],
+  );
+  await refreshGoalProgress(milestone.goal_id);
+}
+
+/**
+ * 勾选 / 取消勾选一个阶段。
+ *
+ * 阶段型目标的进度就是"已完成阶段数 / 总阶段数"，所以阶段必须由用户逐个勾选，
+ * 不能按数值自动达成。勾上时生成一条成就，取消时撤掉。
+ */
+export async function setGoalMilestoneCompleted(
+  milestoneId: string,
+  completed: boolean,
+): Promise<void> {
+  const db = await getDb();
+  const rows = await db.select<GoalMilestone[]>(
+    "SELECT * FROM goal_milestones WHERE id=$1",
+    [milestoneId],
+  );
+  const milestone = rows[0];
+  if (!milestone) return;
+  const stamp = nowIso();
+  await db.execute(
+    "UPDATE goal_milestones SET completed_at=$1, updated_at=$2 WHERE id=$3",
+    [completed ? stamp : null, stamp, milestoneId],
+  );
+  if (completed) {
+    await createAchievementOn(db, {
+      goal_id: milestone.goal_id,
+      title: milestone.title,
+      description: "达成一个阶段",
+      achieved_at: localDateKey(new Date(stamp)),
+      source_type: "milestone",
+      source_id: milestone.id,
+    });
+  } else {
+    await db.execute(
+      "DELETE FROM achievements WHERE source_type='milestone' AND source_id=$1",
+      [milestone.id],
+    );
+  }
+  await refreshGoalProgress(milestone.goal_id);
+}
+export async function deleteGoalMilestone(milestoneId: string): Promise<void> {
+  const db = await getDb();
+  const rows = await db.select<GoalMilestone[]>(
+    "SELECT * FROM goal_milestones WHERE id=$1",
+    [milestoneId],
+  );
+  const milestone = rows[0];
+  if (!milestone) return;
+  await db.execute(
+    "DELETE FROM achievements WHERE source_type='milestone' AND source_id=$1",
+    [milestone.id],
+  );
+  await db.execute("DELETE FROM goal_milestones WHERE id=$1", [milestone.id]);
+  await refreshGoalProgress(milestone.goal_id);
+}
+
 export async function fetchAchievements(): Promise<Achievement[]> {
   const db = await getDb();
   return db.select<Achievement[]>(
@@ -308,12 +475,22 @@ export async function fetchAchievements(): Promise<Achievement[]> {
   );
 }
 
-export async function createAchievement(
-  input: Pick<Achievement, "title" | "achieved_at" | "source_type"> &
-    Partial<Omit<Achievement, "id" | "title" | "achieved_at" | "source_type" | "created_at">>,
-): Promise<void> {
-  const db = await getDb();
-  await db.execute(
+export type AchievementDraft = Pick<
+  Achievement,
+  "title" | "achieved_at" | "source_type"
+> &
+  Partial<Omit<Achievement, "id" | "title" | "achieved_at" | "source_type" | "created_at">>;
+
+export async function createAchievement(input: AchievementDraft): Promise<void> {
+  await createAchievementOn(await getDb(), input);
+}
+
+/** 写入成就，返回是否真的插入了一行（同来源已存在时 INSERT OR IGNORE 会跳过）。 */
+export async function createAchievementOn(
+  db: SqlDb,
+  input: AchievementDraft,
+): Promise<boolean> {
+  const result = await db.execute(
     `INSERT OR IGNORE INTO achievements
      (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
@@ -324,6 +501,7 @@ export async function createAchievement(
       input.pinned ?? 0, nowIso(),
     ],
   );
+  return changedRows(result) > 0;
 }
 
 export async function toggleAchievementPinned(id: string): Promise<void> {

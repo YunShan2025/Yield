@@ -444,7 +444,100 @@ export function projectRowData(
   for (const col of spec.columns) {
     if (col in data) out[col] = data[col];
   }
+  if (table === "goals" && typeof out.goal_type === "string") {
+    // migration v22 把目标类型收敛为三种判据：milestone（数值·次数）、
+    // measure（数值变化）、staged（阶段）。未升级的对端仍可能发来旧类型
+    // （quantity / change / frequency / time / project / custom）：在本机落库前
+    // 归一，否则本端 goalAcceptsSource 认不出旧类型，会静默拒收贡献记录。
+    // 只改投影值，不额外写库，因此不产生回声。
+    const legacy: Record<string, string> = {
+      quantity: "milestone",
+      custom: "milestone",
+      frequency: "milestone",
+      time: "milestone",
+      project: "milestone",
+      change: "measure",
+    };
+    const mapped = legacy[out.goal_type];
+    if (mapped) out.goal_type = mapped;
+  }
   return out;
+}
+
+/**
+ * 带「来源唯一索引」的追加型表：goal_entries 按 (goal_id, source_type,
+ * source_id)、achievements 按 (source_type, source_id) 唯一。同一业务来源
+ * （同一任务完成、同一习惯打卡）在两端离线各写一行时 id 不同，直接 INSERT
+ * 必撞 UNIQUE，整条合并失败——而水位照样推进，那条记录从此永久丢失。
+ * 本机已有同来源的行即视为等价行：不删本地行（删除触发器无守卫，墓碑会反过来
+ * 清掉对端的等价行），而是把较新的一行内容并进去，让两端的记录集合真正一致。
+ * 若只跳过不并值，两端各自的求和会长期分歧，派生进度就会在每轮同步里来回翻。
+ */
+const SOURCE_UNIQUE_COLUMNS: Partial<Record<SyncTableName, string[]>> = {
+  goal_entries: ["goal_id", "source_type", "source_id"],
+  achievements: ["source_type", "source_id"],
+};
+
+/** 归并只搬业务内容：时间戳保持本机原值（见 adoptEquivalentRow）。 */
+const ADOPT_IGNORED_COLUMNS = new Set(["created_at", "updated_at"]);
+
+/** 查同来源的本地行；唯一索引是部分索引，来源为空的行不参与等价判定。 */
+async function findEquivalentRow(
+  db: SqlClient,
+  table: SyncTableName,
+  projected: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const columns = SOURCE_UNIQUE_COLUMNS[table];
+  if (!columns) return null;
+  const values: unknown[] = [];
+  const conditions: string[] = [];
+  for (const column of columns) {
+    const value = projected[column];
+    if (value === undefined || value === null) return null;
+    values.push(value);
+    conditions.push(`${column} = $${values.length}`);
+  }
+  const idColumn = TABLE_SPECS[table as Exclude<SyncTableName, "settings">].idColumns[0];
+  conditions.push(`${idColumn} <> $${values.length + 1}`);
+  values.push(projected[idColumn]);
+  const rows = await db.select<Record<string, unknown>[]>(
+    `SELECT * FROM ${table} WHERE ${conditions.join(" AND ")} LIMIT 1`,
+    values,
+  );
+  return rows[0] ?? null;
+}
+
+/**
+ * 对端这条与本机某行同源且更新（按行内时间戳比，不按条目 HLC：比较对象是
+ * 本机那一行，而不是对端那个 id）。只落本机、不写 updated_at——goal_entries
+ * 的 UPDATE 触发器以 updated_at 变化为守卫，于是这次归并不外推；对端那条本来
+ * 就在日志里，第三方设备各自拉到时按同样规则归并，全局仍然收敛。
+ */
+async function adoptEquivalentRow(
+  db: SqlClient,
+  table: SyncTableName,
+  localRow: Record<string, unknown>,
+  projected: Record<string, unknown>,
+  tsMs: number,
+): Promise<void> {
+  if (tsMs <= rowTsMs(localRow)) return; // 本机那行不旧于对端，保持不动
+  const spec = TABLE_SPECS[table as Exclude<SyncTableName, "settings">];
+  const sourceColumns = SOURCE_UNIQUE_COLUMNS[table] ?? [];
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const [column, value] of Object.entries(projected)) {
+    if (column === spec.idColumns[0] || sourceColumns.includes(column)) continue;
+    if (!spec.columns.includes(column) || ADOPT_IGNORED_COLUMNS.has(column)) continue;
+    if (localRow[column] === value) continue;
+    sets.push(`${column} = $${values.length + 1}`);
+    values.push(value);
+  }
+  if (sets.length === 0) return;
+  values.push(localRow[spec.idColumns[0]]);
+  await db.execute(
+    `UPDATE ${table} SET ${sets.join(", ")} WHERE ${spec.idColumns[0]} = $${values.length}`,
+    values,
+  );
 }
 
 async function buildUpsert(
@@ -457,6 +550,11 @@ async function buildUpsert(
   const projected = projectRowData(table, rowId, data);
   const cols = Object.keys(projected);
   if (cols.length === 0) return;
+  const equivalent = await findEquivalentRow(db, table, projected);
+  if (equivalent) {
+    await adoptEquivalentRow(db, table, equivalent, projected, tsMs);
+    return;
+  }
   const spec = TABLE_SPECS[table as Exclude<SyncTableName, "settings">];
   // 先登记回声抑制，再触发真正的 INSERT（触发器在语句内同步检查登记表）。
   await db.execute(

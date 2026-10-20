@@ -1,40 +1,34 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalType, Task } from "@/types";
 import {
-  addGoalEntry,
   createAchievement,
   createGoal,
   createGoalMilestone,
+  deleteGoalMilestone,
   fetchAchievements,
   fetchGoalEntries,
   fetchGoalMilestones,
   fetchGoals,
-  reconcileGoalEntries,
+  setGoalCurrentProgress,
+  setGoalMilestoneCompleted,
   toggleAchievementPinned,
   updateGoal,
 } from "@/lib/db";
 import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
 import { SelectMenu } from "@/components/SelectMenu";
-import { DatePicker } from "@/components/DatePicker";
+import { AppIcon } from "@/components/AppIcon";
 import {
   activityLevelFromValue,
   calculateGoalProgress,
   currentDateStreak,
+  goalDeadlineInfo,
   localDateKey,
   longestDateStreak,
+  resolveGoalTarget,
 } from "@/lib/growth";
 
 type GrowthTab = "overview" | "goals" | "achievements";
-
-const GOAL_TYPES: { value: GoalType; label: string; unit: string }[] = [
-  { value: "quantity", label: "累计数量", unit: "次" },
-  { value: "change", label: "数值变化", unit: "kg" },
-  { value: "frequency", label: "持续频率", unit: "次" },
-  { value: "time", label: "累计时间", unit: "分钟" },
-  { value: "project", label: "项目完成", unit: "%" },
-  { value: "custom", label: "自定义", unit: "点" },
-];
 
 const COLORS = ["#2F6FED", "#6F83D6", "#3E9B78", "#D7864D", "#C35D77", "#7367A8"];
 const GOAL_STATUS_LABEL: Record<Goal["status"], string> = {
@@ -47,6 +41,30 @@ const GOAL_STATUS_LABEL: Record<Goal["status"], string> = {
 
 function toDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function fmtContribution(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+/** 两个自然日之间相差几天（按本地日历天算，不受时区影响）。 */
+function daysBetween(from: string, to: string): number {
+  const start = new Date(`${from}T12:00:00`).getTime();
+  const end = new Date(`${to}T12:00:00`).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return 0;
+  return Math.max(0, Math.round((end - start) / 86400000));
+}
+
+/** 目标详情标题下的一行摘要：动机输入框已下线，这里改用目标自身的进度语义。 */
+function goalHeroSummary(goal: Goal) {
+  if (goal.goal_type === "measure") {
+    return `从 ${fmtContribution(goal.start_value)}${goal.unit} 到 ${fmtContribution(goal.target_value)}${goal.unit}，以最近一次记录为准`;
+  }
+  const target = resolveGoalTarget(goal);
+  if (goal.goal_type === "staged") {
+    return `阶段进度 ${fmtContribution(goal.current_value)}/${fmtContribution(target.value)} 个阶段`;
+  }
+  return `累计 ${fmtContribution(goal.current_value)}${goal.unit} / ${fmtContribution(target.value)}${goal.unit}`;
 }
 
 function dayRange() {
@@ -67,7 +85,6 @@ export function GrowthView() {
   const [tab, setTab] = useState<GrowthTab>("overview");
   const [goals, setGoals] = useState<Goal[]>([]);
   const [entries, setEntries] = useState<GoalEntry[]>([]);
-  const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [filterGoalId, setFilterGoalId] = useState("");
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
@@ -75,42 +92,59 @@ export function GrowthView() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalTitle, setGoalTitle] = useState("");
-  const [goalType, setGoalType] = useState<GoalType>("quantity");
-  const [targetValue, setTargetValue] = useState("24");
+  // 表单不再让用户选目标类型/单位：新建一律「累计数量 · 次」；编辑时记住目标
+  // 自身的类型与单位，只用来决定显示哪些字段、字段叫什么名字。
+  const [goalKind, setGoalKind] = useState<GoalType>("milestone");
+  const [goalUnit, setGoalUnit] = useState("次");
+  const [targetValue, setTargetValue] = useState("21");
   const [startValue, setStartValue] = useState("0");
-  const [unit, setUnit] = useState("本");
-  const [targetDate, setTargetDate] = useState("");
-  const [motivation, setMotivation] = useState("");
   const [color, setColor] = useState(COLORS[0]);
-  const [entryValue, setEntryValue] = useState("1");
-  const [entryNote, setEntryNote] = useState("");
-  const [milestoneTitle, setMilestoneTitle] = useState("");
-  const [milestoneValue, setMilestoneValue] = useState("");
   const [achievementTitle, setAchievementTitle] = useState("");
-  const [achievementDescription, setAchievementDescription] = useState("");
-  const [weeklyTarget, setWeeklyTarget] = useState("3");
-  const [projectId, setProjectId] = useState("");
-  const projects = useAppStore((state) => state.projects);
-  const addTask = useAppStore((state) => state.addTask);
+  const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
+  const today = todayDateString();
+  const [stageTitle, setStageTitle] = useState("");
   const allTasks = useAppStore((state) => state.tasks);
+  const habits = useAppStore((state) => state.habits);
+  const archivedHabits = useAppStore((state) => state.archivedHabits);
+  const habitChecks = useAppStore((state) => state.habitChecks);
   const focusRequest = useAppStore((state) => state.focusRequest);
-  const clearFocus = useAppStore((state) => state.clearFocus);
+  const saveTask = useAppStore((state) => state.saveTask);
+  const setHabitMeasurement = useAppStore((state) => state.setHabitMeasurement);  const clearFocus = useAppStore((state) => state.clearFocus);
+
+  // 选中目标时载入它的阶段清单（阶段型目标的进度刻度）。
+  useEffect(() => {
+    if (!selectedGoalId) {
+      setMilestones([]);
+      return;
+    }
+    let cancelled = false;
+    void fetchGoalMilestones(selectedGoalId).then((rows) => {
+      if (!cancelled) setMilestones(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedGoalId, goals]);
 
   const refresh = async (includeArchived = false) => {
-    const [nextGoals, nextEntries, nextMilestones, nextAchievements] = await Promise.all([
+    const [nextGoals, nextEntries, nextAchievements] = await Promise.all([
       fetchGoals(includeArchived),
       fetchGoalEntries(),
-      fetchGoalMilestones(),
       fetchAchievements(),
     ]);
     setGoals(nextGoals);
     setEntries(nextEntries);
-    setMilestones(nextMilestones);
     setAchievements(nextAchievements);
   };
 
+  // 目标、记录、成就都是页内本地状态（不在全局 store），同步拉回对端写入后
+  // 必须在这里重载，否则成长页要重开一次才看得到对端的新目标与新记录。
   useEffect(() => {
+    const reload = () => void refresh();
     void refresh();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 命令面板选中目标后：定位到「目标」页签并打开该目标详情（含已归档）。
@@ -133,14 +167,6 @@ export function GrowthView() {
   }, [focusRequest, clearFocus]);
 
   const selectedGoal = goals.find((goal) => goal.id === selectedGoalId) ?? null;
-  useEffect(() => {
-    if (!selectedGoal) return;
-    setEntryValue(
-      selectedGoal.goal_type === "change"
-        ? String(selectedGoal.current_value)
-        : "1",
-    );
-  }, [selectedGoal?.id, selectedGoal?.goal_type]);
   const visibleEntries = filterGoalId
     ? entries.filter((entry) => entry.goal_id === filterGoalId)
     : entries;
@@ -161,6 +187,9 @@ export function GrowthView() {
     for (const task of allTasks) {
       if (task.parent_id || task.deleted_at) continue;
       if (task.status !== "completed") continue;
+      // 按目标筛选时只计这个目标关联的任务：否则热力图上亮着的仍是全量投入，
+      // 筛选名不副实。
+      if (filterGoalId && task.goal_id !== filterGoalId) continue;
       const key =
         task.due_date ??
         (task.completed_at ? localDateKey(new Date(task.completed_at)) : null);
@@ -170,49 +199,104 @@ export function GrowthView() {
       result.set(key, list);
     }
     return result;
-  }, [allTasks]);
-  const activeDateKeys = [...new Set([...entriesByDate.keys(), ...completedTasksByDate.keys()])].sort();
+  }, [allTasks, filterGoalId]);
+  // 习惯打卡本身也点亮热力图（此前只有关联目标的打卡才计入）。
+  // 按目标筛选时，只计服务于该目标的习惯。
+  const habitGoalById = useMemo(
+    () => new Map([...habits, ...archivedHabits].map((habit) => [habit.id, habit.goal_id])),
+    [habits, archivedHabits],
+  );
+  const habitChecksByDate = useMemo(() => {
+    const result = new Map<string, number>();
+    for (const check of habitChecks) {
+      if (filterGoalId && habitGoalById.get(check.habit_id) !== filterGoalId) continue;
+      result.set(check.check_date, (result.get(check.check_date) ?? 0) + 1);
+    }
+    return result;
+  }, [habitChecks, filterGoalId, habitGoalById]);
+  const habitTitleById = useMemo(
+    () => new Map([...habits, ...archivedHabits].map((habit) => [habit.id, habit.title])),
+    [habits, archivedHabits],
+  );
+  const habitTitlesForDate = (dateKey: string) => {
+    const titles: string[] = [];
+    for (const check of habitChecks) {
+      if (check.check_date !== dateKey) continue;
+      const title = habitTitleById.get(check.habit_id);
+      if (title && !titles.includes(title)) titles.push(title);
+    }
+    return titles;
+  };
+  const manualValueByDate = useMemo(() => {
+    const result = new Map<string, number>();
+    for (const entry of visibleEntries) {
+      if (entry.source_type !== "manual") continue;
+      const changeType = goals.find((goal) => goal.id === entry.goal_id)?.goal_type === "measure";
+      // 手动记录里会有「校准冲减」（编辑当前值改小时补的负数账），它不是一次投入。
+      if (!changeType && Number(entry.value) <= 0) continue;
+      const value = changeType ? 1 : Number(entry.value);
+      result.set(entry.entry_date, (result.get(entry.entry_date) ?? 0) + value);
+    }
+    return result;
+  }, [visibleEntries, goals]);
+  const activeDateKeys = [...new Set([
+    ...habitChecksByDate.keys(),
+    ...completedTasksByDate.keys(),
+    ...entriesByDate.keys(),
+  ])].sort();
   const currentStreak = useMemo(
     () => currentDateStreak(activeDateKeys, todayDateString()),
     [activeDateKeys],
   );
   const longestStreak = useMemo(() => longestDateStreak(activeDateKeys), [activeDateKeys]);
-  const activityEntries = (items: GoalEntry[]) => items.map((entry) => ({
-    ...entry,
-    value: goals.find((goal) => goal.id === entry.goal_id)?.goal_type === "change"
-      ? 1
-      : entry.value,
-  }));
-  const totalValue = activityEntries(visibleEntries)
-    .reduce((sum, entry) => sum + Math.abs(Number(entry.value)), 0);
-
+  // 投入 = 行动次数（任务完成、习惯打卡）+ 手动记录值；change 型测量记 1 次。
+  const totalValue = useMemo(
+    () =>
+      [...habitChecksByDate.values()].reduce((sum, value) => sum + value, 0) +
+      [...completedTasksByDate.values()].reduce((sum, list) => sum + list.length, 0) +
+      [...manualValueByDate.values()].reduce((sum, value) => sum + value, 0),
+    [habitChecksByDate, completedTasksByDate, manualValueByDate],
+  );
   const submitGoal = async () => {
-    if (!goalTitle.trim()) return;
-    if (goalType === "project" && !projectId) {
-      useAppStore.getState().setToast("请先选择要跟踪的项目");
+    const title = goalTitle.trim();
+    if (!title) return;
+
+    try {
+      if (editingGoalId) {
+        // 只提交表单真正拥有的字段：类型、单位、目标日期、动机保持原值。
+        const values: Partial<Goal> = { title, color };
+        if (goalKind === "milestone") {
+          values.target_value = Math.max(1, Number(targetValue) || 1);
+          await updateGoal(editingGoalId, values);
+          // 「当前值」是派生量（基线 + 记录之和）：直接写 current_value 会被
+          // 下一次复算按口径覆盖，所以把差额补成一条手动校准记录，改大改小都留得住。
+          await setGoalCurrentProgress(editingGoalId, Number(startValue) || 0);
+        } else {
+          if (goalKind === "measure") {
+            values.start_value = Number(startValue) || 0;
+            values.target_value = Math.max(1, Number(targetValue) || 1);
+          }
+          await updateGoal(editingGoalId, values);
+        }
+      } else {
+        await createGoal({
+          title,
+          goal_type: "milestone",
+          unit: "次",
+          start_value: Number(startValue) || 0,
+          current_value: Number(startValue) || 0,
+          target_value: Math.max(1, Number(targetValue) || 1),
+          color,
+        });
+      }
+    } catch (error) {
+      // 报错一定要让用户看见：异常被 void 吞掉时弹窗原地不动，看着就像保存坏了。
+      useAppStore.getState().setToast(
+        `保存失败：${error instanceof Error ? error.message : "未知错误"}`,
+      );
       return;
     }
-    const values = {
-      title: goalTitle,
-      goal_type: goalType,
-      start_value: goalType === "project" ? 0 : Number(startValue) || 0,
-      current_value: goalType === "project" ? 0 : Number(startValue) || 0,
-      target_value: goalType === "project" ? 100 : Number(targetValue) || 1,
-      unit: goalType === "project" ? "%" : unit,
-      target_date: targetDate || null,
-      motivation,
-      color,
-      project_id: goalType === "project" ? projectId || null : null,
-      weekly_target: goalType === "frequency" ? Math.max(1, Number(weeklyTarget) || 1) : 0,
-    };
-    if (editingGoalId) {
-      await updateGoal(editingGoalId, values);
-      await reconcileGoalEntries(editingGoalId);
-    } else {
-      await createGoal(values);
-    }
     setGoalTitle("");
-    setMotivation("");
     setShowCreate(false);
     setEditingGoalId(null);
     await refresh();
@@ -221,14 +305,10 @@ export function GrowthView() {
   const openCreateGoal = () => {
     setEditingGoalId(null);
     setGoalTitle("");
-    setGoalType("quantity");
+    setGoalKind("milestone");
+    setGoalUnit("次");
     setStartValue("0");
-    setTargetValue("24");
-    setUnit("本");
-    setTargetDate("");
-    setMotivation("");
-    setWeeklyTarget("3");
-    setProjectId("");
+    setTargetValue("21");
     setColor(COLORS[0]);
     setShowCreate(true);
   };
@@ -236,38 +316,53 @@ export function GrowthView() {
   const openGoalEditor = (goal: Goal) => {
     setEditingGoalId(goal.id);
     setGoalTitle(goal.title);
-    setGoalType(goal.goal_type);
-    setStartValue(String(goal.start_value));
+    setGoalKind(goal.goal_type);
+    setGoalUnit(goal.unit);
+    // 累计型目标这一格是「当前值」，其余类型仍是起始值（数值变化的起点）。
+    setStartValue(String(goal.goal_type === "milestone" ? goal.current_value : goal.start_value));
     setTargetValue(String(goal.target_value));
-    setUnit(goal.unit);
-    setTargetDate(goal.target_date ?? "");
-    setMotivation(goal.motivation);
-    setWeeklyTarget(String(goal.weekly_target || 3));
-    setProjectId(goal.project_id ?? "");
     setColor(goal.color);
     setShowCreate(true);
   };
 
-  const submitEntry = async () => {
-    if (!selectedGoal) return;
-    const numericValue = Number(entryValue);
-    if (!Number.isFinite(numericValue)) {
-      useAppStore.getState().setToast("请输入有效数值");
-      return;
+
+  // 表单不再问「这是什么类型的目标」，但每种类型的进度算法不同，
+  // 所以按目标自身的类型决定该出现哪些输入框、以及引导框怎么说。
+  const formShowsValues = goalKind === "milestone" || goalKind === "measure";
+
+  const goalGuide =
+    goalKind === "measure"
+      ? "数值型目标以最近一次记录作为当前值，起点值只在还没有记录时生效。"
+      : goalKind === "staged"
+        ? "阶段型目标：把大目标拆成几个可勾选的阶段，勾一个进一个。"
+        : "任务完成与习惯打卡可按你声明的计量自动累计；重复动作交给「习惯」，目标只放要达成的结果。";
+  // 阶段：把大目标拆成可勾选的阶段，勾一个进一个。
+  const addStage = async () => {
+    const title = stageTitle.trim();
+    if (!title || !selectedGoal) return;
+    await createGoalMilestone(selectedGoal.id, title, 0, null);
+    if (selectedGoal.goal_type !== "staged") {
+      // 第一个阶段加入后，目标切换成阶段型：进度 = 已完成阶段 / 总阶段。
+      await updateGoal(selectedGoal.id, {
+        goal_type: "staged",
+        unit: "个阶段",
+        start_value: 0,
+      });
     }
-    await addGoalEntry({
-      goal_id: selectedGoal.id,
-      entry_date: todayDateString(),
-      value: numericValue,
-      source_type: "manual",
-      note: selectedGoal.goal_type === "change"
-        ? entryNote || `当前值：${entryValue}${selectedGoal.unit}`
-        : entryNote,
-    });
-    setEntryValue("1");
-    setEntryNote("");
+    setStageTitle("");
     await refresh();
   };
+
+  // 正在推进这个目标的任务与习惯（服务关系：它们让目标往前走，但不一定计数）。
+  const pushingTasks = selectedGoal
+    ? allTasks.filter(
+        (task) =>
+          task.goal_id === selectedGoal.id && !task.parent_id && !task.deleted_at,
+      )
+    : [];
+  const pushingHabits = selectedGoal
+    ? habits.filter((habit) => habit.goal_id === selectedGoal.id && !habit.deleted_at)
+    : [];
 
   return (
     <div className="growth-page">
@@ -321,10 +416,10 @@ export function GrowthView() {
             <div className="growth-heatmap" aria-label="成长热点图">
               {days.map((date) => {
                 const key = toDateKey(date);
-                const entryValue = activityEntries(entriesByDate.get(key) ?? [])
-                  .reduce((sum, entry) => sum + Math.abs(Number(entry.value)), 0);
                 const doneCount = (completedTasksByDate.get(key) ?? []).length;
-                const value = entryValue + doneCount;
+                const habitCount = habitChecksByDate.get(key) ?? 0;
+                const entryValue = manualValueByDate.get(key) ?? 0;
+                const value = entryValue + doneCount + habitCount;
                 const level = activityLevelFromValue(value);
                 return <button key={key} className={`heat-cell level-${level}`} title={`${key} · ${value || "无"}投入`} onClick={() => setSelectedDate(key)} />;
               })}
@@ -343,31 +438,169 @@ export function GrowthView() {
           <section className="goal-detail">
             <button className="text-btn" onClick={() => setSelectedGoalId(null)}>← 返回目标列表</button>
             <div className="goal-detail-hero" style={{ "--goal-color": selectedGoal.color } as CSSProperties}>
-              <div><span>{GOAL_STATUS_LABEL[selectedGoal.status]}</span><h2>{selectedGoal.title}</h2><p>{selectedGoal.motivation || selectedGoal.description || "每一步都算数。"}</p></div>
+              <div><span>{GOAL_STATUS_LABEL[selectedGoal.status]}</span><h2>{selectedGoal.title}</h2><p>{selectedGoal.motivation || goalHeroSummary(selectedGoal)}</p></div>
               <strong>{Math.round(calculateGoalProgress(selectedGoal))}%</strong>
             </div>
             <div className="goal-progress-track"><i style={{ width: `${calculateGoalProgress(selectedGoal)}%`, background: selectedGoal.color }} /></div>
+            {/* 阶段清单：目标即里程碑，勾一个进一个。 */}
+            <section className="goal-stages">
+              <div className="goal-section-head">
+                <span>阶段</span>
+                <b>
+                  {milestones.filter((item) => item.completed_at).length}/{milestones.length}
+                </b>
+              </div>
+              {milestones.length ? (
+                <ul className="goal-stage-list">
+                  {milestones.map((milestone) => (
+                    <li
+                      key={milestone.id}
+                      className={milestone.completed_at ? "is-done" : ""}
+                    >
+                      <button
+                        type="button"
+                        className="goal-stage-check"
+                        title={milestone.completed_at ? "取消达成" : "标记达成"}
+                        onClick={() =>
+                          void setGoalMilestoneCompleted(
+                            milestone.id,
+                            !milestone.completed_at,
+                          ).then(() => refresh())
+                        }
+                      >
+                        <AppIcon name="check" size={13} />
+                      </button>
+                      <span>{milestone.title}</span>
+                      <button
+                        type="button"
+                        className="goal-stage-remove"
+                        title="删除阶段"
+                        onClick={() =>
+                          void deleteGoalMilestone(milestone.id).then(() => refresh())
+                        }
+                      >
+                        <AppIcon name="trash" size={13} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="goal-empty">
+                  还没有阶段。把大目标拆成 3–5 个可勾选的阶段，勾一个进一个。
+                </p>
+              )}
+              <div className="goal-stage-add">
+                <input
+                  value={stageTitle}
+                  placeholder="添加阶段，例如「读完前 5 本」"
+                  onChange={(event) => setStageTitle(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void addStage();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="item-action-btn"
+                  disabled={!stageTitle.trim()}
+                  onClick={() => void addStage()}
+                >
+                  添加阶段
+                </button>
+              </div>
+            </section>
+
+            {/* 正在推进：关联的任务与习惯。 */}
+            <section className="goal-pushing">
+              <div className="goal-section-head">
+                <span>正在推进</span>
+                <b>{pushingTasks.length + pushingHabits.length}</b>
+              </div>
+              {pushingTasks.length || pushingHabits.length ? (
+                <ul className="goal-push-list">
+                  {pushingTasks.map((task) => (
+                    <li key={task.id}>
+                      <span className="goal-push-kind">任务</span>
+                      <span className="goal-push-title">{task.title}</span>
+                      <em>
+                        {task.status === "completed"
+                          ? "已完成"
+                          : task.due_date
+                            ? task.due_date < today
+                              ? `逾期 ${daysBetween(task.due_date, today)} 天`
+                              : task.due_date
+                            : "无截止日"}
+                      </em>
+                      <button
+                        type="button"
+                        className="goal-push-measure"
+                        title="切换这项是否给目标计数"
+                        onClick={() =>
+                          void saveTask(task.id, {
+                            goal_contribution: task.goal_contribution > 0 ? 0 : 1,
+                          }).then(() => refresh())
+                        }
+                      >
+                        {task.goal_contribution > 0 ? "计入" : "只关联"}
+                      </button>
+                    </li>
+                  ))}
+                  {pushingHabits.map((habit) => (
+                    <li key={habit.id}>
+                      <span className="goal-push-kind">习惯</span>
+                      <span className="goal-push-title">{habit.title}</span>
+                      <em>{habit.archived ? "已归档" : "每周进行"}</em>
+                      <button
+                        type="button"
+                        className="goal-push-measure"
+                        title="切换这次打卡是否给目标计数"
+                        onClick={() =>
+                          void setHabitMeasurement(
+                            habit.id,
+                            habit.goal_contribution > 0 ? 0 : 1,
+                          ).then(() => refresh())
+                        }
+                      >
+                        {habit.goal_contribution > 0 ? "计入" : "只关联"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="goal-empty">
+                  还没有任务或习惯在推进这个目标。把日常动作关联上来，进度会自己长。
+                </p>
+              )}
+            </section>
+
             <div className="goal-detail-actions">
-              <input disabled={selectedGoal.status !== "active" || selectedGoal.goal_type === "project"} type="number" value={entryValue} onChange={(event) => setEntryValue(event.target.value)} />
-              <input disabled={selectedGoal.status !== "active" || selectedGoal.goal_type === "project"} value={entryNote} placeholder={selectedGoal.goal_type === "change" ? "可选：记录测量说明" : selectedGoal.goal_type === "project" ? "项目进度由任务完成率自动计算" : "记录今天的进展"} onChange={(event) => setEntryNote(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void submitEntry(); }} />
-              <button disabled={selectedGoal.status !== "active" || selectedGoal.goal_type === "project"} className="btn-primary" onClick={() => void submitEntry()}>
-                {selectedGoal.goal_type === "change"
-                  ? `记录当前 ${entryValue}${selectedGoal.unit}`
-                  : selectedGoal.goal_type === "project"
-                    ? "项目自动计算"
-                  : `记录 +${entryValue}${selectedGoal.unit}`}
-              </button>
-              {selectedGoal.status === "active" ? <button className="btn-ghost" onClick={() => void addTask({ title: `推进：${selectedGoal.title}`, due_date: todayDateString(), goal_id: selectedGoal.id, goal_contribution: 1 }).then(() => useAppStore.getState().setToast("已创建今日截止的任务"))}>加入今日行动</button> : null}
-              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
-              <button className="btn-ghost" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
-              <button className="btn-ghost" onClick={() => void reconcileGoalEntries(selectedGoal.id).then((count) => { useAppStore.getState().setToast(count ? `已清理 ${count} 条不兼容贡献` : "贡献记录无需清理"); return refresh(); })}>检查贡献</button>
-              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(() => refresh())}>完成</button> : null}
-              {["active", "paused"].includes(selectedGoal.status) ? <button className="btn-ghost danger" onClick={() => void updateGoal(selectedGoal.id, { status: "abandoned" }).then(() => refresh())}>放弃</button> : null}
-              <button className="btn-ghost" onClick={() => void updateGoal(selectedGoal.id, { status: "archived" }).then(() => { setSelectedGoalId(null); return refresh(); })}>归档</button>
-            </div>
-            <div className="growth-columns">
-              <section className="growth-panel"><h3>里程碑</h3><div className="goal-inline-form"><input value={milestoneTitle} placeholder="阶段目标" onChange={(event) => setMilestoneTitle(event.target.value)} /><input type="number" value={milestoneValue} placeholder="目标值" onChange={(event) => setMilestoneValue(event.target.value)} /><button onClick={() => { if (!milestoneTitle.trim()) return; void createGoalMilestone(selectedGoal.id, milestoneTitle, Number(milestoneValue)).then(() => { setMilestoneTitle(""); setMilestoneValue(""); return refresh(); }); }}>添加</button></div>{milestones.filter((item) => item.goal_id === selectedGoal.id).map((item) => <div key={item.id} className={`milestone-row ${item.completed_at ? "done" : ""}`}><i>{item.completed_at ? "✓" : "○"}</i><span>{item.title}</span><strong>{item.target_value}{selectedGoal.unit}</strong></div>)}</section>
-              <section className="growth-panel"><h3>成长时间线</h3>{entries.filter((entry) => entry.goal_id === selectedGoal.id).slice(0,20).map((entry) => <div key={entry.id} className="growth-entry"><time>{entry.entry_date}</time><div><strong>{selectedGoal.goal_type === "change" ? `当前 ${entry.value}` : `+${entry.value}`}{selectedGoal.unit}</strong><p>{entry.note || entry.source_type}</p></div></div>)}</section>
+              <div className="goal-manage-group">
+                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
+                <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
+                {["active", "paused"].includes(selectedGoal.status) ? (
+                  <SelectMenu
+                    className="item-action-btn"
+                    variant="action"
+                    ariaLabel="更多状态操作"
+                    value=""
+                    onChange={(value) => {
+                      if (!["completed", "abandoned", "archived"].includes(value)) return;
+                      void updateGoal(selectedGoal.id, { status: value as Goal["status"] }).then(() => {
+                        if (value === "archived") setSelectedGoalId(null);
+                        return refresh();
+                      });
+                    }}
+                    options={[
+                      { value: "", label: "更多操作" },
+                      { value: "completed", label: "标记完成" },
+                      { value: "abandoned", label: "放弃目标" },
+                      { value: "archived", label: "归档" },
+                    ]}
+                  />
+                ) : null}
+              </div>
             </div>
           </section>
         ) : (
@@ -377,23 +610,120 @@ export function GrowthView() {
 
       {tab === "achievements" ? (
         <section>
-          <div className="achievement-compose growth-panel"><input value={achievementTitle} placeholder="记录一个值得纪念的成就" onChange={(event) => setAchievementTitle(event.target.value)} /><input value={achievementDescription} placeholder="写下这件事为什么重要" onChange={(event) => setAchievementDescription(event.target.value)} /><SelectMenu ariaLabel="关联目标" value={selectedGoalId ?? ""} onChange={(value) => setSelectedGoalId(value || null)} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} /><button className="btn-primary" onClick={() => { if (!achievementTitle.trim()) return; void createAchievement({ title: achievementTitle, description: achievementDescription, achieved_at: todayDateString(), goal_id: selectedGoalId, source_type: "manual" }).then(() => { setAchievementTitle(""); setAchievementDescription(""); return refresh(); }); }}>保存成就</button></div>
+          <div className="achievement-compose growth-panel"><input value={achievementTitle} placeholder="记录一个值得纪念的成就" onChange={(event) => setAchievementTitle(event.target.value)} /><SelectMenu ariaLabel="关联目标" value={selectedGoalId ?? ""} onChange={(value) => setSelectedGoalId(value || null)} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} /><button className="btn-primary" onClick={() => { const title = achievementTitle.trim(); if (!title) return; void createAchievement({ title, description: "", achieved_at: todayDateString(), goal_id: selectedGoalId, source_type: "manual" }).then(() => { setAchievementTitle(""); return refresh(); }); }}>保存成就</button></div>
           <div className="achievement-grid">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(() => refresh())} />)}</div>
           {!achievements.length ? <div className="empty-state">还没有成就记录。把今天值得纪念的一步留在这里。</div> : null}
         </section>
       ) : null}
 
-      {showCreate ? <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}><div className="goal-create-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><h3>新建目标</h3><button onClick={() => setShowCreate(false)}>×</button></div><label>目标名称<input autoFocus value={goalTitle} onChange={(event) => setGoalTitle(event.target.value)} /></label><div className="form-row"><label>目标类型<SelectMenu ariaLabel="目标类型" value={goalType} onChange={(value) => { const next = value as GoalType; setGoalType(next); setUnit(GOAL_TYPES.find((item) => item.value === next)?.unit ?? "次"); setStartValue("0"); }} options={GOAL_TYPES.map((item) => ({ value: item.value, label: item.label }))} /></label>{goalType !== "project" ? <label>{goalType === "change" ? "起始值" : "当前值"}<input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>目标值<input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} /></label> : null}{goalType !== "project" ? <label>单位<input value={unit} onChange={(event) => setUnit(event.target.value)} /></label> : null}</div>{goalType === "frequency" ? <label>每周目标次数<input type="number" min="1" value={weeklyTarget} onChange={(event) => setWeeklyTarget(event.target.value)} /></label> : null}{goalType === "project" ? <label>关联项目<SelectMenu ariaLabel="关联项目" value={projectId} onChange={setProjectId} options={[{ value: "", label: "请选择项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} /></label> : null}<label>目标日期<DatePicker value={targetDate} onChange={setTargetDate} ariaLabel="目标日期" allowClear /></label><label>为什么想完成它<textarea value={motivation} onChange={(event) => setMotivation(event.target.value)} /></label><div className="goal-color-picker">{COLORS.map((item) => <button key={item} className={color === item ? "active" : ""} style={{ background: item }} onClick={() => setColor(item)} />)}</div><div className="goal-create-actions"><button className="btn-primary item-action-btn item-action-primary" onClick={() => void submitGoal()}>新建目标</button></div></div></div> : null}
+      {showCreate ? (
+        <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}>
+          <div className="goal-create-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <h3>{editingGoalId ? "编辑目标" : "新建目标"}</h3>
+                <p className="goal-create-sub">任务和习惯会自动累计到这里，填三项就能开始。</p>
+              </div>
+              <button type="button" aria-label="关闭" onClick={() => setShowCreate(false)}>×</button>
+            </div>
+            <label>目标名称<input autoFocus value={goalTitle} placeholder="想达成什么结果？例如「读完 21 本书」" onChange={(event) => setGoalTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void submitGoal(); }} /></label>
+            <div className="goal-form-grid">
+              {formShowsValues ? (
+                <>
+                  <label>
+                    {goalKind === "measure" ? "起始值" : "当前值"}（{goalUnit}）
+                    <input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} />
+                  </label>
+                  <label>
+                    目标值（{goalUnit}）
+                    <input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} />
+                  </label>
+                </>
+              ) : null}
 
-      {selectedDate ? <div className="modal-backdrop" onMouseDown={() => setSelectedDate(null)}><div className="day-activity-modal" onMouseDown={(event) => event.stopPropagation()}><div className="modal-head"><h3>成长回看</h3><button onClick={() => setSelectedDate(null)}>×</button></div><p className="day-activity-date">{selectedDate}</p>{(completedTasksByDate.get(selectedDate) ?? []).map((task) => <div className="day-activity-row" key={task.id}><i className="done" /><div><strong>{task.title}</strong><span>完成任务{task.due_time ? ` · ${task.due_time}` : ""}</span></div></div>)}{(entriesByDate.get(selectedDate) ?? []).map((entry) => { const goal = goals.find((item) => item.id === entry.goal_id); const valueLabel = goal?.goal_type === "change" ? `当前 ${entry.value}` : `+${entry.value}`; return <div className="day-activity-row" key={entry.id}><i style={{ background: goal?.color }} /><div><strong>{entry.note || "记录了一次成长"}</strong><span>{goal?.title} · {valueLabel}{goal?.unit}</span></div></div>; })}{!(entriesByDate.get(selectedDate) ?? []).length && !(completedTasksByDate.get(selectedDate) ?? []).length ? <div className="empty-state">这一天没有记录。空白不是失败，只是尚未留下足迹。</div> : null}</div></div> : null}
+              <div className="goal-form-color">
+                <span>标记颜色</span>
+                <div className="goal-color-picker">
+                  {COLORS.map((item) => (
+                    <button key={item} type="button" aria-label={`标记颜色 ${item}`} className={color === item ? "active" : ""} style={{ background: item }} onClick={() => setColor(item)} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <p className="goal-guide"><AppIcon name="sparkle" size={14} /><span>{goalGuide}</span></p>
+            <div className="goal-create-actions">
+              <button type="button" className="btn-ghost item-action-btn" onClick={() => setShowCreate(false)}>取消</button>
+              <button type="button" className="btn-primary item-action-btn item-action-primary" disabled={!goalTitle.trim()} onClick={() => void submitGoal()}>{editingGoalId ? "保存修改" : "新建目标"}</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedDate ? (
+        <div className="modal-backdrop" onMouseDown={() => setSelectedDate(null)}>
+          <div className="day-activity-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-head"><h3>成长回看</h3><button onClick={() => setSelectedDate(null)}>×</button></div>
+            <p className="day-activity-date">{selectedDate}</p>
+            {(completedTasksByDate.get(selectedDate) ?? []).map((task) => (
+              <div className="day-activity-row" key={task.id}>
+                <i className="done" />
+                <div><strong>{task.title}</strong><span>完成任务{task.due_time ? ` · ${task.due_time}` : ""}</span></div>
+              </div>
+            ))}
+            {(habitChecksByDate.get(selectedDate) ?? 0) > 0 ? (
+              <div className="day-activity-row" key={`habit-${selectedDate}`}>
+                <i className="done habit-day-dot" />
+                <div>
+                  <strong>{habitChecksByDate.get(selectedDate)} 次习惯打卡</strong>
+                  <span>{habitTitlesForDate(selectedDate).join("、") || "习惯打卡"}</span>
+                </div>
+              </div>
+            ) : null}
+            {(entriesByDate.get(selectedDate) ?? []).filter((entry) => entry.source_type === "manual").map((entry) => {
+              const goal = goals.find((item) => item.id === entry.goal_id);
+              const valueLabel = goal?.goal_type === "measure" ? `当前 ${entry.value}` : `+${entry.value}`;
+              return (
+                <div className="day-activity-row" key={entry.id}>
+                  <i style={{ background: goal?.color }} />
+                  <div><strong>{entry.note || "记录了一次成长"}</strong><span>{goal?.title} · {valueLabel}{goal?.unit}</span></div>
+                </div>
+              );
+            })}
+            {!(entriesByDate.get(selectedDate) ?? []).some((entry) => entry.source_type === "manual") && !(completedTasksByDate.get(selectedDate) ?? []).length && !(habitChecksByDate.get(selectedDate) ?? 0) ? (
+              <div className="empty-state">这一天没有记录。空白不是失败，只是尚未留下足迹。</div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
+  // 分母与进度走 growth 的唯一真源：目标卡、今日目标条、成长页显示同一组数字。
+  const target = resolveGoalTarget(goal);
   const progress = calculateGoalProgress(goal);
-  const target = goal.goal_type === "frequency" && goal.weekly_target ? goal.weekly_target : goal.target_value;
-  return <button className="goal-card" onClick={onOpen}><div className="goal-card-head"><i style={{ background: goal.color }} /><span>{GOAL_STATUS_LABEL[goal.status]}</span></div><h3>{goal.title}</h3><p>{goal.current_value}{goal.unit} / {target}{goal.unit}{goal.goal_type === "frequency" ? "（本周）" : ""}</p><div className="goal-progress-track"><i style={{ width: `${progress}%`, background: goal.color }} /></div><footer><span>{Math.round(progress)}%</span><span>{goal.target_date ? `目标 ${goal.target_date}` : "长期目标"}</span></footer></button>;
+  const deadline = goalDeadlineInfo(goal, todayDateString());
+  return (
+    <button className="goal-card" onClick={onOpen}>
+      <div className="goal-card-head"><i style={{ background: goal.color }} /><span>{GOAL_STATUS_LABEL[goal.status]}</span></div>
+      <h3>{goal.title}</h3>
+      <p>
+        {fmtContribution(goal.current_value)}{target.unit} / {fmtContribution(target.value)}{target.unit}
+      </p>
+      <div className="goal-progress-track"><i style={{ width: `${progress}%`, background: goal.color }} /></div>
+      <footer>
+        <span>{Math.round(progress)}%</span>
+        <span>
+          {deadline
+            ? `${deadline.behind ? "进度落后 · " : ""}${deadline.daysLeft > 0 ? `剩 ${deadline.daysLeft} 天` : "已到目标日"}`
+            : goal.goal_type === "staged"
+              ? "阶段目标"
+              : "长期目标"}
+        </span>
+      </footer>
+    </button>
+  );
 }
 
 function AchievementCard({ achievement, onPin }: { achievement: Achievement; onPin?: () => void }) {

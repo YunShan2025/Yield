@@ -5,8 +5,18 @@ import { DEFAULT_HABIT_TARGET_PER_WEEK, fetchGoals } from "@/lib/db";
 import { mondayWeekDates } from "@/lib/weeklyChecklist";
 import type { Goal, Habit } from "@/types";
 import { AppIcon } from "@/components/AppIcon";
+import { goalAcceptsSource, resolveGoalTarget, type GoalTarget } from "@/lib/growth";
+import {
+  describeHabitSchedule,
+  matchesRepeatRule,
+  parseRepeatRule,
+  stringifyRepeatRule,
+  weeklyTargetFromRule,
+} from "@/lib/repeat";
+import { WeekdayPicker } from "@/components/WeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
+import type { RepeatRule } from "@/types";
 
 export function HabitsView() {
   const habits = useAppStore((s) => s.habits);
@@ -22,24 +32,40 @@ export function HabitsView() {
   const [title, setTitle] = useState("");
   const [goalId, setGoalId] = useState("");
   const [goalContribution, setGoalContribution] = useState("1");
+  const [goalMeasure, setGoalMeasure] = useState<"none" | "one" | "custom">("none");
   const [targetPerWeek, setTargetPerWeek] = useState(
     String(DEFAULT_HABIT_TARGET_PER_WEEK),
   );
+  // 排期：每天 / 每周指定几天 / 每周 N 次（不指定日子）。
+  const [scheduleMode, setScheduleMode] = useState<"daily" | "weekdays" | "flexible">(
+    "flexible",
+  );
+  const [weekdays, setWeekdays] = useState<number[]>([1, 3, 5]);
   const [targetDays, setTargetDays] = useState("30");
   const [unlimitedDays, setUnlimitedDays] = useState(false);
   const [saving, setSaving] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
   const today = todayDateString();
+  const goalById = new Map(goals.map((goal) => [goal.id, goal]));
+  // 目标分母与目标卡、今日条同源，避免同一个目标在两处显示不同的分母。
+  const linkedGoalFor = (habit: Habit) => {
+    const goal = habit.goal_id ? goalById.get(habit.goal_id) ?? null : null;
+    return { goal, goalTarget: goal ? resolveGoalTarget(goal) : null };
+  };
 
+  // 习惯的目标关联下拉靠这份列表，同步拉回新目标后要能立刻选到。
   useEffect(() => {
-    void fetchGoals().then(setGoals);
+    const reload = () => void fetchGoals().then(setGoals);
+    reload();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
   }, []);
 
-  const activeGoals = goals.filter(
-    (goal) =>
-      goal.status === "active" &&
-      ["quantity", "frequency"].includes(goal.goal_type),
-  );
+  // 所有进行中的目标都能关联（服务关系）；能不能"打卡即计量"由目标自己决定。
+  const activeGoals = goals.filter((goal) => goal.status === "active");
+  const canMeasure = goalId
+    ? goalAcceptsSource(goals.find((goal) => goal.id === goalId) ?? ({} as Goal), "habit")
+    : false;
 
   const checksFor = (habitId: string) =>
     habitChecks.filter((item) => item.habit_id === habitId);
@@ -52,9 +78,12 @@ export function HabitsView() {
     setTitle("");
     setGoalId("");
     setGoalContribution("1");
+    setGoalMeasure("none");
     setTargetPerWeek(String(DEFAULT_HABIT_TARGET_PER_WEEK));
     setTargetDays("30");
     setUnlimitedDays(false);
+    setScheduleMode("flexible");
+    setWeekdays([1, 3, 5]);
     setSaving(false);
     setCreating(true);
   };
@@ -64,10 +93,31 @@ export function HabitsView() {
     setEditingHabit(habit);
     setTitle(habit.title);
     setGoalId(habit.goal_id ?? "");
-    setGoalContribution(String(habit.goal_contribution || 1));
+    setGoalContribution(String(habit.goal_contribution || 0));
+    setGoalMeasure(
+      (habit.goal_contribution ?? 0) > 0
+        ? habit.goal_contribution === 1
+          ? "one"
+          : "custom"
+        : "none",
+    );
     setTargetPerWeek(String(habit.target_per_week || DEFAULT_HABIT_TARGET_PER_WEEK));
     setTargetDays(habit.target_days ? String(habit.target_days) : "30");
     setUnlimitedDays(habit.target_days === null);
+    const rule = parseRepeatRule(habit.repeat_rule ?? null);
+    if (!rule) {
+      setScheduleMode("flexible");
+      setWeekdays([1, 3, 5]);
+    } else if (rule.frequency === "daily") {
+      setScheduleMode("daily");
+      setWeekdays([1, 3, 5]);
+    } else if (rule.frequency === "weekly" && rule.weekdays?.length) {
+      setScheduleMode("weekdays");
+      setWeekdays(rule.weekdays);
+    } else {
+      setScheduleMode("flexible");
+      setWeekdays([1, 3, 5]);
+    }
     setSaving(false);
   };
 
@@ -84,16 +134,23 @@ export function HabitsView() {
       useAppStore.getState().setToast("习惯名称不能为空");
       return;
     }
-    if (!Number.isFinite(contribution) || contribution < 0.1) {
-      useAppStore.getState().setToast("请输入有效的每日打卡贡献值");
+    if (goalMeasure === "custom" && (!Number.isFinite(contribution) || contribution < 0)) {
+      useAppStore.getState().setToast("计入目标的单位数需为不小于 0 的数字");
+      return;
+    }
+    if (scheduleMode === "weekdays" && !weekdays.length) {
+      useAppStore.getState().setToast("请至少选择一天");
       return;
     }
     const rawTargetDays = Number(targetDays);
-    if (!unlimitedDays && (!Number.isInteger(rawTargetDays) || rawTargetDays < 1)) {
+    if (!goalId && !unlimitedDays && (!Number.isInteger(rawTargetDays) || rawTargetDays < 1)) {
       useAppStore.getState().setToast("目标打卡日数至少为 1 天");
       return;
     }
-    const rawTargetPerWeek = Number(targetPerWeek);
+    // 「每周几次」在固定排期下是派生值：每天 = 7，指定星期 = 选中的天数。
+    const derivedPerWeek =
+      scheduleMode === "daily" ? 7 : scheduleMode === "weekdays" ? weekdays.length : null;
+    const rawTargetPerWeek = derivedPerWeek ?? Number(targetPerWeek);
     if (
       !Number.isInteger(rawTargetPerWeek) ||
       rawTargetPerWeek < 1 ||
@@ -102,14 +159,27 @@ export function HabitsView() {
       useAppStore.getState().setToast("每周目标次数需为 1–7 的整数");
       return;
     }
+    const rule: RepeatRule | null =
+      scheduleMode === "daily"
+        ? { frequency: "daily", interval: 1 }
+        : scheduleMode === "weekdays"
+          ? { frequency: "weekly", interval: 1, weekdays }
+          : null;
+    const measuredContribution =
+      !goalId || goalMeasure === "none"
+        ? 0
+        : goalMeasure === "one"
+          ? 1
+          : Math.max(0, contribution);
     setSaving(true);
     try {
       const draft = {
         title: habitTitle,
         goal_id: goalId || null,
-        goal_contribution: contribution,
+        goal_contribution: measuredContribution,
         target_per_week: rawTargetPerWeek,
-        target_days: unlimitedDays ? null : rawTargetDays,
+        target_days: goalId || unlimitedDays ? null : rawTargetDays,
+        repeat_rule: stringifyRepeatRule(rule),
       };
       if (editingHabit) {
         await updateHabit(editingHabit.id, draft);
@@ -167,6 +237,7 @@ export function HabitsView() {
                 habit={habit}
                 checks={checksFor(habit.id)}
                 today={today}
+                {...linkedGoalFor(habit)}
                 onEdit={() => openEdit(habit)}
                 onArchive={() => void archiveHabit(habit.id)}
                 onDelete={() => void removeHabitWithConfirm(habit)}
@@ -190,6 +261,7 @@ export function HabitsView() {
                 habit={habit}
                 checks={[]}
                 today={today}
+                {...linkedGoalFor(habit)}
                 onEdit={() => openEdit(habit)}
                 onArchive={() => void archiveHabit(habit.id)}
                 onDelete={() => void removeHabitWithConfirm(habit)}
@@ -215,6 +287,7 @@ export function HabitsView() {
                   checks={habitChecks.filter((item) => item.habit_id === habit.id)}
                   today={today}
                   archived
+                  {...linkedGoalFor(habit)}
                   onEdit={() => openEdit(habit)}
                   onRestore={() => void restoreHabit(habit.id)}
                   onDelete={() => void removeHabitWithConfirm(habit)}
@@ -253,17 +326,45 @@ export function HabitsView() {
               />
             </label>
             <label>
+              排期
+              <SelectMenu
+                ariaLabel="排期"
+                value={scheduleMode}
+                onChange={(value) => setScheduleMode(value as "daily" | "weekdays" | "flexible")}
+                options={[
+                  { value: "flexible", label: "每周若干次（不指定日子）" },
+                  { value: "daily", label: "每天" },
+                  { value: "weekdays", label: "每周指定几天" },
+                ]}
+              />
+              <small className="project-field-hint">
+                今日事项只列出今天该做的习惯；重复性的事请建习惯，别建任务。
+              </small>
+            </label>
+            {scheduleMode === "weekdays" ? (
+              <label>
+                选择星期
+                <WeekdayPicker weekdays={weekdays} onChange={setWeekdays} />
+                <small className="project-field-hint">
+                  每周 {weekdays.length} 次，今天是{weekdays.includes(new Date(`${today}T12:00:00`).getDay()) ? "要做的日子" : "休息日"}。
+                </small>
+              </label>
+            ) : null}
+            <label>
               每周目标次数
               <input
                 type="number"
                 min={1}
                 max={7}
                 step={1}
-                value={targetPerWeek}
+                disabled={scheduleMode !== "flexible"}
+                value={scheduleMode === "daily" ? "7" : scheduleMode === "weekdays" ? String(weekdays.length) : targetPerWeek}
                 onChange={(event) => setTargetPerWeek(event.target.value)}
               />
               <small className="project-field-hint">
-                1–7 次，今日事项会显示本周进度。
+                {scheduleMode === "flexible"
+                  ? "1–7 次，今日事项会显示本周进度。"
+                  : "固定排期下由排期自动推算。"}
               </small>
             </label>
             <label>
@@ -280,35 +381,58 @@ export function HabitsView() {
                   })),
                 ]}
               />
-              <small className="project-field-hint">只支持累计数量和持续频率目标。</small>
+              <small className="project-field-hint">所有进行中的目标都可以关联。</small>
             </label>
             <label>
-              每日打卡贡献值
-              <input
-                type="number"
-                min={0.1}
-                step={0.1}
-                value={goalContribution}
-                onChange={(event) => setGoalContribution(event.target.value)}
+              目标计量
+              <SelectMenu
+                ariaLabel="目标计量"
+                value={goalMeasure}
+                onChange={(value) => setGoalMeasure(value as "none" | "one" | "custom")}
+                options={canMeasure
+                  ? [
+                      { value: "none", label: "不计入（只关联）" },
+                      { value: "one", label: "算 1 个单位" },
+                      { value: "custom", label: "自定义单位数" },
+                    ]
+                  : [{ value: "none", label: "不计入（只关联）" }]}
               />
-              <small className="project-field-hint">未关联成长目标时不会计入。</small>
+              <small className="project-field-hint">
+                打卡是否给目标算数，由你在这里显式声明。
+              </small>
             </label>
+            {goalMeasure === "custom" ? (
+              <label>
+                计入的单位数
+                <input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={goalContribution}
+                  onChange={(event) => setGoalContribution(event.target.value)}
+                />
+              </label>
+            ) : null}
             <label>
               目标打卡日数
               <input
                 type="number"
                 min={1}
                 step={1}
-                disabled={unlimitedDays}
+                disabled={unlimitedDays || Boolean(goalId)}
                 value={unlimitedDays ? "" : targetDays}
                 placeholder="无限"
                 onChange={(event) => setTargetDays(event.target.value)}
               />
+              {goalId ? (
+                <small className="project-field-hint">已关联成长目标，进度以目标为准。</small>
+              ) : null}
             </label>
             <label className="settings-toggle habit-unlimited-toggle">
               <input
                 type="checkbox"
                 checked={unlimitedDays}
+                disabled={Boolean(goalId)}
                 onChange={(event) => setUnlimitedDays(event.target.checked)}
               />
               <span>
@@ -349,6 +473,8 @@ function HabitCard({
   habit,
   checks,
   today,
+  goal,
+  goalTarget,
   archived = false,
   onEdit,
   onArchive,
@@ -358,6 +484,8 @@ function HabitCard({
   habit: Habit;
   checks: { check_date: string }[];
   today: string;
+  goal: Goal | null;
+  goalTarget: GoalTarget | null;
   archived?: boolean;
   onEdit: () => void;
   onArchive?: () => void;
@@ -369,7 +497,11 @@ function HabitCard({
   const weekDone = checks.filter(
     (item) => item.check_date >= weekDates[0] && item.check_date <= weekDates[6],
   ).length;
-  const weekTarget = habit.target_per_week;
+  // 固定排期的习惯，「每周几次」由排期推算；浮动模式才用习惯自己设的值。
+  const rule = parseRepeatRule(habit.repeat_rule ?? null);
+  const weekTarget = weeklyTargetFromRule(rule) ?? habit.target_per_week;
+  const scheduleText = describeHabitSchedule(rule);
+  const dueToday = matchesRepeatRule(today, rule);
   const weekPercent = Math.min(100, Math.round((weekDone / weekTarget) * 100));
   const weekFull = weekDone >= weekTarget;
   const streak = (() => {
@@ -392,10 +524,16 @@ function HabitCard({
           <strong className={streak > 0 ? "streak-pop" : ""}>{habit.title}</strong>
         </div>
         <p className="habits-card-meta">
-          {habit.target_days
-            ? `已打卡 ${checks.length}/${habit.target_days} 天`
-            : `已打卡 ${checks.length} 天`}
+          {goal
+            ? `目标进度 ${Math.round(goal.current_value * 100) / 100}/${Math.round((goalTarget?.value ?? 0) * 100) / 100}${goalTarget?.unit ?? goal.unit}`
+            : habit.target_days
+              ? `已打卡 ${checks.length}/${habit.target_days} 天`
+              : `已打卡 ${checks.length} 天`}
           <span> · 连续 {streak} 天</span>
+        </p>
+        <p className="habits-card-schedule">
+          {scheduleText}
+          {rule && !dueToday ? " · 今天不做" : ""}
         </p>
         <div
           className={`habit-week-progress${weekFull ? " is-full" : ""}`}

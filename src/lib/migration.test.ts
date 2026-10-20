@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -223,6 +223,72 @@ describe("database migration declarations", () => {
     expect(match).not.toBeNull();
     // 延期功能下线（P1-2 后续）：可空备注列无保留价值，直接删列。
     expect(match?.[1] ?? "").toContain("ALTER TABLE tasks DROP COLUMN delay_reason");
+  });
+
+  it("slims goal fields and types via migration v20", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*20,\s*description:\s*"slim_goal_fields_and_types",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // time 无自动来源、custom 与手动累计重合：统一转 quantity 后删死字段。
+    expect(sql).toContain("WHERE goal_type IN ('time', 'custom')");
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN icon");
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN description");
+    expect(sql).not.toContain("updated_at");
+  });
+
+  it("收口目标 · 习惯 · 任务的关系：migration v22", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*22,\s*description:\s*"goal_habit_task_linkage_v2",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    const sql = match?.[1] ?? "";
+    // 习惯接管重复能力：新增排期规则。
+    expect(sql).toContain("ALTER TABLE habits ADD COLUMN repeat_rule TEXT");
+    // 任务不再重复：重复规则与实例来源列一并下线（索引也要先删）。
+    expect(sql).toContain("ALTER TABLE tasks DROP COLUMN repeat_rule");
+    expect(sql).toContain("DROP INDEX IF EXISTS uq_tasks_repeat_occurrence");
+    expect(sql).toContain("ALTER TABLE tasks DROP COLUMN generated_from_id");
+    // 周口径归习惯；项目型目标退役。
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN weekly_target");
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN project_id");
+    // 目标类型归并为三种判据。
+    expect(sql).toContain("'quantity', 'custom', 'frequency', 'time'");
+    expect(sql).toContain("goal_type = 'measure' WHERE goal_type = 'change'");
+    // 关联默认不计量。
+    expect(sql).toContain("UPDATE tasks SET goal_contribution = 0");
+    expect(sql).toContain("UPDATE habits SET goal_contribution = 0");
+    // 历史贡献合并成一条手动记录，进度数值不变。
+    expect(sql).toContain("'历史贡献合并'");
+    // 带重复规则的任务转成习惯，原任务软删除进回收站（不丢用户数据）。
+    expect(sql).toContain("INSERT INTO habits (id, title, target_per_week, goal_id, goal_contribution, repeat_rule");
+    expect(sql).toContain("UPDATE tasks SET deleted_at = updated_at, repeat_rule = NULL");
+  });
+
+  it("adds the achievements update trigger via migration v21", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*21,\s*description:\s*"sync_fix_achievements_update_trigger",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 追加型表补上 UPDATE 触发器：置顶（pinned）此前改了永远不入箱。
+    expect(sql).toContain("CREATE TRIGGER IF NOT EXISTS trg_achievements_upd");
+    // 该表没有 updated_at，守卫盯住唯一可更新列，ts 仍取 created_at，
+    // 与合并落库登记的 sync_merge_seen 同源，避免应用后反弹回声。
+    expect(sql).toContain("WHEN NEW.pinned IS NOT OLD.pinned");
+    expect(sql).toContain("table_name = 'achievements' AND row_id = NEW.id");
   });
 
   it("drops project goal/criteria/milestones via migration v10", () => {

@@ -21,8 +21,7 @@ export interface TableSpec {
 const TASK_COLUMNS = [
   "title", "description", "notes", "priority", "status", "due_date", "due_time",
   "end_time", "sort_order", "created_at", "updated_at", "completed_at", "deleted_at",
-  "parent_id", "repeat_rule", "project_id", "goal_id",
-  "goal_contribution", "generated_from_id",
+  "parent_id", "project_id", "goal_id", "goal_contribution",
 ];
 
 export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> = {
@@ -33,9 +32,9 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   goals: {
     idColumns: ["id"],
     columns: [
-      "title", "description", "icon", "color", "goal_type", "start_date", "target_date",
+      "title", "color", "goal_type", "start_date", "target_date",
       "start_value", "target_value", "current_value", "unit", "status", "motivation",
-      "project_id", "weekly_target", "manual_completion", "created_at", "updated_at",
+      "manual_completion", "created_at", "updated_at",
     ],
   },
   tags: {
@@ -44,7 +43,7 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   },
   habits: {
     idColumns: ["id"],
-    columns: ["title", "target_per_week", "target_days", "archived", "deleted_at", "goal_id", "goal_contribution", "created_at", "updated_at"],
+    columns: ["title", "target_per_week", "target_days", "archived", "deleted_at", "goal_id", "goal_contribution", "repeat_rule", "created_at", "updated_at"],
   },
   anniversaries: {
     idColumns: ["id"],

@@ -11,6 +11,7 @@
 import { create } from "zustand";
 import { getDb } from "@/lib/db/client";
 import { getSetting, setSetting } from "@/lib/db/settings";
+import { recomputeGoalsAfterSync } from "@/lib/db/growth";
 import { nowIso } from "@/lib/dates";
 import { runSync, type SyncSummary, type SyncTrigger } from "./engine";
 import {
@@ -208,10 +209,20 @@ export class SyncService {
         lastSummary: summary,
         lastError: summary.errors[0] ?? null,
       });
+      // 目标进度是派生值，合并只整行 LWW 不会替本机重算：拉回对端写入后
+      // 按本机记录复算一次，否则两端一起停在偏小的旧值上。
+      let recalcChanged = false;
+      if (summary.pulled > 0) {
+        try {
+          recalcChanged = await recomputeGoalsAfterSync(await getDb());
+        } catch {
+          // 复算失败不影响本轮同步结论：本地任意一次写入或下轮同步会再补。
+        }
+      }
       // 对端拉回了新写入（或一次性修复改写了本机数据）：通知 UI 层重载，
       // 避免界面一直显示旧数据、要重启应用才看得到同步结果。
       // 手动与自动触发（启动/回前台）都走这里。
-      if ((summary.ok && summary.pulled > 0) || repaired) {
+      if ((summary.ok && summary.pulled > 0) || repaired || recalcChanged) {
         window.dispatchEvent(new Event("youqiu:sync-applied"));
       }
       return summary;

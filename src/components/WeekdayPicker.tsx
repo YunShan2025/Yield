@@ -5,10 +5,10 @@ type Props = {
   onChange: (weekdays: number[]) => void;
 };
 
-/** Mon-first chips for weekly repeat (0=Sun … 6=Sat). */
-export function RepeatWeekdayPicker({ weekdays, onChange }: Props) {
+/** Mon-first chips for picking weekdays (0=Sun … 6=Sat). */
+export function WeekdayPicker({ weekdays, onChange }: Props) {
   return (
-    <div className="repeat-weekday-picker" role="group" aria-label="重复星期">
+    <div className="repeat-weekday-picker" role="group" aria-label="选择星期">
       {WEEKDAY_OPTIONS.map((day) => {
         const on = weekdays.includes(day.value);
         return (

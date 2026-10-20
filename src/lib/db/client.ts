@@ -66,11 +66,9 @@ export function mapTask(row: Task): Task {
   return {
     ...row,
     parent_id: row.parent_id ?? null,
-    repeat_rule: row.repeat_rule ?? null,
     end_time: row.end_time ?? null,
     project_id: row.project_id ?? null,
     goal_id: row.goal_id ?? null,
     goal_contribution: row.goal_contribution ?? 1,
-    generated_from_id: row.generated_from_id ?? null,
   };
 }

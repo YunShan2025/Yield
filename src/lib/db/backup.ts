@@ -150,10 +150,10 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
       `INSERT INTO tasks (
         id, title, description, notes, priority, status,
         due_date, due_time, end_time, sort_order, created_at, updated_at,
-        completed_at, deleted_at, parent_id, repeat_rule,
+        completed_at, deleted_at, parent_id,
         project_id,
-        goal_id, goal_contribution, generated_from_id
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+        goal_id, goal_contribution
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
       [
         task.id,
         task.title,
@@ -170,11 +170,9 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         task.completed_at,
         task.deleted_at,
         task.parent_id ?? null,
-        task.repeat_rule ?? null,
         task.project_id ?? null,
         task.goal_id ?? null,
-        task.goal_contribution ?? 1,
-        task.generated_from_id ?? null,
+        task.goal_contribution ?? 0,
       ],
     );
   }
@@ -199,7 +197,7 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   }
   for (const h of payload.habits) {
     await db.execute(
-      "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, created_at, updated_at, deleted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+      "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, repeat_rule, created_at, updated_at, deleted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
       [
         h.id,
         h.title,
@@ -207,7 +205,8 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
         h.target_days ?? null,
         h.archived ?? 0,
         h.goal_id ?? null,
-        h.goal_contribution ?? 1,
+        h.goal_contribution ?? 0,
+        h.repeat_rule ?? null,
         h.created_at,
         h.updated_at ?? h.created_at,
         h.deleted_at ?? null,
@@ -290,14 +289,14 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   for (const goal of payload.goals ?? []) {
     await db.execute(
       `INSERT INTO goals
-       (id,title,description,icon,color,goal_type,start_date,target_date,start_value,
-        target_value,current_value,unit,status,motivation,project_id,weekly_target,
+       (id,title,color,goal_type,start_date,target_date,start_value,
+        target_value,current_value,unit,status,motivation,
         manual_completion,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
-      [goal.id,goal.title,goal.description,goal.icon,goal.color,goal.goal_type,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      [goal.id,goal.title,goal.color,goal.goal_type,
        goal.start_date,goal.target_date,goal.start_value,goal.target_value,
-       goal.current_value,goal.unit,goal.status,goal.motivation,goal.project_id,
-       goal.weekly_target,goal.manual_completion ?? (goal.status === "completed" ? 1 : 0),
+       goal.current_value,goal.unit,goal.status,goal.motivation,
+       goal.manual_completion ?? (goal.status === "completed" ? 1 : 0),
        goal.created_at,goal.updated_at],
     );
   }

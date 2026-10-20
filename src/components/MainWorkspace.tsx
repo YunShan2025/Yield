@@ -608,7 +608,6 @@ function TrashView() {
                   {task.due_date ? (
                     <span>原截止 {formatDueDate(task.due_date)}</span>
                   ) : null}
-                  {task.repeat_rule ? <span>重复任务</span> : null}
                 </div>
               </div>
               <div className="trash-item-actions">
@@ -727,7 +726,7 @@ function TrashView() {
                     }).then((ok) => {
                       if (ok) {
                         void purgeProject(project.id).then(async () => {
-                          // 永久删除会摘除任务/目标的 project_id，需刷新 store。
+                          // 永久删除会摘除任务的项目归属，需刷新 store。
                           await refreshAll();
                           await loadProjectTrash();
                         });

@@ -32,12 +32,9 @@ interface PaletteSection {
 }
 
 const GOAL_TYPE_LABELS: Record<Goal["goal_type"], string> = {
-  quantity: "数量",
-  change: "变化",
-  frequency: "频次",
-  time: "时长",
-  project: "项目",
-  custom: "自定义",
+  milestone: "累计",
+  measure: "数值",
+  staged: "阶段",
 };
 
 function compactPreview(text: string, max = 44) {
@@ -170,7 +167,7 @@ export function CommandPalette() {
     }
 
     const goalItems = goals
-      .filter((goal) => matches(goal.title, goal.description, goal.motivation))
+      .filter((goal) => matches(goal.title, goal.motivation))
       .slice(0, 5)
       .map<PaletteItem>((goal) => ({
         kind: "goal",

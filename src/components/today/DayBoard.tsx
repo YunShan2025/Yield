@@ -3,13 +3,11 @@ import { useAppStore } from "@/store/app";
 import { addDays, formatLongDate, todayDateString } from "@/lib/dates";
 import { isInboxTask, isActiveTask } from "@/lib/tasks";
 import { findTimeConflictIds } from "@/lib/planning";
-import {
-  orderTodayTasks,
-  loadTodayOrder,
-  saveTodayOrder,
-} from "@/lib/today";
+import { matchesRepeatRule, parseRepeatRule } from "@/lib/repeat";
+import { loadTodayOrder, saveTodayOrder } from "@/lib/today";
 import { TodayHero } from "./TodayHero";
-import { BatchToolbar } from "./BatchToolbar";
+import { GoalStrip } from "./GoalStrip";
+import { WeekBeat } from "./WeekBeat";import { BatchToolbar } from "./BatchToolbar";
 import { TodayAgenda } from "./TodayAgenda";
 import { TodayTimeline } from "../TodayTimeline";
 
@@ -54,17 +52,19 @@ export function DayBoard() {
     [cursor, orderVersion],
   );
 
-  const orderedTasks = useMemo(
-    () => orderTodayTasks(dayTasks, order),
-    [dayTasks, order],
-  );
 
   const conflictIds = useMemo(() => findTimeConflictIds(dayTasks), [dayTasks]);
 
-  // 今日事项把习惯一并列出（任务 + 习惯）；习惯模型只按每周次数设目标，
-  // 没有星期字段，因此活跃习惯每天都出现在今日清单里。
+  // 今日事项把习惯一并列出（任务 + 习惯）。习惯有自己的排期：固定"每周几"
+  // 的习惯只在该出现的日子出现；"每周 N 次"不指定日子的模式每天都出现，
+  // 但卡片会说明今天做不做都行。
   const todayHabits = useMemo(
-    () => (isTodayView && cursor === today ? habits : []),
+    () =>
+      isTodayView && cursor === today
+        ? habits.filter((habit) =>
+            matchesRepeatRule(today, parseRepeatRule(habit.repeat_rule ?? null)),
+          )
+        : [],
     [habits, isTodayView, cursor, today],
   );
 
@@ -88,7 +88,8 @@ export function DayBoard() {
         doneCount={done}
         totalCount={total}
       />
-      {!isInboxView ? (
+      {isTodayView && cursor === today ? <WeekBeat /> : null}
+      {isTodayView && cursor === today ? <GoalStrip /> : null}      {!isInboxView ? (
         <div className="scope-nav">
           <button
             type="button"
@@ -119,8 +120,9 @@ export function DayBoard() {
       {isTodayView ? <TodayTimeline /> : null}
 
       <TodayAgenda
-        tasks={orderedTasks}
+        tasks={dayTasks}
         habits={todayHabits}
+        order={order}
         cursor={cursor}
         today={today}
         isTodayView={isTodayView}

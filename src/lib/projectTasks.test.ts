@@ -19,21 +19,18 @@ function task(overrides: Partial<Task>): Task {
     completed_at: null,
     deleted_at: null,
     parent_id: null,
-    repeat_rule: null,
     project_id: "project-1",
     goal_id: null,
-    goal_contribution: 1,
-    generated_from_id: null,
+    goal_contribution: 0,
     ...overrides,
   };
 }
 
 describe("projectTasks", () => {
-  it("keeps finite project tasks and hides recurring tasks and their occurrences", () => {
+  it("keeps every project task — repetition now lives in habits", () => {
     const finite = task({ id: "finite" });
-    const recurring = task({ id: "recurring", repeat_rule: '{"frequency":"daily","interval":1}' });
-    const generated = task({ id: "generated", repeat_rule: recurring.repeat_rule, generated_from_id: recurring.id });
-    expect(projectTasks([finite, recurring, generated], "project-1")).toEqual([finite]);
+    const second = task({ id: "second" });
+    expect(projectTasks([finite, second], "project-1")).toEqual([finite, second]);
   });
 
   it("excludes deleted tasks, subtasks, and tasks from other projects", () => {

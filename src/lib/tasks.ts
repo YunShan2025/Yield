@@ -26,14 +26,13 @@ export function computeNavCounts(
   };
 }
 
-/** Project progress is made of finite deliverables, not recurring routines. */
+/** 项目里只放一次性交付物：重复性的日常动作属于习惯，不进项目。 */
 export function projectTasks(tasks: Task[], projectId: string): Task[] {
   return tasks.filter(
     (task) =>
       task.project_id === projectId &&
       !task.deleted_at &&
-      !task.parent_id &&
-      !task.repeat_rule,
+      !task.parent_id,
   );
 }
 

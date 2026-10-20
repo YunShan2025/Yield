@@ -35,6 +35,17 @@
   border-color: var(--accent);
 }
 
+/* 悬停态要重写整条 background：.item-action-btn:hover 用 background 简写做底色，
+   优先级高于本文件的 .select-btn，会把箭头图一并抹掉，看起来像「箭头悬停就消失」。
+   这里用更高的优先级把带箭头的底色抢回来，悬停只让边框变色。 */
+.select-btn:hover:not(:disabled),
+.select-btn:active:not(:disabled),
+.select-btn.item-action-btn:hover:not(:disabled),
+.select-btn.item-action-btn:active:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-input) var(--select-arrow) no-repeat right 11px center;
+}
+
 /* 与输入框同一套「边框变色 + 3px 外扩环」焦点语言,不用外挂 outline。 */
 .select-btn:focus-visible {
   outline: none;

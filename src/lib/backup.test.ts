@@ -165,12 +165,10 @@ describe("backup pure helpers", () => {
               completed_at: null,
               deleted_at: null,
               parent_id: "missing-parent",
-              repeat_rule: null,
-              project_id: null,
+                        project_id: null,
               goal_id: null,
               goal_contribution: 1,
-              generated_from_id: null,
-            },
+                      },
             {
               id: "a",
               title: "dup",
@@ -187,12 +185,10 @@ describe("backup pure helpers", () => {
               completed_at: null,
               deleted_at: null,
               parent_id: null,
-              repeat_rule: null,
-              project_id: null,
+                        project_id: null,
               goal_id: null,
               goal_contribution: 1,
-              generated_from_id: null,
-            },
+                      },
           ] as never,
         }),
       ),
@@ -216,12 +212,10 @@ describe("backup pure helpers", () => {
             completed_at: null,
             deleted_at: null,
             parent_id: "missing-parent",
-            repeat_rule: null,
-            project_id: null,
+                    project_id: null,
             goal_id: null,
             goal_contribution: 1,
-            generated_from_id: null,
-          },
+                  },
         ] as never,
       }),
     );
@@ -258,11 +252,9 @@ describe("backup pure helpers", () => {
       completed_at: null,
       deleted_at: null,
       parent_id: "missing-parent",
-      repeat_rule: null,
-      project_id: "missing-project",
+        project_id: "missing-project",
       goal_id: null,
       goal_contribution: 1,
-      generated_from_id: "missing-source",
     };
     const payload = minimalPayload({
       tasks: [task] as never,
@@ -298,7 +290,6 @@ describe("backup pure helpers", () => {
     expect(sanitized.taskTags).toEqual([{ task_id: "task-1", tag_id: "tag-1" }]);
     expect(sanitized.attachments).toEqual([]);
     expect(sanitized.tasks[0].parent_id).toBeNull();
-    expect(sanitized.tasks[0].generated_from_id).toBeNull();
     expect(sanitized.tasks[0].project_id).toBeNull();
   });
 });

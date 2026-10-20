@@ -1,24 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  addCalendarMonths,
-  isRecyclableGeneratedTask,
-  monthlyRuleFromDate,
-  nextOccurrence,
-  nextUpcomingOccurrence,
-  nextRepeatTaskDraft,
+  WEEKDAY_OPTIONS,
+  describeHabitSchedule,
+  matchesRepeatRule,
   parseRepeatRule,
   stringifyRepeatRule,
+  toggleWeekday,
+  weekdayFromDate,
+  weeklyTargetFromRule,
 } from "./repeat";
-import type { Task } from "@/types";
-
-const task = (repeat_rule: string, due_date = "2026-07-28") =>
-  ({
-    id: "task",
-    title: "test",
-    due_date,
-    due_time: "09:00",
-    repeat_rule,
-  }) as Task;
+import type { RepeatRule } from "@/types";
 
 describe("repeat rules", () => {
   it("round trips a rule", () => {
@@ -26,139 +17,48 @@ describe("repeat rules", () => {
     expect(parseRepeatRule(stringifyRepeatRule(rule))).toEqual(rule);
   });
 
-  it("calculates daily and weekly occurrences", () => {
-    expect(
-      nextOccurrence(task('{"frequency":"daily","interval":2}'))?.due_date,
-    ).toBe("2026-07-30");
-    expect(
-      nextOccurrence(task('{"frequency":"weekly","interval":1}'))?.due_date,
-    ).toBe("2026-08-04");
-    expect(
-      nextOccurrence(
-        task('{"frequency":"weekly","interval":1,"weekdays":[3]}', "2026-08-12"),
-      )?.due_date,
-    ).toBe("2026-08-19");
+  it("parses invalid payloads as no rule", () => {
+    expect(parseRepeatRule(null)).toBeNull();
+    expect(parseRepeatRule("{oops")).toBeNull();
   });
 
-  it("skips expired repeat occurrences in a single completion", () => {
-    const reference = new Date("2026-08-04T14:30:00");
-    expect(
-      nextUpcomingOccurrence(
-        task('{"frequency":"daily","interval":1}', "2026-07-28"),
-        reference,
-      ),
-    ).toEqual({ due_date: "2026-08-05", due_time: "09:00" });
-    expect(
-      nextUpcomingOccurrence(
-        task('{"frequency":"weekly","interval":1,"weekdays":[1,3]}', "2026-07-27"),
-        reference,
-      ),
-    ).toEqual({ due_date: "2026-08-05", due_time: "09:00" });
+  it("normalises weekday selection to Monday first", () => {
+    expect(toggleWeekday([1, 3], 0)).toEqual([1, 3, 0]);
+    expect(toggleWeekday([1, 3], 3)).toEqual([1]);
+    // 最后一个不能取消：至少留一天。
+    expect(toggleWeekday([3], 3)).toEqual([3]);
+    expect(toggleWeekday([0, 6], 5)).toEqual([5, 6, 0]);
   });
 
-  it("keeps today's all-day occurrence but skips a time that already passed", () => {
-    const reference = new Date("2026-08-04T14:30:00");
-    const allDay = {
-      ...task('{"frequency":"daily","interval":1}', "2026-08-03"),
-      due_time: null,
-    } as Task;
-    expect(nextUpcomingOccurrence(allDay, reference)?.due_date).toBe("2026-08-04");
-    expect(
-      nextUpcomingOccurrence(
-        task('{"frequency":"daily","interval":1}', "2026-08-03"),
-        reference,
-      )?.due_date,
-    ).toBe("2026-08-05");
+  it("maps a date to its weekday", () => {
+    expect(weekdayFromDate("2026-07-27")).toBe(1);
+    expect(weekdayFromDate("2026-08-02")).toBe(0);
+    expect(WEEKDAY_OPTIONS.map((day) => day.value)).toEqual([1, 2, 3, 4, 5, 6, 0]);
+  });
+});
+
+describe("habit schedules", () => {
+  it("treats an empty rule as the flexible weekly mode", () => {
+    // 浮动次数模式：每天都出现在今日清单，但"今天做不做都行"。
+    expect(matchesRepeatRule("2026-07-27", null)).toBe(true);
+    expect(describeHabitSchedule(null)).toBe("每周若干次");
+    expect(weeklyTargetFromRule(null)).toBeNull();
   });
 
-  it("skips unused weeks for multi-weekday interval rules", () => {
-    const rule = '{"frequency":"weekly","interval":2,"weekdays":[1,3]}';
-    expect(nextOccurrence(task(rule, "2026-08-10"))?.due_date).toBe("2026-08-12");
-    expect(nextOccurrence(task(rule, "2026-08-12"))?.due_date).toBe("2026-08-24");
+  it("shows a daily habit every day", () => {
+    const rule: RepeatRule = { frequency: "daily", interval: 1 };
+    expect(matchesRepeatRule("2026-07-27", rule)).toBe(true);
+    expect(matchesRepeatRule("2026-08-02", rule)).toBe(true);
+    expect(describeHabitSchedule(rule)).toBe("每天");
+    expect(weeklyTargetFromRule(rule)).toBe(7);
   });
 
-  it("supports the last weekday of a month", () => {
-    const result = nextOccurrence(
-      task(
-        '{"frequency":"custom","interval":1,"nthWeekday":{"n":-1,"weekday":5}}',
-      ),
-    );
-    expect(result?.due_date).toBe("2026-08-28");
-  });
-
-  it("carries description, project and goal fields into the next repeated task", () => {
-    const source = {
-      ...task('{"frequency":"daily","interval":1}'),
-      description: "details",
-      notes: "notes",
-      priority: 1,
-      end_time: "10:00",
-      project_id: "project-1",
-      goal_id: "goal-1",
-      goal_contribution: 2,
-    } as Task;
-    expect(nextRepeatTaskDraft(source, new Date("2026-07-28T08:00:00"))).toMatchObject({
-      due_date: "2026-07-29",
-      project_id: "project-1",
-      goal_id: "goal-1",
-      goal_contribution: 2,
-      generated_from_id: "task",
-    });
-  });
-
-  it("clamps monthly dates to the target month instead of overflowing", () => {
-    expect(addCalendarMonths("2026-01-31", 1, 31)).toBe("2026-02-28");
-    expect(addCalendarMonths("2024-01-31", 1, 31)).toBe("2024-02-29");
-    expect(addCalendarMonths("2026-01-31", 2, 31)).toBe("2026-03-31");
-    expect(addCalendarMonths("2026-01-31", 3, 31)).toBe("2026-04-30");
-    expect(addCalendarMonths("2026-01-31", 1, -1)).toBe("2026-02-28");
-    expect(
-      nextOccurrence(
-        task('{"frequency":"monthly","interval":1,"monthDay":31}', "2026-01-31"),
-      )?.due_date,
-    ).toBe("2026-02-28");
-    expect(
-      nextOccurrence(
-        task('{"frequency":"monthly","interval":1,"monthDay":31}', "2026-02-28"),
-      )?.due_date,
-    ).toBe("2026-03-31");
-    expect(monthlyRuleFromDate("2026-01-31").monthDay).toBe(31);
-  });
-
-  it("recycles only unmodified generated occurrences", () => {
-    const source = task('{"frequency":"daily","interval":1}', "2026-07-28");
-    const expected = nextOccurrence(source)!;
-    expect(
-      isRecyclableGeneratedTask(
-        {
-          title: "test",
-          status: "pending",
-          deleted_at: null,
-          due_date: expected.due_date,
-          due_time: expected.due_time,
-          repeat_rule: source.repeat_rule,
-          notes: "",
-          description: "",
-        },
-        { title: "test", notes: "", description: "", repeat_rule: source.repeat_rule },
-        expected,
-      ),
-    ).toBe(true);
-    expect(
-      isRecyclableGeneratedTask(
-        {
-          title: "renamed",
-          status: "pending",
-          deleted_at: null,
-          due_date: expected.due_date,
-          due_time: expected.due_time,
-          repeat_rule: source.repeat_rule,
-          notes: "",
-          description: "",
-        },
-        { title: "test", notes: "", description: "", repeat_rule: source.repeat_rule },
-        expected,
-      ),
-    ).toBe(false);
+  it("only shows a weekday habit on its own days", () => {
+    const rule: RepeatRule = { frequency: "weekly", interval: 1, weekdays: [1, 3, 5] };
+    expect(matchesRepeatRule("2026-07-27", rule)).toBe(true); // 周一
+    expect(matchesRepeatRule("2026-07-28", rule)).toBe(false); // 周二
+    expect(matchesRepeatRule("2026-07-29", rule)).toBe(true); // 周三
+    expect(describeHabitSchedule(rule)).toBe("每周一三五");
+    expect(weeklyTargetFromRule(rule)).toBe(3);
   });
 });

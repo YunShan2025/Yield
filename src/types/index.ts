@@ -70,12 +70,10 @@ export interface Task {
   completed_at: string | null;
   deleted_at: string | null;
   parent_id: string | null;
-  repeat_rule: string | null;
   project_id: string | null;
   goal_id: string | null;
+  /** 计量关联的权重：0 = 只关联、不计数；>0 = 完成时给目标加 N 个单位。 */
   goal_contribution: number;
-  /** Repeat occurrence spawned when completing another task. */
-  generated_from_id: string | null;
 }
 
 export interface Tag {
@@ -107,7 +105,13 @@ export interface Habit {
   created_at: string;
   updated_at: string;
   goal_id: string | null;
+  /** 计量关联的权重：0 = 只关联、不计数；>0 = 打卡时给目标加 N 个单位。 */
   goal_contribution: number;
+  /**
+   * 排期规则（JSON，沿用 RepeatRule 结构）：决定习惯出现在哪几天。
+   * 空 = 浮动次数模式（每周 N 次，不指定日子，每天都出现在今日清单）。
+   */
+  repeat_rule: string | null;
 }
 
 export interface HabitCheck {
@@ -160,14 +164,12 @@ export interface TaskDraft {
   due_time?: string | null;
   end_time?: string | null;
   parent_id?: string | null;
-  repeat_rule?: string | null;
   project_id?: string | null;
   relative_due_days?: number;
   subtasks?: TaskDraft[];
   goal_id?: string | null;
   goal_contribution?: number;
   tagIds?: string[];
-  generated_from_id?: string | null;
 }
 
 export interface HabitDraft {
@@ -177,6 +179,8 @@ export interface HabitDraft {
   /** 每周目标打卡次数，1–7；缺省按 3 处理。 */
   target_per_week?: number;
   target_days?: number | null;
+  /** 排期规则 JSON；空 = 浮动次数模式。 */
+  repeat_rule?: string | null;
 }
 
 export interface TaskUpdate {
@@ -191,7 +195,6 @@ export interface TaskUpdate {
   due_time?: string | null;
   end_time?: string | null;
   parent_id?: string | null;
-  repeat_rule?: string | null;
   project_id?: string | null;
   goal_id?: string | null;
   goal_contribution?: number;
@@ -260,13 +263,13 @@ export interface Anniversary {
   updated_at: string;
 }
 
-export type GoalType =
-  | "quantity"
-  | "change"
-  | "frequency"
-  | "time"
-  | "project"
-  | "custom";
+/**
+ * 目标的内部判据种类（界面上不让用户选）。
+ * - milestone 数值·次数：起点 → 目标值，靠记录累计推进
+ * - measure  数值变化：起点 → 目标值，靠最新一次测量推进
+ * - staged   阶段：靠勾选阶段清单推进
+ */
+export type GoalType = "milestone" | "measure" | "staged";
 export type GoalStatus =
   | "active"
   | "paused"
@@ -277,8 +280,6 @@ export type GoalStatus =
 export interface Goal {
   id: string;
   title: string;
-  description: string;
-  icon: string;
   color: string;
   goal_type: GoalType;
   start_date: string;
@@ -289,8 +290,6 @@ export interface Goal {
   unit: string;
   status: GoalStatus;
   motivation: string;
-  project_id: string | null;
-  weekly_target: number;
   manual_completion: number;
   created_at: string;
   updated_at: string;

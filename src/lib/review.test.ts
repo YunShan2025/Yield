@@ -25,11 +25,9 @@ function task(overrides: Partial<Task> = {}): Task {
     completed_at: null,
     deleted_at: null,
     parent_id: null,
-    repeat_rule: null,
     project_id: null,
     goal_id: null,
-    goal_contribution: 1,
-    generated_from_id: null,
+    goal_contribution: 0,
     ...overrides,
   };
 }
@@ -38,10 +36,8 @@ function goal(overrides: Partial<Goal> = {}): Goal {
   return {
     id: "g1",
     title: "写作",
-    description: "",
-    icon: "target",
     color: "#2F6FED",
-    goal_type: "quantity",
+    goal_type: "milestone",
     start_date: "2026-10-01",
     target_date: null,
     start_value: 0,
@@ -50,8 +46,6 @@ function goal(overrides: Partial<Goal> = {}): Goal {
     unit: "篇",
     status: "active",
     motivation: "",
-    project_id: null,
-    weekly_target: 0,
     manual_completion: 0,
     created_at: "2026-10-01T00:00:00.000Z",
     updated_at: "2026-10-01T00:00:00.000Z",

@@ -18,11 +18,9 @@ function makeTask(patch: Partial<Task> & { id: string }): Task {
     completed_at: null,
     deleted_at: null,
     parent_id: null,
-    repeat_rule: null,
     project_id: null,
     goal_id: null,
     goal_contribution: 0,
-    generated_from_id: null,
     ...patch,
   };
 }

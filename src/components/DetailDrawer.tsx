@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
-import { parseRepeatRule, stringifyRepeatRule, describeRepeatRule, weeklyRuleFromDate, monthlyRuleFromDate, nextDateMatchingWeekdays } from "@/lib/repeat";
-import { RepeatWeekdayPicker } from "@/components/RepeatWeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import type {
   Attachment,
   Goal,
-  RepeatRule,
   TaskPriority,
 } from "@/types";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -21,7 +18,6 @@ import {
   ensureEndAfterStart,
   formatTimeRange,
   nowTimeString,
-  todayDateString,
 } from "@/lib/dates";
 
 type Mode = "view" | "edit";
@@ -33,9 +29,7 @@ const PRIORITY_LABEL: Record<number, string> = {
   4: "P4 低",
 };
 
-function repeatLabel(rule: string | null): string {
-  return describeRepeatRule(parseRepeatRule(rule));
-}
+
 
 export function DetailDrawer() {
   const tasks = useAppStore((s) => s.tasks);
@@ -64,10 +58,9 @@ export function DetailDrawer() {
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [repeat, setRepeat] = useState<RepeatRule | null>(null);
   const [goalId, setGoalId] = useState("");
-  const [goalContribution, setGoalContribution] = useState("1");
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goalMeasure, setGoalMeasure] = useState<"none" | "one" | "custom">("none");
+  const [goalContribution, setGoalContribution] = useState("1");  const [goals, setGoals] = useState<Goal[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -104,9 +97,15 @@ export function DetailDrawer() {
       task.end_time ??
         ensureEndAfterStart(task.due_time ?? range.start, null),
     );
-    setRepeat(parseRepeatRule(task.repeat_rule));
     setGoalId(task.goal_id ?? "");
-    setGoalContribution(String(task.goal_contribution || 1));
+    setGoalContribution(String(task.goal_contribution || 0));
+    setGoalMeasure(
+      task.goal_contribution > 0
+        ? task.goal_contribution === 1
+          ? "one"
+          : "custom"
+        : "none",
+    );
   };
 
   const enterEdit = () => {
@@ -204,8 +203,8 @@ export function DetailDrawer() {
     const start = dueTime || nowTimeString();
     const end = ensureEndAfterStart(start, endTime);
     const contribution = Number(goalContribution);
-    if (goalId && (!Number.isFinite(contribution) || contribution <= 0)) {
-      setToast("目标贡献值需大于 0");
+    if (goalMeasure === "custom" && (!Number.isFinite(contribution) || contribution < 0)) {
+      setToast("计入目标的单位数需为不小于 0 的数字");
       return false;
     }
     setSaving(true);
@@ -220,9 +219,8 @@ export function DetailDrawer() {
         // 备注已从编辑表单移除，透传现有值避免保存时被清掉。
         notes: task.notes,
         status: task.status,
-        repeat_rule: stringifyRepeatRule(repeat),
         goal_id: goalId || null,
-        goal_contribution: goalId ? contribution : 1,
+        goal_contribution: goalId ? measuredContribution : 0,
       });
       setToast("已保存");
       setDirty(false);
@@ -246,15 +244,17 @@ export function DetailDrawer() {
   const goal = task.goal_id
     ? goals.find((item) => item.id === task.goal_id) ?? null
     : null;
-  const contributionGoals = goals.filter(
-    (item) =>
-      item.status === "active" &&
-      (item.goal_type === "quantity" || item.goal_type === "frequency"),
-  );
+  const linkableGoals = goals.filter((item) => item.status === "active");
+  const measuredContribution =
+    !goalId || goalMeasure === "none"
+      ? 0
+      : goalMeasure === "one"
+        ? 1
+        : Math.max(0, Number(goalContribution) || 0);
   const goalOptions = [
     { value: "", label: "不关联目标" },
-    ...contributionGoals.map((item) => ({ value: item.id, label: item.title })),
-    ...(goal && !contributionGoals.some((item) => item.id === goal.id)
+    ...linkableGoals.map((item) => ({ value: item.id, label: item.title })),
+    ...(goal && !linkableGoals.some((item) => item.id === goal.id)
       ? [{ value: goal.id, label: `${goal.title}（已归档/不适用）` }]
       : []),
   ];
@@ -325,10 +325,7 @@ export function DetailDrawer() {
                 {PRIORITY_LABEL[task.priority] ?? `P${task.priority}`}
               </strong>
             </div>
-            <div className="detail-meta">
-              <span className="field-label">重复</span>
-              <strong>{repeatLabel(task.repeat_rule)}</strong>
-            </div>
+
             <div className="detail-meta">
               <span className="field-label">所属项目</span>
               <strong>{project ? project.name : "无项目"}</strong>
@@ -339,10 +336,11 @@ export function DetailDrawer() {
             </div>
             {goal ? (
               <div className="detail-meta">
-                <span className="field-label">目标贡献</span>
+                <span className="field-label">目标计量</span>
                 <strong>
-                  {Math.round(task.goal_contribution * 100) / 100}
-                  {goal.unit}
+                  {task.goal_contribution > 0
+                    ? `完成时计入 ${Math.round(task.goal_contribution * 100) / 100}${goal.unit}`
+                    : "只关联，不计入"}
                 </strong>
               </div>
             ) : null}
@@ -431,55 +429,6 @@ export function DetailDrawer() {
                 ]}
               />
             </div>
-            <div>
-              <label className="field-label">重复</label>
-              <SelectMenu
-                className="field"
-                ariaLabel="重复"
-                value={repeat?.frequency ?? ""}
-                onChange={(value) => {
-                  if (!value) setRepeat(null);
-                  else if (value === "custom")
-                    setRepeat({
-                      frequency: "custom",
-                      interval: 1,
-                      nthWeekday: { n: -1, weekday: 5 },
-                    });
-                  else if (value === "weekly")
-                    setRepeat(weeklyRuleFromDate(dueDate || todayDateString()));
-                  else if (value === "monthly")
-                    setRepeat(monthlyRuleFromDate(dueDate || todayDateString()));
-                  else
-                    setRepeat({
-                      frequency: value as RepeatRule["frequency"],
-                      interval: 1,
-                    });
-                }}
-                options={[
-                  { value: "", label: "不重复" },
-                  { value: "daily", label: "每天" },
-                  { value: "weekly", label: "每周" },
-                  { value: "monthly", label: "每月" },
-                  { value: "custom", label: "每月最后周五" },
-                ]}
-              />
-              {repeat?.frequency === "weekly" ? (
-                <div className="create-task-weekdays" style={{ marginTop: 8 }}>
-                  <RepeatWeekdayPicker
-                    weekdays={
-                      repeat.weekdays ??
-                      weeklyRuleFromDate(dueDate || todayDateString()).weekdays!
-                    }
-                    onChange={(weekdays) => {
-                      setRepeat({ ...repeat, weekdays });
-                      if (dueDate) {
-                        setDueDate(nextDateMatchingWeekdays(dueDate, weekdays));
-                      }
-                    }}
-                  />
-                </div>
-              ) : null}
-            </div>
           </div>
           <div className="detail-form-row">
             <div>
@@ -529,19 +478,40 @@ export function DetailDrawer() {
                 onChange={(value) => {
                   setGoalId(value);
                   setDirty(true);
-                  if (!value) setGoalContribution("1");
+                  setGoalMeasure(
+                    value ? (task.goal_contribution > 0 ? "one" : "none") : "none",
+                  );
                 }}
                 options={goalOptions}
               />
             </div>
             {goalId ? (
               <div>
-                <label className="field-label">目标贡献</label>
+                <label className="field-label">目标计量</label>
+                <SelectMenu
+                  className="field"
+                  ariaLabel="目标计量"
+                  value={goalMeasure}
+                  onChange={(value) => {
+                    setGoalMeasure(value as "none" | "one" | "custom");
+                    setDirty(true);
+                  }}
+                  options={[
+                    { value: "none", label: "不计入（只关联）" },
+                    { value: "one", label: "算 1 个单位" },
+                    { value: "custom", label: "自定义单位数" },
+                  ]}
+                />
+              </div>
+            ) : null}
+            {goalId && goalMeasure === "custom" ? (
+              <div>
+                <label className="field-label">计入的单位数</label>
                 <input
                   className="field"
                   type="number"
-                  min={0.1}
-                  step={0.1}
+                  min={0}
+                  step={0.5}
                   value={goalContribution}
                   onChange={(event) => {
                     setGoalContribution(event.target.value);

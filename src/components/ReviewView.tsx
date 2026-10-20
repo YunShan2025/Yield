@@ -27,11 +27,18 @@ export function ReviewView() {
   const [anchor, setAnchor] = useState(() => todayDateString());
   const [dimension, setDimension] = useState<ReviewDimension>("goal");
 
+  // 复盘页读目标与目标记录两份页内数据，同步拉回对端写入后要重载。
   useEffect(() => {
-    void Promise.all([fetchGoals(true), fetchGoalEntries()]).then(([nextGoals, nextEntries]) => {
-      setGoals(nextGoals);
-      setGoalEntries(nextEntries);
-    });
+    const reload = () =>
+      void Promise.all([fetchGoals(true), fetchGoalEntries()]).then(
+        ([nextGoals, nextEntries]) => {
+          setGoals(nextGoals);
+          setGoalEntries(nextEntries);
+        },
+      );
+    reload();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
   }, []);
 
   const weekDates = useMemo(() => mondayWeekDates(anchor), [anchor]);
@@ -144,22 +151,51 @@ export function ReviewView() {
         </section>
 
         <section className="review-story-card review-goals">
-          <div className="review-section-head"><div><span>长期方向</span><h3>长期目标投入</h3></div><b>{activeGoals.length}</b></div>
+          <div className="review-section-head"><div><span>长期方向</span><h3>当周目标推进</h3></div><b>{activeGoals.length}</b></div>
         <div className="review-goal-list">
           {activeGoals.map((goal) => {
-            const value = goalEntries
+            const weekEntries = goalEntries
               .filter(
                 (entry) =>
                   entry.goal_id === goal.id &&
                   entry.entry_date >= weekStart &&
                   entry.entry_date <= weekEnd,
               )
+              .sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+            // 数值变化型目标的记录是绝对测量值，累加没有意义：当周显示最新一次测量。
+            const isMeasure = goal.goal_type === "measure";
+            const value = isMeasure
+              ? Number(weekEntries[weekEntries.length - 1]?.value ?? goal.current_value)
+              : weekEntries.reduce((sum, entry) => sum + Number(entry.value), 0);
+            const fromTask = weekEntries
+              .filter((entry) => entry.source_type === "task")
               .reduce((sum, entry) => sum + Number(entry.value), 0);
+            const fromHabit = weekEntries
+              .filter((entry) => entry.source_type === "habit")
+              .reduce((sum, entry) => sum + Number(entry.value), 0);
+            const fromManual = weekEntries
+              .filter((entry) => entry.source_type === "manual")
+              .reduce((sum, entry) => sum + Number(entry.value), 0);
+            const parts = [
+              fromTask ? `任务 +${Math.round(fromTask * 10) / 10}` : "",
+              fromHabit ? `打卡 +${Math.round(fromHabit * 10) / 10}` : "",
+              fromManual
+                ? `记录 ${fromManual > 0 ? "+" : ""}${Math.round(fromManual * 10) / 10}`
+                : "",
+            ].filter(Boolean);
             return (
               <div key={goal.id} className="review-goal-row">
                 <i style={{ background: goal.color }} />
-                <span>{goal.title}</span>
-                <strong>{Math.round(value * 10) / 10}{goal.unit}</strong>
+                <span>
+                  {goal.title}
+                  {parts.length ? (
+                    <em className="review-goal-source">{parts.join(" · ")}</em>
+                  ) : null}
+                </span>
+                <strong>
+                  {isMeasure ? "现值 " : ""}
+                  {Math.round(value * 10) / 10}{goal.unit}
+                </strong>
               </div>
             );
           })}
@@ -171,8 +207,8 @@ export function ReviewView() {
       <section className="review-story-card review-breakdown">
         <div className="review-section-head">
           <div>
-            <span>精力投向</span>
-            <h3>当周完成情况</h3>
+            <span>当周完成的任务</span>
+            <h3>任务完成去向</h3>
           </div>
           <div className="review-dimension-tabs" role="tablist" aria-label="聚合维度">
             {(

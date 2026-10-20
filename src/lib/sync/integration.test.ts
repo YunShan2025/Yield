@@ -1,6 +1,6 @@
 /**
- * 双端同步集成测试：两台"设备"各自持有真实内存 SQLite（含 migration v1–v16
- * 全部触发器）+ 临时目录日志文件，通过内存传输交换日志，驱动真实 runSync。
+ * 双端同步集成测试：两台"设备"各自持有真实内存 SQLite（migration v1 到最新
+ * 全部 DDL 与触发器）+ 临时目录日志文件，通过内存传输交换日志，驱动真实 runSync。
  * 覆盖：对账闭环（建/改/删）、离线交错与同键并发收敛、回声抑制、
  * settings 白名单、水位增量、基线回填。
  */
@@ -12,6 +12,8 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runSync, type SyncSummary } from "./engine";
 import { SYNC_SCHEMA_VERSION } from "./tables";
+import { TABLE_SPECS } from "./columns";
+import { recomputeGoalsAfterSync } from "@/lib/db/growth";
 import { captureSettingWrite, backfillOutbox, remapDanglingProjectTags, type SqlClient } from "./outbox";
 import { HlcClock } from "./hlc";
 import { MemoryTransport } from "./transport";
@@ -20,7 +22,12 @@ import type { LogReadState } from "./log";
 let schemaSql = "";
 beforeAll(() => {
   const src = rf("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
-  schemaSql = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+  // 必须铺到最新一版：同步行为要跑在线上真实 schema 上，否则删列类
+  // migration（v19 任务延期原因、v20 目标瘦身）与列白名单的偏差测不出来。
+  // 新增 migration 时把版本号补进这里。
+  schemaSql = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+  ]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
       const a = src.indexOf('sql: r#"', i) + 8;
@@ -648,5 +655,322 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
     expect(hc).toEqual([{ habit_id: "h1", check_date: "2026-09-16" }]);
     // 远端应用不产生回声（merge_seen 常量 0 / updated_at ms 两种约定都对上）
     expect(await b.outboxCount()).toBe(0);
+  });
+});
+
+/**
+ * 目标模块的同步专项：目标是「派生值 + 关联子表」最密集的一块——
+ * current_value/status 由 goal_entries 复算、阶段达成又派生成成就，
+ * 而合并是整行 LWW，既不重算也不算和，最容易在这里露馅。
+ */
+describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
+  const GOAL_COLUMNS = `(id,title,color,goal_type,start_date,start_value,target_value,
+        current_value,unit,status,manual_completion,created_at,updated_at)`;
+
+  const goalRow = (device: Device, id: string) =>
+    device.rows(
+      `SELECT title,goal_type,unit,target_value,current_value,status
+       FROM goals WHERE id='${id}'`,
+    );
+
+  const insertGoal = (
+    device: Device,
+    id: string,
+    ts: string,
+    overrides: Partial<Record<string, unknown>> = {},
+  ) => {
+    const row = {
+      title: "读书",
+      color: "#2F6FED",
+      goal_type: "milestone",
+      start_date: "2026-09-01",
+      start_value: 0,
+      target_value: 21,
+      current_value: 0,
+      unit: "次",
+      status: "active",
+      manual_completion: 0,
+      ...overrides,
+    };
+    return device.run(
+      `INSERT INTO goals ${GOAL_COLUMNS}
+       VALUES ('${id}','${row.title}','${row.color}','${row.goal_type}',
+       '${row.start_date}',${row.start_value},${row.target_value},${row.current_value},
+       '${row.unit}','${row.status}',${row.manual_completion},
+       '${ts}','${ts}')`,
+    );
+  };
+
+  const insertEntry = (
+    device: Device,
+    id: string,
+    goalId: string,
+    value: number,
+    sourceId: string,
+    ts: string,
+  ) =>
+    device.run(
+      `INSERT INTO goal_entries
+       (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
+       VALUES ('${id}','${goalId}','2026-09-16',${value},'task','${sourceId}',
+       '读书笔记','${ts}','${ts}')`,
+    );
+
+  /** 等价于 addGoalEntry 之后的 refreshGoalProgress：进度行必须带新版本号。 */
+  const bumpProgress = (device: Device, goalId: string, current: number, ts: string) =>
+    device.run(
+      `UPDATE goals SET current_value=${current}, updated_at='${ts}' WHERE id='${goalId}'`,
+    );
+
+  it("列白名单与真实 schema 一致：删列/加列不会与白名单脱节", async () => {
+    const device = createDevice("schema", new MemoryTransport());
+    for (const [table, spec] of Object.entries(TABLE_SPECS)) {
+      const cols = (await device.rows(`PRAGMA table_info(${table})`)).map((c) => c.name);
+      expect(cols.length, table).toBeGreaterThan(0);
+      for (const column of [...spec.idColumns, ...spec.columns]) {
+        // 白名单里有、库里没有 → 合并拼 INSERT 时直接 no such column。
+        expect(cols, `${table}.${column}`).toContain(column);
+      }
+    }
+    // migration v20 删掉的 goals.icon / goals.description 不得回流。
+    const goalCols = (await device.rows("PRAGMA table_info(goals)")).map((c) => c.name);
+    expect(goalCols).not.toContain("icon");
+    expect(goalCols).not.toContain("description");
+    expect(TABLE_SPECS.goals.columns).not.toContain("icon");
+    // migration v22：重复能力归习惯，任务不再有重复与实例来源列；
+    // 目标不再有周口径与项目绑定。
+    const taskCols = (await device.rows("PRAGMA table_info(tasks)")).map((c) => c.name);
+    expect(taskCols).not.toContain("repeat_rule");
+    expect(taskCols).not.toContain("generated_from_id");
+    expect(TABLE_SPECS.tasks.columns).not.toContain("repeat_rule");
+    expect(goalCols).not.toContain("weekly_target");
+    expect(goalCols).not.toContain("project_id");
+    expect(TABLE_SPECS.goals.columns).not.toContain("weekly_target");
+    // 习惯新增排期规则，白名单必须带上。
+    const habitCols = (await device.rows("PRAGMA table_info(habits)")).map((c) => c.name);
+    expect(habitCols).toContain("repeat_rule");
+    expect(TABLE_SPECS.habits.columns).toContain("repeat_rule");
+  });
+
+  it("新建目标与记录端到端同步，进度刷新跟得上，删除记录有墓碑", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+
+    await insertGoal(a, "g1", "2026-09-16T01:00:00.000Z");
+    await a.sync();
+    await b.sync();
+    expect(await goalRow(b, "g1")).toEqual([
+      {
+        title: "读书",
+        goal_type: "milestone",
+        unit: "次",
+        target_value: 21,
+        current_value: 0,
+        status: "active",
+      },
+    ]);
+    // 对端只是应用，不应产生回声。
+    expect(await b.outboxCount()).toBe(0);
+
+    // A 完成一条关联任务 → 记一笔并把复算出的进度刷进目标行（带新 updated_at）。
+    await insertEntry(a, "e1", "g1", 3, "t1", "2026-09-16T02:00:00.000Z");
+    await bumpProgress(a, "g1", 3, "2026-09-16T02:00:00.000Z");
+    await a.sync();
+    await b.sync();
+    expect((await goalRow(b, "g1"))[0]?.current_value).toBe(3);
+    expect(await b.rows("SELECT id FROM goal_entries")).toHaveLength(1);
+
+    // B 端编辑目标（部分更新：改名 + 目标值），不得把 A 的进度刷回旧值。
+    await b.run(
+      `UPDATE goals SET title='读书(改)', target_value=25,
+       updated_at='2026-09-16T03:00:00.000Z' WHERE id='g1'`,
+    );
+    await b.sync();
+    await a.sync();
+    expect(await goalRow(a, "g1")).toEqual([
+      {
+        title: "读书(改)",
+        goal_type: "milestone",
+        unit: "次",
+        target_value: 25,
+        current_value: 3,
+        status: "active",
+      },
+    ]);
+    expect(await a.outboxCount()).toBe(0);
+
+    // A 取消任务完成：记录删除走墓碑，进度归零。
+    await a.run("DELETE FROM goal_entries WHERE id='e1'");
+    await bumpProgress(a, "g1", 0, "2026-09-16T04:00:00.000Z");
+    await a.sync();
+    await b.sync();
+    expect(await b.rows("SELECT id FROM goal_entries WHERE id='e1'")).toHaveLength(0);
+    expect((await goalRow(b, "g1"))[0]?.current_value).toBe(0);
+  });
+
+  it("双端离线各记一笔：合并只整行 LWW，复算后两端进度才一致", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+    await insertGoal(a, "g1", "2026-09-16T01:00:00.000Z");
+    await a.sync();
+    await b.sync();
+
+    // 离线期间两端各完成一条关联任务，各自只看见自己那一笔。
+    await insertEntry(a, "eA", "g1", 1, "tA", "2026-09-16T05:00:00.000Z");
+    await bumpProgress(a, "g1", 1, "2026-09-16T05:00:00.000Z");
+    await insertEntry(b, "eB", "g1", 1, "tB", "2026-09-16T06:00:00.000Z");
+    await bumpProgress(b, "g1", 1, "2026-09-16T06:00:00.000Z");
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    await b.sync();
+
+    // 记录本身各是一行，两条都到齐。
+    for (const device of [a, b]) {
+      expect(
+        (await device.rows("SELECT id FROM goal_entries ORDER BY id")).map((r) => r.id),
+      ).toEqual(["eA", "eB"]);
+    }
+    // 但目标行是整行 LWW：后写的 06:00 赢，进度停在 1，而真实值是 2。
+    for (const device of [a, b]) {
+      expect((await goalRow(device, "g1"))[0]?.current_value).toBe(1);
+    }
+
+    // 同步层的复算补上这一课：按本机全量记录重算，值真变了才写库。
+    expect(await recomputeGoalsAfterSync(a.client)).toBe(true);
+    expect(await recomputeGoalsAfterSync(b.client)).toBe(true);
+    for (const device of [a, b]) {
+      expect((await goalRow(device, "g1"))[0]?.current_value).toBe(2);
+    }
+
+    // 变化推给对端后收敛：两端一致，且复算不再产生新写入（不会来回刷）。
+    await a.sync();
+    await b.sync();
+    for (const device of [a, b]) {
+      expect((await goalRow(device, "g1"))[0]?.current_value).toBe(2);
+      expect(await device.outboxCount()).toBe(0);
+    }
+    expect(await recomputeGoalsAfterSync(a.client)).toBe(false);
+    expect(await a.outboxCount()).toBe(0);
+  });
+
+  it("未升级的对端发来旧类型目标：落库归一为 milestone", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+    await b.sync(); // 先建好 B 的日志文件
+
+    // 模拟旧端日志：goal_type 仍是 migration v20 之前的旧值域。
+    const legacyGoal = JSON.stringify({
+      hlc: { p: Date.parse("2026-09-16T07:00:00.000Z"), l: 0, d: "legacy" },
+      schema_v: SYNC_SCHEMA_VERSION,
+      op: "upsert",
+      table: "goals",
+      row_id: "gt",
+      data: {
+        id: "gt",
+        title: "晨跑",
+        color: "#E4572E",
+        goal_type: "milestone",
+        start_date: "2026-09-01",
+        start_value: 0,
+        target_value: 600,
+        current_value: 0,
+        unit: "分钟",
+        status: "active",
+        manual_completion: 0,
+        created_at: "2026-09-16T07:00:00.000Z",
+        updated_at: "2026-09-16T07:00:00.000Z",
+      },
+    });
+    await b.rewriteLocal(`${b.readLocalLog()}${legacyGoal}\n`);
+    await b.sync();
+    await a.sync();
+
+    // 归一后本端才认得它：goalAcceptsSource 对未知类型一律拒收贡献记录。
+    expect(await a.rows("SELECT id,goal_type,unit FROM goals WHERE id='gt'")).toEqual([
+      { id: "gt", goal_type: "milestone", unit: "分钟" },
+    ]);
+    // 归一只发生在投影写入时，不该顺手把行再推回对端。
+    expect(await a.outboxCount()).toBe(0);
+  });
+
+  it("同一来源在两端各生成一行：不炸合并，较新值并入，两端求和一致", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+    await insertGoal(a, "g1", "2026-09-16T01:00:00.000Z");
+    await a.run(
+      `INSERT INTO goal_milestones
+       (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at,updated_at)
+       VALUES ('m1','g1','读完前三章',1,NULL,NULL,1,'2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
+    );
+    await a.sync();
+    await b.sync();
+
+    // 离线期间两端都为「同一个任务完成」各记一笔（id 不同，来源相同）；
+    // 阶段达成也各自生成一条同源成就。
+    await insertEntry(a, "eA", "g1", 1, "t1", "2026-09-16T04:00:00.000Z");
+    await a.run(
+      `INSERT INTO achievements
+       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
+       VALUES ('aA','g1','读完前三章','','2026-09-16','milestone','m1',0,'2026-09-16T04:00:00.000Z')`,
+    );
+    // 贡献值也不同：B 在完成前把任务的贡献改成了 5。
+    await insertEntry(b, "eB", "g1", 5, "t1", "2026-09-16T05:00:00.000Z");
+    await b.run(
+      `INSERT INTO achievements
+       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
+       VALUES ('aB','g1','读完前三章','','2026-09-16','milestone','m1',0,'2026-09-16T05:00:00.000Z')`,
+    );
+
+    await a.sync();
+    const pulled = await b.sync();
+    await a.sync();
+    // 曾因撞来源唯一索引记成「合并 N 条失败」，条目随水位推进永久丢失。
+    expect(pulled.errors).toEqual([]);
+    for (const device of [a, b]) {
+      // 各端只留一行（id 是本机那个），但内容取较新的一条：两端求和一致，
+      // 派生进度才不会在每轮同步里来回翻。
+      const entries = await device.rows("SELECT id,value FROM goal_entries");
+      expect(entries).toHaveLength(1);
+      expect(entries[0]?.value).toBe(5);
+      expect(await device.rows("SELECT id FROM achievements")).toHaveLength(1);
+    }
+    for (const device of [a, b]) {
+      await recomputeGoalsAfterSync(device.client);
+      expect((await goalRow(device, "g1"))[0]?.current_value).toBe(5);
+    }
+    // 阶段目标本身正常同步（同源重复行被归并进本机那一行）。
+    expect(await b.rows("SELECT id,title FROM goal_milestones")).toEqual([
+      { id: "m1", title: "读完前三章" },
+    ]);
+  });
+
+  it("成就置顶同步：追加型表的 UPDATE 也有触发器接住", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+    await a.run(
+      `INSERT INTO achievements
+       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
+       VALUES ('ac1','g1','读完前三章','','2026-09-16','milestone','m1',0,'2026-09-16T01:00:00.000Z')`,
+    );
+    await a.sync();
+    await b.sync();
+    expect((await b.rows("SELECT pinned FROM achievements WHERE id='ac1'"))[0]?.pinned).toBe(0);
+
+    // B 端置顶：achievements 此前只有 ins/del 触发器，UPDATE 永远不入箱。
+    await b.run("UPDATE achievements SET pinned=1 WHERE id='ac1'");
+    expect(
+      await b.rows("SELECT row_id FROM sync_outbox WHERE table_name='achievements'"),
+    ).toEqual([{ row_id: "ac1" }]);
+    await b.sync();
+    await a.sync();
+    expect((await a.rows("SELECT pinned FROM achievements WHERE id='ac1'"))[0]?.pinned).toBe(1);
+    // 应用后不反弹回声（登记 ts 与触发器 ts 都取 created_at）。
+    expect(await a.outboxCount()).toBe(0);
   });
 });
