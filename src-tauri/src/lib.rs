@@ -1473,6 +1473,17 @@ ALTER TABLE tasks DROP COLUMN generated_from_id;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 24,
+            description: "goal_soft_delete",
+            // 目标也要能撤回：放弃与归档本来就可恢复，但"删除"此前只能硬删或
+            // 根本没有。加一列 deleted_at，目标进回收站、可恢复、可永久删除，
+            // 与任务 / 习惯 / 项目 / 账目的处理方式一致。
+            sql: r#"
+ALTER TABLE goals ADD COLUMN deleted_at TEXT;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

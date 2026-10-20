@@ -47,6 +47,7 @@ function goal(overrides: Partial<Goal> = {}): Goal {
     status: "active",
     motivation: "",
     manual_completion: 0,
+    deleted_at: null,
     created_at: "2026-10-01T00:00:00.000Z",
     updated_at: "2026-10-01T00:00:00.000Z",
     ...overrides,

@@ -34,7 +34,7 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
     columns: [
       "title", "color", "goal_type", "start_date", "target_date",
       "start_value", "target_value", "current_value", "unit", "status", "motivation",
-      "manual_completion", "created_at", "updated_at",
+      "manual_completion", "deleted_at", "created_at", "updated_at",
     ],
   },
   tags: {

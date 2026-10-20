@@ -21,20 +21,23 @@ import {
   isActiveTask,
 } from "@/lib/tasks";
 import { formatDueDate, formatTimeRange, todayDateString, addDays, formatLongDate, formatStamp, weekDates, parseDate, startOfWeek, parseTimeToMinutes } from "@/lib/dates";
-import type { Habit, Project, Task } from "@/types";
+import type { Goal, Habit, Project, Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { AppIcon } from "@/components/AppIcon";
 import { confirmAction } from "@/components/AppConfirm";
 import {
   fetchDeletedProjects,
+  fetchDeletedGoals,
   fetchDeletedHabits,
   fetchLedgerTrash,
   formatLedgerMoney,
   purgeLedgerTransaction,
   purgeProject,
+  purgeGoal,
   purgeHabit,
   restoreDeletedProject,
   restoreDeletedHabit,
+  restoreGoal,
   restoreLedgerTransaction,
   type LedgerTransaction,
 } from "@/lib/db";
@@ -509,11 +512,20 @@ function TrashView() {
   // 项目回收站：软删的项目行（同样走本地状态，任务回收站来自 store）。
   const [projectTrash, setProjectTrash] = useState<Project[]>([]);
   const [habitTrash, setHabitTrash] = useState<Habit[]>([]);
+  // 目标回收站：软删的目标行，可恢复、可永久删除。
+  const [goalTrash, setGoalTrash] = useState<Goal[]>([]);
   const loadLedgerTrash = async () => {
     try {
       setLedgerTrash(await fetchLedgerTrash());
     } catch {
       /* 回收站里账目加载失败不阻塞任务列表 */
+    }
+  };
+  const loadGoalTrash = async () => {
+    try {
+      setGoalTrash(await fetchDeletedGoals());
+    } catch {
+      /* 回收站里目标加载失败不阻塞其它列表 */
     }
   };
   const loadProjectTrash = async () => {
@@ -534,15 +546,22 @@ function TrashView() {
     void loadLedgerTrash();
     void loadProjectTrash();
     void loadHabitTrash();
+    void loadGoalTrash();
     const reload = () => {
       void loadLedgerTrash();
       void loadProjectTrash();
       void loadHabitTrash();
+      void loadGoalTrash();
     };
     window.addEventListener("youqiu:sync-applied", reload);
     return () => window.removeEventListener("youqiu:sync-applied", reload);
   }, []);
-  const total = trashTasks.length + ledgerTrash.length + projectTrash.length + habitTrash.length;
+  const total =
+    trashTasks.length +
+    ledgerTrash.length +
+    projectTrash.length +
+    habitTrash.length +
+    goalTrash.length;
 
   const restoreLedger = async (id: number) => {
     if (await restoreLedgerTransaction(id)) await loadLedgerTrash();
@@ -569,6 +588,11 @@ function TrashView() {
               danger: true,
             }).then(async (ok) => {
               if (!ok) return;
+              if (goalTrash.length) {
+                for (const item of goalTrash) await purgeGoal(item.id);
+                await refreshAll();
+                void loadGoalTrash();
+              }
               if (projectTrash.length) {
                 for (const item of projectTrash) await purgeProject(item.id);
                 await refreshAll();
@@ -676,6 +700,54 @@ function TrashView() {
                         void purgeHabit(habit.id).then(async () => {
                           await refreshAll();
                           await loadHabitTrash();
+                        });
+                      }
+                    });
+                  }}
+                >
+                  <AppIcon name="trash" size={14} />
+                  <span>永久删除</span>
+                </button>
+              </div>
+            </article>
+          ))}
+          {goalTrash.map((goal) => (
+            <article key={`goal-${goal.id}`} className="trash-item">
+              <div className="trash-item-main">
+                <p className="task-title">{goal.title}</p>
+                <div className="trash-item-meta">
+                  {goal.deleted_at ? <span>删除于 {formatStamp(goal.deleted_at)}</span> : null}
+                  <span>成长目标</span>
+                </div>
+              </div>
+              <div className="trash-item-actions">
+                <button
+                  type="button"
+                  className="item-action-btn item-action-archive"
+                  onClick={() =>
+                    void restoreGoal(goal.id).then(async () => {
+                      await refreshAll();
+                      await loadGoalTrash();
+                    })
+                  }
+                >
+                  <AppIcon name="review" size={14} />
+                  <span>恢复</span>
+                </button>
+                <button
+                  type="button"
+                  className="item-action-btn item-action-danger"
+                  onClick={() => {
+                    void confirmAction({
+                      title: `永久删除目标「${goal.title}」？`,
+                      description: "不可恢复，目标记录、阶段与成就会一并删除。",
+                      confirmText: "永久删除",
+                      danger: true,
+                    }).then((ok) => {
+                      if (ok) {
+                        void purgeGoal(goal.id).then(async () => {
+                          await refreshAll();
+                          await loadGoalTrash();
                         });
                       }
                     });

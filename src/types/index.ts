@@ -291,6 +291,8 @@ export interface Goal {
   status: GoalStatus;
   motivation: string;
   manual_completion: number;
+  /** 目标回收站：非空即已删除，可在回收站恢复。 */
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }

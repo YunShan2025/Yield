@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalType, Task } from "@/types";
+import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalStatus, GoalType, Task } from "@/types";
 import {
   createAchievement,
   createGoal,
@@ -10,6 +10,7 @@ import {
   fetchGoalMilestones,
   fetchGoals,
   setGoalCurrentProgress,
+  softDeleteGoal,
   setGoalMilestoneCompleted,
   toggleAchievementPinned,
   updateGoal,
@@ -18,7 +19,7 @@ import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
 import { SelectMenu } from "@/components/SelectMenu";
 import { AppIcon } from "@/components/AppIcon";
-import {
+import { confirmAction } from "@/components/AppConfirm";import {
   activityLevelFromValue,
   calculateGoalProgress,
   currentDateStreak,
@@ -101,6 +102,8 @@ export function GrowthView() {
   const [color, setColor] = useState(COLORS[0]);
   const [achievementTitle, setAchievementTitle] = useState("");
   const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
+  /** 目标列表的状态筛选：默认"全部"（不含回收站里的）。 */
+  const [goalStatusFilter, setGoalStatusFilter] = useState<"all" | GoalStatus>("all");
   const today = todayDateString();
   const [stageTitle, setStageTitle] = useState("");
   const allTasks = useAppStore((state) => state.tasks);
@@ -126,9 +129,9 @@ export function GrowthView() {
     };
   }, [selectedGoalId, goals]);
 
-  const refresh = async (includeArchived = false) => {
+  const refresh = async () => {
     const [nextGoals, nextEntries, nextAchievements] = await Promise.all([
-      fetchGoals(includeArchived),
+      fetchGoals(true),
       fetchGoalEntries(),
       fetchAchievements(),
     ]);
@@ -336,6 +339,43 @@ export function GrowthView() {
       : goalKind === "staged"
         ? "阶段型目标：把大目标拆成几个可勾选的阶段，勾一个进一个。"
         : "任务完成与习惯打卡可按你声明的计量自动累计；重复动作交给「习惯」，目标只放要达成的结果。";
+  // 目标列表按状态筛选：已放弃 / 已归档也要能翻出来，否则"撤回"无从下手。
+  const visibleGoals = useMemo(() => {
+    if (goalStatusFilter === "all") return goals;
+    if (goalStatusFilter === "active") {
+      return goals.filter((goal) => goal.status === "active" || goal.status === "paused");
+    }
+    return goals.filter((goal) => goal.status === goalStatusFilter);
+  }, [goals, goalStatusFilter]);
+
+  const goalFilterOptions: Array<{ value: "all" | GoalStatus; label: string }> = [
+    { value: "all", label: "全部" },
+    { value: "active", label: "进行中" },
+    { value: "completed", label: "已完成" },
+    { value: "abandoned", label: "已放弃" },
+    { value: "archived", label: "已归档" },
+  ];
+
+  /** 放弃 / 归档都能一键撤回：回到进行中。 */
+  const resumeGoal = async (goal: Goal) => {
+    await updateGoal(goal.id, { status: "active" });
+    await refresh();
+  };
+
+  /** 删除目标 = 移入回收站，可恢复。 */
+  const deleteGoalWithConfirm = async (goal: Goal) => {
+    const ok = await confirmAction({
+      title: `删除目标「${goal.title}」？`,
+      description: "会移入回收站，随时可以恢复。",
+      confirmText: "移入回收站",
+      danger: true,
+    });
+    if (!ok) return;
+    await softDeleteGoal(goal.id);
+    setSelectedGoalId(null);
+    await refresh();
+  };
+
   // 阶段：把大目标拆成可勾选的阶段，勾一个进一个。
   const addStage = async () => {
     const title = stageTitle.trim();
@@ -578,6 +618,8 @@ export function GrowthView() {
             <div className="goal-detail-actions">
               <div className="goal-manage-group">
                 {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
+                {/* 放弃与归档都能撤回：回到进行中。 */}
+                {["abandoned", "archived"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
                 <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
                 {["active", "paused"].includes(selectedGoal.status) ? (
                   <SelectMenu
@@ -600,11 +642,28 @@ export function GrowthView() {
                     ]}
                   />
                 ) : null}
+                <button className="item-action-btn" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
               </div>
             </div>
           </section>
         ) : (
-          <section className="goal-grid">{goals.map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />)}{!goals.length ? <div className="empty-state">创建第一个长期目标，让每天的任务有更清晰的方向。</div> : null}</section>
+          <>
+          <div className="goal-filter-row" role="tablist" aria-label="目标状态筛选">
+            {goalFilterOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="tab"
+                aria-selected={goalStatusFilter === option.value}
+                className={goalStatusFilter === option.value ? "is-active" : ""}
+                onClick={() => setGoalStatusFilter(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <section className="goal-grid">{visibleGoals.map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />)}{!visibleGoals.length ? <div className="empty-state">{goals.length ? "这个状态下还没有目标。" : "创建第一个长期目标，让每天的任务有更清晰的方向。"}</div> : null}</section>
+          </>
         )
       ) : null}
 

@@ -1309,3 +1309,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .today-week-beat-stats em { color: var(--text-muted); font-size: 11.5px; font-style: normal; }
 /* 今日清单头部的目标筛选。 */
 .day-agenda-filters { display: flex; align-items: center; gap: 8px; }
+/* 目标列表的状态筛选：已放弃 / 已归档也要能翻出来，"撤回"才找得到。 */
+.goal-filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.goal-filter-row button { padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; }
+.goal-filter-row button:hover { color: var(--text-primary); border-color: var(--text-muted); }
+.goal-filter-row button.is-active { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }

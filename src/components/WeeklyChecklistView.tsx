@@ -1,6 +1,7 @@
 import { useMemo, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
+import { currentDateStreak } from "@/lib/growth";
 import {
   buildWeekBuckets,
   categoryColor,
@@ -26,6 +27,7 @@ export function WeeklyChecklistView() {
   const setDateScope = useAppStore((s) => s.setDateScope);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
   const selectTask = useAppStore((s) => s.selectTask);
+  const habitChecks = useAppStore((s) => s.habitChecks);
   const today = todayDateString();
 
   const weekDates = useMemo(
@@ -41,6 +43,30 @@ export function WeeklyChecklistView() {
   );
 
   const donePct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+
+  // 周节奏放在周清单：今日页只留今天要做的事，周统计归这里。
+  const weekChecks = useMemo(
+    () =>
+      habitChecks.filter(
+        (check) => check.check_date >= weekStart && check.check_date <= weekEnd,
+      ),
+    [habitChecks, weekStart, weekEnd],
+  );
+  const streak = useMemo(() => {
+    const days = new Set<string>([
+      ...habitChecks.map((check) => check.check_date),
+      ...tasks
+        .filter(
+          (task) =>
+            !task.parent_id &&
+            !task.deleted_at &&
+            task.status === "completed" &&
+            task.completed_at,
+        )
+        .map((task) => task.completed_at!.slice(0, 10)),
+    ]);
+    return currentDateStreak([...days], today);
+  }, [habitChecks, tasks, today]);
 
   const goalLine = (id: WeeklyCategoryId) => {
     const bucket = categories.find((item) => item.category.id === id);
@@ -209,6 +235,20 @@ export function WeeklyChecklistView() {
             <span className="weekly-stat-label">剩余</span>
             <div className="weekly-stat-value">
               <strong className="weekly-stat-num">{stats.remaining}</strong>
+            </div>
+          </div>
+          <div className="weekly-stat-item">
+            <span className="weekly-stat-label">习惯打卡</span>
+            <div className="weekly-stat-value">
+              <strong className="weekly-stat-num">{weekChecks.length}</strong>
+              <span className="weekly-stat-note">次</span>
+            </div>
+          </div>
+          <div className="weekly-stat-item">
+            <span className="weekly-stat-label">当前连续</span>
+            <div className="weekly-stat-value">
+              <strong className="weekly-stat-num">{streak}</strong>
+              <span className="weekly-stat-note">天</span>
             </div>
           </div>
           <div className="weekly-stat-item">

@@ -22,7 +22,7 @@ import {
   fetchAchievements,
   fetchGoalEntries,
   fetchGoalMilestones,
-  fetchGoals,
+  fetchAllGoals,
   refreshGoalProgress,
 } from "./growth";
 import { fetchAnniversaries } from "./anniversaries";
@@ -46,7 +46,7 @@ export async function exportBackup(): Promise<BackupPayload> {
     "SELECT * FROM app_notifications",
   );
   const taskEvents = await db.select<TaskEvent[]>("SELECT * FROM task_events");
-  const goals = await fetchGoals(true);
+  const goals = await fetchAllGoals();
   const goalEntries = await fetchGoalEntries();
   const goalMilestones = await fetchGoalMilestones();
   const achievements = await fetchAchievements();
@@ -291,13 +291,13 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
       `INSERT INTO goals
        (id,title,color,goal_type,start_date,target_date,start_value,
         target_value,current_value,unit,status,motivation,
-        manual_completion,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+        manual_completion,deleted_at,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [goal.id,goal.title,goal.color,goal.goal_type,
        goal.start_date,goal.target_date,goal.start_value,goal.target_value,
        goal.current_value,goal.unit,goal.status,goal.motivation,
        goal.manual_completion ?? (goal.status === "completed" ? 1 : 0),
-       goal.created_at,goal.updated_at],
+       goal.deleted_at ?? null,goal.created_at,goal.updated_at],
     );
   }
   for (const entry of payload.goalEntries ?? []) {

@@ -28,6 +28,7 @@ const fullGoal = (goal_type: Goal["goal_type"]): Goal => ({
   status: "active",
   motivation: "",
   manual_completion: 0,
+  deleted_at: null,
   created_at: "",
   updated_at: "",
 });

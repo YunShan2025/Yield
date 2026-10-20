@@ -26,7 +26,7 @@ beforeAll(() => {
   // migration（v19 任务延期原因、v20 目标瘦身）与列白名单的偏差测不出来。
   // 新增 migration 时把版本号补进这里。
   schemaSql = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
   ]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
@@ -750,6 +750,9 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     const habitCols = (await device.rows("PRAGMA table_info(habits)")).map((c) => c.name);
     expect(habitCols).toContain("repeat_rule");
     expect(TABLE_SPECS.habits.columns).toContain("repeat_rule");
+    // 目标进回收站：软删列两侧都要有。
+    expect(goalCols).toContain("deleted_at");
+    expect(TABLE_SPECS.goals.columns).toContain("deleted_at");
   });
 
   it("新建目标与记录端到端同步，进度刷新跟得上，删除记录有墓碑", async () => {

@@ -7,7 +7,7 @@ import { matchesRepeatRule, parseRepeatRule } from "@/lib/repeat";
 import { loadTodayOrder, saveTodayOrder } from "@/lib/today";
 import { TodayHero } from "./TodayHero";
 import { GoalStrip } from "./GoalStrip";
-import { WeekBeat } from "./WeekBeat";import { BatchToolbar } from "./BatchToolbar";
+import { BatchToolbar } from "./BatchToolbar";
 import { TodayAgenda } from "./TodayAgenda";
 import { TodayTimeline } from "../TodayTimeline";
 
@@ -88,7 +88,6 @@ export function DayBoard() {
         doneCount={done}
         totalCount={total}
       />
-      {isTodayView && cursor === today ? <WeekBeat /> : null}
       {isTodayView && cursor === today ? <GoalStrip /> : null}      {!isInboxView ? (
         <div className="scope-nav">
           <button

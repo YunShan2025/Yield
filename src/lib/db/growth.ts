@@ -13,10 +13,56 @@ import { getDb } from "./client";
 export async function fetchGoals(includeArchived = false): Promise<Goal[]> {
   const db = await getDb();
   return db.select<Goal[]>(
-    `SELECT * FROM goals ${includeArchived ? "" : "WHERE status != 'archived'"}
+    `SELECT * FROM goals
+     WHERE deleted_at IS NULL ${includeArchived ? "" : "AND status != 'archived'"}
      ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END,
               updated_at DESC`,
   );
+}
+
+/** 备份用：连同归档与回收站里的目标一起导出，不丢用户数据。 */
+export async function fetchAllGoals(): Promise<Goal[]> {
+  const db = await getDb();
+  return db.select<Goal[]>(
+    "SELECT * FROM goals ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END, updated_at DESC",
+  );
+}
+
+/** 回收站里的目标。 */
+export async function fetchDeletedGoals(): Promise<Goal[]> {
+  const db = await getDb();
+  return db.select<Goal[]>(
+    "SELECT * FROM goals WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC",
+  );
+}
+
+/** 删除目标 = 移入回收站，可恢复。 */
+export async function softDeleteGoal(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE goals SET deleted_at=$1, updated_at=$2 WHERE id=$3 AND deleted_at IS NULL",
+    [nowIso(), nowIso(), id],
+  );
+}
+
+/** 从回收站恢复目标。 */
+export async function restoreGoal(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "UPDATE goals SET deleted_at=NULL, updated_at=$1 WHERE id=$2",
+    [nowIso(), id],
+  );
+}
+
+/**
+ * 永久删除目标，连同它的记录、阶段与成就一起清掉——不留孤儿数据。
+ */
+export async function purgeGoal(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute("DELETE FROM goal_entries WHERE goal_id=$1", [id]);
+  await db.execute("DELETE FROM goal_milestones WHERE goal_id=$1", [id]);
+  await db.execute("DELETE FROM achievements WHERE goal_id=$1", [id]);
+  await db.execute("DELETE FROM goals WHERE id=$1", [id]);
 }
 
 export async function createGoal(
@@ -38,6 +84,7 @@ export async function createGoal(
     status: draft.status ?? "active",
     motivation: draft.motivation?.trim() ?? "",
     manual_completion: draft.status === "completed" ? 1 : 0,
+    deleted_at: null,
     created_at: stamp,
     updated_at: stamp,
   };
@@ -45,13 +92,13 @@ export async function createGoal(
     `INSERT INTO goals
      (id,title,color,goal_type,start_date,target_date,start_value,
       target_value,current_value,unit,status,motivation,
-      manual_completion,created_at,updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      manual_completion,deleted_at,created_at,updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
     [
       goal.id, goal.title, goal.color,
       goal.goal_type, goal.start_date, goal.target_date, goal.start_value,
       goal.target_value, goal.current_value, goal.unit, goal.status,
-      goal.motivation, goal.manual_completion,
+      goal.motivation, goal.manual_completion, goal.deleted_at ?? null,
       goal.created_at, goal.updated_at,
     ],
   );
