@@ -977,7 +977,7 @@ html[data-shell="mobile"] .app-body {
 }
 
 .mobile-nav-item.active {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 650;
 }
 
@@ -1624,15 +1624,15 @@ html[data-shell="mobile"] .desktop-notification-stack {
     min-height: 0;
   }
 
-  /* 提醒状态条：固定 90px×2 统计列会把主文案挤剩 66px（实测截断），
-     改为统计列按内容收缩，主文案吃满剩余宽度。 */
+  /* 提醒状态条：统计格按内容收缩，主文案吃满剩余宽度；
+     统计为 0 时整格不渲染，flex 下自动收拢，主文案不再被挤到只剩一个字。 */
   .timer-status-rail {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
     gap: 12px;
     padding: 12px 14px;
   }
 
   .timer-status-rail > div:not(.timer-status-primary) {
+    flex-basis: 72px;
     padding-left: 12px;
   }
 }

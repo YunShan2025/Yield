@@ -72,6 +72,9 @@ export function RemindersView() {
   );
   const runningCount = visibleTimers.filter((timer) => timer.running).length;
   const finishedCount = visibleTimers.filter((timer) => !timer.running && liveRemaining(timer) === 0).length;
+  // 第二格统计：倒计时页数「已结束」，循环页数「已保存」。为 0 时整格不出现 ——
+  // 状态条要么有数据，要么只剩一句话（与周清单引导块同一原则）。
+  const settledCount = tab === "countdown" ? finishedCount : visibleTimers.length;
 
   const countdownSeconds = () => {
     if (timeMode === "duration") return Math.max(1, Math.floor(countdownMinutes)) * 60;
@@ -174,14 +177,18 @@ export function RemindersView() {
               {active ? <em className="timer-status-remain">剩余 {formatCountdown(liveRemaining(active))}</em> : null}
             </strong>
           </div>
-          <div>
-            <span>运行中</span>
-            <strong>{runningCount}</strong>
-          </div>
-          <div>
-            <span>{tab === "countdown" ? "已结束" : "已保存"}</span>
-            <strong>{tab === "countdown" ? finishedCount : visibleTimers.length}</strong>
-          </div>
+          {runningCount > 0 ? (
+            <div>
+              <span>运行中</span>
+              <strong>{runningCount}</strong>
+            </div>
+          ) : null}
+          {settledCount > 0 ? (
+            <div>
+              <span>{tab === "countdown" ? "已结束" : "已保存"}</span>
+              <strong>{settledCount}</strong>
+            </div>
+          ) : null}
         </section>
 
         {tab === "countdown" ? (

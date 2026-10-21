@@ -244,7 +244,6 @@ export function ReviewView() {
                 <i style={{ width: `${group.rate}%` }} />
               </div>
               <strong>{group.done}/{group.total}</strong>
-              <em>{group.rate}%</em>
             </div>
           ))}
           {!breakdown.length ? (

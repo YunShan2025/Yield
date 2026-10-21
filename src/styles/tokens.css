@@ -400,7 +400,7 @@
   --text-label: #41526b;
   --text-on-accent: #ffffff;
   --text-on-solid: #ffffff;
-  --text-overdue: #c3505a;
+  --text-overdue: #bd4a54;
 
   --accent: #2f6fed;
   --accent-hover: #245fd2;
@@ -412,7 +412,7 @@
   --brand-gold: #f4b942;
   --success: #2c8561;
   --warning: #a96622;
-  --danger: #c3505a;
+  --danger: #bd4a54;
   --success-solid: #2c8561;
   --warning-solid: #a96622;
   --danger-solid: #c3505a;
@@ -522,7 +522,7 @@
   --brand-gold: #f4b942;
   --success: #247c68;
   --warning: #aa612b;
-  --danger: #c5485a;
+  --danger: #b8404f;
   --success-solid: #247c68;
   --warning-solid: #ae642e;
   --danger-solid: #c84b5e;

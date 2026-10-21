@@ -105,14 +105,14 @@ select:focus {
 }
 
 .memo-list-tabs button.active {
-  color: var(--accent);
+  color: var(--accent-strong);
   background: var(--surface-selected);
   font-weight: 600;
 }
 
 .memo-list-tabs span {
   font-size: var(--font-size-caption);
-  color: var(--text-muted);
+  color: var(--text-label);
 }
 
 .memo-list-item {
@@ -896,7 +896,7 @@ body {
 }
 
 .today-hero p {
-  color: var(--text-secondary);
+  color: var(--text-label);
 }
 
 .today-hero .plan-warning {
@@ -910,6 +910,14 @@ body {
   border: 1px solid color-mix(in srgb, var(--warm-700) 22%, transparent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--warm-700) 8%, var(--surface-panel));
+}
+
+/* 静夜 / 璃幕是深色底，暖棕字（--warm-700）压上去只有 2.8:1 —— 换成浅暖色。 */
+:root[data-theme="dark"] .today-hero .plan-warning,
+:root[data-theme="glass"] .today-hero .plan-warning {
+  color: var(--warm-300);
+  border-color: color-mix(in srgb, var(--warm-300) 26%, transparent);
+  background: color-mix(in srgb, var(--warm-300) 10%, var(--surface-panel));
 }
 
 :root[data-theme="dark"] .today-hero {
@@ -926,7 +934,7 @@ body {
 }
 
 :root[data-theme="dark"] .today-hero p {
-  color: var(--text-secondary);
+  color: var(--text-label);
 }
 
 @media (prefers-color-scheme: dark) {

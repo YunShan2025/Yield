@@ -881,7 +881,7 @@ select {
 
 .timeline-h-event.is-done .timeline-h-event-time {
   background: color-mix(in srgb, var(--amber-800) 16%, transparent);
-  color: var(--text-secondary);
+  color: var(--text-label);
 }
 
 .timeline-h-event-done {
@@ -962,8 +962,8 @@ select {
   line-height: 1.2;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  background: var(--amber-900-12);
-  color: var(--amber-950-a);
+  background: var(--amber-150);
+  color: var(--amber-950-c);
   white-space: nowrap;
 }
 
@@ -984,6 +984,25 @@ select {
 }
 
 :root[data-theme="dark"] .done-at-chip {
+  background: var(--amber-750-16);
+  color: var(--amber-700);
+}
+
+/* 璃幕也是暗色主题：静夜这套「成就式金色」版式要一并跟过来。
+   否则璃幕的今日页会留着浅色金层，配上璃幕的浅色文字等于隐形（实测 1.79:1）。 */
+:root[data-theme="glass"] .day-agenda .expand-task::before {
+  background: var(--amber-750-8);
+}
+:root[data-theme="glass"] .day-agenda .expand-task.is-done {
+  border-color: var(--amber-750-25);
+}
+:root[data-theme="glass"] .day-agenda .expand-task.is-done .expand-task-row:hover {
+  background: var(--amber-750-8);
+}
+:root[data-theme="glass"] .day-agenda .expand-task.is-done .task-title {
+  color: var(--text-primary);
+}
+:root[data-theme="glass"] .done-at-chip {
   background: var(--amber-750-16);
   color: var(--amber-700);
 }
@@ -1190,7 +1209,7 @@ select {
 .scope-empty {
   padding: 28px 12px;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--text-label);
   border: 1px dashed var(--border);
   border-radius: var(--radius-lg);
 }
@@ -1838,7 +1857,7 @@ select {
 .growth-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .growth-panel-head h3 { margin: 0 0 3px; }
 .growth-panel-head p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); }
-.growth-panel-head button { min-height: 24px; padding: 0 4px; border: 0; background: transparent; color: var(--accent); cursor: pointer; }
+.growth-panel-head button { min-height: 24px; padding: 0 4px; border: 0; background: transparent; color: var(--accent-strong); cursor: pointer; }
 
 /* 最近半年（26 周 × 7 天，列优先，每周一列）的热力图：桌面与手机同一数量。 */
 .growth-heatmap { display: grid; grid-template-columns: repeat(26, minmax(8px, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: clamp(2px, .3vw, 4px); width: 100%; min-width: 0; padding: 5px 2px 10px; }
@@ -1952,7 +1971,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-goal-list { display: grid; gap: 9px; }
 .review-goal-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .review-goal-row i { width: 9px; height: 9px; border-radius: 50%; }
-.review-goal-row strong { color: var(--accent); }
+.review-goal-row strong { color: var(--accent-strong); }
 /* 习惯卡上的排期说明：每天 / 每周一三五 / 每周若干次。 */
 .habits-card-schedule { margin: 2px 0 0; color: var(--text-muted); font-size: var(--font-size-caption); }
 /* 目标行的推进构成：任务 / 打卡 / 手动记录，标明这周的数字是怎么来的。 */
@@ -2042,7 +2061,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .habit-week-track { flex: 1 1 auto; height: 5px; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-rail); }
 .habit-week-track i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--accent); transition: width calc(300ms * var(--motion-scale)) ease; }
 .habit-week-progress em { flex: 0 0 auto; color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
-.habit-week-progress.is-full em { color: var(--accent); font-weight: 700; }
+.habit-week-progress.is-full em { color: var(--accent-strong); font-weight: 700; }
 /* 列表/卡片动作按钮组：习惯卡先落地，今日/待办行、标签、项目、回收站、
    计时器等复用同一套 .item-action-* 观感。 */
 .habit-card-actions,
@@ -2265,6 +2284,15 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 :root[data-theme="dark"] .habit-card.is-checked .habits-card-head strong { color: var(--amber-700); }
 :root[data-theme="dark"] .habit-card.is-checked .habits-card-meta { color: var(--gold-250); }
+
+/* 璃幕同样是暗色主题：沿用静夜的「已完成」版式。原先璃幕没这组覆写，
+   深色玻璃上会留一张浅色金卡，配上玻璃的浅色文字等于隐形（实测 1.04:1）。 */
+:root[data-theme="glass"] .habit-card.is-checked {
+  border-color: var(--amber-750-25);
+  background: var(--amber-750-8);
+}
+:root[data-theme="glass"] .habit-card.is-checked .habits-card-head strong { color: var(--amber-700); }
+:root[data-theme="glass"] .habit-card.is-checked .habits-card-meta { color: var(--gold-250); }
 .habit-unlimited-toggle { margin: -6px 0 0; }
 .project-edit-modal .habit-unlimited-toggle {
   display: flex;
@@ -2290,13 +2318,13 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .brand-origin-en { margin-left: auto; color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
 .brand-origin-epigraph { margin: 12px 0 0; padding: 12px 14px; border-left: 3px solid var(--brand-gold); border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--amber-650-14), var(--amber-650-4)); }
 .brand-origin-epigraph p { margin: 0; color: var(--text-heading); font: 600 15px/1.5 var(--font-display); letter-spacing: .04em; }
-.brand-origin-epigraph cite { display: block; margin-top: 4px; color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
+.brand-origin-epigraph cite { display: block; margin-top: 4px; color: var(--text-label); font-size: var(--font-size-caption); font-style: normal; }
 .brand-origin-intro { margin: 10px 0 0; color: var(--text-secondary); font-size: var(--font-size-label); line-height: 1.7; }
 .brand-origin { margin: 12px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .brand-origin li { margin: 0; padding: 11px 13px; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .brand-origin-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .brand-origin-head strong { color: var(--text-heading); font-size: var(--font-size-body); }
-.brand-origin-head span { color: var(--text-muted); font-size: var(--font-size-caption); }
+.brand-origin-head span { color: var(--text-label); font-size: var(--font-size-caption); }
 .brand-origin-quote { margin: 5px 0 0; color: var(--accent-strong); font-size: var(--font-size-label); font-weight: 600; line-height: 1.5; }
 .brand-origin-meaning { margin: 3px 0 0; color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.65; }
 @media (max-width: 720px) {
@@ -2307,8 +2335,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-workspace { overflow: auto; }
 .review-body { padding: 0 28px 28px; }
 .top-controls .review-hero-total { flex: 0 0 auto; display: grid; min-width: 0; margin-right: 6px; text-align: right; }
-.top-controls .review-hero-total strong { color: var(--accent); font: 700 20px/1 var(--font-display); letter-spacing: -.02em; }
-.top-controls .review-hero-total span { margin-top: 2px; color: var(--text-muted); font-size: var(--font-size-caption); }
+.top-controls .review-hero-total strong { color: var(--accent-strong); font: 700 20px/1 var(--font-display); letter-spacing: -.02em; }
+.top-controls .review-hero-total span { margin-top: 2px; color: var(--text-label); font-size: var(--font-size-caption); }
 .review-metrics { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
 .review-metrics article { display: grid; gap: 4px; padding: 22px 24px 20px 2px; }
 .review-metrics article + article { padding-left: 24px; border-left: 1px solid var(--border); }
@@ -2320,7 +2348,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .review-section-head span { color: var(--text-muted); font-size: var(--font-size-caption); }
 .review-section-head h3 { margin: 4px 0 0; font: 700 18px/1.3 var(--font-display); }
-.review-section-head > b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--accent); background: var(--accent-soft); font-size: var(--font-size-caption); }
+.review-section-head > b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--accent-strong); background: var(--accent-soft); font-size: var(--font-size-caption); }
 .review-chart-legend { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--font-size-caption); }
 .review-chart-legend i { width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; }
 .review-chart-legend .is-created, .review-bar-pair .is-created { background: color-mix(in srgb, var(--accent) 28%, var(--surface-rail)); }
@@ -2338,17 +2366,17 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-breakdown { margin-top: 16px; }
 .review-dimension-tabs { display: inline-flex; flex: 0 0 auto; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-rail); }
 .review-dimension-tabs button { min-height: 28px; padding: 0 10px; border: 0; border-radius: var(--radius-sm); color: var(--text-secondary); background: transparent; font-size: var(--font-size-caption); font-weight: 650; cursor: pointer; }
-.review-dimension-tabs button.is-active { color: var(--accent); background: var(--surface-panel); box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 10%, transparent); }
+.review-dimension-tabs button.is-active { color: var(--accent-strong); background: var(--surface-panel); box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 10%, transparent); }
 .review-breakdown-list { display: grid; gap: 4px; margin-top: 16px; }
-.review-breakdown-row { display: grid; grid-template-columns: minmax(96px, 170px) minmax(80px, 1fr) auto minmax(48px, auto); gap: 12px; align-items: center; padding: 9px 2px; border-top: 1px solid var(--border); }
+.review-breakdown-row { display: grid; grid-template-columns: minmax(96px, 170px) minmax(80px, 1fr) minmax(48px, auto); gap: 12px; align-items: center; padding: 9px 2px; border-top: 1px solid var(--border); }
 .review-breakdown-row:first-child { border-top: 0; }
 .review-breakdown-label { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .review-breakdown-label i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
 .review-breakdown-label span { overflow: hidden; font-size: var(--font-size-label); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .review-breakdown-track { height: 6px; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-rail); }
 .review-breakdown-track i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--accent); transition: width calc(300ms * var(--motion-scale)) ease; }
-.review-breakdown-row strong { font-size: var(--font-size-caption); }
-.review-breakdown-row em { color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; text-align: right; }
+.review-breakdown-row strong { font-size: var(--font-size-caption); font-variant-numeric: tabular-nums; text-align: right; }
+
 /* 桌面端窄窗口（最小窗口 800px、侧栏展开时工作区约 500px）：
    操作区不再被挤压，容器不够宽时整块换行右对齐，避免「下周 ›」被裁切。 */
 @media (max-width: 1080px) {
@@ -2371,7 +2399,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   .review-breakdown .review-section-head { flex-direction: column; }
   .review-dimension-tabs { width: 100%; }
   .review-dimension-tabs button { flex: 1; }
-  .review-breakdown-row { grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px 10px; }
+  .review-breakdown-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; }
   .review-breakdown-track { grid-row: 2; grid-column: 1 / -1; }
 }
 
@@ -2639,7 +2667,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .expand-row-trailing {
   margin-left: auto;
   flex: none;
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: var(--font-size-caption);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2737,7 +2765,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   min-width: 22px;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  color: var(--text-secondary);
+  color: var(--text-label);
   background: color-mix(in srgb, var(--tag-accent, var(--accent)) 12%, transparent);
   font-size: var(--font-size-caption);
   text-align: center;
@@ -3091,7 +3119,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   padding: 0 4px;
   border: 0;
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: var(--font-size-caption);
   cursor: pointer;
 }
@@ -3271,8 +3299,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 .timer-status-rail {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 90px 90px;
+  display: flex;
   align-items: center;
   gap: 14px;
   min-height: 68px;
@@ -3281,10 +3308,11 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   border-radius: var(--radius-md);
   background: linear-gradient(100deg, var(--surface-panel), color-mix(in srgb, var(--accent-soft) 42%, var(--surface-panel)));
 }
-.timer-status-pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--text-muted); box-shadow: 0 0 0 6px color-mix(in srgb, var(--text-muted) 9%, transparent); }
+.timer-status-pulse { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--text-muted); box-shadow: 0 0 0 6px color-mix(in srgb, var(--text-muted) 9%, transparent); }
 .timer-status-rail.has-active .timer-status-pulse { background: var(--accent); box-shadow: 0 0 0 6px var(--accent-soft); }
 .timer-status-rail > div { display: grid; gap: 3px; }
-.timer-status-rail > div:not(.timer-status-primary) { padding-left: 16px; border-left: 1px solid var(--border); text-align: center; }
+.timer-status-primary { flex: 1 1 auto; min-width: 0; }
+.timer-status-rail > div:not(.timer-status-primary) { flex: 0 0 90px; padding-left: 16px; border-left: 1px solid var(--border); text-align: center; }
 .timer-status-rail span { color: var(--text-muted); font-size: var(--font-size-caption); }
 .timer-status-rail strong { color: var(--text-primary); font-size: var(--font-size-label); }
 .timer-status-rail > div:not(.timer-status-primary) strong { font: 700 20px/1 var(--font-display); }
@@ -3329,7 +3357,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .timer-tabs button span {
   margin-left: 4px;
   font-size: var(--font-size-caption);
-  color: var(--text-muted);
+  color: var(--text-label);
 }
 
 .countdown-custom-time {
@@ -3452,7 +3480,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .reminders-section-head span {
   font-size: var(--font-size-caption);
-  color: var(--text-muted);
+  color: var(--text-label);
   font-variant-numeric: tabular-nums;
 }
 
@@ -3460,7 +3488,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   padding: 18px 14px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--border-strong);
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: var(--font-size-label);
   text-align: center;
 }
@@ -3602,7 +3630,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 @media (max-width: 900px) {
-  .timer-status-rail { grid-template-columns: auto minmax(0, 1fr) 72px 72px; }
+  .timer-status-rail > div:not(.timer-status-primary) { flex-basis: 72px; }
 }
 
 /* ── 原 global-09-moments-workspace.css ────────────────────────────────────────── */
@@ -4196,13 +4224,13 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .today-hero-meter-count span {
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: var(--font-size-label);
   font-variant-numeric: tabular-nums;
 }
 
 .today-hero-meter-label {
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: var(--font-size-caption);
 }
 
@@ -4263,7 +4291,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .scope-summary .scope-card span {
-  color: var(--text-muted);
+  color: var(--text-label);
 }
 
 .scope-summary .scope-card strong {
@@ -4398,7 +4426,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 .version-update-actions button.is-primary { color: var(--text-on-accent); background: var(--accent); font-weight: 700; }
 
 .settings-version-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.settings-version-card span { color: var(--accent); font-size: var(--font-size-caption); font-weight: 800; letter-spacing: .08em; }
+.settings-version-card span { color: var(--accent-strong); font-size: var(--font-size-caption); font-weight: 800; letter-spacing: .08em; }
 .settings-version-card h3 { margin: 4px 0; }
 .settings-version-card p { margin: 0; color: var(--text-muted); font-size: var(--font-size-caption); }
 .settings-version-card > button { flex: 0 0 auto; }
@@ -4508,7 +4536,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .section-title-row > span {
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: var(--font-size-caption);
 }
 
@@ -5341,7 +5369,7 @@ html[data-nav="railed"] .nav-edge-collapse {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  color: var(--white);
+  color: var(--ink-950-g);
   font-size: var(--font-size-caption);
   line-height: 1;
   background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
@@ -5358,7 +5386,20 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 :root[data-theme="dark"] .weekly-day-task.is-done .weekly-day-check {
-  color: var(--white);
+  color: var(--ink-950-g);
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+}
+
+:root[data-theme="glass"] .weekly-day-task.is-done {
+  background: var(--amber-750-14);
+  box-shadow: inset 0 0 0 1px var(--amber-750-40);
+}
+:root[data-theme="glass"] .weekly-day-task.is-done .weekly-day-title {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+:root[data-theme="glass"] .weekly-day-task.is-done .weekly-day-check {
+  color: var(--ink-950-g);
   background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
 }
 
