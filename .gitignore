@@ -38,3 +38,5 @@ src-tauri/gen/android/app/keystore.properties
 .codex/
 .impeccable/*
 !.impeccable/config.json
+# 阶段 2 UI 视觉基线截图（由 scripts/ui-snapshot.mjs 生成，可随时重建，不入库）
+docs/ui-baseline/
