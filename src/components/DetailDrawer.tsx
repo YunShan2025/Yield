@@ -5,6 +5,7 @@ import type { Goal, TaskPriority } from "@/types";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
+import { AppIcon } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import { fetchGoals } from "@/lib/db";
@@ -262,24 +263,31 @@ export function DetailDrawer() {
 
   return (
     <aside ref={panelRef} className="detail-panel">
-      <div className="panel-head">
-        <h3>{mode === "view" ? "任务详情" : "编辑任务"}</h3>
+      <div className={`panel-head${mode === "view" ? " panel-head-task" : ""}`}>
+        {mode === "view" ? (
+          <h2 className="detail-view-title">{task.title}</h2>
+        ) : (
+          <h3>编辑任务</h3>
+        )}
         <div className="detail-head-actions">
           <button
             type="button"
-            className="btn-ghost"
+            className="btn-ghost detail-close"
+            aria-label="关闭详情"
             onClick={closeDetail}
           >
-            ✕
+            <AppIcon name="close" size={14} />
           </button>
         </div>
       </div>
 
       {mode === "view" ? (
         <div className="detail-body detail-view">
-          <div className="detail-view-hero">
-            <h2 className="detail-view-title">{task.title}</h2>
-          </div>
+          {/* 打开抽屉最常看的是「什么时候」，先给日期与时间。 */}
+          <p className="detail-lead">
+            <span>{task.due_date ?? "未设日期"}</span>
+            {timeText ? <span className="detail-lead-time">{timeText}</span> : null}
+          </p>
 
           {task.description ? (
             <p className="detail-view-desc">{task.description}</p>
@@ -287,20 +295,11 @@ export function DetailDrawer() {
 
           <div className="detail-meta-grid">
             <div className="detail-meta">
-              <span className="field-label">日期</span>
-              <strong>{task.due_date ?? "未设置"}</strong>
-            </div>
-            <div className="detail-meta">
-              <span className="field-label">时间</span>
-              <strong>{timeText || "未设置"}</strong>
-            </div>
-            <div className="detail-meta">
               <span className="field-label">优先级</span>
               <strong className={`prio p${task.priority}`}>
                 {PRIORITY_LABEL[task.priority] ?? `P${task.priority}`}
               </strong>
             </div>
-
             <div className="detail-meta">
               <span className="field-label">所属项目</span>
               <strong>{project ? project.name : "无项目"}</strong>
@@ -331,8 +330,6 @@ export function DetailDrawer() {
               </strong>
             </div>
           </div>
-
-
         </div>
       ) : (
         <div

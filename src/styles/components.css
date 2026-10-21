@@ -1629,10 +1629,55 @@ select {
   gap: 4px;
 }
 
-.detail-view-hero {
-  display: flex;
+.panel-head-task {
   align-items: flex-start;
-  gap: 10px;
+  padding: 18px 20px 10px;
+}
+
+.panel-head-task .detail-view-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+
+.detail-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: none;
+  cursor: pointer;
+}
+
+.detail-close:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+/* 主信息：日期与时间。打开抽屉第一眼要看的就是「什么时候」。 */
+.detail-lead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+  color: var(--text-primary);
+  font: 700 var(--font-size-h2)/1.3 var(--font-display);
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-lead-time {
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .detail-view-title {
@@ -1647,7 +1692,7 @@ select {
 .detail-view-desc {
   margin: 0;
   font-size: var(--font-size-body);
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--text-secondary);
   white-space: pre-wrap;
 }
@@ -1666,16 +1711,14 @@ select {
    原来六张带边框的灰底小卡，是「同尺寸小卡当内容结构」—— 卡片是懒容器，
    嵌套卡片更糟。 */
 .detail-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr;
   border-top: 1px solid var(--border);
 }
 
 .detail-meta {
-  display: flex;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
   align-items: baseline;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   padding: 9px 0;
   border-bottom: 1px solid var(--border);
 }
@@ -1686,8 +1729,7 @@ select {
 
 .detail-meta strong {
   min-width: 0;
-  text-align: right;
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   font-weight: 600;
 }
 
@@ -3946,10 +3988,12 @@ html[data-nav="railed"] .nav-edge-collapse {
   box-shadow: -14px 0 42px var(--slate-200-11);
 }
 
+/* 字段行不再做小卡：1px 边框 + 灰底 + 圆角 = 一堆灰盒子。 */
 .detail-meta {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-base);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
 }
 
 /* ── 原 polish-01-overrides.css ────────────────────────────────────────── */

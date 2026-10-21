@@ -730,10 +730,12 @@ button:active:not(:disabled) {
   letter-spacing: -0.035em;
 }
 
+/* 字段行不再做小卡：1px 边框 + 灰底 + 圆角 = 一堆灰盒子。 */
 .detail-meta {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-base);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
 }
 
 /* ── 原 global-04-structural-v2.css ────────────────────────────────────────── */
