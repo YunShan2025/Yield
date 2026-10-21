@@ -346,7 +346,7 @@ function WeekBoard() {
                   return (
                     <div
                       key={t.id}
-                      className={`week-event ${compact ? "is-compact" : ""} ${t.status === "completed" ? "is-done" : ""}`}
+                      className={`week-event p${t.priority ?? 3} ${compact ? "is-compact" : ""} ${t.status === "completed" ? "is-done" : ""}`}
                       style={{
                         top: Math.max(0, top),
                         height,

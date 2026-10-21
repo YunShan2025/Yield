@@ -290,7 +290,7 @@ html:not([data-desktop-widget]) #root {
   color: var(--accent-strong);
   border-color: var(--navy-450-14);
   background: var(--white-72);
-  box-shadow: 0 5px 14px var(--navy-250-8), inset 0 1px var(--white-95);
+  box-shadow: inset 0 1px var(--white-95);
 }
 
 :root[data-theme="dawn"] .scope-card,
@@ -313,7 +313,7 @@ html:not([data-desktop-widget]) #root {
   background:
     radial-gradient(circle at 88% 12%, var(--rose-350-14), transparent 30%),
     linear-gradient(135deg, var(--paper-150-92), var(--magenta-100-84));
-  box-shadow: 0 10px 28px var(--navy-500-8), inset 0 1px var(--white-95);
+  box-shadow: inset 0 1px var(--white-95);
   backdrop-filter: blur(22px) saturate(135%);
   -webkit-backdrop-filter: blur(22px) saturate(135%);
   color: var(--text-primary);
@@ -327,14 +327,14 @@ html:not([data-desktop-widget]) #root {
   color: var(--text-primary);
   border-color: var(--navy-450-16);
   background: var(--white-88);
-  box-shadow: inset 0 1px var(--white-95), 0 4px 12px var(--navy-350-4);
+  box-shadow: inset 0 1px var(--white-95);
 }
 
 :root[data-theme="dawn"] .btn-primary,
 :root[data-theme="dawn"] .seg button.active {
   color: var(--text-on-accent);
   background: linear-gradient(135deg, var(--azure-750), var(--azure-900));
-  box-shadow: 0 9px 21px var(--navy-100-24), inset 0 1px var(--white-28);
+  box-shadow: inset 0 1px var(--white-28);
 }
 
 :root[data-theme="dawn"] .btn-ghost {
@@ -551,7 +551,7 @@ html:not([data-desktop-widget]) #root {
     radial-gradient(circle at 88% 12%, var(--azure-250-20), transparent 34%),
     radial-gradient(circle at 12% 88%, var(--amber-600-12), transparent 36%),
     linear-gradient(145deg, var(--white-16), var(--white-8));
-  box-shadow: 0 12px 32px var(--black-24), inset 0 1px var(--white-16);
+  box-shadow: inset 0 1px var(--white-16);
   backdrop-filter: blur(22px) saturate(140%);
   -webkit-backdrop-filter: blur(22px) saturate(140%);
   color: var(--text-primary);
@@ -579,7 +579,7 @@ html:not([data-desktop-widget]) #root {
 :root[data-theme="glass"] .seg button.active {
   color: var(--text-on-accent);
   background: linear-gradient(135deg, var(--mist-700), var(--azure-250));
-  box-shadow: 0 10px 24px var(--steel-550-28), inset 0 1px var(--white-45);
+  box-shadow: inset 0 1px var(--white-45);
 }
 
 :root[data-theme="glass"] .btn-ghost {
@@ -646,12 +646,11 @@ html:not([data-desktop-widget]) #root {
   border-radius: 17px;
   text-align: left;
   background: var(--surface-raised);
-  box-shadow: var(--shadow-1);
-  transition: transform calc(180ms * var(--motion-scale)) ease, border-color calc(180ms * var(--motion-scale)) ease, box-shadow calc(180ms * var(--motion-scale)) ease;
+  transition: border-color calc(180ms * var(--motion-scale)) ease;
 }
 
-.theme-preview:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
-.theme-preview.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-1); }
+.theme-preview:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.theme-preview.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 .theme-preview-canvas {
   position: relative;
@@ -681,7 +680,6 @@ html:not([data-desktop-widget]) #root {
   border: 1px solid var(--white-58);
   border-radius: 10px;
   background: var(--preview-card);
-  box-shadow: 0 8px 20px var(--ink-600-12);
 }
 
 @supports (background: color-mix(in srgb, red 10%, blue)) {

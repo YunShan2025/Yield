@@ -601,7 +601,6 @@ button:active:not(:disabled) {
 .seg {
   padding: 4px;
   border-color: var(--border);
-  box-shadow: var(--shadow-1);
 }
 
 .seg button {
@@ -610,7 +609,6 @@ button:active:not(:disabled) {
 
 .seg button.active {
   background: var(--accent);
-  box-shadow: 0 4px 12px var(--slate-150-22);
 }
 
 .scope-board {
@@ -630,7 +628,6 @@ button:active:not(:disabled) {
   border-color: var(--border);
   border-radius: 15px;
   background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
-  box-shadow: var(--shadow-1);
 }
 
 .scope-card strong {
@@ -649,13 +646,10 @@ button:active:not(:disabled) {
   border-color: transparent;
   border-radius: 14px;
   background: var(--surface-panel);
-  box-shadow: var(--shadow-1);
 }
 
 .expand-task:hover {
   border-color: var(--slate-150-17);
-  box-shadow: 0 10px 27px var(--slate-200-9);
-  transform: translateY(-1px);
 }
 
 .expand-task-row {
@@ -811,7 +805,7 @@ body {
   border-radius: 10px;
   border-color: var(--azure-800-16);
   background: var(--paper-450);
-  box-shadow: 0 3px 10px var(--azure-800-10);
+  
 }
 
 .timeline-h-event-title {
@@ -840,7 +834,6 @@ body {
     radial-gradient(circle at 88% 10%, var(--azure-950-14), transparent 28%),
     radial-gradient(circle at 96% 92%, var(--warm-350-11), transparent 24%),
     linear-gradient(120deg, var(--paper-600) 0%, var(--paper-250) 70%, var(--white) 100%);
-  box-shadow: 0 10px 30px var(--navy-400-8);
 }
 
 .today-hero::after {
@@ -898,7 +891,6 @@ body {
     radial-gradient(circle at 88% 10%, var(--azure-400-19), transparent 29%),
     radial-gradient(circle at 96% 92%, var(--warm-500-8), transparent 24%),
     linear-gradient(120deg, var(--ink-700) 0%, var(--ink-950-e) 72%, var(--ink-950-f) 100%);
-  box-shadow: var(--shadow-1);
 }
 
 :root[data-theme="dark"] .today-hero h3 {
