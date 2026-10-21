@@ -143,7 +143,6 @@ export function ProjectsView() {
         {/* 与「今日/成长」同款的暖色引导框。 */}
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <span className="today-eyebrow">百工 · 项目</span>
             <h3>百工居肆以成其事。</h3>
             <p className="today-hero-note">项目是长期事项的工坊：相关任务都在这里聚拢。</p>
           </div>

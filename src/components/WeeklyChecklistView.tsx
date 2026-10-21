@@ -122,7 +122,6 @@ export function WeeklyChecklistView() {
       {/* 与「今日」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">积微 · 周清单</span>
           <h3>把一周摊开来看。</h3>
           <p className="today-hero-note">本周目标按标签聚合，周日历逐天盘点；点任务直达详情，完成进度一眼见底。</p>
         </div>

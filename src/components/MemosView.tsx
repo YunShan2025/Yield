@@ -230,7 +230,6 @@ export function MemosView() {
     {/* 与「今日」同款的暖色引导框。 */}
     <section className="today-hero guide-hero">
       <div className="today-hero-copy">
-        <span className="today-eyebrow">百工 · 备忘录</span>
         <h3>好记性不如烂笔头。</h3>
         <p className="today-hero-note">点开任意一条即可阅读；支持富文本与 Markdown，可置顶、归档。</p>
       </div>

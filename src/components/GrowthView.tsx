@@ -417,7 +417,6 @@ export function GrowthView() {
       {/* 与「今日」同款的引导框:eyebrow + 标语 + 一句注释。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">有恒 · 长期主义</span>
           <h3>看见每一天累积的成长。</h3>
           <p className="today-hero-note">日复一日，功在不舍。</p>
         </div>

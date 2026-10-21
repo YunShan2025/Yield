@@ -277,7 +277,6 @@ export function LedgerView() {
       {/* 与「今日」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">观澜 · 收支</span>
           <h3>看清流向，再谈安排。</h3>
           <p className="today-hero-note">月度摘要、分类占比与趋势都在一页；截图分享前可用「隐藏金额」。</p>
         </div>
@@ -333,7 +332,10 @@ export function LedgerView() {
                     </span>
                     <span className={`ledger-day-caret${collapsed ? " collapsed" : ""}`} aria-hidden>▾</span>
                   </button>
-                  {!collapsed && items.map((item) => <div className="ledger-row" key={item.id}><span className="ledger-row-icon" style={{ background: `${item.category_color}20`, color: item.category_color }}>{ICONS[item.category_icon] ?? "·"}</span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions item-action-cluster"><button type="button" className="item-action-btn item-action-edit" onClick={() => openDrawer(item)}><AppIcon name="edit" size={14} /><span>编辑</span></button><button type="button" className="item-action-btn item-action-danger" onClick={() => void remove(item)}><AppIcon name="trash" size={14} /><span>删除</span></button></div></div>)}
+                  {!collapsed && items.map((item) => <div className="ledger-row" key={item.id}><span className="ledger-row-icon" style={{
+                    background: `color-mix(in srgb, ${item.category_color} 14%, var(--surface-panel))`,
+                    color: `color-mix(in srgb, ${item.category_color} 55%, var(--text-primary))`,
+                  }}>{ICONS[item.category_icon] ?? "·"}</span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions item-action-cluster"><button type="button" className="item-action-btn item-action-edit" onClick={() => openDrawer(item)}><AppIcon name="edit" size={14} /><span>编辑</span></button><button type="button" className="item-action-btn item-action-danger" onClick={() => void remove(item)}><AppIcon name="trash" size={14} /><span>删除</span></button></div></div>)}
                 </div>
               );
             })}</section>

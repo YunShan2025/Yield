@@ -219,7 +219,6 @@ export function HabitsView() {
       <div className="habits-body">
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <span className="today-eyebrow">有恒 · 习惯</span>
             <h3>让坚持成为默认选项。</h3>
             <p className="today-hero-note">小步不断，胜过心血来潮。</p>
           </div>

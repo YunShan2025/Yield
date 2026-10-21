@@ -94,7 +94,7 @@ html:not([data-desktop-widget]) #root {
 
 :root[data-theme="light"] .glass-titlebar-brand small,
 :root[data-theme="dawn"] .glass-titlebar-brand small {
-  color: var(--ink-550-50);
+  color: var(--text-muted);
 }
 
 :root[data-theme="light"] .glass-titlebar-controls button,

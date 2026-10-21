@@ -126,7 +126,6 @@ export function ReviewView() {
       {/* 与「今日」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">有恒 · 复盘</span>
           <h3>回头看，是为了走得更稳。</h3>
           <p className="today-hero-note">完成率、高效时段与满勤天数，每周回望一次，节奏自然浮现。</p>
         </div>

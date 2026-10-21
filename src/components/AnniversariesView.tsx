@@ -157,7 +157,6 @@ export function AnniversariesView() {
       {/* 与「今日」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">有恒 · 纪念日</span>
           <h3>把值得记住的日子，好好收藏。</h3>
           <p className="today-hero-note">公历、农历都能记；日子按远近排序，未来三十天内的会单独列出一栏。</p>
         </div>

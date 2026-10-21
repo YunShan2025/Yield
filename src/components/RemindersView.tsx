@@ -155,7 +155,6 @@ export function RemindersView() {
       {/* 与「今日/成长」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">百工 · 提醒</span>
           <h3>关掉窗口，提醒也不会丢。</h3>
           <p className="today-hero-note">
             {isMobileShell()

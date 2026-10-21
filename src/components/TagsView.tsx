@@ -166,7 +166,6 @@ export function TagsView() {
       {/* 与「今日」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <span className="today-eyebrow">条理 · 标签</span>
           <h3>把散落的事，按线归拢。</h3>
           <p className="today-hero-note">跨项目、跨清单的同类任务，一个标签就能聚合查看。</p>
         </div>

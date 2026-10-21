@@ -366,7 +366,7 @@ select {
 
 .nav-count {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .main-workspace {
@@ -1761,7 +1761,7 @@ select {
 
 .growth-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
 .growth-tabs button { padding: 9px 15px; border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary); cursor: pointer; }
-.growth-tabs button.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.growth-tabs button.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; }
 
 .growth-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
 .growth-metrics article { padding: 18px 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-panel); box-shadow: var(--shadow-1); }
@@ -2029,18 +2029,19 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   font: 700 14.5px/1.4 var(--font-display);
 }
 .habits-card-meta { margin: 0; color: var(--text-muted); font-size: 12px; }
-.item-action-primary {
+.item-action-primary,
+.item-action-btn.item-action-primary {
   position: relative;
   isolation: isolate;
   min-width: 78px;
   border-color: transparent;
-  color: var(--white);
+  color: var(--text-on-accent);
   background: var(--accent);
   box-shadow: 0 2px 7px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 .item-action-primary:hover:not(:disabled) {
   border-color: transparent;
-  color: var(--white);
+  color: var(--text-on-accent);
   background: var(--accent-hover);
 }
 .item-action-primary:active:not(:disabled) {
@@ -2054,10 +2055,15 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   inset: 0;
   z-index: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+  background: linear-gradient(135deg, var(--amber-950), var(--amber-950-c));
   opacity: 0;
   pointer-events: none;
   transition: opacity calc(260ms * var(--motion-scale)) ease;
+}
+
+.item-action-primary.is-done,
+.item-action-btn.item-action-primary.is-done {
+  color: var(--white);
 }
 .item-action-primary > * {
   position: relative;
@@ -2206,7 +2212,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* 设置页「命名缘起」:品牌标 + 题铭 + 四词出处卡片 */
 .brand-origin-title { display: flex; align-items: center; gap: 8px; }
 .brand-origin-title h3 { margin: 0; }
-.brand-origin-en { margin-left: auto; color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+.brand-origin-en { margin-left: auto; color: var(--text-secondary); font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
 .brand-origin-epigraph { margin: 12px 0 0; padding: 12px 14px; border-left: 3px solid var(--brand-gold); border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--amber-650-14), var(--amber-650-4)); }
 .brand-origin-epigraph p { margin: 0; color: var(--text-heading); font: 600 15px/1.5 var(--font-display); letter-spacing: .04em; }
 .brand-origin-epigraph cite { display: block; margin-top: 4px; color: var(--text-muted); font-size: 12px; font-style: normal; }
@@ -2216,7 +2222,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .brand-origin-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .brand-origin-head strong { color: var(--text-heading); font-size: 14px; }
 .brand-origin-head span { color: var(--text-muted); font-size: 11px; }
-.brand-origin-quote { margin: 5px 0 0; color: var(--accent); font-size: 12.5px; font-weight: 600; line-height: 1.5; }
+.brand-origin-quote { margin: 5px 0 0; color: var(--accent-strong); font-size: 12.5px; font-weight: 600; line-height: 1.5; }
 .brand-origin-meaning { margin: 3px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.65; }
 @media (max-width: 720px) {
   .brand-origin { grid-template-columns: 1fr; }
@@ -3174,7 +3180,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .timer-tabs button.active,
 .countdown-mode-switch button.active {
-  color: var(--accent);
+  color: var(--accent-strong);
   background: var(--surface-selected);
   font-weight: 600;
 }
@@ -5217,8 +5223,8 @@ body.nav-resizing {
 
 /* ── 原 global-11-ledger.css ────────────────────────────────────────── */
 .ledger-view {
-  --ledger-income: var(--green-200);
-  --ledger-expense: var(--rose-450);
+  --ledger-income: var(--success);
+  --ledger-expense: var(--danger);
   --ledger-line: color-mix(in srgb, var(--border) 78%, var(--surface-panel));
   isolation: isolate;
   min-height: 100%;
