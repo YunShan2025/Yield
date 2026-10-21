@@ -783,11 +783,16 @@ npm run release:check
   - [x] 间距 / 字号 / 圆角 / 表面层级 / 字体角色五张表已定
   - [x] 三个决策点（§2.4）已拍板
   - [x] `docs/MOBILE-IA.md` 已写入
-- [ ] 阶段 2 桌面 CSS 分层
-  - [ ] 非 token 文件硬编码色值 = 0
-  - [ ] `!important` = 0
-  - [ ] 文件改为职责命名
-  - [ ] 四主题 token 集完全对齐
+- [x] 阶段 2 桌面 CSS 分层 ✅（2026-10-21）
+  - [x] 非 token 文件硬编码色值 = 0（531 处 → 0，迁成 296 枚色阶 token）
+  - [x] `!important` = 0（30 处 → 0，减弱动效改用 `--motion-scale` 变量）
+  - [x] 文件改为职责命名（`tokens` / `primitives` / `components` / `views` / `index`）
+  - [x] 四主题 token 集完全对齐（每套 40 枚，含 `system`）
+  - [x] 5 个失效的 token 引用已修（整条声明此前被丢弃）
+  - [x] 状态色契约取值已落地（8 处对比度不达标已修）
+  - [x] `index.css` 只剩 `@import`
+  - [x] 回归：`tsc` / `vitest`(224) / `vite build` 全绿；四主题 + 移动壳
+        32 视图的计算样式逐项比对差异 0，截图逐像素一致
 - [ ] 阶段 3 桌面视图层
   - [ ] 今日
   - [ ] 记一笔
@@ -806,6 +811,21 @@ npm run release:check
 ```
 
 > 每完成一项就在本文档里打勾。**本文档就是跨会话的进度载体。**
+
+### 阶段 2 的验收手段（后续阶段照此复用）
+
+| 工具 | 作用 | 用法 |
+|---|---|---|
+| `scripts/ui-css-audit.mjs` | 硬编码色值 / `!important` / 失效引用 / 四主题 token 集对齐 | `node scripts/ui-css-audit.mjs` |
+| `scripts/ui-snapshot.mjs` | 四主题 × 六视图 + 移动壳截图（时钟固定，可重复） | `node scripts/ui-snapshot.mjs <outDir>` |
+| `scripts/ui-style-dump.mjs` | 导出 32 个视图里每个可见元素的 50 项计算样式 | `node scripts/ui-style-dump.mjs <out.json>` |
+| `scripts/ui-style-diff.mjs` | 逐元素逐属性比对两份计算样式快照 | `node scripts/ui-style-diff.mjs <a.json> <b.json>` |
+| `scripts/ui-visual-diff.py` | 两组截图的像素级差异 + 热区图 | `python scripts/ui-visual-diff.py <before> <after>` |
+
+> 计算样式比对比像素比对更严：它能抓到「只影响交互过程」的变化（例如动效时长
+> 被改错 1000 倍，截图看不出来）。阶段 2 里有两条真 bug 就是它抓出来的。
+
+**基线截图不入库**（`docs/ui-baseline/` 已 gitignore），随时可重建。
 
 ## 附录 C · 参考位置
 
