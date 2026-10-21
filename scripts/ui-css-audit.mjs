@@ -128,6 +128,18 @@ for (const t of unresolved) {
 
 P("\n## 5. 四主题 token 集对齐");
 const tokenRaw = readFileSync(join(STYLES, "tokens.css"), "utf8");
+function region(startMark, endMark) {
+  const a = tokenRaw.indexOf(startMark);
+  const b = tokenRaw.indexOf(endMark);
+  return a < 0 || b < 0 ? "" : tokenRaw.slice(a, b);
+}
+// 主题无关层：字体 / 间距 / 字号 / 圆角 / 动效 / 布局，四套主题共用
+const independentRaw = region("/* @theme-independent:start */", "/* @theme-independent:end */");
+const independent = new Set([...independentRaw.matchAll(DEF)].map((m) => m[1]));
+// 别名层：过渡期旧名，不参与对齐判定
+const aliasRaw = region("/* @legacy-alias:start */", "/* @legacy-alias:end */");
+const alias = new Set([...aliasRaw.matchAll(DEF)].map((m) => m[1]));
+
 function blockOf(sel) {
   const i = tokenRaw.indexOf(sel);
   if (i < 0) return null;
@@ -140,19 +152,40 @@ function blockOf(sel) {
   return null;
 }
 const themeSets = {};
-themeSets[":root"] = new Set([...tokenRaw.matchAll(DEF)].map((m) => m[1]));
+// 取某个选择器后面第一个 {...} 块（花括号配平）
+function blockAfter(sel, from = 0) {
+  const i = tokenRaw.indexOf(sel, from);
+  if (i < 0) return null;
+  let depth = 0;
+  const start = tokenRaw.indexOf("{", i);
+  for (let j = start; j < tokenRaw.length; j++) {
+    if (tokenRaw[j] === "{") depth++;
+    else if (tokenRaw[j] === "}") { depth--; if (depth === 0) return tokenRaw.slice(start + 1, j); }
+  }
+  return null;
+}
+// 清昼：语义层标题之后的第一个 :root 块（跳过主题无关层）
+const lightStart = tokenRaw.indexOf("语义层 · 清昼");
+themeSets[":root"] = new Set(
+  [...(blockAfter(":root {", lightStart) || "").matchAll(DEF)].map((m) => m[1]).filter((t) => !independent.has(t))
+);
 for (const t of ["dark", "dawn", "glass"]) {
-  const b = blockOf(`:root[data-theme="${t}"]`);
+  const b = blockAfter(`:root[data-theme="${t}"]`);
   themeSets[t] = new Set(b ? [...b.matchAll(DEF)].map((m) => m[1]) : []);
 }
-const sysIdx = tokenRaw.indexOf("@media (prefers-color-scheme: dark)");
-themeSets.system = new Set(sysIdx < 0 ? [] : [...tokenRaw.slice(sysIdx).matchAll(DEF)].map((m) => m[1]));
+const sysBlock = blockAfter(":root[data-theme=\"system\"]");
+themeSets.system = new Set(sysBlock ? [...sysBlock.matchAll(DEF)].map((m) => m[1]) : []);
 const base = themeSets[":root"];
+let alignOk = true;
 for (const t of [":root", "dark", "dawn", "glass", "system"]) {
-  const s = themeSets[t];
-  const missing = [...base].filter((x) => !s.has(x));
-  P(`  ${t.padEnd(9)} count=${String(s.size).padStart(3)}  missing_vs_root=${missing.length}${missing.length ? " [" + missing.join(", ") + "]" : ""}`);
+  const set = themeSets[t];
+  const missing = [...base].filter((x) => !set.has(x));
+  const extra = [...set].filter((x) => !base.has(x));
+  if (missing.length || extra.length) alignOk = false;
+  P(`  ${t.padEnd(9)} count=${String(set.size).padStart(3)}  missing=${missing.length}${missing.length ? " [" + missing.join(", ") + "]" : ""}${extra.length ? "  extra=[" + extra.join(", ") + "]" : ""}`);
 }
+P(`  → 四主题 token 集${alignOk ? "完全对齐 ✅" : "未对齐 ❌"}`);
+P(`  主题无关层 ${independent.size} 个（字体/间距/字号/圆角/动效/布局），别名层 ${alias.size} 个（过渡期）`);
 
 P("\n## 6. 已定义但从未被引用");
 const unused = [...defined.keys()].filter((t) => !used.has(t));

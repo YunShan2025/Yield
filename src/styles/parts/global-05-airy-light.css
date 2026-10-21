@@ -1201,9 +1201,9 @@ select {
   gap: 12px;
 }
 
-.scope-card {
+.scope-card { /* 卡片用 --radius-md（§Shapes：卡片圆角不超过 16px） */
   padding: 14px 16px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--bg-panel);
   display: flex;

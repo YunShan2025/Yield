@@ -155,7 +155,7 @@ components:
 
 ```
 语义层  --surface-*  --text-*  --border-*  --accent*  --success/--warning/--danger  --focus-ring
-材质层  --shell-opacity  --shell-blur  --shell-tint  --shell-border  --shell-shadow
+材质层  --shell-opacity  --shell-blur  --shell-saturate  --shell-tint  --shell-border  --shell-shadow
 ```
 
 ### 四套主题（语义层取值）
@@ -451,14 +451,15 @@ components:
 | `--bg-panel` | `--surface-panel` | 重命名 |
 | `--surface-elevated` | `--surface-raised` | 重命名 |
 | `--surface-soft` | `--surface-sunken` | 重命名 |
-| `--bg-rail` | `--surface-sunken` | 合并 |
-| `--bg-hover` / `--bg-selected` / `--bg-input` | `--surface-hover` / `--surface-selected` / `--surface-panel` | 合并 / 重命名 |
+| `--bg-rail` | **`--surface-rail`** | 重命名（新增 token，见下方注 1） |
+| `--bg-hover` / `--bg-selected` | `--surface-hover` / `--surface-selected` | 重命名 |
+| `--bg-input` | **`--surface-input`** | 重命名（新增 token，见下方注 2） |
 | `--text-*` | 同名 | 保留，**`--text-muted` 改值**（四主题） |
 | `--accent*` | 同名 | 保留 |
 | `--success` / `--warning` / `--danger` / `--vip` | 同名 + 新增 `--*-solid` | **改值**（四主题） |
 | `--border` / `--border-strong` | 同名 | 保留 |
 | `--shadow` / `--shadow-soft` | `--shadow-2` / `--shadow-1` | 重命名，仅浮起层使用 |
-| `--radius` / `--radius-sm` | `--radius-lg` / `--radius-sm`，**新增 `--radius-md`** | **改值**（8/12/18） |
+| `--radius` / `--radius-sm` | `--radius-lg` / `--radius-sm`，**新增 `--radius-md`** | **改值**（8/12/18）。卡片用 `--radius-md`、容器用 `--radius-lg`（见下方注 3） |
 | `--focus-ring` | 同名 | 保留 |
 | `--rail-w` / `--side-w` / `--timeline-w` | `--layout-*` | 移出主题文件到 layout 层 |
 | `--transition` | `--motion-fast` 等 | 移出主题文件到 motion 层 |
@@ -478,6 +479,24 @@ components:
         --motion-fast/base/slow  --motion-ease-out  --motion-ease-in
 布局层  --layout-rail-w  --layout-side-w  --layout-timeline-w
 ```
+
+> **注 1 · 侧栏单列 `--surface-rail`**：本表原写 `--bg-rail` 合并进 `--surface-sunken`。但 `--bg-rail`
+> 同时承担两种角色 —— 侧栏底色（`polish-03-solid-shells.css`）与进度条凹槽（`g06` / `g08`）。
+> 合并后静夜主题的侧栏会从 `#0c121c`（比面板更深）变成 `#202d40`（比面板更浅），
+> 层级关系反转；璃幕主题的侧栏会从深色玻璃变成 `rgba(255,255,255,.12)` 的浅色洗白。
+> 因此拆成两个 token：侧栏用 `--surface-rail`，凹槽用 `--surface-sunken`。
+>
+> **注 2 · 输入框单列 `--surface-input`**：本表原写 `--bg-input` 合并进 `--surface-panel`。
+> 合并后璃幕主题的输入框会从 `rgba(255,255,255,.14)`（磨砂白内嵌场）变成面板色
+> `rgba(22,30,44,.82)`，与面板同色后失去「内嵌场」的视觉暗示。`.表面层级` 表把
+> 「输入框」列在第 3 层（`--surface-sunken`），但那会让清昼主题的输入框从纯白
+> `#ffffff` 变成 `#f0f4fa`，与现有观感不符。故单列 `--surface-input`。
+>
+> **注 3 · 卡片与容器的圆角分工**：`§Shapes` 规定「卡片圆角不超过 16px，`--radius-lg` 只给容器不给卡片」。
+> 现状 `--radius`（16px）被 7 处共用，其中 `.scope-card`、`.habits-card` 是卡片，
+> 迁到 `--radius-lg`（18px）会越线 —— 这两处改用 `--radius-md`（12px），
+> 其余 5 处（`--board-col` / `--timeline-h-scroll` / `--scope-empty` / `--week-board` / `--modal`）
+> 是容器，用 `--radius-lg`（18px）。
 
 ## 10. 迁移映射的验证方式
 
