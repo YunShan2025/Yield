@@ -200,4 +200,4 @@ npm run release:check
 npm run release:migration-dry-run
 ```
 
-- 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；开发与发布惯例见 [Git 惯例](docs/GIT_CONVENTIONS.md)；版本历史见 [版本记录](docs/CHANGES.md)
+- 架构与技术栈说明见 [架构文档](docs/ARCHITECTURE.md)；开发与发布惯例见 [Git 惯例](docs/GIT_CONVENTIONS.md)；版本历史见 [版本记录](docs/CHANGES.md)；界面视觉优化进度见 [UI 路线图](docs/UI-REDESIGN-ROADMAP.md)

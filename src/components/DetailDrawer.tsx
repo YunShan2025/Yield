@@ -368,23 +368,21 @@ export function DetailDrawer() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div className="detail-schedule">
-            <div>
-              <label className="field-label">日期</label>
-              <DatePicker
-                value={dueDate}
-                onChange={setDueDate}
-                allowClear
-                ariaLabel="日期"
-              />
-            </div>
-            <TimeRangeFields
-              start={dueTime}
-              end={endTime}
-              onStartChange={setDueTime}
-              onEndChange={setEndTime}
+          <div>
+            <label className="field-label">日期</label>
+            <DatePicker
+              value={dueDate}
+              onChange={setDueDate}
+              allowClear
+              ariaLabel="日期"
             />
           </div>
+          <TimeRangeFields
+            start={dueTime}
+            end={endTime}
+            onStartChange={setDueTime}
+            onEndChange={setEndTime}
+          />
           <div className="detail-form-row">
             <div>
               <label className="field-label">优先级</label>

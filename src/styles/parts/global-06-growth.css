@@ -1317,7 +1317,3 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-filter-row button { padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; }
 .goal-filter-row button:hover { color: var(--text-primary); border-color: var(--text-muted); }
 .goal-filter-row button.is-active { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
-/* 任务详情抽屉：日期与起止时间同一行，与新建任务弹窗一致。 */
-.detail-schedule { display: grid; grid-template-columns: 152px minmax(0, 1fr); gap: 13px; align-items: start; }
-.detail-schedule .time-range { gap: 8px; }
-@media (max-width: 620px) { .detail-schedule { grid-template-columns: 1fr; } }

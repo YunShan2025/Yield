@@ -614,9 +614,8 @@ export function GrowthView() {
             <div className="goal-detail-actions">
               <div className="goal-manage-group">
                 {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
-                {/* 已放弃可以改主意；已达成也能重新打开（进度没满时不会立刻再达成）。 */}
+                {/* 已放弃可以改主意撤回；已达成是终点，不给"重新打开"。 */}
                 {selectedGoal.status === "abandoned" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
-                {selectedGoal.status === "completed" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>重新打开</button> : null}
                 <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
                 {["active", "paused"].includes(selectedGoal.status) ? (
                   <SelectMenu
