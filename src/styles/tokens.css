@@ -56,6 +56,8 @@
   /* 布局：主区栏宽 */
   --layout-rail-w: 0px;
   --layout-side-w: 232px;
+  /* 窄窗图标条列宽。宽度判定在 MainApp.tsx(NAV_RAIL_BREAKPOINT),这里只管列宽。 */
+  --layout-side-rail: 64px;
   --layout-timeline-w: 300px;
 }
 /* @theme-independent:end */

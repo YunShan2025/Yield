@@ -316,6 +316,10 @@ components:
 ```
 
 - 侧栏宽 232px，可拖拽调整，可折叠
+- **窄窗图标条**：窗口窄于 1330px 时侧栏自动收成 64px 图标条（`--layout-side-rail`）——
+  只留图标，分组标题退化为分隔线，条目名进悬停提示，计数收成角标；让出的 168px 归主区。
+  阈值取 1330 是因为 1440×900 展开态的主区宽 1208px，与 1240×720 图标条态的 1174px 相当；
+  再窄则主区开始明显缩水。手动展开图标条只在窗口尺寸不变期间有效。
 - 详情用**右侧抽屉**覆盖在主区上，不挤压主区
 - 视图切换不重排侧栏（位置稳定）
 - 最小窗口 800×560（`tauri.conf.json`），窄于此宽度时时间轴折叠
@@ -477,7 +481,7 @@ components:
         --font-size-display/h1/h2/h3/body/label/caption
         --radius-sm/md/lg/pill
         --motion-fast/base/slow  --motion-ease-out  --motion-ease-in
-布局层  --layout-rail-w  --layout-side-w  --layout-timeline-w
+布局层  --layout-rail-w  --layout-side-w  --layout-side-rail  --layout-timeline-w
 ```
 
 > **注 1 · 侧栏单列 `--surface-rail`**：本表原写 `--bg-rail` 合并进 `--surface-sunken`。但 `--bg-rail`

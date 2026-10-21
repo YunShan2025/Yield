@@ -7,6 +7,10 @@ import type { NavId } from "@/types";
 
 type NavSidebarProps = {
   onCollapse?: () => void;
+  /** 窄窗图标条：右侧边缘按钮改为「展开侧栏」而非「折叠」。 */
+  onExpandRail?: () => void;
+  /** 窄窗图标条状态：只显示图标，条目名进 title 提示。 */
+  railed?: boolean;
   onResizeStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
   onResetWidth?: () => void;
 };
@@ -18,7 +22,13 @@ type NavEntry = {
   count?: number | null;
 };
 
-export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSidebarProps) {
+export function NavSidebar({
+  onCollapse,
+  onExpandRail,
+  railed = false,
+  onResizeStart,
+  onResetWidth,
+}: NavSidebarProps) {
   const nav = useAppStore((s) => s.nav);
   const setNav = useAppStore((s) => s.setNav);
   const tasks = useAppStore((s) => s.tasks);
@@ -35,7 +45,7 @@ export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSideb
       items: [
         { id: "today", label: "今日", icon: "today", count: counts.today },
         { id: "inbox", label: "待办箱", count: counts.inbox, icon: "inbox" },
-        { id: "week", label: "周清单", icon: "review" },
+        { id: "week", label: "周清单", icon: "checklist" },
       ],
     },
     {
@@ -65,7 +75,7 @@ export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSideb
     {
       label: "更多",
       items: [
-        { id: "anniversaries", label: "纪念日", icon: "heart" },
+        { id: "anniversaries", label: "纪念日", icon: "gift" },
         { id: "settings", label: "设置", icon: "settings" },
         { id: "trash", label: "回收站", icon: "trash" },
       ],
@@ -86,16 +96,24 @@ export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSideb
       </div>
 
       {sections.map((section) => (
-        <div key={section.label} className="nav-section">
+        <div
+          key={section.label}
+          className="nav-section"
+          title={railed ? [section.label, section.note].filter(Boolean).join(" —— ") : undefined}
+        >
           <div className="nav-section-label" title={section.note}>{section.label}</div>
           {section.items.map(({ id, label, icon, count }) => (
             <button
               key={id}
               type="button"
               className={`nav-item ${nav === id ? "active" : ""}`}
+              title={railed ? label : undefined}
               onClick={() => setNav(id)}
             >
-              <span className="nav-item-label"><AppIcon name={icon} size={17} />{label}</span>
+              <span className="nav-item-label">
+                <span className="nav-item-icon"><AppIcon name={icon} size={railed ? 19 : 17} /></span>
+                <span className="nav-item-text">{label}</span>
+              </span>
               {count != null ? <span className="nav-count">{count}</span> : null}
             </button>
           ))}
@@ -114,11 +132,11 @@ export function NavSidebar({ onCollapse, onResizeStart, onResetWidth }: NavSideb
         <button
           type="button"
           className="nav-edge-collapse"
-          title="折叠侧栏，主区域占满窗口"
-          aria-label="折叠侧栏"
-          onClick={onCollapse}
+          title={railed ? "展开侧栏" : "折叠侧栏，主区域占满窗口"}
+          aria-label={railed ? "展开侧栏" : "折叠侧栏"}
+          onClick={railed && onExpandRail ? onExpandRail : onCollapse}
         >
-          ◂
+          {railed ? "»" : "◂"}
         </button>
       ) : null}
     </aside>

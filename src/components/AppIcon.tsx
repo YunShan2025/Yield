@@ -4,6 +4,8 @@ export type AppIconName =
   | "memo"
   | "timer"
   | "heart"
+  | "checklist"
+  | "gift"
   | "review"
   | "panel"
   | "trash"
@@ -29,6 +31,10 @@ const paths: Record<AppIconName, ReactNode> = {
   memo: <><path d="M5 4.75A1.75 1.75 0 0 1 6.75 3h7.5A1.75 1.75 0 0 1 16 4.75v10.5A1.75 1.75 0 0 1 14.25 17h-7.5A1.75 1.75 0 0 1 5 15.25z" /><path d="M8 7h5M8 10h5M8 13h3" /></>,
   timer: <><circle cx="10" cy="11" r="6.5" /><path d="M10 7.5V11l2.25 1.5M8 2.5h4M14.5 5l1.5-1.5" /></>,
   heart: <path d="M10 16.5S3.75 13 3.75 8.25A3.25 3.25 0 0 1 10 7a3.25 3.25 0 0 1 6.25 1.25C16.25 13 10 16.5 10 16.5Z" />,
+  /** 周清单：勾选清单 —— 与「今日」的日历区分，两者同在「积微」分组里相邻。 */
+  checklist: <><path d="M3.5 5.75l1.5 1.5L7.6 4.4" /><path d="M10 5.75h6.5" /><path d="M3.5 10.25l1.5 1.5L7.6 8.9" /><path d="M10 10.25h6.5" /><path d="M3.5 14.75h3.4" /><path d="M10 14.75h6.5" /></>,
+  /** 纪念日：礼盒 —— 与「习惯」的心形区分。 */
+  gift: <><rect x="3.5" y="9" width="13" height="7.5" rx="1.5" /><path d="M2.5 5.5h15V9h-15z" /><path d="M10 5.5v11" /></>,
   review: <><path d="M4 10a6 6 0 1 0 2-4.47" /><path d="M4 4.5v4h4M10 6.5V10l2.5 1.5" /></>,
   panel: <><rect x="3" y="4" width="14" height="12" rx="2" /><path d="M7.5 4v12M10.5 8h3M10.5 11h3" /></>,
   trash: <><path d="M4.5 6h11M8 3.5h4M6 6l.65 10h6.7L14 6M8.5 9v4M11.5 9v4" /></>,

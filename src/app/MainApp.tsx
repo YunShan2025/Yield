@@ -45,9 +45,15 @@ import {
 
 const NAV_COLLAPSE_KEY = "minimal.navCollapsed";
 const NAV_WIDTH_KEY = "minimal.navWidth";
-const NAV_WIDTH_DEFAULT = 272;
+// 侧栏默认宽:与 DESIGN.md「侧栏宽 232px」一致。
+const NAV_WIDTH_DEFAULT = 232;
+// 232 之前的旧默认值。读到的宽度正好等于它时按「用户没动过」处理,迁移到新默认。
+const NAV_WIDTH_LEGACY_DEFAULT = 272;
 const NAV_WIDTH_MIN = 200;
 const NAV_WIDTH_MAX = 440;
+// 窄窗图标条:窗口窄于此宽度时侧栏收成图标列,把宽度让给主区。
+// 判定放在 JS —— 窗口宽度是窗口属性,CSS 媒体查询拿不到这层语义。
+const NAV_RAIL_BREAKPOINT = 1330;
 const REMINDER_RESYNC_MS = 6 * 60 * 60 * 1000;
 
 // Android 返回键桥：MainActivity.onBackPressed 经 evaluateJavascript 调用此钩子，
@@ -185,25 +191,43 @@ export function MainApp() {
   const [navWidth, setNavWidth] = useState<number>(() => {
     try {
       const value = Number(localStorage.getItem(NAV_WIDTH_KEY));
-      return Number.isFinite(value) && value >= NAV_WIDTH_MIN && value <= NAV_WIDTH_MAX
-        ? Math.round(value)
-        : NAV_WIDTH_DEFAULT;
+      if (!Number.isFinite(value) || value < NAV_WIDTH_MIN || value > NAV_WIDTH_MAX) {
+        return NAV_WIDTH_DEFAULT;
+      }
+      // 旧默认值 272 视为「没动过」,迁移到契约里的 232;用户自己拉过的宽度保留。
+      if (value === NAV_WIDTH_LEGACY_DEFAULT) return NAV_WIDTH_DEFAULT;
+      return Math.round(value);
     } catch {
       return NAV_WIDTH_DEFAULT;
     }
   });
+
+  // 窗口宽度:窄窗(< NAV_RAIL_BREAKPOINT)时侧栏自动收成图标条。
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? NAV_RAIL_BREAKPOINT : window.innerWidth,
+  );
+  // 用户从图标条手动展开后,本次窗口尺寸不变期间不再自动收起。
+  const [navRailExpanded, setNavRailExpanded] = useState(false);
   useEffect(() => {
-    document.documentElement.style.setProperty("--layout-side-w", `${navWidth}px`);
-    try {
-      localStorage.setItem(NAV_WIDTH_KEY, String(navWidth));
-    } catch {
-      /* ignore */
-    }
-  }, [navWidth]);
+    const onResize = () => {
+      setViewportWidth(window.innerWidth);
+      // 尺寸一变就重新按宽度判定:手动展开只在尺寸不变期间有效。
+      setNavRailExpanded(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // 图标条:侧栏让位给主区。用户主动隐藏侧栏时不参与。
+  const navRailed =
+    !navCollapsed && !navRailExpanded && viewportWidth < NAV_RAIL_BREAKPOINT && !isMobileShell();
   const onNavResizePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
     const startX = event.clientX;
-    const startWidth = navWidth;
+    // 图标条下拖右边界 = 展开侧栏并继续调宽:以展开宽度起算,
+    // 免得指针位移被 64→232 那一下跳变吃掉。
+    const startWidth = navRailed ? NAV_WIDTH_DEFAULT : navWidth;
+    if (navRailed) setNavRailExpanded(true);
     const onMove = (move: PointerEvent) => {
       setNavWidth(
         Math.min(NAV_WIDTH_MAX, Math.max(NAV_WIDTH_MIN, Math.round(startWidth + move.clientX - startX))),
@@ -388,11 +412,13 @@ export function MainApp() {
     } catch {
       /* ignore */
     }
+    // 侧栏形态:collapsed(用户隐藏)/ railed(窄窗图标条)/ expanded(完整侧栏)。
     document.documentElement.dataset.nav =
-      navCollapsed ? "collapsed" : "expanded";
-  }, [navCollapsed]);
+      navCollapsed ? "collapsed" : navRailed ? "railed" : "expanded";
+  }, [navCollapsed, navRailed]);
 
   // 侧栏宽度:写入 --layout-side-w 供 .app-body 网格使用,并持久化(仅本地,不进数据库)。
+  // 图标条的实际列宽由 CSS 令牌 --layout-side-rail 决定,这里记的是用户的偏好宽度。
   useEffect(() => {
     document.documentElement.style.setProperty("--layout-side-w", `${navWidth}px`);
     try {
@@ -728,7 +754,9 @@ export function MainApp() {
         className={`app-body ${detailOpen ? "detail-open" : ""} ${navCollapsed ? "nav-collapsed" : ""}`}
       >
         <NavSidebar
+          railed={navRailed}
           onCollapse={() => setNavCollapsed(true)}
+          onExpandRail={() => setNavRailExpanded(true)}
           onResizeStart={navCollapsed ? undefined : onNavResizePointerDown}
           onResetWidth={() => setNavWidth(NAV_WIDTH_DEFAULT)}
         />

@@ -3782,6 +3782,82 @@ body.nav-resizing {
   background: var(--accent);
 }
 
+/* ── 窄窗图标条 ────────────────────────────────────────────────────────────
+   窗口窄于 1330px 时侧栏收成 64px 图标列,把宽度让给主区:分组标题退化为
+   分隔线,条目名进 title 提示,计数变角标。判定在 MainApp.tsx
+   (NAV_RAIL_BREAKPOINT),这里只管形态。 */
+html[data-nav="railed"] .app-body {
+  grid-template-columns: var(--layout-side-rail) 1fr;
+}
+
+html[data-nav="railed"] .nav-side-scroll {
+  padding: 20px 8px;
+  align-items: center;
+}
+
+html[data-nav="railed"] .brand-row {
+  justify-content: center;
+  margin-bottom: 9px;
+}
+
+/* 品牌只留麦穗标记,「有秋」字样与副题让位给图标。 */
+html[data-nav="railed"] .brand-lockup > div {
+  display: none;
+}
+
+html[data-nav="railed"] .nav-section {
+  width: 100%;
+}
+
+/* 分组标题退化为 1px 分隔线,分组关系靠留白与分隔线保住。 */
+html[data-nav="railed"] .nav-section-label {
+  height: 1px;
+  margin: 7px 8px;
+  font-size: 0;
+  background: var(--border);
+  border-radius: 1px;
+}
+
+html[data-nav="railed"] .nav-item {
+  position: relative;
+  justify-content: center;
+  padding: 7px 0;
+}
+
+html[data-nav="railed"] .nav-item-label {
+  gap: 0;
+}
+
+html[data-nav="railed"] .nav-item-text {
+  display: none;
+}
+
+/* 计数收成图标右上角标,数字比圆点更有用(5 / 9 分得清)。
+   底色用面板色而非实心强调色——实心蓝在 64px 窄栏里比图标还重,喧宾夺主。 */
+html[data-nav="railed"] .nav-count {
+  position: absolute;
+  top: 2px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent-strong);
+  background: var(--surface-panel);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+/* 边缘按钮收窄,给角标让位。 */
+html[data-nav="railed"] .nav-edge-collapse {
+  width: 14px;
+  height: 48px;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--steel-150), var(--accent));
   box-shadow: 0 8px 20px var(--slate-150-19);
