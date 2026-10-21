@@ -10,11 +10,6 @@
   background: var(--white-88);
 }
 
-.nav-side-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: var(--steel-500-22) transparent;
-}
-
 .nav-side-scroll::-webkit-scrollbar,
 .task-scroll::-webkit-scrollbar,
 .scope-board::-webkit-scrollbar {
@@ -121,16 +116,6 @@ select {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
 
 .app-root {
   display: flex;
@@ -825,10 +810,9 @@ select {
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 4px 14px var(--slate-150-12);
-  transition:
-    transform 140ms ease,
-    box-shadow 140ms ease,
-    border-color 140ms ease;
+  transition: transform calc(140ms * var(--motion-scale)) ease,
+    box-shadow calc(140ms * var(--motion-scale)) ease,
+    border-color calc(140ms * var(--motion-scale)) ease;
 }
 
 .timeline-h-event::before {
@@ -956,7 +940,7 @@ select {
 .day-agenda .expand-task {
   position: relative;
   isolation: isolate;
-  transition: border-color 260ms ease;
+  transition: border-color calc(260ms * var(--motion-scale)) ease;
 }
 
 .day-agenda .expand-task::before {
@@ -967,7 +951,7 @@ select {
   background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 260ms ease;
+  transition: opacity calc(260ms * var(--motion-scale)) ease;
 }
 
 .day-agenda .expand-task > * {
@@ -1067,7 +1051,7 @@ select {
   box-shadow: 0 18px 50px var(--ink-950-a-20);
   backdrop-filter: blur(14px);
   pointer-events: none;
-  animation: timeline-popover-in 120ms ease-out;
+  animation: timeline-popover-in calc(120ms * var(--motion-scale)) ease-out;
 }
 
 .timeline-task-popover-head {
@@ -1280,7 +1264,7 @@ select {
 .expand-caret {
   color: var(--text-muted);
   font-size: 12px;
-  transition: transform 0.15s ease;
+  transition: transform calc(150ms * var(--motion-scale)) ease;
   display: inline-block;
 }
 

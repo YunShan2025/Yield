@@ -70,7 +70,7 @@
   border-radius: 12px;
   background: var(--surface-raised);
   box-shadow: var(--shadow-1);
-  animation: select-menu-in 0.14s ease-out;
+  animation: select-menu-in calc(140ms * var(--motion-scale)) ease-out;
 }
 
 @keyframes select-menu-in {
@@ -193,7 +193,7 @@
   box-shadow: var(--shadow-1);
   display: grid;
   gap: 8px;
-  animation: time-picker-in 0.14s ease-out;
+  animation: time-picker-in calc(140ms * var(--motion-scale)) ease-out;
 }
 
 .date-picker-head {

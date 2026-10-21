@@ -178,8 +178,6 @@
 
 .today-timeline .timeline-h-scroll {
   max-height: 480px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--steel-500-38) transparent;
 }
 
 .today-timeline .timeline-h-scroll::-webkit-scrollbar {
@@ -260,7 +258,7 @@
 }
 
 .desktop-notification-stack { position: fixed; z-index: 120; top: 54px; right: 24px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 11px; pointer-events: none; }
-.desktop-notification-card { position: relative; display: grid; grid-template-columns: 5px 1fr; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border)); border-radius: 18px; color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 22px 60px var(--ink-650-20), inset 0 1px var(--white-42); backdrop-filter: blur(22px) saturate(135%); pointer-events: auto; animation: desktop-notification-enter 260ms cubic-bezier(.2,.8,.2,1) both; }
+.desktop-notification-card { position: relative; display: grid; grid-template-columns: 5px 1fr; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border)); border-radius: 18px; color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 22px 60px var(--ink-650-20), inset 0 1px var(--white-42); backdrop-filter: blur(22px) saturate(135%); pointer-events: auto; animation: desktop-notification-enter calc(260ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1) both; }
 .desktop-notification-mark { background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 45%, var(--green-150))); }
 .desktop-notification-mark span { display: block; width: 5px; height: 32%; margin-top: 20px; background: var(--white-50); }
 .desktop-notification-content { min-width: 0; padding: 15px 16px 14px; }
@@ -279,7 +277,7 @@
 @keyframes desktop-notification-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .desktop-notification-card { animation: none; } }
 
-.version-update-notice { position: fixed; z-index: 80; right: 24px; top: 54px; width: min(390px, calc(100vw - 32px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 17px; border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius: 20px; color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 24px 70px var(--ink-800-24); backdrop-filter: blur(24px) saturate(140%); animation: desktop-notification-enter 260ms cubic-bezier(.2,.8,.2,1) both; }
+.version-update-notice { position: fixed; z-index: 80; right: 24px; top: 54px; width: min(390px, calc(100vw - 32px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 17px; border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius: 20px; color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 24px 70px var(--ink-800-24); backdrop-filter: blur(24px) saturate(140%); animation: desktop-notification-enter calc(260ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1) both; }
 .version-update-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: var(--accent); background: var(--accent-soft); }
 .version-update-copy > span { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
 .version-update-copy h3 { margin: 3px 0 6px; font: 700 18px/1.25 var(--font-display); }
@@ -470,8 +468,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 14px;
   background: var(--surface-sunken);
-  transition:
-    border-color var(--motion-fast),
+  transition: border-color var(--motion-fast),
     background var(--motion-fast),
     box-shadow var(--motion-fast);
 }
@@ -519,8 +516,7 @@
   color: var(--text-muted);
   background: color-mix(in srgb, var(--text-muted) 11%, transparent);
   cursor: pointer;
-  transition:
-    color var(--motion-fast),
+  transition: color var(--motion-fast),
     background var(--motion-fast);
 }
 
@@ -626,8 +622,7 @@
   min-height: 38px;
   border-color: var(--border-strong);
   background: var(--surface-sunken);
-  transition:
-    border-color var(--motion-fast),
+  transition: border-color var(--motion-fast),
     background var(--motion-fast),
     box-shadow var(--motion-fast);
 }
@@ -725,7 +720,7 @@
 :root[data-theme="dark"] .scope-card,
 :root[data-theme="dark"] .expand-task,
 :root[data-theme="dark"] .project-card {
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
   border-color: var(--border-strong);
   background: var(--surface-panel);
 }
@@ -768,7 +763,7 @@
   :root[data-theme="system"] .scope-card,
   :root[data-theme="system"] .expand-task,
   :root[data-theme="system"] .project-card {
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
     border-color: var(--border-strong);
     background: var(--surface-panel);
   }

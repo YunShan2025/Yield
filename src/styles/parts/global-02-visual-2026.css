@@ -12,8 +12,7 @@ button,
 input,
 textarea,
 select {
-  transition:
-    color var(--motion-fast),
+  transition: color var(--motion-fast),
     border-color var(--motion-fast),
     background-color var(--motion-fast),
     box-shadow var(--motion-fast),

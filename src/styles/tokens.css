@@ -42,10 +42,14 @@
   --radius-lg: 18px;
   --radius-pill: 999px;
 
-  /* 动效：时长与缓动分开，便于成对使用 */
-  --motion-fast: 160ms;
-  --motion-base: 240ms;
-  --motion-slow: 320ms;
+  /* 动效：时长与缓动分开，便于成对使用。
+     时长统一乘 --motion-scale，减弱动效时由 :root 把它压到 0，
+     因此不需要用强制优先级兜底。 */
+  --motion-scale: 1;
+  --motion-iterations: infinite;
+  --motion-fast: calc(160ms * var(--motion-scale));
+  --motion-base: calc(240ms * var(--motion-scale));
+  --motion-slow: calc(320ms * var(--motion-scale));
   --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
 
@@ -359,6 +363,17 @@
   --azure-550: #7d9be8;
   --amber-900-55: rgba(217, 119, 6, 0.55);
   --amber-900-16: rgba(217, 119, 6, 0.16);
+}
+
+/* 减弱动效：把动效时长整体压到 0、循环次数收到 1。
+   放在主题无关层之后（同样 (0,1,0)，靠源码顺序取胜），
+   因此不需要强制优先级。 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-scale: 0.0001;
+    --motion-iterations: 1;
+    scroll-behavior: auto;
+  }
 }
 
 /* ============================================================

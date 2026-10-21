@@ -16,7 +16,7 @@
 }
 
 .streak-pop {
-  animation: pop 400ms ease;
+  animation: pop calc(400ms * var(--motion-scale)) ease;
 }
 
 @keyframes pop {

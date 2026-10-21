@@ -6,13 +6,13 @@
 html,
 body,
 #root {
-  background: transparent !important;
+  background: transparent;
 }
 
 html:not([data-desktop-widget]),
 html:not([data-desktop-widget]) body,
 html:not([data-desktop-widget]) #root {
-  background: transparent !important;
+  background: transparent;
 }
 
 html:not([data-desktop-widget]) #root {

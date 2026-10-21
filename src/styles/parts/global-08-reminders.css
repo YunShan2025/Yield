@@ -294,7 +294,7 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-  animation: timer-live-pulse 1.6s ease-in-out infinite;
+  animation: timer-live-pulse calc(1600ms * var(--motion-scale)) ease-in-out var(--motion-iterations);
 }
 
 @keyframes timer-live-pulse {
@@ -335,7 +335,7 @@
   height: 100%;
   border-radius: inherit;
   background: var(--accent);
-  transition: width 200ms linear;
+  transition: width calc(200ms * var(--motion-scale)) linear;
 }
 
 .timer-actions {

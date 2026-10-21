@@ -126,7 +126,7 @@
 .ledger-budget-input.compact span { font-size: 13px; padding-left: 9px; }
 .ledger-budget-input.compact input { min-height: 32px; padding: 3px 8px; font-size: 14px; }
 .ledger-budget-editor small { color: var(--text-muted); font-size: 10px; }
-.ledger-budget-editor .ledger-error { margin: 0 !important; }
+.ledger-budget-editor .ledger-error { margin: 0; }
 .ledger-progress {
   height: 6px;
   border-radius: 99px;
@@ -138,7 +138,7 @@
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--accent), var(--azure-500));
-  transition: width 0.25s ease;
+  transition: width calc(250ms * var(--motion-scale)) ease;
 }
 
 .ledger-insight-grid {
@@ -275,7 +275,7 @@
   flex: none;
   font-size: 10px;
   color: var(--text-muted);
-  transition: transform 0.15s;
+  transition: transform calc(150ms * var(--motion-scale));
 }
 .ledger-day-caret.collapsed { transform: rotate(-90deg); }
 .ledger-row {
@@ -305,7 +305,7 @@
 }
 .ledger-row > strong.income { color: var(--ledger-income); }
 .ledger-row > strong.expense { color: var(--ledger-expense); }
-.ledger-row-actions { opacity: 0; transition: opacity 0.15s; }
+.ledger-row-actions { opacity: 0; transition: opacity calc(150ms * var(--motion-scale)); }
 .ledger-row:hover .ledger-row-actions,
 .ledger-row:focus-within .ledger-row-actions { opacity: 1; }
 .ledger-row-actions button { padding: 5px 9px; font-size: 12px; }
@@ -341,7 +341,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   border-left: 1px solid var(--border);
   box-shadow: -14px 0 42px var(--slate-200-11);
   color: var(--text-primary);
-  animation: ledger-in 0.22s ease-out;
+  animation: ledger-in calc(220ms * var(--motion-scale)) ease-out;
 }
 .ledger-drawer-head {
   flex: none;
@@ -504,7 +504,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   color: var(--text-primary);
 }
 .ledger-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.ledger-error { color: var(--ledger-expense) !important; margin: -5px 0 12px !important; }
+.ledger-error { color: var(--ledger-expense); margin: -5px 0 12px; }
 
 .ledger-toast {
   position: fixed;
@@ -568,12 +568,12 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 }
 .ledger-budget-input input::placeholder { color: var(--text-muted); }
 .ledger-checkbox {
-  display: flex !important;
+  display: flex;
   align-items: center;
   gap: 8px;
   margin: 4px 0 14px;
-  font-weight: 500 !important;
-  color: var(--text-secondary) !important;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 .ledger-checkbox input {
   width: 16px;

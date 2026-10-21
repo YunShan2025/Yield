@@ -1,7 +1,7 @@
 /* Solid shells: 清昼 / 静夜 — outer radius + integrated chrome */
 :root[data-theme="light"] body,
 :root[data-theme="dark"] body {
-  background: transparent !important;
+  background: transparent;
 }
 
 :root[data-theme="light"] #root,
@@ -123,7 +123,7 @@
 }
 
 @media (prefers-color-scheme: light) {
-  :root[data-theme="system"] body { background: transparent !important; }
+  :root[data-theme="system"] body { background: transparent; }
   :root[data-theme="system"] #root,
   :root[data-theme="system"] .app-root {
     height: 100%;
@@ -149,7 +149,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="system"] body { background: transparent !important; }
+  :root[data-theme="system"] body { background: transparent; }
   :root[data-theme="system"] #root,
   :root[data-theme="system"] .app-root {
     height: 100%;

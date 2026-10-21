@@ -74,7 +74,7 @@
     :root[data-theme="system"] .heat-cell { border-color: var(--mist-250-14); }
   }
 }
-button.heat-cell { cursor: pointer; transition: transform 100ms ease, outline-color 100ms ease; }
+button.heat-cell { cursor: pointer; transition: transform calc(100ms * var(--motion-scale)) ease, outline-color calc(100ms * var(--motion-scale)) ease; }
 button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent); }
 .heatmap-legend { display: flex; align-items: center; justify-content: flex-end; gap: 5px; color: var(--text-muted); font-size: 10px; }
 .heatmap-legend .heat-cell { flex: 0 0 12px; width: 12px; height: 12px; aspect-ratio: auto; }
@@ -83,7 +83,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 /* 目标为空时,空状态占满整行(此前只占一个 260px 网格列,框显得很窄)。 */
 .goal-grid .empty-state { grid-column: 1 / -1; padding: 44px 24px; font-size: 13px; }
-.goal-card { display: block; width: 100%; padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-panel); color: var(--text-primary); text-align: left; cursor: pointer; box-shadow: var(--shadow-1); transition: transform 140ms ease, border-color 140ms ease; }
+.goal-card { display: block; width: 100%; padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-panel); color: var(--text-primary); text-align: left; cursor: pointer; box-shadow: var(--shadow-1); transition: transform calc(140ms * var(--motion-scale)) ease, border-color calc(140ms * var(--motion-scale)) ease; }
 .goal-card:hover { transform: translateY(-2px); border-color: var(--accent); }
 /* 收起来的目标（已完成 / 已放弃）弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
 .goal-card.is-finished { opacity: .72; box-shadow: none; }
@@ -93,7 +93,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-card h3 { margin: 14px 0 6px; font-size: 17px; }
 .goal-card p { margin: 0; color: var(--text-secondary); font-size: 12px; }
 .goal-progress-track { height: 7px; margin: 14px 0 8px; overflow: hidden; border-radius: 999px; background: var(--surface-sunken); }
-.goal-progress-track i { display: block; height: 100%; border-radius: inherit; transition: width 240ms ease; }
+.goal-progress-track i { display: block; height: 100%; border-radius: inherit; transition: width calc(240ms * var(--motion-scale)) ease; }
 .goal-card footer { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11px; }
 
 .goal-detail > .text-btn { margin-bottom: 12px; }
@@ -117,7 +117,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* btn-primary 在 global-05 中默认全宽,组合条里应为自适应按钮。 */
 .achievement-compose .btn-primary { flex: 0 0 auto; width: auto; }
 .achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
-.achievement-card { position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-panel); box-shadow: var(--shadow-1); transition: transform 140ms ease, border-color 140ms ease; }
+.achievement-card { position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-panel); box-shadow: var(--shadow-1); transition: transform calc(140ms * var(--motion-scale)) ease, border-color calc(140ms * var(--motion-scale)) ease; }
 .achievement-card:hover { transform: translateY(-2px); border-color: var(--accent); }
 .achievement-card.pinned { border-color: color-mix(in srgb, var(--amber-550) 55%, var(--border)); box-shadow: 0 8px 20px var(--amber-550-14); }
 .achievement-card.pinned:hover { border-color: var(--amber-550); }
@@ -180,7 +180,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   .growth-tabs { overflow-x: auto; }
   .goal-grid, .achievement-grid { grid-template-columns: 1fr; }
   .goal-detail-hero { flex-direction: column; gap: 14px; }
-  .goal-detail-actions > *, .achievement-compose > * { width: 100% !important; flex: 1 0 100%; }
+  .goal-detail-actions > *, .achievement-compose > *, .achievement-compose .btn-primary { width: 100%; flex: 1 0 100%; }
   .goal-form-grid { grid-template-columns: 1fr; }
   .goal-create-actions .item-action-btn { flex: 1 1 0; }
 }
@@ -245,7 +245,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* 习惯卡片的每周目标进度：次数口径，与今日页进度条一致。 */
 .habit-week-progress { display: flex; align-items: center; gap: 8px; }
 .habit-week-track { flex: 1 1 auto; height: 5px; overflow: hidden; border-radius: 99px; background: var(--surface-rail); }
-.habit-week-track i { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .3s ease; }
+.habit-week-track i { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width calc(300ms * var(--motion-scale)) ease; }
 .habit-week-progress em { flex: 0 0 auto; color: var(--text-muted); font-size: 11px; font-style: normal; }
 .habit-week-progress.is-full em { color: var(--accent); font-weight: 700; }
 /* 列表/卡片动作按钮组：习惯卡先落地，今日/待办行、标签、项目、回收站、
@@ -325,7 +325,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
   opacity: 0;
   pointer-events: none;
-  transition: opacity 260ms ease;
+  transition: opacity calc(260ms * var(--motion-scale)) ease;
 }
 .item-action-primary > * {
   position: relative;
@@ -353,10 +353,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 /* 只在用户刚完成的那一次渲染播放落金动效,进场时不重播。 */
 .item-action-primary.is-flash {
-  animation: task-action-confirm 380ms cubic-bezier(.2, .8, .2, 1);
+  animation: task-action-confirm calc(380ms * var(--motion-scale)) cubic-bezier(.2, .8, .2, 1);
 }
 .item-action-primary.is-flash > svg {
-  animation: task-action-icon-pop 420ms cubic-bezier(.2, .8, .2, 1) both;
+  animation: task-action-icon-pop calc(420ms * var(--motion-scale)) cubic-bezier(.2, .8, .2, 1) both;
 }
 @keyframes task-action-confirm {
   0% { transform: scale(.96); }
@@ -515,7 +515,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-rhythm-chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(8px, 2vw, 20px); height: 218px; margin-top: 18px; padding-top: 12px; border-bottom: 1px solid var(--border); background: repeating-linear-gradient(to bottom, transparent 0, transparent 49px, color-mix(in srgb, var(--border) 65%, transparent) 50px); }
 .review-day { display: grid; grid-template-rows: 1fr auto auto; min-width: 0; text-align: center; }
 .review-bar-pair { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 158px; }
-.review-bar-pair i { width: min(14px, 42%); min-height: 5px; border-radius: 5px 5px 1px 1px; transition: height .3s ease; }
+.review-bar-pair i { width: min(14px, 42%); min-height: 5px; border-radius: 5px 5px 1px 1px; transition: height calc(300ms * var(--motion-scale)) ease; }
 .review-day strong { margin-top: 7px; font-size: 11px; }
 .review-day > span { color: var(--text-muted); font-size: 9px; }
 .review-goals .review-goal-list { margin-top: 15px; }
@@ -533,7 +533,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .review-breakdown-label i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
 .review-breakdown-label span { overflow: hidden; font-size: 12.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .review-breakdown-track { height: 6px; overflow: hidden; border-radius: 99px; background: var(--surface-rail); }
-.review-breakdown-track i { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .3s ease; }
+.review-breakdown-track i { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width calc(300ms * var(--motion-scale)) ease; }
 .review-breakdown-row strong { font-size: 12px; }
 .review-breakdown-row em { color: var(--text-muted); font-size: 11px; font-style: normal; text-align: right; }
 /* 桌面端窄窗口（最小窗口 800px、侧栏展开时工作区约 500px）：
@@ -753,7 +753,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   padding: 10px 16px;
   border-radius: 999px;
   z-index: 60;
-  animation: fadeUp 200ms ease;
+  animation: fadeUp calc(200ms * var(--motion-scale)) ease;
 }
 
 /* 标签页 */
@@ -780,7 +780,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface-panel);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color calc(160ms * var(--motion-scale)) ease, box-shadow calc(160ms * var(--motion-scale)) ease;
 }
 
 .tag-card.is-active {
@@ -846,7 +846,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   border: 2px solid transparent;
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 140ms ease, transform 140ms ease;
+  transition: border-color calc(140ms * var(--motion-scale)) ease, transform calc(140ms * var(--motion-scale)) ease;
 }
 
 .tag-color-palette .color-swatch:hover {

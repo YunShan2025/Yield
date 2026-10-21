@@ -1,6 +1,6 @@
 /* Glass curtain — one outer shell, corners on the window edge. */
 :root[data-theme="glass"] body {
-  background: transparent !important;
+  background: transparent;
 }
 
 :root[data-theme="glass"],
@@ -168,7 +168,7 @@
 }
 
 :root[data-theme="glass"] .nav-item.active {
-  color: var(--white) !important;
+  color: var(--white);
   border-color: var(--white-18);
   background: var(--white-14);
   box-shadow: inset 0 1px var(--white-16);
@@ -295,7 +295,7 @@
   text-align: left;
   background: var(--surface-raised);
   box-shadow: var(--shadow-1);
-  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  transition: transform calc(180ms * var(--motion-scale)) ease, border-color calc(180ms * var(--motion-scale)) ease, box-shadow calc(180ms * var(--motion-scale)) ease;
 }
 
 .theme-preview:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }

@@ -1,6 +1,6 @@
 /* Dawn Glass — one light frosted shell, corners on the window edge. */
 :root[data-theme="dawn"] body {
-  background: transparent !important;
+  background: transparent;
 }
 
 :root[data-theme="dawn"],
@@ -73,7 +73,7 @@
 }
 
 :root[data-theme="dawn"] .nav-item.active {
-  color: var(--accent-strong) !important;
+  color: var(--accent-strong);
   border-color: var(--navy-450-14);
   background: var(--white-72);
   box-shadow: 0 5px 14px var(--navy-250-8), inset 0 1px var(--white-95);
