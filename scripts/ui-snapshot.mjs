@@ -2,6 +2,8 @@
 // 用法: node scripts/ui-snapshot.mjs <outDir> [baseUrl]
 //
 // 桌面端通过侧栏 .nav-item 切换视图；移动端走 ?shell=mobile 调试口 + 底部导航。
+// 视口三档：desktop 1240×720 = 桌面端默认窗口（窄窗图标条态），
+// wide 1600×1000 覆盖展开态侧栏，mobile 390×844 走移动壳。
 // 时钟被固定，避免时间轴「此刻」标记随真实时间漂移。
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -59,8 +61,8 @@ mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ executablePath: findChrome() });
 const log = [];
 
-for (const vp of [{ name: "desktop", width: 1600, height: 1000 }, { name: "mobile", width: 390, height: 844 }]) {
-  const views = vp.name === "desktop" ? DESKTOP_VIEWS : MOBILE_VIEWS;
+for (const vp of [{ name: "desktop", width: 1240, height: 720 }, { name: "wide", width: 1600, height: 1000 }, { name: "mobile", width: 390, height: 844 }]) {
+  const views = vp.name === "mobile" ? MOBILE_VIEWS : DESKTOP_VIEWS;
   const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   const errors = [];

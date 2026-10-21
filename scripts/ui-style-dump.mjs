@@ -32,7 +32,7 @@ const PROPS = ["color","background-color","background-image","border-top-color",
 
 const browser = await chromium.launch({ executablePath: findChrome() });
 const result = {};
-for (const vp of [{name:"desktop",width:1600,height:1000},{name:"mobile",width:390,height:844}]) {
+for (const vp of [{name:"desktop",width:1240,height:720},{name:"wide",width:1600,height:1000},{name:"mobile",width:390,height:844}]) {
   const ctx = await browser.newContext({ viewport:{width:vp.width,height:vp.height} });
   const page = await ctx.newPage();
   await page.clock.install({ time: new Date("2026-10-21T11:00:00+08:00") }).catch(()=>{});
