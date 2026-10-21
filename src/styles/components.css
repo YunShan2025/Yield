@@ -229,6 +229,14 @@ select {
   box-shadow: 2px 0 8px var(--ink-950-a-8);
 }
 
+/* 边缘按钮靠 translateY(-50%) 垂直居中,而全局 button:active 只写 transform:
+   scale(0.98) —— 直接套用会把居中位移整个顶掉,按下时按钮往下掉半个身位。
+   这里把居中位移与按压缩放合成,按压时位置不动。 */
+.nav-edge-collapse:active:not(:disabled),
+.nav-edge-expand:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.98);
+}
+
 .nav-edge-collapse:hover,
 .nav-edge-expand:hover {
   color: var(--accent);
