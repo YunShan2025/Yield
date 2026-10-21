@@ -88,8 +88,8 @@ src-tauri/
 ## 7. 数据层
 
 - **存储位置**：桌面 `%APPDATA%\com.yunshan.yield\app.db`（SQLite 单库），WebView2 配置在 `%LOCALAPPDATA%\com.yunshan.yield`；Android 为应用私有数据目录。
-- **21 张表**，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 删除，不再列出）：
-  - 任务域：`tasks`、`tags`、`task_tags`、`attachments`、`task_events`、`projects`；
+- **20 张表**，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 / v26 删除，不再列出）：
+  - 任务域：`tasks`、`tags`、`task_tags`、`task_events`、`projects`；
   - 目标与成长：`goals`、`goal_milestones`、`goal_entries`、`achievements`、`habit_checks`、`habits`；
   - 收支（观流账本）：`ledger_accounts`、`ledger_categories`、`ledger_budgets`、`ledger_transactions`；
   - 回望：`memos`、`anniversaries`；

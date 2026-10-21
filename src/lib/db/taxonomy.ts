@@ -1,5 +1,4 @@
 import type {
-  Attachment,
   Habit,
   HabitCheck,
   HabitDraft,
@@ -124,46 +123,6 @@ export async function setTaskTags(taskId: string, tagIds: string[]): Promise<voi
     await linkTag(taskId, tagId);
   }
 }
-
-/* Attachments */
-export async function fetchAttachments(taskId: string): Promise<Attachment[]> {
-  const db = await getDb();
-  return db.select<Attachment[]>(
-    "SELECT * FROM attachments WHERE task_id=$1 ORDER BY created_at DESC",
-    [taskId],
-  );
-}
-
-export async function fetchAllAttachments(): Promise<Attachment[]> {
-  const db = await getDb();
-  return db.select<Attachment[]>("SELECT * FROM attachments");
-}
-
-export async function addAttachment(
-  taskId: string,
-  data: { kind: Attachment["kind"]; name: string; path: string },
-): Promise<Attachment> {
-  const db = await getDb();
-  const item: Attachment = {
-    id: createId(),
-    task_id: taskId,
-    kind: data.kind,
-    name: data.name,
-    path: data.path,
-    created_at: nowIso(),
-  };
-  await db.execute(
-    "INSERT INTO attachments (id, task_id, kind, name, path, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
-    [item.id, item.task_id, item.kind, item.name, item.path, item.created_at],
-  );
-  return item;
-}
-
-export async function removeAttachment(id: string): Promise<void> {
-  const db = await getDb();
-  await db.execute("DELETE FROM attachments WHERE id=$1", [id]);
-}
-
 
 /* Habits */
 /** 每周目标次数的合法区间：1–7 的整数；越界/缺失回到默认 3（migration v18 同口径）。 */

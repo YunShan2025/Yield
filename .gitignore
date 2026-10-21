@@ -31,3 +31,10 @@ separate_resume_sections.py
 # M5 发布签名：自签 keystore 与密码文件永不入库
 keys/
 src-tauri/gen/android/app/keystore.properties
+
+# Impeccable 设计 skill（项目级安装，约 21MB 含 Windows 引擎二进制，不入库）
+# 重装：npx impeccable install --scope=project --providers=codex -y
+.agents/
+.codex/
+.impeccable/*
+!.impeccable/config.json

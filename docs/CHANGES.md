@@ -29,12 +29,15 @@
 - **目标表单移除「每周目标次数」**：周口径整体归习惯；目标卡脚注不再回显无效的「每周 N 次」
 - **复盘页两处目标统计不再同名不同义**：「当周目标推进」列出每个目标当周积累的进度及其构成（任务 / 打卡 / 记录），「任务完成去向」按目标 / 项目 / 标签查看当周完成的任务归属
 - **成长热点图按目标筛选真正生效**：此前只筛手动记录，任务与习惯仍按全量点亮；现在按目标的关联关系同步筛选
+- **今日目标条实时同步**：完成任务或习惯打卡后，目标进度立刻更新——写库完成后广播一次数据变更信号，今日页的目标条据此重载，不再等翻页或重启
+- **任务详情抽屉重排**：日期与起止时间并到同一行（与新建任务弹窗一致），删掉「重复」后留下的空位一并理顺（优先级 | 所属项目、标签 | 成长目标各自成行）
+- **附件功能下线**（migration v26）：任务详情里的拖拽上传与附件列表整体移除，`attachments` 表随之删除
 - **周统计归位到周清单**：今日页只留今天要做的事；本周的打卡次数与当前连续天数挪进「周清单」的当周概览，与本周事项、完成率、峰值日并排
 - **目标也能撤回**（migration v24）：新增 `goals.deleted_at`。删除进回收站可恢复，永久删除时连同目标记录、阶段与成就一并清掉、不留孤儿数据
 - **目标状态收敛为四个**（migration v25）：进行中 / 已暂停 / 已完成 / 已放弃。原来的 `archived` 与 `completed` 语义重叠，而项目、习惯、备忘录里"归档"是唯一表达"收起来了"的动作——按同一套约定，目标上的"归档"就等于"已完成"，历史 archived 目标并入 completed
 - **目标列表改成分区**（进行中 / 已完成 / 已放弃），与项目页、习惯页同一套做法；已放弃与已完成都能一键撤回
 - **首启引导新增一步**：「目标、习惯、任务各司其职」——目标拆阶段、重复建习惯、一次性建任务
-- **数据库结构变更（migration v22 / v23 / v24）**，只向前升级、不支持降级：新增 `habits.repeat_rule`、`goals.deleted_at`；删除 `tasks.repeat_rule`、`tasks.generated_from_id`、`goals.weekly_target`、`goals.project_id`；migration v25 把历史 `goals.status='archived'` 并入 `completed`
+- **数据库结构变更（migration v22 – v26）**，只向前升级、不支持降级：新增 `habits.repeat_rule`、`goals.deleted_at`；删除 `tasks.repeat_rule`、`tasks.generated_from_id`、`goals.weekly_target`、`goals.project_id`、`attachments` 表；migration v25 把历史 `goals.status='archived'` 并入 `completed`
 - **迁移演练工具**：`npm run release:migration-dry-run` 把尚未落库的 migration 跑在**真实数据库的副本**上，并复刻 sqlx 的校验和比对——已应用的 migration 若与代码不一致会当场报出（sqlx 会在启动时直接失败，应用起不来）。发布前跑一次，比点着验收更早发现问题
 - **同步日志格式升版（schema v10）**：`tasks` 的重复相关列与 `goals` 的周口径列不再携带，`habits.repeat_rule` 入列。旧端读到 v10 条目会被 header 闸门整体拒收并提示升级，**两端需同时升级**
 #### v1.3.0 全局搜索与复盘体验升级

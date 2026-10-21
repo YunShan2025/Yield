@@ -18,7 +18,6 @@ function minimalPayload(
     tasks: [],
     tags: [],
     taskTags: [],
-    attachments: [],
     habits: [],
     habitChecks: [],
     settings: {},
@@ -272,23 +271,13 @@ describe("backup pure helpers", () => {
         { task_id: "ghost", tag_id: "tag-1" },
         { task_id: "task-1", tag_id: "ghost-tag" },
       ],
-      attachments: [
-        {
-          id: "att-1",
-          task_id: "ghost",
-          kind: "file",
-          name: "x",
-          path: "/tmp/x",
-          created_at: "2026-08-01T00:00:00.000Z",
-        },
-      ] as never,
+
       projects: [],
     });
     const report = inspectBackupPayload(payload);
     expect(report.warnings.some((item) => item.includes("恢复时将跳过"))).toBe(true);
     const sanitized = sanitizeBackupPayload(payload);
     expect(sanitized.taskTags).toEqual([{ task_id: "task-1", tag_id: "tag-1" }]);
-    expect(sanitized.attachments).toEqual([]);
     expect(sanitized.tasks[0].parent_id).toBeNull();
     expect(sanitized.tasks[0].project_id).toBeNull();
   });

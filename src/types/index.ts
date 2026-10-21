@@ -84,15 +84,6 @@ export interface Tag {
   updated_at: string;
 }
 
-export interface Attachment {
-  id: string;
-  task_id: string;
-  kind: "file" | "url" | "image";
-  name: string;
-  path: string;
-  created_at: string;
-}
-
 export interface Habit {
   id: string;
   title: string;
@@ -353,7 +344,6 @@ export interface BackupPayload {
   tasks: Task[];
   tags: Tag[];
   taskTags: { task_id: string; tag_id: string; updated_at?: string }[];
-  attachments: Attachment[];
   habits: Habit[];
   habitChecks: HabitCheck[];
   memos?: Memo[];

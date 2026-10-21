@@ -1,16 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { SelectMenu } from "@/components/SelectMenu";
-import type {
-  Attachment,
-  Goal,
-  TaskPriority,
-} from "@/types";
-import { open } from "@tauri-apps/plugin-dialog";
+import type { Goal, TaskPriority } from "@/types";
 import { TimeRangeFields, defaultTimeRange } from "@/components/TimePicker";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
-import { AppIcon } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import { fetchGoals } from "@/lib/db";
@@ -42,10 +36,7 @@ export function DetailDrawer() {
   const deleteTask = useAppStore((s) => s.deleteTask);
   const setTaskTags = useAppStore((s) => s.setTaskTags);
   const setToast = useAppStore((s) => s.setToast);
-  const attachments = useAppStore((s) => s.attachments);
-  const loadAttachments = useAppStore((s) => s.loadAttachments);
-  const addAttachment = useAppStore((s) => s.addAttachment);
-  const removeAttachment = useAppStore((s) => s.removeAttachment);
+
   const toggleComplete = useAppStore((s) => s.toggleComplete);
   const projects = useAppStore((s) => s.projects);
 
@@ -61,7 +52,6 @@ export function DetailDrawer() {
   const [goalId, setGoalId] = useState("");
   const [goalMeasure, setGoalMeasure] = useState<"none" | "one" | "custom">("none");
   const [goalContribution, setGoalContribution] = useState("1");  const [goals, setGoals] = useState<Goal[]>([]);
-  const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const loadedId = useRef<string | null>(null);
@@ -81,7 +71,6 @@ export function DetailDrawer() {
     setDirty(false);
     setMode(detailPreferEdit ? "edit" : "view");
     hydrateFromTask();
-    void loadAttachments(task.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id, detailPreferEdit]);
 
@@ -259,12 +248,6 @@ export function DetailDrawer() {
       : []),
   ];
 
-  const pickFile = async () => {
-    const selected = await open({ multiple: false });
-    if (!selected || Array.isArray(selected)) return;
-    const name = selected.split(/[/\\]/).pop() ?? selected;
-    await addAttachment(task.id, { kind: "file", name, path: selected });
-  };
 
   const confirmDelete = () => {
     void confirmAction({
@@ -357,20 +340,7 @@ export function DetailDrawer() {
             </div>
           </div>
 
-          {attachments.length ? (
-            <div>
-              <span className="field-label">附件</span>
-              <div className="subtask-list">
-                {attachments.map((a: Attachment) => (
-                  <div key={a.id} className="subtask-item">
-                    <span style={{ flex: 1, fontSize: 12 }}>
-                      {a.kind}: {a.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
+
         </div>
       ) : (
         <div
@@ -398,21 +368,23 @@ export function DetailDrawer() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div>
-            <label className="field-label">日期</label>
-            <DatePicker
-              value={dueDate}
-              onChange={setDueDate}
-              allowClear
-              ariaLabel="日期"
+          <div className="detail-schedule">
+            <div>
+              <label className="field-label">日期</label>
+              <DatePicker
+                value={dueDate}
+                onChange={setDueDate}
+                allowClear
+                ariaLabel="日期"
+              />
+            </div>
+            <TimeRangeFields
+              start={dueTime}
+              end={endTime}
+              onStartChange={setDueTime}
+              onEndChange={setEndTime}
             />
           </div>
-          <TimeRangeFields
-            start={dueTime}
-            end={endTime}
-            onStartChange={setDueTime}
-            onEndChange={setEndTime}
-          />
           <div className="detail-form-row">
             <div>
               <label className="field-label">优先级</label>
@@ -429,8 +401,6 @@ export function DetailDrawer() {
                 ]}
               />
             </div>
-          </div>
-          <div className="detail-form-row">
             <div>
               <label className="field-label">所属项目</label>
               <SelectMenu
@@ -451,6 +421,8 @@ export function DetailDrawer() {
                 options={[{ value: "", label: "无项目" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
               />
             </div>
+          </div>
+          <div className="detail-form-row">
             <div>
               <label className="field-label">标签</label>
               <SelectMenu
@@ -466,9 +438,6 @@ export function DetailDrawer() {
                 ]}
               />
             </div>
-          </div>
-
-          <div className="detail-form-row">
             <div>
               <label className="field-label">成长目标</label>
               <SelectMenu
@@ -485,7 +454,10 @@ export function DetailDrawer() {
                 options={goalOptions}
               />
             </div>
-            {goalId ? (
+          </div>
+
+          {goalId ? (
+            <div className="detail-form-row">
               <div>
                 <label className="field-label">目标计量</label>
                 <SelectMenu
@@ -503,81 +475,25 @@ export function DetailDrawer() {
                   ]}
                 />
               </div>
-            ) : null}
-            {goalId && goalMeasure === "custom" ? (
-              <div>
-                <label className="field-label">计入的单位数</label>
-                <input
-                  className="field"
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={goalContribution}
-                  onChange={(event) => {
-                    setGoalContribution(event.target.value);
-                    setDirty(true);
-                  }}
-                />
-              </div>
-            ) : null}
-          </div>
-
-          <div>
-            <label className="field-label">附件</label>
-            <div
-              className={`drop-zone ${dragOver ? "active" : ""}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                const file = e.dataTransfer.files?.[0];
-                const uri = e.dataTransfer.getData("text/uri-list");
-                if (uri?.startsWith("http")) {
-                  void addAttachment(task.id, {
-                    kind: "url",
-                    name: uri,
-                    path: uri,
-                  });
-                  return;
-                }
-                if (file) {
-                  void addAttachment(task.id, {
-                    kind: "file",
-                    name: file.name,
-                    path: (file as File & { path?: string }).path || file.name,
-                  });
-                }
-              }}
-            >
-              拖拽文件/链接到此处，或
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => void pickFile()}
-              >
-                选择文件
-              </button>
+              {goalMeasure === "custom" ? (
+                <div>
+                  <label className="field-label">计入的单位数</label>
+                  <input
+                    className="field"
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={goalContribution}
+                    onChange={(event) => {
+                      setGoalContribution(event.target.value);
+                      setDirty(true);
+                    }}
+                  />
+                </div>
+              ) : null}
             </div>
-            {attachments.map((a: Attachment) => (
-              <div key={a.id} className="subtask-item">
-                <span style={{ flex: 1, fontSize: 12 }}>
-                  {a.kind}: {a.name}
-                </span>
-                <button
-                  type="button"
-                  className="item-action-btn item-action-danger"
-                  onClick={() => void removeAttachment(a.id)}
-                >
-                  <AppIcon name="trash" size={14} />
-                  <span>删除</span>
-                </button>
-              </div>
-            ))}
-          </div>
+          ) : null}
+
         </div>
       )}
 

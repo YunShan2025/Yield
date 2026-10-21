@@ -16,8 +16,14 @@ export function GoalStrip() {
   useEffect(() => {
     const reload = () => void fetchGoals().then(setGoals);
     reload();
+    // 完成任务 / 习惯打卡会改写目标进度，写库完成后广播一次，这里立刻重载，
+    // 今日目标条的进度不等人翻页才更新。
+    window.addEventListener("youqiu:data-changed", reload);
     window.addEventListener("youqiu:sync-applied", reload);
-    return () => window.removeEventListener("youqiu:sync-applied", reload);
+    return () => {
+      window.removeEventListener("youqiu:data-changed", reload);
+      window.removeEventListener("youqiu:sync-applied", reload);
+    };
   }, []);
 
   const activeGoals = useMemo(

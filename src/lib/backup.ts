@@ -144,16 +144,6 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
     }
   }
 
-  for (const attachment of payload.attachments ?? []) {
-    if (!taskIds.has(attachment.task_id)) {
-      warnings.push(`附件 ${attachment.id} 引用了不存在的任务`);
-    }
-    const path = attachment.path ?? "";
-    if (path.includes("\0") || path.includes("..")) {
-      errors.push(`附件 ${attachment.id} 的路径不合法`);
-    }
-  }
-
   for (const habit of payload.habits ?? []) {
     if (habit.target_days != null && (!Number.isInteger(habit.target_days) || habit.target_days < 1)) {
       errors.push(`习惯 ${habit.id} 的目标打卡日数无效`);
@@ -188,7 +178,6 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
     taskTags: (payload.taskTags ?? []).filter(
       (link) => taskIds.has(link.task_id) && tagIds.has(link.tag_id),
     ),
-    attachments: (payload.attachments ?? []).filter((item) => taskIds.has(item.task_id)),
     habitChecks: (payload.habitChecks ?? []).filter((item) => habitIds.has(item.habit_id)),
     notifications: payload.notifications?.filter(
       (item) => !item.task_id || taskIds.has(item.task_id),

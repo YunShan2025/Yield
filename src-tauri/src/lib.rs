@@ -1496,6 +1496,16 @@ UPDATE goals SET status = 'completed' WHERE status = 'archived';
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 26,
+            description: "drop_attachments",
+            // 附件功能下线：任务详情里的拖拽上传与附件列表整体移除，附件表随之
+            // 删除。表无外键引用、也不参与同步，直接 DROP。
+            sql: r#"
+DROP TABLE IF EXISTS attachments;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

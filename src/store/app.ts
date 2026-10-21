@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
   AppSettings,
-  Attachment,
   Habit,
   HabitCheck,
   HabitDraft,
@@ -29,6 +28,19 @@ import { errorMessage } from "@/lib/errors";
 
 const pendingCompleteIds = new Set<string>();
 
+/**
+ * 数据写库成功后广播一次。
+ *
+ * 目标进度这类派生数据不住在 store 里，而在库里——完成任务、打卡都会改写
+ * 目标记录。目标条之类的组件要跟着重载，就得有一个"写完了"的信号：只盯着
+ * store 的乐观更新去重载，会读到还没写进库的值。
+ */
+function notifyDataChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("youqiu:data-changed"));
+  }
+}
+
 interface AppStore {
   ready: boolean;
   error: string | null;
@@ -40,7 +52,6 @@ interface AppStore {
   habitChecks: HabitCheck[];
   archivedHabits: Habit[];
   timers: Timer[];
-  attachments: Attachment[];
   projects: Project[];
   archivedProjects: Project[];
   settings: AppSettings;
@@ -102,12 +113,6 @@ interface AppStore {
   restoreProject: (id: string) => Promise<void>;
 
 
-  addAttachment: (
-    taskId: string,
-    data: { kind: Attachment["kind"]; name: string; path: string },
-  ) => Promise<void>;
-  removeAttachment: (id: string) => Promise<void>;
-  loadAttachments: (taskId: string) => Promise<void>;
 
   addHabit: (draft: HabitDraft) => Promise<void>;
   updateHabit: (id: string, draft: HabitDraft) => Promise<void>;
@@ -165,7 +170,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   habitChecks: [],
   archivedHabits: [],
   timers: [],
-  attachments: [],
   projects: [],
   archivedProjects: [],
   settings: {
@@ -269,6 +273,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       projects,
       archivedProjects,
     }));
+    notifyDataChanged();
   },
 
   setNav: (nav) => {
@@ -340,6 +345,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         db.fetchTaskTagMap(),
       ]);
       set({ tasks, tagMap, toast: "已创建任务" });
+      notifyDataChanged();
       return task;
     } catch (e) {
       set({ error: errorMessage(e, "创建失败") });
@@ -357,6 +363,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           ),
         }));
         if (updates.status === "completed") await get().refreshAll();
+        else notifyDataChanged();
       }
     } catch (e) {
       const msg = errorMessage(e, "保存失败");
@@ -408,6 +415,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         await db.setTaskNotificationsStatus(task.id, "dismissed").catch(() => undefined);
         window.dispatchEvent(new Event("notifications:changed"));
       }
+      notifyDataChanged();
       set({
         toast: task?.status === "completed" ? "任务已完成" : "已恢复为待办",
         canUndo: true,
@@ -568,21 +576,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ toast: "项目已恢复" });
   },
 
-  addAttachment: async (taskId, data) => {
-    await db.addAttachment(taskId, data);
-    await get().loadAttachments(taskId);
-  },
-
-  removeAttachment: async (id) => {
-    const taskId = get().selectedTaskId;
-    await db.removeAttachment(id);
-    if (taskId) await get().loadAttachments(taskId);
-  },
-
-  loadAttachments: async (taskId) => {
-    const attachments = await db.fetchAttachments(taskId);
-    set({ attachments });
-  },
 
   addHabit: async (draft) => {
     await db.createHabit(draft);

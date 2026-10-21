@@ -38,6 +38,7 @@ const retiredFeatureWords = [
   "专注会话",
   "专注时间",
   "专注计时",
+  "附件",
 ];
 const readmeRetiredHits = retiredFeatureWords.filter((word) => readme.includes(word));
 if (readmeRetiredHits.length) {

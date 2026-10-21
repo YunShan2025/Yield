@@ -455,9 +455,7 @@ export async function purgeTrash(): Promise<number> {
        WHERE source_type='task' AND source_id IN (${trash})`,
     );
 
-    await db.execute(
-      `DELETE FROM attachments WHERE task_id IN (${trash})`,
-    );
+
     await db.execute(
       `DELETE FROM task_tags WHERE task_id IN (${trash})`,
     );
@@ -494,7 +492,6 @@ export async function purgeTask(id: string): Promise<void> {
       ids,
     );
 
-    await db.execute(`DELETE FROM attachments WHERE task_id IN (${placeholders})`, ids);
     await db.execute(`DELETE FROM task_tags WHERE task_id IN (${placeholders})`, ids);
     await db.execute(`DELETE FROM task_events WHERE task_id IN (${placeholders})`, ids);
     await db.execute(

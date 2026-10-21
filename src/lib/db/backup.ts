@@ -10,7 +10,6 @@ import { sanitizeImportedMemoContent } from "@/lib/richText";
 import { getDb, withTransaction } from "./client";
 import { fetchTasks } from "./tasks";
 import {
-  fetchAllAttachments,
   fetchAllHabits,
   fetchHabitChecks,
   fetchTags,
@@ -37,7 +36,6 @@ export async function exportBackup(): Promise<BackupPayload> {
   const taskTags = await db.select<{ task_id: string; tag_id: string; updated_at: string }[]>(
     "SELECT task_id, tag_id, updated_at FROM task_tags",
   );
-  const attachments = await fetchAllAttachments();
   const habits = await fetchAllHabits();
   const habitChecks = await fetchHabitChecks();
   const memos = await fetchMemos({ archived: "all" });
@@ -69,8 +67,7 @@ export async function exportBackup(): Promise<BackupPayload> {
     tasks,
     tags,
     taskTags,
-    attachments,
-    habits,
+      habits,
     habitChecks,
     memos,
     projects,
@@ -124,7 +121,7 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     if (has("taskEvents")) await db.execute("DELETE FROM task_events");
     await db.execute("DELETE FROM habit_checks");
     await db.execute("DELETE FROM habits");
-    await db.execute("DELETE FROM attachments");
+
     await db.execute("DELETE FROM task_tags");
     await db.execute("DELETE FROM tags");
     await db.execute("DELETE FROM tasks");
@@ -189,12 +186,7 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
       [tt.task_id, tt.tag_id, tt.updated_at ?? ""],
     );
   }
-  for (const a of payload.attachments) {
-    await db.execute(
-      "INSERT INTO attachments (id, task_id, kind, name, path, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
-      [a.id, a.task_id, a.kind, a.name, a.path, a.created_at],
-    );
-  }
+
   for (const h of payload.habits) {
     await db.execute(
       "INSERT INTO habits (id, title, target_per_week, target_days, archived, goal_id, goal_contribution, repeat_rule, created_at, updated_at, deleted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
