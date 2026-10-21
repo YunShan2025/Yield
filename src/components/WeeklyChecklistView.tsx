@@ -119,37 +119,45 @@ export function WeeklyChecklistView() {
         </div>
       </div>
 
-      {/* 与「今日」同款的暖色引导框。 */}
+      {/* 与「今日」同款的暖色引导框。右侧承载本周完成进度 —— 引导块要么有数据，
+          要么不出现。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
           <h3>把一周摊开来看。</h3>
-          <p className="today-hero-note">本周目标按标签聚合，周日历逐天盘点；点任务直达详情，完成进度一眼见底。</p>
+          <p className="today-hero-note">本周目标按标签聚合，周日历逐天盘点；点任务直达详情。</p>
+        </div>
+        <div className="today-hero-meter">
+          <span className="today-hero-meter-count">
+            <strong>{stats.done}</strong>
+            <span>/{stats.total}</span>
+          </span>
+          <span className="today-hero-meter-label">已完成</span>
+          <span className="today-hero-meter-track">
+            <i style={{ "--progress": `${donePct}%` } as CSSProperties} />
+          </span>
         </div>
       </section>
 
+      {/* 本周目标：一行一条，像表一样对齐 —— 四张同尺寸卡片当页面结构是懒容器，
+          而且卡里的进度条与头部计数、页脚文字讲的是同一件事。 */}
       <section className="weekly-goals" aria-label="本周目标">
         <h3>本周目标</h3>
-        <div className="weekly-goal-grid">
+        <ul className="weekly-goal-list">
           {categories.map((bucket) => (
-            <article
-              key={bucket.category.id}
-              className="weekly-goal-card"
-              style={{ "--goal-accent": bucket.category.color } as CSSProperties}
-            >
-              <header>
-                <strong>{bucket.category.label}</strong>
-                <span>
-                  {bucket.done}/{bucket.total}
-                </span>
-              </header>
-              <p>{goalLine(bucket.category.id)}</p>
-              <div className="weekly-goal-bar">
-                <i style={{ width: `${bucket.progress}%` }} />
-              </div>
-              <footer>{bucket.total} 项 · {bucket.progress}%</footer>
-            </article>
+            <li key={bucket.category.id} className="weekly-goal-row">
+              <span
+                className="weekly-goal-dot"
+                style={{ background: bucket.category.color }}
+                aria-hidden
+              />
+              <strong className="weekly-goal-name">{bucket.category.label}</strong>
+              <span className="weekly-goal-note">{goalLine(bucket.category.id)}</span>
+              <span className="weekly-goal-count">
+                {bucket.done}/{bucket.total}
+              </span>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <section className="weekly-days" aria-label="当周日历">
@@ -216,26 +224,10 @@ export function WeeklyChecklistView() {
         </div>
       </section>
 
+      {/* 当周概览降级为一行元信息：本周事项 / 已完成 / 剩余与引导块的进度重复，
+          完成率条也重复，统统去掉。留下的三项都与「本周」口径不同。 */}
       <section className="weekly-stat-strip" aria-label="当周概览">
         <div className="weekly-stat-track">
-          <div className="weekly-stat-item">
-            <span className="weekly-stat-label">本周事项</span>
-            <div className="weekly-stat-value">
-              <strong className="weekly-stat-num">{stats.total}</strong>
-            </div>
-          </div>
-          <div className="weekly-stat-item">
-            <span className="weekly-stat-label">已完成</span>
-            <div className="weekly-stat-value">
-              <strong className="weekly-stat-num is-accent">{stats.done}</strong>
-            </div>
-          </div>
-          <div className="weekly-stat-item">
-            <span className="weekly-stat-label">剩余</span>
-            <div className="weekly-stat-value">
-              <strong className="weekly-stat-num">{stats.remaining}</strong>
-            </div>
-          </div>
           <div className="weekly-stat-item">
             <span className="weekly-stat-label">习惯打卡</span>
             <div className="weekly-stat-value">
@@ -261,19 +253,6 @@ export function WeeklyChecklistView() {
               </span>
             </div>
           </div>
-        </div>
-        <div className="weekly-stat-bar">
-          <div
-            className="weekly-stat-progress"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={donePct}
-            aria-label="本周完成率"
-          >
-            <i style={{ width: `${donePct}%` }} />
-          </div>
-          <span className="weekly-stat-pct">完成率 {donePct}%</span>
         </div>
       </section>
     </main>

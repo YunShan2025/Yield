@@ -2134,6 +2134,20 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
 }
+/* 任务行里的「删除」降权：每行都摆一颗红按钮，一屏就是一片红点。
+   动作本身还在（点开有二次确认），红色只在悬停时出现。 */
+.expand-delete {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  background: var(--surface-panel);
+}
+
+.expand-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
+}
+
 .habit-delete-btn:hover:not(:disabled),
 .item-action-danger:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
@@ -4921,33 +4935,57 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-size: 15px;
 }
 
-.weekly-goal-grid {
+/* 本周目标：一行一条，列对齐像表。分类色只留在色点上（数据），不再铺成四条
+   并排的彩色进度条（装饰）。 */
+.weekly-goal-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.weekly-goal-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 8px 56px minmax(0, 1fr) auto;
   gap: 12px;
+  align-items: baseline;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--border);
 }
 
-.weekly-goal-card {
-  --goal-accent: var(--azure-550);
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--surface-panel);
-  display: grid;
-  gap: 8px;
+.weekly-goal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  align-self: center;
 }
 
-.weekly-goal-card header,
+.weekly-goal-name {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.weekly-goal-note {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.weekly-goal-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .weekly-day-col header {
   display: flex;
   justify-content: space-between;
   gap: 8px;
   align-items: center;
-}
-
-.weekly-goal-card header span {
-  color: var(--text-muted);
-  font-size: 12px;
 }
 
 .weekly-day-col header span {
@@ -4956,15 +4994,6 @@ html[data-nav="railed"] .nav-edge-collapse {
   white-space: nowrap;
 }
 
-.weekly-goal-card p {
-  margin: 0;
-  min-height: 40px;
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.weekly-goal-bar,
 .weekly-day-bar {
   height: 8px;
   border-radius: 99px;
@@ -4976,23 +5005,16 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 @supports (background: color-mix(in srgb, red 10%, blue)) {
-  .weekly-goal-bar,
   .weekly-day-bar {
     background: color-mix(in srgb, var(--goal-accent, var(--accent)) 18%, transparent);
   }
 }
 
-.weekly-goal-bar > i,
 .weekly-day-bar > i {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--goal-accent, var(--accent));
-}
-
-.weekly-goal-card footer {
-  color: var(--text-muted);
-  font-size: 12px;
 }
 
 .weekly-day-grid {
@@ -5164,33 +5186,32 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-size: 12px;
 }
 
-/* 当周概览:单卡四列(标签在上、数值在下,发丝线分隔),
-   底部一条完成率细条收口,呼应复盘页指标行的设计语言。 */
+/* 当周概览：一行元信息，发丝线分隔。数字不再撑成 21px 的「KPI 墙」——
+   这三项是补充信息，不是本页主角（本周完成进度在引导块里）。 */
 .weekly-stat-strip {
-  display: grid;
-  gap: 12px;
   margin: 24px 28px 0;
-  padding: 13px 18px 12px;
+  padding: 10px 18px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--surface-panel);
 }
 
 .weekly-stat-track {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 26px;
+  align-items: baseline;
+  gap: 8px 24px;
 }
 
 .weekly-stat-item {
-  display: grid;
+  display: inline-flex;
+  align-items: baseline;
   gap: 7px;
-  align-content: end;
   min-width: 0;
 }
 
 .weekly-stat-item + .weekly-stat-item {
-  padding-left: 26px;
+  padding-left: 24px;
   border-left: 1px solid var(--border);
 }
 
@@ -5200,14 +5221,14 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .weekly-stat-value {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
-  gap: 7px;
+  gap: 6px;
 }
 
 .weekly-stat-num {
-  font: 700 21px/1 var(--font-display);
-  letter-spacing: -0.02em;
+  font: 700 15px/1 var(--font-display);
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
 }
@@ -5218,35 +5239,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 
 .weekly-stat-note {
   color: var(--text-muted);
-  font-size: 11px;
-}
-
-.weekly-stat-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.weekly-stat-progress {
-  flex: 1;
-  height: 4px;
-  border-radius: 99px;
-  background: var(--accent-soft);
-  overflow: hidden;
-}
-
-@supports (background: color-mix(in srgb, red 10%, blue)) {
-  .weekly-stat-progress {
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
-  }
-}
-
-.weekly-stat-progress > i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-  transition: width var(--motion-fast);
+  font-size: 12px;
 }
 
 .weekly-stat-pct {

@@ -31,24 +31,34 @@ export function TodayHero({
             ? "截止日期不在今天的任务集中在这里，慢慢完成。"
             : "今天要做的事集中在这里，逐项完成。"}
         </p>
-        {isTodayView && conflictCount ? (
+        {conflictCount ? (
           <span className="plan-warning">
             {conflictCount} 项任务存在时间冲突
           </span>
         ) : null}
       </div>
-      {!isInbox ? (
-        <div className="today-hero-meter">
-          <span className="today-hero-meter-count">
-            <strong>{doneCount}</strong>
-            <span>/{totalCount}</span>
-          </span>
-          <span className="today-hero-meter-label">已完成</span>
-          <span className="today-hero-meter-track">
-            <i style={{ "--progress": `${progress}%` } as CSSProperties} />
-          </span>
-        </div>
-      ) : null}
+      <div className="today-hero-meter">
+        {isInbox ? (
+          <>
+            <span className="today-hero-meter-count">
+              <strong>{totalCount}</strong>
+              <span>件</span>
+            </span>
+            <span className="today-hero-meter-label">待处理</span>
+          </>
+        ) : (
+          <>
+            <span className="today-hero-meter-count">
+              <strong>{doneCount}</strong>
+              <span>/{totalCount}</span>
+            </span>
+            <span className="today-hero-meter-label">已完成</span>
+            <span className="today-hero-meter-track">
+              <i style={{ "--progress": `${progress}%` } as CSSProperties} />
+            </span>
+          </>
+        )}
+      </div>
     </section>
   );
 }
