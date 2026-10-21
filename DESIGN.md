@@ -32,6 +32,8 @@ colors:
   border: "rgba(34, 55, 91, 0.09)"
   border-strong: "rgba(34, 55, 91, 0.16)"
   focus-ring: "rgba(47, 111, 237, 0.28)"
+  shell-tint-outer: "rgba(18, 26, 40, 0.92)"
+  shell-tint-inner: "rgba(10, 14, 24, 0.9)"
 typography:
   display:
     fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
@@ -39,9 +41,21 @@ typography:
     fontWeight: 700
     lineHeight: 1.25
     letterSpacing: "-0.01em"
+  h1:
+    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
+    fontSize: "24px"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "-0.02em"
   heading:
     fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
     fontSize: "20px"
+    fontWeight: 650
+    lineHeight: 1.35
+    letterSpacing: "normal"
+  h3:
+    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
+    fontSize: "16px"
     fontWeight: 650
     lineHeight: 1.35
     letterSpacing: "normal"
@@ -53,8 +67,14 @@ typography:
     letterSpacing: "normal"
   label:
     fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Text\", sans-serif"
-    fontSize: "12px"
+    fontSize: "13px"
     fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: "0.01em"
+  caption:
+    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Text\", sans-serif"
+    fontSize: "12px"
+    fontWeight: 500
     lineHeight: 1.4
     letterSpacing: "0.01em"
 rounded:
@@ -435,7 +455,12 @@ components:
 - ❌ 圆角超出 12-16px 的卡片
 - ❌ 字距减到 -0.04em 以下
 - ❌ 页面出现第二个大标题
-- ❌ 触摸目标小于 44px（桌面）/ 48dp（移动）
+- ❌ 触摸目标小于 24px（桌面）/ 48dp（移动）
+
+> **注 · 桌面端 24px 而非 44px**：原条款把移动端的 44/48 搬到了桌面。桌面是鼠标驱动的
+> 多栏工作台，44px 会让侧栏 13 个导航项与行内操作按钮的高度近乎翻倍，与「信息密度优先、
+> 表面是平的」定位相反。改按 WCAG 2.5.8 AA 的 24×24 底线；移动端仍按 Material 的 48dp。
+> 两种例外：复选框与行内文字链接 —— 前者整行由 `<label>` 包裹可点，后者受同行文字行高约束。
 
 ### 豁免（检测器会误报，勿改）
 

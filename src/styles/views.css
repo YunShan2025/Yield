@@ -156,7 +156,7 @@ html:not([data-desktop-widget]) #root {
   :root[data-theme="light"] .app-root,
   :root[data-theme="dark"] #root,
   :root[data-theme="dark"] .app-root {
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 }
 
@@ -299,7 +299,7 @@ html:not([data-desktop-widget]) #root {
 :root[data-theme="dawn"] .project-card,
 :root[data-theme="dawn"] .timeline-task-popover {
   border-color: var(--navy-450-12);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(145deg, var(--white-90), var(--white-78));
   box-shadow: 0 8px 22px var(--navy-600-8), inset 0 1px var(--white-95);
   backdrop-filter: blur(20px) saturate(130%);
@@ -309,7 +309,7 @@ html:not([data-desktop-widget]) #root {
 
 :root[data-theme="dawn"] .today-hero {
   border-color: var(--navy-450-12);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background:
     radial-gradient(circle at 88% 12%, var(--rose-350-14), transparent 30%),
     linear-gradient(135deg, var(--paper-150-92), var(--magenta-100-84));
@@ -345,7 +345,7 @@ html:not([data-desktop-widget]) #root {
 @media (max-width: 900px) {
   :root[data-theme="dawn"] #root,
   :root[data-theme="dawn"] .app-root {
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 }
 
@@ -424,14 +424,14 @@ html:not([data-desktop-widget]) #root {
 }
 
 .glass-titlebar-brand strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .glass-titlebar-brand small {
   color: var(--paper-950-a-55);
-  font-size: 10px;
+  font-size: var(--font-size-caption);
 }
 
 .glass-titlebar-controls {
@@ -447,7 +447,7 @@ html:not([data-desktop-widget]) #root {
   border-radius: 0;
   color: var(--paper-950-a-86);
   background: transparent;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   line-height: 1;
 }
 
@@ -536,7 +536,7 @@ html:not([data-desktop-widget]) #root {
 :root[data-theme="glass"] .project-card,
 :root[data-theme="glass"] .timeline-task-popover {
   border-color: var(--white-16);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(155deg, var(--white-14), var(--white-8));
   box-shadow: 0 10px 28px var(--black-22), inset 0 1px var(--white-14);
   backdrop-filter: blur(20px) saturate(135%);
@@ -546,7 +546,7 @@ html:not([data-desktop-widget]) #root {
 
 :root[data-theme="glass"] .today-hero {
   border-color: var(--white-18);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background:
     radial-gradient(circle at 88% 12%, var(--azure-250-20), transparent 34%),
     radial-gradient(circle at 12% 88%, var(--amber-600-12), transparent 36%),
@@ -606,7 +606,7 @@ html:not([data-desktop-widget]) #root {
 @media (max-width: 900px) {
   :root[data-theme="glass"] #root,
   :root[data-theme="glass"] .app-root {
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 }
 
@@ -622,10 +622,10 @@ html:not([data-desktop-widget]) #root {
 .theme-section-heading p { margin: 5px 0 0; color: var(--text-secondary); }
 .theme-section-heading > span {
   padding: 6px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--accent-strong);
   background: var(--accent-soft);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 700;
 }
 
@@ -643,7 +643,7 @@ html:not([data-desktop-widget]) #root {
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 17px;
+  border-radius: var(--radius-lg);
   text-align: left;
   background: var(--surface-raised);
   transition: border-color calc(180ms * var(--motion-scale)) ease;
@@ -678,7 +678,7 @@ html:not([data-desktop-widget]) #root {
   bottom: 12px;
   left: 39px;
   border: 1px solid var(--white-58);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--preview-card);
 }
 
@@ -695,7 +695,7 @@ html:not([data-desktop-widget]) #root {
   top: 9px;
   bottom: 9px;
   width: 22px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--preview-accent);
 }
 
@@ -706,7 +706,7 @@ html:not([data-desktop-widget]) #root {
 }
 
 .theme-preview-canvas i,
-.theme-preview-canvas b { position: absolute; z-index: 1; display: block; border-radius: 99px; }
+.theme-preview-canvas b { position: absolute; z-index: 1; display: block; border-radius: var(--radius-pill); }
 .theme-preview-canvas i { left: 50px; height: 5px; background: var(--preview-accent); }
 .theme-preview-canvas i:nth-child(1) { top: 27px; width: 45%; }
 .theme-preview-canvas i:nth-child(2) { top: 42px; width: 58%; opacity: .42; }
@@ -714,10 +714,10 @@ html:not([data-desktop-widget]) #root {
 .theme-preview-canvas b { right: 22px; bottom: 19px; width: 25px; height: 12px; background: var(--preview-accent); }
 
 .theme-preview-copy { display: grid; gap: 3px; min-width: 0; padding: 12px 13px 14px; }
-.theme-preview-copy strong { color: var(--text-heading); font-size: 14px; }
+.theme-preview-copy strong { color: var(--text-heading); font-size: var(--font-size-body); }
 .theme-preview-copy small { color: var(--accent-strong); font-weight: 700; }
-.theme-preview-copy em { margin-top: 3px; color: var(--text-secondary); font-size: 11px; font-style: normal; line-height: 1.5; }
-.theme-preview-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: var(--text-on-accent); background: var(--accent); font-size: 12px; }
+.theme-preview-copy em { margin-top: 3px; color: var(--text-secondary); font-size: var(--font-size-caption); font-style: normal; line-height: 1.5; }
+.theme-preview-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: var(--text-on-accent); background: var(--accent); font-size: var(--font-size-caption); }
 .theme-preview-check:empty { display: none; }
 
 .theme-system-toggle {
@@ -727,10 +727,10 @@ html:not([data-desktop-widget]) #root {
   margin-top: 14px;
   padding: 11px 13px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
-.theme-system-toggle input { width: 17px; height: 17px; accent-color: var(--accent); }
+.theme-system-toggle input { width: 24px; height: 24px; accent-color: var(--accent); }
 .theme-system-toggle span { display: grid; gap: 2px; }
 .theme-system-toggle strong { color: var(--text-heading); }
 .theme-system-toggle small { color: var(--text-secondary); }
@@ -971,7 +971,7 @@ html[data-shell="mobile"] .app-body {
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -992,10 +992,10 @@ html[data-shell="mobile"] .app-body {
   right: -12px;
   min-width: 16px;
   padding: 0 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--text-on-accent);
-  font-size: 9px;
+  font-size: var(--font-size-caption);
   font-style: normal;
   font-weight: 700;
   line-height: 16px;
@@ -1041,7 +1041,7 @@ html[data-shell="mobile"] .ledger-row {
 html[data-shell="mobile"] .ledger-row-icon {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 html[data-shell="mobile"] .ledger-row-main {
@@ -1056,7 +1056,7 @@ html[data-shell="mobile"] .ledger-row-main small {
 }
 
 html[data-shell="mobile"] .ledger-row > strong {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   white-space: nowrap;
 }
 
@@ -1074,8 +1074,8 @@ html[data-shell="mobile"] .ledger-row-actions .item-action-btn {
   min-height: 28px;
   padding: 4px 6px;
   gap: 3px;
-  border-radius: 7px;
-  font-size: 11px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
   line-height: 1;
   white-space: nowrap;
 }
@@ -1108,7 +1108,7 @@ html[data-shell="mobile"] .drag-handle {
   min-height: 40px;
   padding: 5px 4px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   letter-spacing: -3px;
   touch-action: none;
 }
@@ -1133,7 +1133,7 @@ html[data-shell="mobile"] .drag-handle {
   z-index: 63;
   padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: var(--surface-panel);
   box-shadow: 0 18px 44px var(--ink-950-m-24);
   animation: sheetUp calc(160ms * var(--motion-scale)) ease;
@@ -1157,7 +1157,7 @@ html[data-shell="mobile"] .drag-handle {
   margin: 0 0 10px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1176,11 +1176,11 @@ html[data-shell="mobile"] .drag-handle {
   min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--surface-base);
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   cursor: pointer;
 }
 
@@ -1204,7 +1204,7 @@ html[data-shell="mobile"] .drag-handle {
   align-items: center;
   gap: 8px;
   margin-top: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
 }
 
 .action-sheet-date .field {
@@ -1264,7 +1264,7 @@ html[data-shell="mobile"] body.ledger-drawer-open .mobile-nav {
 .mobile-more-head h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--font-size-h2);
 }
 
 /* 次级入口按行展现（2026-09-16 真机反馈）：整宽一行一个入口，
@@ -1283,10 +1283,10 @@ html[data-shell="mobile"] body.ledger-drawer-open .mobile-nav {
   min-height: 50px;
   padding: 8px 12px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -1321,7 +1321,7 @@ html[data-shell="mobile"] .command-palette {
   max-height: 78vh;
   max-height: min(78dvh, calc(100dvh - 16px));
   border: 0;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   /* 底部导航在面板之下，但滚动到底时最后一行仍要与屏幕下沿留白。 */
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
@@ -1338,13 +1338,13 @@ html[data-shell="mobile"] .command-search {
 html[data-shell="mobile"] .command-search-field {
   min-height: 48px;
   padding: 0 13px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
 }
 
 html[data-shell="mobile"] .command-search input {
   /* 16px 是 Android WebView 的输入框防缩放下限，比桌面同值。 */
   min-height: 46px;
-  font-size: 16px;
+  font-size: var(--font-size-h3);
 }
 
 html[data-shell="mobile"] .command-search-hint {
@@ -1413,8 +1413,8 @@ html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-btn:not(.ite
   min-height: 30px;
   padding: 5px 8px;
   gap: 3px;
-  border-radius: 7px;
-  font-size: 11.5px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -1431,8 +1431,8 @@ html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-primary {
   min-height: 30px;
   padding: 5px 9px;
   gap: 4px;
-  border-radius: 7px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -1471,7 +1471,7 @@ html[data-shell="mobile"] .habit-card-actions .habit-action-btn {
   min-height: 32px;
   padding: 6px 8px;
   gap: 4px;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
@@ -1495,7 +1495,7 @@ html[data-shell="mobile"] .desktop-notification-stack {
   }
 
   .workspace-top h2 {
-    font-size: 1.28rem;
+    font-size: var(--font-size-h2);
   }
 
   .top-controls {
@@ -1529,7 +1529,7 @@ html[data-shell="mobile"] .desktop-notification-stack {
   }
 
   .workspace-subtitle {
-    font-size: 11px;
+    font-size: var(--font-size-caption);
   }
 
   /* 滚动容器统一收窄左右留白。 */
@@ -1569,7 +1569,7 @@ html[data-shell="mobile"] .desktop-notification-stack {
   }
 
   .cal-task {
-    font-size: 10px;
+    font-size: var(--font-size-caption);
   }
 
   /* 周历横向滚动容器保持可滑；竖屏收窄列与时间轴，减少横滑距离。 */
@@ -1708,12 +1708,12 @@ html[data-shell="mobile"] .ledger-view .top-controls {
 
 html[data-shell="mobile"] .ledger-month-switcher strong {
   min-width: 86px;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 html[data-shell="mobile"] .ledger-month-switcher button {
   width: 30px;
-  font-size: 19px;
+  font-size: var(--font-size-h2);
 }
 
 html[data-shell="mobile"] .ledger-view .top-controls .btn-ghost {
@@ -1736,7 +1736,7 @@ html[data-shell="mobile"] .done-at-chip {
 /* 提醒状态条主文案（空闲态 13 字）在 175px 列里末行只剩一个「时」，
    13→12px 后 156px < 175px 单行放下；运行中的长标题仍允许自然两行。 */
 html[data-shell="mobile"] .timer-status-primary strong {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 /* 设置页外观胶囊同理：flex 收缩导致「氛围」断行；nowrap 后整行 321px < 349px。 */
@@ -1799,7 +1799,7 @@ html[data-shell="mobile"] .app-root {
    降到随视口收缩的 15-17px，最长 13 字的待办箱文案在 360px 也单行放下。 */
 @media (max-width: 700px) {
   .today-hero h3 {
-    font-size: clamp(15px, 4.3vw, 17px);
+    font-size: clamp(16px, 4.3vw, 20px);
   }
 }
 
@@ -1968,7 +1968,7 @@ html[data-shell="mobile"] .completed-time-modal .modal-head {
 html[data-shell="mobile"] .modal-head > button {
   width: 40px;
   height: 40px;
-  font-size: 22px;
+  font-size: var(--font-size-h1);
 }
 
 /* 动作条钉底（两种情形都盖住）：内容不足一屏时 margin-top:auto 把它推到
@@ -2081,7 +2081,7 @@ html[data-shell="mobile"] .completed-time-modal .date-picker-trigger {
 html[data-shell="mobile"] .repeat-weekday-chip {
   width: 40px;
   height: 40px;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 /* 纪念日新增/详情弹窗也是桌面居中卡片，一并全屏化（页头/页脚同一套钉边）。 */
@@ -2114,7 +2114,7 @@ html[data-shell="mobile"] .anni-composer-dialog > header > button,
 html[data-shell="mobile"] .anni-detail-dialog > header > button {
   width: 40px;
   height: 40px;
-  font-size: 22px;
+  font-size: var(--font-size-h1);
 }
 
 html[data-shell="mobile"] .anni-composer input,
@@ -2135,7 +2135,7 @@ html[data-shell="mobile"] .tag-color-palette {
 html[data-shell="mobile"] .tag-color-palette .color-swatch {
   width: 40px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 /* 时/分下拉组在窄弹窗里的间距压缩；触发按钮已由上面的 48px 规则垫高。 */
@@ -2144,7 +2144,7 @@ html[data-shell="mobile"] .time-dropdown-group {
 }
 
 html[data-shell="mobile"] .time-dropdown-unit {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 /* 修改完成时间弹窗：时间下拉（select-btn）此前不在 48px 触控清单里，补上。 */
@@ -2158,8 +2158,8 @@ html[data-shell="mobile"] .completed-time-modal input {
 html[data-shell="mobile"] .countdown-custom-step {
   width: 36px;
   height: 36px;
-  border-radius: 9px;
-  font-size: 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-h3);
 }
 
 html[data-shell="mobile"] .countdown-custom-time input {
