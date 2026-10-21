@@ -526,12 +526,30 @@ button:active:not(:disabled) {
   letter-spacing: -0.025em;
 }
 
+/* 箴言两行：Yield 一行，典故一行。侧栏可拖到 200px，一行放不下就顶出面板右缘。 */
+/* 箴言独占一行：与「有秋 Yield」一起排就挤不下了。 */
 .brand-caption {
   display: block;
-  margin-top: 2px;
+  margin-top: 1px;
+  overflow: hidden;
   color: var(--text-muted);
   font-size: var(--font-size-caption);
+  line-height: 1.4;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.brand-name {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.brand-latin {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  letter-spacing: 0.04em;
 }
 
 .btn-primary {

@@ -86,11 +86,16 @@ export function NavSidebar({
     <aside className="nav-side">
       <div className="nav-side-scroll">
       <div className="brand-row">
-        <div className="brand-lockup">
+        <div className="brand-lockup" title="有秋 · Yield · 服田力穑，乃亦有秋">
           <span className="brand-mark" aria-hidden><AppIcon name="brand" size={18} /></span>
           <div>
-            <h1>有秋</h1>
-            <span className="brand-caption">Yield · 服田力穑，乃亦有秋</span>
+            {/* 「有秋 Yield」同一行，典故另起一行：侧栏可拖到 200px，
+                一行放不下「Yield · 服田力穑，乃亦有秋」，字会顶出面板右缘。 */}
+            <div className="brand-name">
+              <h1>有秋</h1>
+              <span className="brand-latin">Yield</span>
+            </div>
+            <span className="brand-caption">服田力穑，乃亦有秋</span>
           </div>
         </div>
       </div>
