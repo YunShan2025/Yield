@@ -225,7 +225,7 @@
 
 :root[data-theme="glass"] .btn-primary,
 :root[data-theme="glass"] .seg button.active {
-  color: #0d1524;
+  color: var(--text-on-accent);
   background: linear-gradient(135deg, #b8d4ff, #7eb0ff);
   box-shadow: 0 10px 24px rgba(80, 130, 210, 0.28), inset 0 1px rgba(255, 255, 255, 0.45);
 }
@@ -367,7 +367,7 @@
 .theme-preview-copy strong { color: var(--text-heading); font-size: 14px; }
 .theme-preview-copy small { color: var(--accent-strong); font-weight: 700; }
 .theme-preview-copy em { margin-top: 3px; color: var(--text-secondary); font-size: 11px; font-style: normal; line-height: 1.5; }
-.theme-preview-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: #fff; background: var(--accent); font-size: 12px; }
+.theme-preview-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: var(--text-on-accent); background: var(--accent); font-size: 12px; }
 .theme-preview-check:empty { display: none; }
 
 .theme-system-toggle {

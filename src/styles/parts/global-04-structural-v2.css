@@ -9,7 +9,7 @@ body {
 }
 
 .btn-primary {
-  color: #fff;
+  color: var(--text-on-accent);
   background: var(--accent);
   box-shadow: 0 8px 20px rgba(75, 104, 245, 0.2);
 }

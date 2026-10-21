@@ -10,10 +10,11 @@ colors:
   surface-selected: "rgba(47, 111, 237, 0.11)"
   text-primary: "#17233b"
   text-secondary: "#5f6d83"
-  text-muted: "#6b7a90"
+  text-muted: "#69778d"
   text-heading: "#101b31"
   text-label: "#41526b"
   text-on-accent: "#ffffff"
+  text-on-solid: "#ffffff"
   text-overdue: "#c3505a"
   accent: "#2f6fed"
   accent-hover: "#245fd2"
@@ -24,6 +25,10 @@ colors:
   success: "#2c8561"
   warning: "#a96622"
   danger: "#c3505a"
+  danger-solid: "#c3505a"
+  success-solid: "#2c8561"
+  warning-solid: "#a96622"
+  accent-solid: "#2f6fed"
   border: "rgba(34, 55, 91, 0.09)"
   border-strong: "rgba(34, 55, 91, 0.16)"
   focus-ring: "rgba(47, 111, 237, 0.28)"
@@ -191,10 +196,35 @@ components:
 
 | token | 清昼 | 静夜 | 晨曦玻璃 | 璃幕 |
 |---|---|---|---|---|
-| `--danger` | `#c3505a` | `#e05c67` | `#c84b5e` | `#f0888d` |
+| `--danger` | `#c3505a` | `#e05c67` | `#c5485a` | `#f0888d` |
 | `--success` | `#2c8561` | `#32986e` | `#247c68` | `#5dcf9e` |
-| `--warning` | `#a96622` | `#c77828` | `#ae642e` | `#f0b35a` |
-| `--text-muted` | `#6b7a90` | `#a7b3c6` | `#4d5f7a` | `#b0bcd0` |
+| `--warning` | `#a96622` | `#c77828` | `#aa612b` | `#f0b35a` |
+| `--text-muted` | `#69778d` | `#a7b3c6` | `#4d5f7a` | `#b0bcd0` |
+| `--text-overdue` | `#c3505a` | `#f0888d` | `#b93c52` | `#ffb0b6` |
+
+> **三处最小微调**：上表原本写的是清昼 `--text-muted #6b7a90`、晨曦 `--danger #c84b5e`、晨曦 `--warning #ae642e`，
+> 但这三值在本节自定的「≥4.5:1」标准下分别只有 4.36 / 4.35 / 4.31:1（面板基准：清昼 `#ffffff`、晨曦 `#f8faff`），
+> 与本节声明的「全部 ≥4.5:1」不符。阶段 2 按声明的标准取**同色相最近的达标值**：
+> `#69778d`（4.54:1）/ `#c5485a`（4.52:1）/ `#aa612b`（4.51:1）。其余取值一字未改。
+
+**实心状态标签**（背景 + 白字）必须用**独立 token**，不能复用文字色 —— 四主题取值（括号内为白字对比度）：
+
+| token | 清昼 | 静夜 | 晨曦玻璃 | 璃幕 |
+|---|---|---|---|---|
+| `--danger-solid` | `#c3505a` (4.55) | `#c3505a` (4.55) | `#c84b5e` (4.54) | `#b03a48` (5.92) |
+| `--success-solid` | `#2c8561` (4.53) | `#2c8561` (4.53) | `#247c68` (5.05) | `#2c8561` (4.53) |
+| `--warning-solid` | `#a96622` (4.55) | `#a96622` (4.55) | `#ae642e` (4.50) | `#a96622` (4.55) |
+
+**「压在实心底上的文字色」也要分两种**（阶段 2 新增）：
+
+| token | 清昼 | 静夜 | 晨曦玻璃 | 璃幕 | 用途 |
+|---|---|---|---|---|---|
+| `--text-on-accent` | `#ffffff` (4.55) | `#0b1428` (7.19) | `#060d18` (4.70) | `#0b1428` (8.33) | 压在 `--accent` 底上的字（主按钮） |
+| `--text-on-solid` | `#ffffff` | `#ffffff` | `#ffffff` | `#ffffff` | 压在 `--*-solid` 底上的字（状态标签） |
+
+> 括号内是压在 `--accent` 上的对比度。**清昼的 `--accent` 够深，白字达标；静夜 / 晨曦玻璃 / 璃幕的
+> `--accent` 是浅色调，白字只有 2.55 / 4.14 / 2.20:1** —— 这是 Material 3 的 `on-primary` 角色：
+> 深色主题的 on-primary 用深色字，不是白字。阶段 2 已按此改写主按钮与分段控件的文字色。
 
 **实心状态标签**（背景 + 白字）必须用**独立 token**，不能复用文字色：
 
@@ -441,6 +471,7 @@ components:
         --surface-hover  --surface-selected
         --danger-solid  --success-solid  --warning-solid  --accent-solid
 材质层  --shell-opacity  --shell-blur  --shell-tint  --shell-border  --shell-shadow
+文字层  --text-on-accent  --text-on-solid
 刻度层  --space-xs/sm/md/lg/xl/xxl/xxxl
         --font-size-display/h1/h2/h3/body/label/caption
         --radius-sm/md/lg/pill

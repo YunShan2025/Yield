@@ -394,14 +394,14 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .habit-delete-btn:hover:not(:disabled),
 .item-action-danger:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
-  color: #fff;
-  background: var(--danger);
+  color: var(--text-on-solid);
+  background: var(--danger-solid);
 }
 .item-action-primary.danger,
 .item-action-primary.danger:hover:not(:disabled) {
   border-color: transparent;
-  color: #fff;
-  background: var(--danger);
+  color: var(--text-on-solid);
+  background: var(--danger-solid);
 }
 .habit-card.is-checked {
   border-color: rgba(217, 119, 6, .28);

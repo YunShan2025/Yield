@@ -266,7 +266,7 @@
 
 .date-cell.is-selected {
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-weight: 700;
 }
 

@@ -275,7 +275,7 @@
 .desktop-notification-content > footer time { color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
 .desktop-notification-content > footer div { display: flex; gap: 6px; }
 .desktop-notification-content > footer button { min-height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); background: var(--surface-soft); font-size: 11px; }
-.desktop-notification-content > footer button.is-primary { border-color: transparent; color: #fff; background: var(--accent); }
+.desktop-notification-content > footer button.is-primary { border-color: transparent; color: var(--text-on-accent); background: var(--accent); }
 @keyframes desktop-notification-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .desktop-notification-card { animation: none; } }
 

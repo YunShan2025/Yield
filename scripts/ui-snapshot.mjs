@@ -88,17 +88,25 @@ for (const vp of [{ name: "desktop", width: 1600, height: 1000 }, { name: "mobil
     await page.waitForTimeout(300);
 
     for (const [view, label] of views) {
-      // 切视图：桌面点侧栏 .nav-item，移动点底部导航
-      const ok = await page.evaluate(({ view, label }) => {
-        const isMobile = document.querySelector(".mobile-nav, .mobile-bottom-nav") !== null;
-        const nodes = [...document.querySelectorAll(".nav-item, .mobile-nav-item, .mobile-nav button, .mobile-bottom-nav button")];
+      // 切视图：用「标签 span」匹配（nav 项自带计数徽标，整块 textContent 不等于标签）
+      const ok = await page.evaluate(({ label }) => {
+        const nodes = [...document.querySelectorAll(".nav-item-label, .mobile-nav-label")];
         const hit = nodes.find((n) => (n.textContent || "").trim() === label);
-        if (hit) { hit.click(); return true; }
-        return false;
-      }, { view, label });
+        if (!hit) return false;
+        (hit.closest("button") || hit).click();
+        return true;
+      }, { label });
       await page.waitForTimeout(700);
+      // 校验：目标导航项应处于 active 态，否则说明没切过去
+      const active = await page.evaluate(({ label }) => {
+        const nodes = [...document.querySelectorAll(".nav-item-label, .mobile-nav-label")];
+        const hit = nodes.find((n) => (n.textContent || "").trim() === label);
+        if (!hit) return false;
+        const btn = hit.closest(".nav-item, .mobile-nav-item");
+        return !!btn && /active|is-active|current/.test(btn.className);
+      }, { label });
       await page.screenshot({ path: join(OUT, `${vp.name}-${theme}-${view}.png`) });
-      log.push(`${vp.name}/${theme}/${view}: nav=${ok} title=${(await page.title())}`);
+      if (!ok || !active) log.push(`WARN ${vp.name}/${theme}/${view}: click=${ok} active=${active}  ← 视图可能未切换`);
     }
   }
   if (errors.length) log.push(`[${vp.name}] console: ${[...new Set(errors)].slice(0, 4).join(" | ")}`);
@@ -108,3 +116,4 @@ for (const vp of [{ name: "desktop", width: 1600, height: 1000 }, { name: "mobil
 await browser.close();
 console.log(log.join("\n"));
 console.log("SNAPSHOT_DIR=" + OUT);
+

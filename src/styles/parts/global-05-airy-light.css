@@ -259,7 +259,7 @@ select {
   padding: 11px 14px;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   font-weight: 600;
   box-shadow: var(--shadow);
 }
@@ -426,7 +426,7 @@ select {
 
 .seg button.active {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .chip {
@@ -1489,7 +1489,7 @@ select {
 }
 
 .week-day-head.is-today strong {
-  color: white;
+  color: var(--text-on-accent);
   background: var(--accent);
   width: 28px;
   height: 28px;
@@ -1633,13 +1633,13 @@ select {
 
 .detail-footer .btn-ghost.danger {
   border: 1px solid transparent;
-  background: var(--danger);
-  color: #fff;
+  background: var(--danger-solid);
+  color: var(--text-on-solid);
 }
 
 .detail-footer .btn-ghost.danger:hover {
-  background: color-mix(in srgb, var(--danger) 86%, #000);
-  color: #fff;
+  background: color-mix(in srgb, var(--danger-solid) 86%, #000);
+  color: var(--text-on-solid);
 }
 
 .detail-head-actions {

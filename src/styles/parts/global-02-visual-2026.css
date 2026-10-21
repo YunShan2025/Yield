@@ -212,7 +212,7 @@ button:active:not(:disabled) {
 
 .expand-task.is-done .task-check,
 .task-check.is-done {
-  color: white;
+  color: var(--text-on-accent);
   border-color: var(--accent);
   background: var(--accent);
 }
