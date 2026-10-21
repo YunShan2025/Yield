@@ -430,9 +430,41 @@ body {
   letter-spacing: -0.006em;
 }
 
+/* ============================================================
+   浏览器默认外观接管
+   选中文本、插入符、占位符、焦点环、等宽数字、下划线偏移 ——
+   这些部件你没有画，但它们承载着产品的观感。
+   放在级联最前端做唯一定义，别处不再重复。
+   ============================================================ */
+
 ::selection {
   color: var(--text-primary);
-  background: var(--warm-450-32);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+:root {
+  caret-color: var(--accent);
+  accent-color: var(--accent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+:root input::placeholder,
+:root textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+/* 焦点环：输入类用「边框变色 + 3px 外扩环」(见下)，其余控件统一 2px 强调色环 */
+:root :where(button, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:root input:focus-visible,
+:root textarea:focus-visible,
+:root select:focus-visible {
+  outline: none;
 }
 
 button,

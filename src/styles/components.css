@@ -363,7 +363,7 @@ select {
 
 .nav-item.active {
   background: var(--surface-selected);
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 
@@ -716,7 +716,7 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(180deg, var(--paper-100) 0%, var(--surface-base) 48%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 70%, var(--surface-base)) 0%, var(--surface-base) 48%),
     var(--surface-base);
   min-height: 0;
   height: 100%;
@@ -730,7 +730,7 @@ select {
 .timeline-h-hours {
   display: flex;
   border-bottom: 1px solid var(--border);
-  background: var(--white-92);
+  background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
   backdrop-filter: blur(6px);
   position: sticky;
   top: 0;
@@ -743,7 +743,7 @@ select {
   font-size: 11px;
   color: var(--text-muted);
   padding: 8px 10px;
-  border-left: 1px dashed var(--ink-950-a-8);
+  border-left: 1px dashed var(--border);
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
 }
@@ -757,8 +757,8 @@ select {
     to bottom,
     transparent 0,
     transparent 83px,
-    var(--ink-950-a-7) 83px,
-    var(--ink-950-a-7) 84px
+    var(--border) 83px,
+    var(--border) 84px
   );
 }
 
@@ -772,7 +772,7 @@ select {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: var(--ink-950-a-6);
+  background: var(--border);
 }
 
 .timeline-h-now {
@@ -807,8 +807,8 @@ select {
   gap: 6px;
   padding: 10px 14px 10px 16px;
   border-radius: 12px;
-  border: 1px solid var(--slate-150-22);
-  background: linear-gradient(135deg, var(--paper-550) 0%, var(--paper-950) 100%);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--text-primary) 6%, var(--surface-panel));
   color: var(--text-primary);
   text-align: left;
   overflow: hidden;
@@ -831,9 +831,9 @@ select {
 }
 
 .timeline-h-event.p1 {
-  background: linear-gradient(135deg, var(--rose-100) 0%, var(--rose-200) 100%);
-  border-color: var(--rose-550-20);
-  box-shadow: 0 4px 14px var(--rose-550-10);
+  background: color-mix(in srgb, var(--rose-550) 16%, var(--surface-panel));
+  border-color: color-mix(in srgb, var(--rose-550) 28%, var(--border));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--rose-550) 12%, transparent);
 }
 
 .timeline-h-event.p1::before {
@@ -841,9 +841,9 @@ select {
 }
 
 .timeline-h-event.p2 {
-  background: linear-gradient(135deg, var(--amber-150) 0%, var(--amber-350) 100%);
-  border-color: var(--amber-800-20);
-  box-shadow: 0 4px 14px var(--amber-800-10);
+  background: color-mix(in srgb, var(--amber-800) 16%, var(--surface-panel));
+  border-color: color-mix(in srgb, var(--amber-800) 28%, var(--border));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--amber-800) 12%, transparent);
 }
 
 .timeline-h-event.p2::before {
@@ -851,9 +851,9 @@ select {
 }
 
 .timeline-h-event.p4 {
-  background: linear-gradient(135deg, var(--paper-300) 0%, var(--paper-900) 100%);
-  border-color: var(--ink-950-a-10);
-  box-shadow: 0 4px 12px var(--ink-950-a-6);
+  background: color-mix(in srgb, var(--text-primary) 4%, var(--surface-panel));
+  border-color: var(--border);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--text-primary) 6%, transparent);
 }
 
 .timeline-h-event.p4::before {
@@ -876,13 +876,13 @@ select {
 /* 完成事项的「成就式」呈现:金色认可——✓ 金章、暖金底、完成时刻标识。
    不置灰、不划线、不降透明:完成是成就感,不是退场。 */
 .timeline-h-event.is-done {
-  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
-  border-color: var(--amber-900-28);
-  box-shadow: 0 4px 14px var(--amber-900-12);
+  background: color-mix(in srgb, var(--amber-700) 16%, var(--surface-panel));
+  border-color: color-mix(in srgb, var(--amber-800) 30%, var(--border));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--amber-800) 12%, transparent);
 }
 
 .timeline-h-event.is-done::before {
-  background: linear-gradient(180deg, var(--amber-750), var(--amber-900));
+  background: var(--amber-950-c);
 }
 
 .timeline-h-event.is-done:hover {
@@ -891,8 +891,8 @@ select {
 }
 
 .timeline-h-event.is-done .timeline-h-event-time {
-  background: var(--amber-900-12);
-  color: var(--amber-950-a);
+  background: color-mix(in srgb, var(--amber-800) 16%, transparent);
+  color: var(--text-secondary);
 }
 
 .timeline-h-event-done {
@@ -905,15 +905,15 @@ select {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
-  color: var(--white);
-  box-shadow: 0 1px 4px var(--amber-900-35);
+  background: var(--amber-950-c);
+  color: var(--gold-150);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--amber-950-c) 35%, transparent);
 }
 
 .timeline-h-allday-chip.is-done {
-  background: var(--amber-300);
-  border-color: var(--amber-900-30);
-  color: var(--amber-950-a);
+  background: color-mix(in srgb, var(--amber-700) 22%, var(--surface-panel));
+  border-color: color-mix(in srgb, var(--amber-800) 30%, var(--border));
+  color: var(--text-secondary);
 }
 
 .timeline-h-allday-chip.is-done svg {
@@ -922,21 +922,6 @@ select {
   color: var(--amber-900);
 }
 
-:root[data-theme="dark"] .timeline-h-event.is-done {
-  background: var(--amber-750-14);
-  border-color: var(--amber-750-40);
-}
-
-:root[data-theme="dark"] .timeline-h-event.is-done .timeline-h-event-time {
-  background: var(--amber-750-16);
-  color: var(--amber-700);
-}
-
-:root[data-theme="dark"] .timeline-h-allday-chip.is-done {
-  background: var(--amber-750-14);
-  border-color: var(--amber-750-30);
-  color: var(--amber-700);
-}
 
 /* 今日/当日事项行:同一套成就式完成态。作用于 .day-agenda 作用域,
    周历等其余列表的完成态不受影响。金色用覆盖层渐显,与按钮落金同步;
@@ -1037,7 +1022,7 @@ select {
   font-variant-numeric: tabular-nums;
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--white-85);
+  background: color-mix(in srgb, var(--surface-panel) 78%, transparent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3676,11 +3661,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   min-height: 55vh;
   place-items: center;
   color: var(--text-muted);
-}
-
-:where(button, input, textarea, select, [tabindex]):focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 48%, transparent);
-  outline-offset: 2px;
 }
 
 :where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: .56; }
