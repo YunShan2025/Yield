@@ -5841,11 +5841,21 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   line-height: 1.2;
   cursor: pointer;
 }
-.ledger-choice-grid button i {
-  display: block;
-  font-style: normal;
-  font-size: var(--font-size-h3);
-  font-weight: 800;
+.select-option-icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--text-muted);
+}
+
+.ledger-choice-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 3px;
   line-height: 1;
   width: auto;
   height: auto;

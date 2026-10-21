@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-export type SelectOption = { value: string; label: string };
+export type SelectOption = { value: string; label: string; icon?: ReactNode };
 
 type SelectMenuProps = {
   value: string;
@@ -174,6 +174,7 @@ export function SelectMenu({
                     setOpen(false);
                   }}
                 >
+                  {item.icon ? <span className="select-option-icon" aria-hidden>{item.icon}</span> : null}
                   <span>{item.label}</span>
                   {item.value === value ? (
                     <span className="select-check" aria-hidden>

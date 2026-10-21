@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppIcon } from "@/components/AppIcon";
+import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import {
@@ -30,10 +30,10 @@ import { DatePicker } from "@/components/DatePicker";
 import { confirmAction } from "@/components/AppConfirm";
 import { useAppStore } from "@/store/app";
 
-const ICONS: Record<string, string> = {
-  food: "餐", car: "行", bag: "购", home: "住", play: "娱", medical: "医",
-  book: "学", gift: "礼", plane: "旅", dots: "…", salary: "薪", star: "奖",
-  trend: "财", zap: "兼", back: "退",
+const ICONS: Record<string, AppIconName> = {
+  food: "food", car: "car", bag: "bag", home: "home", play: "music", medical: "medical",
+  book: "book", gift: "gift", plane: "plane", dots: "dots", salary: "salary", star: "star",
+  trend: "trend", zap: "zap", back: "back",
 };
 
 function currentMonth() {
@@ -57,9 +57,9 @@ function monthLabel(month: string) {
   return `${year} 年 ${Number(value)} 月`;
 }
 
-function accountGlyph(kind: string) {
-  return ({ cash: "现", card: "卡", credit: "信", alipay: "支", wechat: "微" } as Record<string, string>)[kind] ?? "账";
-}
+const ACCOUNT_ICONS: Record<string, AppIconName> = {
+  cash: "wallet", card: "card", credit: "credit", alipay: "phone", wechat: "chat",
+};
 
 type DraftState = { kind: LedgerKind; amount: string; categoryId: number; accountId: number; date: string; note: string };
 
@@ -335,14 +335,18 @@ export function LedgerView() {
                   {!collapsed && items.map((item) => <div className="ledger-row" key={item.id}><span className="ledger-row-icon" style={{
                     background: `color-mix(in srgb, ${item.category_color} 14%, var(--surface-panel))`,
                     color: `color-mix(in srgb, ${item.category_color} 55%, var(--text-primary))`,
-                  }}>{ICONS[item.category_icon] ?? "·"}</span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions item-action-cluster"><button type="button" className="item-action-btn item-action-edit" onClick={() => openDrawer(item)}><AppIcon name="edit" size={14} /><span>编辑</span></button><button type="button" className="item-action-btn item-action-danger" onClick={() => void remove(item)}><AppIcon name="trash" size={14} /><span>删除</span></button></div></div>)}
+                  }}><AppIcon name={ICONS[item.category_icon] ?? "dots"} size={16} /></span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions item-action-cluster"><button type="button" className="item-action-btn item-action-edit" onClick={() => openDrawer(item)}><AppIcon name="edit" size={14} /><span>编辑</span></button><button type="button" className="item-action-btn item-action-danger" onClick={() => void remove(item)}><AppIcon name="trash" size={14} /><span>删除</span></button></div></div>)}
                 </div>
               );
             })}</section>
       </>
       </div>
 
-      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3></div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}>✕</button></header><div className="ledger-drawer-body"><div className="ledger-kind-tabs"><button className={draft.kind === "expense" ? "active" : ""} onClick={() => setKind("expense")}>支出</button><button className={draft.kind === "income" ? "active" : ""} onClick={() => setKind("income")}>收入</button></div><label className="ledger-amount"><span>金额</span><div><b>¥</b><input ref={amountRef} value={draft.amount} inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></div></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>分类</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><i style={{ color: item.color }}>{ICONS[item.icon] ?? "·"}</i>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({ value: String(item.id), label: `${accountGlyph(item.kind)} · ${item.name}` }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer"><button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存记录</button></footer></aside>}
+      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3></div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}>✕</button></header><div className="ledger-drawer-body"><div className="ledger-kind-tabs"><button className={draft.kind === "expense" ? "active" : ""} onClick={() => setKind("expense")}>支出</button><button className={draft.kind === "income" ? "active" : ""} onClick={() => setKind("income")}>收入</button></div><label className="ledger-amount"><span>金额</span><div><b>¥</b><input ref={amountRef} value={draft.amount} inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></div></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>分类</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><span className="ledger-choice-icon" style={{ color: item.color }}><AppIcon name={ICONS[item.icon] ?? "dots"} size={17} /></span>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({
+                    value: String(item.id),
+                    label: item.name,
+                    icon: <AppIcon name={ACCOUNT_ICONS[item.kind] ?? "wallet"} size={15} />,
+                  }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer"><button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存记录</button></footer></aside>}
       {notice && <div className="ledger-toast" role="status"><span>{notice.text}</span>{notice.undoId && <button onClick={() => void undoDelete(notice.undoId!)}>撤销</button>}</div>}
     </main>
   );
