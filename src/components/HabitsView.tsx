@@ -501,7 +501,6 @@ function HabitCard({
   const weekTarget = weeklyTargetFromRule(rule) ?? habit.target_per_week;
   const scheduleText = describeHabitSchedule(rule);
   const dueToday = matchesRepeatRule(today, rule);
-  const weekPercent = Math.min(100, Math.round((weekDone / weekTarget) * 100));
   const weekFull = weekDone >= weekTarget;
   const streak = (() => {
     const dates = new Set(checks.map((item) => item.check_date));
@@ -538,9 +537,6 @@ function HabitCard({
           className={`habit-week-progress${weekFull ? " is-full" : ""}`}
           aria-label={`本周已打卡 ${weekDone}/${weekTarget} 次`}
         >
-          <span className="habit-week-track">
-            <i style={{ width: `${weekPercent}%` }} />
-          </span>
           <em>
             本周 {weekDone}/{weekTarget} 次
           </em>
@@ -576,7 +572,7 @@ function HabitCard({
         )}
         <button
           type="button"
-          className="habit-action-btn habit-delete-btn"
+          className="habit-action-btn habit-delete-btn quiet-danger"
           onClick={onDelete}
         >
           <AppIcon name="trash" size={14} />

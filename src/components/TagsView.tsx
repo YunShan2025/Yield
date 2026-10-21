@@ -167,7 +167,13 @@ export function TagsView() {
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
           <h3>把散落的事，按线归拢。</h3>
-          <p className="today-hero-note">跨项目、跨清单的同类任务，一个标签就能聚合查看。</p>
+        </div>
+        <div className="today-hero-meter">
+          <span className="today-hero-meter-count">
+            <strong>{tags.length}</strong>
+            <span>个</span>
+          </span>
+          <span className="today-hero-meter-label">标签</span>
         </div>
       </section>
       <div className="tags-body">
@@ -212,7 +218,7 @@ export function TagsView() {
                       </button>
                       <button
                         type="button"
-                        className="item-action-btn item-action-danger"
+                        className="item-action-btn item-action-danger quiet-danger"
                         onClick={() => {
                           void confirmAction({
                             title: `删除标签「${tag.name}」？`,

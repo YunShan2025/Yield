@@ -87,10 +87,6 @@ export function AnniversariesView() {
   }, []);
 
   const sorted = useMemo(() => sortAnniversaries(items, today), [items, today]);
-  const upcoming = sorted.filter((item) => {
-    const days = anniversaryHeadline(item, today).daysLeft;
-    return days !== null && days <= 30;
-  });
 
   const submit = async () => {
     if (!title.trim() || busy) return;
@@ -158,7 +154,6 @@ export function AnniversariesView() {
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
           <h3>把值得记住的日子，好好收藏。</h3>
-          <p className="today-hero-note">公历、农历都能记；日子按远近排序，未来三十天内的会单独列出一栏。</p>
         </div>
       </section>
 
@@ -269,23 +264,6 @@ export function AnniversariesView() {
           onChange={(event) => setNote(event.target.value)}
         />
       </section></div> : null}
-
-      {upcoming.length ? (
-        <section className="anni-upcoming" aria-label="近 30 天">
-          <h3>近 30 天</h3>
-          <div className="anni-upcoming-row">
-            {upcoming.map((item) => {
-              const head = anniversaryHeadline(item, today);
-              return (
-                <button type="button" key={item.id} className="anni-chip" onClick={() => setSelected(item)}>
-                  <strong>{item.title}</strong>
-                  <span>{head.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
 
       {loading ? (
         <div className="moments-loading">正在加载纪念日…</div>

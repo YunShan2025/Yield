@@ -127,7 +127,6 @@ export function ReviewView() {
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
           <h3>回头看，是为了走得更稳。</h3>
-          <p className="today-hero-note">完成率、高效时段与满勤天数，每周回望一次，节奏自然浮现。</p>
         </div>
       </section>
 

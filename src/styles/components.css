@@ -1782,11 +1782,14 @@ select {
 .growth-tabs button { padding: 9px 15px; border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary); cursor: pointer; }
 .growth-tabs button.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; }
 
-.growth-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
-.growth-metrics article { padding: 18px 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-panel); }
-.growth-metrics span { display: block; color: var(--text-secondary); font-size: 12px; }
-.growth-metrics strong { display: block; margin-top: 7px; color: var(--text-primary); font-size: 26px; }
-.growth-metrics small { font-size: 12px; font-weight: 500; }
+/* 四个大数字做成一排指标（标签 / 数字 / 辅助说明，发丝线分隔），不再做四张
+   同尺寸卡 —— 「大数字 + 小标签 + 辅助统计」当页面结构是 craft-floor 禁项。 */
+.growth-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.growth-metrics article { display: grid; gap: 4px; align-content: start; padding: 16px 24px 16px 2px; }
+.growth-metrics article + article { padding-left: 24px; border-left: 1px solid var(--border); }
+.growth-metrics span { color: var(--text-secondary); font-size: 12px; }
+.growth-metrics strong { color: var(--text-primary); font: 700 28px/1.1 var(--font-display); letter-spacing: -.025em; }
+.growth-metrics small { font-size: 12px; font-weight: 500; color: var(--text-muted); }
 
 .growth-panel { min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface-panel); }
 .growth-panel h3 { margin: 0 0 14px; }
@@ -2145,15 +2148,15 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
 }
-/* 任务行里的「删除」降权：每行都摆一颗红按钮，一屏就是一片红点。
+/* 「删除」降权：列表里每行都摆一颗红按钮，一屏就是一片红点。
    动作本身还在（点开有二次确认），红色只在悬停时出现。 */
-.expand-delete {
+.quiet-danger {
   border-color: var(--border);
   color: var(--text-secondary);
   background: var(--surface-panel);
 }
 
-.expand-delete:hover:not(:disabled) {
+.quiet-danger:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
@@ -2536,24 +2539,27 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .tags-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
   margin-top: 12px;
 }
 
+/* 标签 / 项目：卡片网格 -> 一行一条的列表。八张同尺寸小卡当页面结构是懒
+   容器；列表还让名字拿到整行宽度，不用截断。 */
 .tag-card {
-  display: grid;
-  gap: 9px;
-  padding: 13px 15px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface-panel);
-  transition: border-color calc(160ms * var(--motion-scale)) ease, box-shadow calc(160ms * var(--motion-scale)) ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  transition: background-color calc(160ms * var(--motion-scale)) ease;
 }
 
 .tag-card.is-active {
-  border-color: color-mix(in srgb, var(--tag-accent, var(--accent)) 55%, var(--border));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tag-accent, var(--accent)) 14%, transparent);
+  background: var(--surface-sunken);
+  border-bottom-color: var(--border);
 }
 
 .tag-card-main {
@@ -2701,11 +2707,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   margin-left: auto;
 }
 
-/* 项目页与标签页同构：上方紧凑卡片网格，点击卡片在下方展开详情 */
+/* 项目页与标签页同构：上方一行一条的列表，点击条目在下方展开详情 */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
   margin-top: 12px;
 }
 
@@ -3963,8 +3968,8 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .today-hero-note {
-  margin: 8px 0 0;
-  max-width: 36em;
+  margin: 0;
+  max-width: 46em;
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.45;
@@ -4292,7 +4297,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 
 .plan-warning {
   display: inline-flex;
-  margin-top: 10px;
+  align-self: center;
   padding: 4px 8px;
   border-radius: 999px;
   color: var(--warm-650);

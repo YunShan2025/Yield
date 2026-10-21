@@ -440,7 +440,7 @@ export function GrowthView() {
           </section>
           <section className="growth-panel heatmap-panel">
             <div className="growth-panel-head">
-              <div><h3>最近半年的投入</h3><p>点击格子回看当天完成的行动</p></div>
+              <div><h3>最近半年的投入</h3></div>
               <SelectMenu
                 ariaLabel="筛选目标"
                 value={filterGoalId}

@@ -823,9 +823,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
   flex-shrink: 0;
   min-height: 0;
-  padding: 20px 26px;
+  padding: 12px 22px;
   overflow: hidden;
   color: var(--text-primary);
   border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
@@ -851,11 +852,18 @@ body {
     0 0 0 48px color-mix(in srgb, var(--accent) 2%, transparent);
 }
 
+/* 引导块排成一行：箴言标题 + 说明 + 状态标签依次排开，右侧是本页的一个数字。
+   竖排两行会让 126px 的色块压住首屏 —— 今日页的「今日事项」就是因此被
+   推到折线以下的。 */
 .today-hero-copy {
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: 72%;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .today-hero h3 {

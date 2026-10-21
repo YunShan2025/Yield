@@ -203,7 +203,7 @@ function DayTaskRow({
           !selecting && isActiveTask(task) ? (
             <button
               type="button"
-              className="item-action-btn item-action-danger expand-delete"
+              className="item-action-btn item-action-danger quiet-danger expand-delete"
               title="移入回收站"
               onClick={(e) => {
                 e.stopPropagation();

@@ -144,7 +144,13 @@ export function ProjectsView() {
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
             <h3>百工居肆以成其事。</h3>
-            <p className="today-hero-note">项目是长期事项的工坊：相关任务都在这里聚拢。</p>
+          </div>
+          <div className="today-hero-meter">
+            <span className="today-hero-meter-count">
+              <strong>{projects.length}</strong>
+              <span>个</span>
+            </span>
+            <span className="today-hero-meter-label">项目</span>
           </div>
         </section>
         {/* 未开始：还没有任务的项目；进行中：已挂上任务的项目。 */}
@@ -244,9 +250,7 @@ export function ProjectsView() {
               onClose={() => setActiveProjectId(null)}
             />
           </div>
-        ) : (
-          <p className="projects-hint">点击上方项目卡片，可查看对应的任务与进度。</p>
-        )}
+        ) : null}
 
         {archivedProjects.length ? (
           <section aria-label="已归档项目">
