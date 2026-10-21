@@ -24,6 +24,7 @@ export type AppIconName =
   | "credit"
   | "phone"
   | "chat"
+  | "chevron"
   | "review"
   | "panel"
   | "trash"
@@ -78,6 +79,8 @@ const paths: Record<AppIconName, ReactNode> = {
   trend: <><path d="M3.2 16.6h13.6" /><path d="M6 16.6v-4.4" /><path d="M10 16.6V6.2" /><path d="M14 16.6V9.2" /></>,
   /** 兼职：闪电。 */
   zap: <path d="M11.2 2.6 4.6 11h4.2l-.6 6.4L15.4 9h-4.2l0-6.4Z" />,
+  /** 展开/收起的尖角。 */
+  chevron: <path d="M5 8l5 5 5-5" />,
   /** 储蓄卡：银行卡。 */
   card: <><rect x="2.5" y="5.5" width="15" height="9" rx="1.6" /><path d="M2.5 8.8h15" /></>,
   /** 信用卡：卡 + 时钟。 */

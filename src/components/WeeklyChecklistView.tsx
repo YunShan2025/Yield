@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
 import { currentDateStreak } from "@/lib/growth";
@@ -11,6 +11,7 @@ import {
   weekdayShort,
   type WeeklyCategoryId,
 } from "@/lib/weeklyChecklist";
+import { ExpandRow } from "@/components/ExpandRow";
 
 function formatMd(date: string) {
   const [, m, d] = date.split("-");
@@ -43,6 +44,8 @@ export function WeeklyChecklistView() {
   );
 
   const donePct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+  // 哪个分类展开着：点哪行就在哪行下面展开，不另起一块。
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   // 周节奏放在周清单：今日页只留今天要做的事，周统计归这里。
   const weekChecks = useMemo(
@@ -138,26 +141,58 @@ export function WeeklyChecklistView() {
         </div>
       </section>
 
-      {/* 本周目标：一行一条，像表一样对齐 —— 四张同尺寸卡片当页面结构是懒容器，
-          而且卡里的进度条与头部计数、页脚文字讲的是同一件事。 */}
-      <section className="weekly-goals" aria-label="本周目标">
-        <h3>本周目标</h3>
-        <ul className="weekly-goal-list">
-          {categories.map((bucket) => (
-            <li key={bucket.category.id} className="weekly-goal-row">
-              <span
-                className="weekly-goal-dot"
-                style={{ background: bucket.category.color }}
-                aria-hidden
-              />
-              <strong className="weekly-goal-name">{bucket.category.label}</strong>
-              <span className="weekly-goal-note">{goalLine(bucket.category.id)}</span>
-              <span className="weekly-goal-count">
-                {bucket.done}/{bucket.total}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {/* 本周任务：按分类聚合，一行一条。点行就地展开这一类的任务 —— 分类是「按标签
+          分组」的口径，当周日历是「按天」的口径，两个视角不重复。 */}
+      <section className="weekly-goals" aria-label="本周任务">
+        <h3>本周任务</h3>
+        <div className="weekly-goal-list">
+          {categories.map((bucket) => {
+            const on = expandedCategory === bucket.category.id;
+            return (
+              <ExpandRow
+                key={bucket.category.id}
+                open={on}
+                onToggle={() => setExpandedCategory(on ? null : bucket.category.id)}
+                accent={bucket.category.color}
+                rowId={bucket.category.id}
+                dot={
+                  <span
+                    className="weekly-goal-dot"
+                    style={{ background: bucket.category.color }}
+                    aria-hidden
+                  />
+                }
+                title={bucket.category.label}
+                meta={goalLine(bucket.category.id)}
+                trailing={`${bucket.done}/${bucket.total}`}
+                toggleTitle={on ? "收起这一类" : "查看这一类的任务"}
+              >
+                {bucket.tasks.length ? (
+                  <div className="weekly-goal-tasks">
+                    {bucket.tasks.map((task) => (
+                      <button
+                        key={task.id}
+                        type="button"
+                        className={`weekly-goal-task${task.status === "completed" ? " is-done" : ""}`}
+                        onClick={() => selectTask(task.id)}
+                      >
+                        <span className="weekly-goal-task-state" aria-hidden>
+                          {task.status === "completed" ? "✓" : "○"}
+                        </span>
+                        <span className="weekly-goal-task-title">{task.title}</span>
+                        {task.due_date ? (
+                          <span className="weekly-goal-task-due">{task.due_date.slice(5)}</span>
+                        ) : null}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="expand-row-empty">这一类本周没有任务。</p>
+                )}
+              </ExpandRow>
+            );
+          })}
+        </div>
       </section>
 
       <section className="weekly-days" aria-label="当周日历">

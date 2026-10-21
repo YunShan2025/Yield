@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
 import { AppIcon } from "@/components/AppIcon";
+import { ExpandRow } from "@/components/ExpandRow";
 import type { Project } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import { formatDayStamp } from "@/lib/dates";
@@ -29,7 +30,6 @@ export function ProjectsView() {
   const [editDueDate, setEditDueDate] = useState("");
   const [editTagId, setEditTagId] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const detailRef = useRef<HTMLDivElement>(null);
   // 命令面板定位过来的项目需要滚到详情；手动点卡片时保持原位。
   const pendingDetailScrollRef = useRef(false);
 
@@ -41,9 +41,6 @@ export function ProjectsView() {
     projects.find((p) => p.id === activeProjectId) ??
     archivedProjects.find((p) => p.id === activeProjectId) ??
     null;
-  const activeProjectArchived = archivedProjects.some(
-    (p) => p.id === activeProject?.id,
-  );
 
   // 命令面板选中项目后：展开该项目的任务详情（已归档项目也能定位）。
   useEffect(() => {
@@ -56,7 +53,9 @@ export function ProjectsView() {
   useEffect(() => {
     if (!activeProject || !pendingDetailScrollRef.current) return;
     pendingDetailScrollRef.current = false;
-    detailRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    document
+      .querySelector(`[data-expand-row="${activeProject.id}"]`)
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [activeProject]);
 
   const openCreate = () => {
@@ -172,27 +171,28 @@ export function ProjectsView() {
                   {inProgress.map((project) => {
                     const projectTasks = selectProjectTasks(tasks, project.id);
                     const on = activeProjectId === project.id;
+                    const done = projectTasks.filter((task) => task.status === "completed").length;
                     return (
-                      <article
+                      <ExpandRow
                         key={project.id}
-                        className={`tag-card project-tile ${on ? "is-active" : ""}`}
-                        style={{ "--tag-accent": projectColor(project) } as CSSProperties}
+                        open={on}
+                        onToggle={() => setActiveProjectId(on ? null : project.id)}
+                        accent={projectColor(project)}
+                        rowId={project.id}
+                        dot={<span className="tag-card-dot" aria-hidden />}
+                        title={project.name}
+                        trailing={`${projectTasks.length} 项任务 · 已完成 ${done}`}
+                        toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
                       >
-                        <button
-                          type="button"
-                          className="tag-card-main"
-                          title={on ? "收起该项目" : "查看该项目的任务"}
-                          onClick={() => setActiveProjectId(on ? null : project.id)}
-                        >
-                          <span className="tag-card-dot" aria-hidden />
-                          <strong>{project.name}</strong>
-                          <span className="tag-card-count">
-                            {`${projectTasks.length} 项任务 · 已完成 ${
-                              projectTasks.filter((task) => task.status === "completed").length
-                            }`}
-                          </span>
-                        </button>
-                      </article>
+                        <ProjectTaskPanel
+                          project={project}
+                          tasks={projectTasks}
+                          tags={tags}
+                          onEdit={() => beginEditProject(project)}
+                          onArchive={() => void archiveProject(project.id)}
+                          onDelete={() => void deleteActiveProject()}
+                        />
+                      </ExpandRow>
                     );
                   })}
                   {!projects.length ? (
@@ -211,22 +211,19 @@ export function ProjectsView() {
                     {notStarted.map((project) => {
                       const on = activeProjectId === project.id;
                       return (
-                        <article
+                        <ExpandRow
                           key={project.id}
-                          className={`tag-card project-tile ${on ? "is-active" : ""}`}
-                          style={{ "--tag-accent": projectColor(project) } as CSSProperties}
+                          open={on}
+                          onToggle={() => setActiveProjectId(on ? null : project.id)}
+                          accent={projectColor(project)}
+                          rowId={project.id}
+                          dot={<span className="tag-card-dot" aria-hidden />}
+                          title={project.name}
+                          trailing="暂无任务"
+                          toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
                         >
-                          <button
-                            type="button"
-                            className="tag-card-main"
-                            title={on ? "收起该项目" : "查看该项目的任务"}
-                            onClick={() => setActiveProjectId(on ? null : project.id)}
-                          >
-                            <span className="tag-card-dot" aria-hidden />
-                            <strong>{project.name}</strong>
-                            <span className="tag-card-count">暂无任务</span>
-                          </button>
-                        </article>
+                          <p className="expand-row-empty">这个项目还没有挂任务。</p>
+                        </ExpandRow>
                       );
                     })}
                   </div>
@@ -235,22 +232,6 @@ export function ProjectsView() {
             </>
           );
         })()}
-
-        {activeProject ? (
-          <div ref={detailRef}>
-            <ProjectDetail
-              project={activeProject}
-              tasks={tasks}
-              tags={tags}
-              archived={activeProjectArchived}
-              onEdit={() => beginEditProject(activeProject)}
-              onArchive={() => void archiveProject(activeProject.id)}
-              onRestore={() => void restoreProject(activeProject.id)}
-              onDelete={() => void deleteActiveProject()}
-              onClose={() => setActiveProjectId(null)}
-            />
-          </div>
-        ) : null}
 
         {archivedProjects.length ? (
           <section aria-label="已归档项目">
@@ -264,33 +245,32 @@ export function ProjectsView() {
                 const done = projectTasks.filter(
                   (task) => task.status === "completed",
                 ).length;
+                const on = activeProjectId === project.id;
                 return (
-                  <article
+                  <ExpandRow
                     key={project.id}
-                    className={`tag-card project-tile is-archived ${
-                      activeProjectId === project.id ? "is-active" : ""
-                    }`}
-                    style={{ "--tag-accent": projectColor(project) } as CSSProperties}
+                    open={on}
+                    onToggle={() => setActiveProjectId(on ? null : project.id)}
+                    accent={projectColor(project)}
+                    rowId={project.id}
+                    dot={<span className="tag-card-dot" aria-hidden />}
+                    title={project.name}
+                    trailing={
+                      projectTasks.length
+                        ? `${projectTasks.length} 项任务 · 已完成 ${done}`
+                        : "暂无任务"
+                    }
+                    toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
                   >
-                    <div className="tag-card-main is-static">
-                      <span className="tag-card-dot" aria-hidden />
-                      <strong>{project.name}</strong>
-                      <span className="tag-card-count">
-                        {projectTasks.length
-                          ? `${projectTasks.length} 项任务 · 已完成 ${done}`
-                          : "暂无任务"}
-                      </span>
-                      <button
-                        type="button"
-                        className="item-action-btn item-action-archive"
-                        title="恢复到进行中"
-                        onClick={() => void restoreProject(project.id)}
-                      >
-                        <AppIcon name="review" size={14} />
-                        <span>恢复</span>
-                      </button>
-                    </div>
-                  </article>
+                    <ProjectTaskPanel
+                      project={project}
+                      tasks={projectTasks}
+                      tags={tags}
+                      archived
+                      onRestore={() => void restoreProject(project.id)}
+                      onDelete={() => void deleteActiveProject()}
+                    />
+                  </ExpandRow>
                 );
               })}
             </div>
@@ -396,8 +376,8 @@ export function ProjectsView() {
   );
 }
 
-/** 选中项目后展开的任务详情区，样式对齐标签页的筛选区。 */
-function ProjectDetail({
+/** 展开在行内的任务面板：任务列表 + 右对齐的操作。 */
+function ProjectTaskPanel({
   project,
   tasks,
   tags,
@@ -406,82 +386,34 @@ function ProjectDetail({
   onArchive,
   onRestore,
   onDelete,
-  onClose,
 }: {
   project: Project;
   tasks: ReturnType<typeof useAppStore.getState>["tasks"];
   tags: ReturnType<typeof useAppStore.getState>["tags"];
-  archived: boolean;
-  onEdit: () => void;
-  onArchive: () => void;
-  onRestore: () => void;
+  archived?: boolean;
+  onEdit?: () => void;
+  onArchive?: () => void;
+  onRestore?: () => void;
   onDelete: () => void;
-  onClose: () => void;
 }) {
   const selectTask = useAppStore((s) => s.selectTask);
   const [showAllTasks, setShowAllTasks] = useState(false);
-  const projectTasks = selectProjectTasks(tasks, project.id);
-  const done = projectTasks.filter((task) => task.status === "completed").length;
-  const progress = projectTasks.length
-    ? Math.round((done / projectTasks.length) * 100)
-    : 0;
   const tagName = tags.find((tag) => tag.id === project.tag_id)?.name;
-  const displayColor = tags.find((tag) => tag.id === project.tag_id)?.color ?? project.color;
   // 完成时间倒序（未完成在后）；默认只展示前五条，可展开全部
-  const sortedTasks = [...projectTasks].sort(
+  const sortedTasks = [...tasks].sort(
     (a, b) =>
       (Date.parse(b.completed_at ?? "") || 0) -
       (Date.parse(a.completed_at ?? "") || 0),
   );
   const visibleTasks = showAllTasks ? sortedTasks : sortedTasks.slice(0, 5);
   return (
-    <section className="tags-filtered projects-detail" aria-label={`${project.name} 的任务`}>
-      <header>
-        <h3>
-          <span className="tag-card-dot" style={{ background: displayColor }} aria-hidden />
-          「{project.name}」的任务
-          <span className="tags-filtered-count">{projectTasks.length}</span>
-        </h3>
-        <div className="projects-detail-actions">
-          <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
-            <AppIcon name="edit" size={14} />
-            <span>编辑</span>
-          </button>
-          {archived ? (
-            <button type="button" className="item-action-btn item-action-archive" onClick={onRestore}>
-              <AppIcon name="review" size={14} />
-              <span>恢复</span>
-            </button>
-          ) : (
-            <button type="button" className="item-action-btn item-action-archive" onClick={onArchive}>
-              <AppIcon name="archive" size={14} />
-              <span>归档</span>
-            </button>
-          )}
-          <button type="button" className="item-action-btn item-action-danger" onClick={onDelete}>
-            <AppIcon name="trash" size={14} />
-            <span>删除</span>
-          </button>
-          <button type="button" className="item-action-btn" onClick={onClose}>
-            关闭
-          </button>
-        </div>
-      </header>
-      <div className="project-card-meta">
-        <p>{projectTasks.length} 项任务 · 已完成 {done}</p>
-        {project.tag_id ? (
-          <span
-            className="project-card-tag"
-            style={{ "--tag-accent": tags.find((tag) => tag.id === project.tag_id)?.color } as CSSProperties}
-          >
-            <i className="tag-card-dot" aria-hidden />
-            {tagName ?? "标签"}
-          </span>
-        ) : null}
-      </div>
-      <div className="progress-bar">
-        <span style={{ width: `${progress}%` }} />
-      </div>
+    <div className="expand-row-body">
+      {tagName ? (
+        <span className="project-card-tag">
+          <i className="tag-card-dot" aria-hidden />
+          {tagName}
+        </span>
+      ) : null}
       <div className="project-task-links">
         {visibleTasks.map((task) => (
           <button key={task.id} type="button" onClick={() => selectTask(task.id)}>
@@ -505,6 +437,43 @@ function ProjectDetail({
           {showAllTasks ? "收起任务列表" : `展开全部 ${sortedTasks.length} 项任务`}
         </button>
       ) : null}
-    </section>
+      <div className="expand-row-foot">
+        {onEdit ? (
+          <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
+            <AppIcon name="edit" size={14} />
+            <span>编辑</span>
+          </button>
+        ) : null}
+        {archived ? (
+          onRestore ? (
+            <button
+              type="button"
+              className="item-action-btn item-action-archive"
+              onClick={onRestore}
+            >
+              <AppIcon name="review" size={14} />
+              <span>恢复</span>
+            </button>
+          ) : null
+        ) : onArchive ? (
+          <button
+            type="button"
+            className="item-action-btn item-action-archive"
+            onClick={onArchive}
+          >
+            <AppIcon name="archive" size={14} />
+            <span>归档</span>
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="item-action-btn item-action-danger quiet-danger"
+          onClick={onDelete}
+        >
+          <AppIcon name="trash" size={14} />
+          <span>删除</span>
+        </button>
+      </div>
+    </div>
   );
 }

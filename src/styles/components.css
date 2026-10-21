@@ -2585,35 +2585,104 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   margin-top: 12px;
 }
 
-/* 标签 / 项目：卡片网格 -> 一行一条的列表。八张同尺寸小卡当页面结构是懒
-   容器；列表还让名字拿到整行宽度，不用截断。 */
-.tag-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 2px;
-  border: 0;
+/* 可展开行：一行一条，点行就地展开，展开内容附着在这一行下面。 */
+.expand-row {
   border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: none;
   transition: background-color calc(160ms * var(--motion-scale)) ease;
 }
 
-.tag-card.is-active {
+.expand-row.is-open {
   background: var(--surface-sunken);
-  border-bottom-color: var(--border);
 }
 
-.tag-card-main {
+.expand-row-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 30px;
-  padding: 0;
+}
+
+.expand-row-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 7px 2px;
   border: 0;
   background: transparent;
-  cursor: pointer;
+  color: inherit;
   text-align: left;
+  cursor: pointer;
+}
+
+.expand-row-title {
+  overflow: hidden;
+  flex: none;
+  max-width: 46%;
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expand-row-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expand-row-trailing {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.expand-row-caret {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  transition: transform var(--motion-fast);
+}
+
+.expand-row-caret.open {
+  transform: rotate(180deg);
+}
+
+.expand-row-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.expand-row-body {
+  display: grid;
+  gap: 8px;
+  padding: 2px 10px 12px 30px;
+}
+
+.expand-row-foot {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.expand-row-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
 }
 
 .tag-card-dot {
@@ -2622,29 +2691,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   flex: none;
   border-radius: 50%;
   background: var(--tag-accent, var(--accent));
-}
-
-.tag-card-main strong {
-  overflow: hidden;
-  color: var(--text-primary);
-  font-size: var(--font-size-body);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tag-card-count {
-  margin-left: auto;
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
-}
-
-.tag-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
 }
 
 /* 标签新建/修改弹窗里的十色色板 */
@@ -2810,6 +2856,9 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .project-card-tag .tag-card-dot { width: 8px; height: 8px; }
 
+/* 展开区里是 grid，标签芯片要按内容宽度，不要拉满一行 */
+.expand-row-body > .project-card-tag { justify-self: start; }
+
 /* 统计行：任务数靠左，标签徽标靠右 */
 .project-card-meta {
   display: flex;
@@ -2834,8 +2883,9 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 /* 任务链接区：默认只展示前五条（倒序），可展开全部，不做高度截断 */
-.projects-detail .project-task-links {
-  margin-top: 12px;
+.project-task-links {
+  display: grid;
+  gap: 2px;
 }
 
 /* 展开全部/收起按钮，与头部按钮同观感 */
@@ -2855,14 +2905,28 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 /* 行内布局：标题截断省略，完成日期靠右 */
-.projects-detail .project-task-links button {
+.project-task-links button {
   display: flex;
   align-items: center;
   gap: 8px;
   overflow: hidden;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  text-align: left;
+  cursor: pointer;
 }
 
-.projects-detail .project-task-links .project-task-link-title {
+.project-task-links button:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.project-task-links .project-task-link-title {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -3581,13 +3645,36 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .anni-detail-dialog > header h2 { margin: 5px 0 0; font: 750 26px/1.2 var(--font-display); }
 .anni-detail-name { margin: -8px 0 14px; color: var(--text-primary); font: 650 15px/1.4 var(--font-display); }
 .anni-composer-dialog > header > button,
-.anni-detail-dialog > header > button { width: 34px; height: 34px; padding: 0; border-radius: 50%; color: var(--text-muted); background: var(--surface-sunken); }
+.anni-detail-dialog > header > button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; color: var(--text-muted); background: var(--surface-sunken); cursor: pointer; }
 
-.anni-composer-row {
+/* 新建纪念日：标签在上、控件在下；主动作固定在底部，不再夹在表单中间。 */
+.anni-field {
+  display: grid;
+  gap: 6px;
+}
+
+.anni-field > .field-label {
+  margin: 0;
+}
+
+/* 分段控件按内容宽度，不要拉满一整行 */
+.anni-field > .seg {
+  justify-self: start;
+}
+
+.anni-composer-foot {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.anni-composer-foot .btn-primary,
+.anni-composer-foot .btn-ghost {
+  width: auto;
+  min-width: 96px;
 }
 
 .anni-cal-seg {
@@ -3616,9 +3703,9 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   color: var(--text-muted);
 }
 
-.anni-composer-row .field[type="date"] {
+.anni-field .field[type="date"] {
   width: auto;
-  min-width: 160px;
+  min-width: 200px;
 }
 
 .anni-check {
@@ -3815,6 +3902,11 @@ body.nav-resizing {
   min-width: 0;
 }
 
+/* 文字块要能收缩，否则窄侧栏下箴言会顶出面板右缘。 */
+.brand-lockup > div {
+  min-width: 0;
+}
+
 .nav-item-label {
   gap: 9px;
 }
@@ -3831,11 +3923,30 @@ body.nav-resizing {
   box-shadow: 0 6px 16px var(--navy-200-22);
 }
 
+/* 箴言两行：Yield 一行，典故一行。侧栏可拖到 200px，一行放不下就顶出面板右缘。 */
+/* 箴言独占一行：与「有秋 Yield」一起排就挤不下了。 */
 .brand-caption {
   display: block;
-  margin-top: 2px;
+  margin-top: 1px;
+  overflow: hidden;
   color: var(--text-muted);
   font-size: var(--font-size-caption);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-name {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.brand-latin {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  letter-spacing: 0.04em;
 }
 
 .nav-item {
@@ -4997,50 +5108,70 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-size: var(--font-size-h3);
 }
 
-/* 本周目标：一行一条，列对齐像表。分类色只留在色点上（数据），不再铺成四条
+/* 本周任务：按分类聚合的可展开行。分类色只留在色点上（数据），不再铺成四条
    并排的彩色进度条（装饰）。 */
 .weekly-goal-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--border);
-}
-
-.weekly-goal-row {
-  display: grid;
-  grid-template-columns: 8px 56px minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: baseline;
-  padding: 10px 2px;
-  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
 }
 
 .weekly-goal-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-pill);
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 99px;
   align-self: center;
 }
 
-.weekly-goal-name {
-  font-size: var(--font-size-body);
+.weekly-goal-tasks {
+  display: grid;
+  gap: 2px;
+}
+
+.weekly-goal-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  text-align: left;
+  cursor: pointer;
+}
+
+.weekly-goal-task:hover {
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
-.weekly-goal-note {
+.weekly-goal-task.is-done .weekly-goal-task-title {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.weekly-goal-task-state {
+  flex: none;
+  width: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.weekly-goal-task-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-secondary);
-  font-size: var(--font-size-label);
 }
 
-.weekly-goal-count {
+.weekly-goal-task-due {
+  flex: none;
+  margin-left: auto;
   color: var(--text-muted);
-  font-size: var(--font-size-caption);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .weekly-day-col header {

@@ -1,9 +1,10 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { confirmAction } from "@/components/AppConfirm";
 import { filterTasksByView, taskRowClassName } from "@/lib/tasks";
 import { formatDueDate, formatDayStamp } from "@/lib/dates";
 import { AppIcon } from "@/components/AppIcon";
+import { ExpandRow } from "@/components/ExpandRow";
 import type { Tag } from "@/types";
 
 const TAG_PALETTE = [
@@ -89,23 +90,25 @@ export function TagsView() {
     return map;
   }, [projects, tasks, tagMap]);
 
-  const taggedProjects = useMemo(
-    () =>
-      activeTagId
-        ? projects.filter((project) => project.tag_id === activeTagId)
-        : [],
-    [projects, activeTagId],
-  );
-  const filtered = useMemo(
-    () =>
-      activeTagId
-        ? filterTasksByView(tasks, "tags", tagMap, activeTagId).filter(
-            (task) => !task.project_id,
-          )
-        : [],
-    [tasks, tagMap, activeTagId],
-  );
-  const activeTag = tags.find((tag) => tag.id === activeTagId) ?? null;
+  // 每个标签下的项目与任务，展开哪一行就直接取哪一行。
+  const tagDetails = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        projects: ReturnType<typeof useAppStore.getState>["projects"];
+        tasks: ReturnType<typeof useAppStore.getState>["tasks"];
+      }
+    >();
+    for (const tag of tags) {
+      map.set(tag.id, {
+        projects: projects.filter((project) => project.tag_id === tag.id),
+        tasks: filterTasksByView(tasks, "tags", tagMap, tag.id).filter(
+          (task) => !task.project_id,
+        ),
+      });
+    }
+    return map;
+  }, [tags, projects, tasks, tagMap]);
 
   const openCreate = () => {
     setCreateName("");
@@ -191,50 +194,114 @@ export function TagsView() {
                       .filter(Boolean)
                       .join(" · ")
                   : "暂无关联";
+                const color = tag.color || TAG_PALETTE[index % TAG_PALETTE.length];
+                const detail = tagDetails.get(tag.id);
+                const detailProjects = detail?.projects ?? [];
+                const detailTasks = detail?.tasks ?? [];
                 return (
-                  <article
+                  <ExpandRow
                     key={tag.id}
-                    className={`tag-card ${on ? "is-active" : ""}`}
-                    style={{ "--tag-accent": tag.color || TAG_PALETTE[index % TAG_PALETTE.length] } as CSSProperties}
+                    open={on}
+                    onToggle={() => setActiveTag(on ? null : tag.id)}
+                    accent={color}
+                    rowId={tag.id}
+                    dot={<span className="tag-card-dot" style={{ background: color }} aria-hidden />}
+                    title={tag.name}
+                    trailing={countText}
+                    toggleTitle={on ? "收起该标签" : "查看该标签下的项目与任务"}
+                    actions={
+                      <>
+                        <button
+                          type="button"
+                          className="item-action-btn item-action-edit"
+                          onClick={() => beginEditTag(tag)}
+                        >
+                          <AppIcon name="edit" size={14} />
+                          <span>编辑</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="item-action-btn item-action-danger quiet-danger"
+                          onClick={() => {
+                            void confirmAction({
+                              title: `删除标签「${tag.name}」？`,
+                              description: "任务不会被删除，仅解除关联。",
+                              confirmText: "删除",
+                              danger: true,
+                            }).then((ok) => {
+                              if (ok) void removeTag(tag.id);
+                            });
+                          }}
+                        >
+                          <AppIcon name="trash" size={14} />
+                          <span>删除</span>
+                        </button>
+                      </>
+                    }
                   >
-                    <button
-                      type="button"
-                      className="tag-card-main"
-                      title={on ? "取消筛选" : "查看该标签下的项目与任务"}
-                      onClick={() => setActiveTag(on ? null : tag.id)}
-                    >
-                      <span className="tag-card-dot" aria-hidden />
-                      <strong>{tag.name}</strong>
-                      <span className="tag-card-count">{countText}</span>
-                    </button>
-                    <div className="tag-card-actions">
-                      <button
-                        type="button"
-                        className="item-action-btn item-action-edit"
-                        onClick={() => beginEditTag(tag)}
-                      >
-                        <AppIcon name="edit" size={14} />
-                        <span>编辑</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="item-action-btn item-action-danger quiet-danger"
-                        onClick={() => {
-                          void confirmAction({
-                            title: `删除标签「${tag.name}」？`,
-                            description: "任务不会被删除，仅解除关联。",
-                            confirmText: "删除",
-                            danger: true,
-                          }).then((ok) => {
-                            if (ok) void removeTag(tag.id);
-                          });
-                        }}
-                      >
-                        <AppIcon name="trash" size={14} />
-                        <span>删除</span>
-                      </button>
-                    </div>
-                  </article>
+                    {detailProjects.length ? (
+                      <div className="tags-project-section">
+                        <h4>项目</h4>
+                        <div className="tags-project-list">
+                          {detailProjects.map((project) => (
+                            <div key={project.id} className="tags-project-row">
+                              <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
+                              <p className="tags-project-name">{project.name}</p>
+                              <span className="tags-task-due">
+                                {tasks.filter((task) => task.project_id === project.id && !task.deleted_at).length} 项任务
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {detailTasks.length ? (
+                      <div className="tags-task-section">
+                        <h4>任务</h4>
+                        <div className="tags-task-list">
+                          {detailTasks.map((task) => (
+                            <div
+                              key={task.id}
+                              className={taskRowClassName(task, false)}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => selectTask(task.id)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  selectTask(task.id);
+                                }
+                              }}
+                            >
+                              <button
+                                type="button"
+                                className="task-check"
+                                aria-label={task.status === "completed" ? "标记为未完成" : "标记为完成"}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void toggleComplete(task.id);
+                                }}
+                              >
+                                {task.status === "completed" ? "✓" : ""}
+                              </button>
+                              <p className="task-title">{task.title}</p>
+                              <span className="tags-task-due">
+                                {task.completed_at
+                                  ? formatDayStamp(task.completed_at)
+                                  : task.due_date
+                                    ? formatDueDate(task.due_date)
+                                    : "无日期"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {!detailProjects.length && !detailTasks.length ? (
+                      <div className="tags-filtered-empty">
+                        该标签下暂无项目或独立任务。新建项目时可选择标签；未归属项目的任务也可在详情里打上「{tag.name}」。
+                      </div>
+                    ) : null}
+                  </ExpandRow>
                 );
               })}
             </div>
@@ -245,90 +312,6 @@ export function TagsView() {
           )}
         </section>
 
-        {activeTag ? (
-          <section className="tags-filtered" aria-label={`${activeTag.name} 的项目与任务`}>
-            <header>
-              <h3>
-                <span className="tag-card-dot" aria-hidden />
-                「{activeTag.name}」的项目与任务
-                <span className="tags-filtered-count">
-                  {taggedProjects.length + filtered.length}
-                </span>
-              </h3>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setActiveTag(null)}
-              >
-                取消筛选
-              </button>
-            </header>
-            {taggedProjects.length ? (
-              <div className="tags-project-section">
-                <h4>项目</h4>
-                <div className="tags-project-list">
-                  {taggedProjects.map((project) => (
-                    <div key={project.id} className="tags-project-row">
-                      <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
-                      <p className="tags-project-name">{project.name}</p>
-                      <span className="tags-task-due">
-                        {tasks.filter((task) => task.project_id === project.id && !task.deleted_at).length} 项任务
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {filtered.length ? (
-              <div className="tags-task-section">
-                <h4>任务</h4>
-                <div className="tags-task-list">
-                  {filtered.map((task) => (
-                    <div
-                      key={task.id}
-                      className={taskRowClassName(task, false)}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => selectTask(task.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          selectTask(task.id);
-                        }
-                      }}
-                    >
-                      <button
-                        type="button"
-                        className="task-check"
-                        aria-label={task.status === "completed" ? "标记为未完成" : "标记为完成"}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void toggleComplete(task.id);
-                        }}
-                      >
-                        {task.status === "completed" ? "✓" : ""}
-                      </button>
-                      <p className="task-title">{task.title}</p>
-                      <span className="tags-task-due">
-                        {task.completed_at
-                          ? formatDayStamp(task.completed_at)
-                          : task.due_date
-                            ? formatDueDate(task.due_date)
-                            : "无日期"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {!taggedProjects.length && !filtered.length ? (
-              <div className="tags-filtered-empty">
-                该标签下暂无项目或独立任务。新建项目时可选择标签；未归属项目的任务也可在详情里打上「{activeTag.name}」。
-              </div>
-            ) : null}
-          </section>
-        ) : (
-          <p className="tags-hint">点击上方标签卡片，可查看对应的项目与任务。</p>
-        )}
       </div>
 
       {creating ? (
