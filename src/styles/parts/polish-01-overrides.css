@@ -267,14 +267,14 @@
 .desktop-notification-content > header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .desktop-notification-content > header span { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .1em; }
 .desktop-notification-content > header button { width: 27px; height: 27px; padding: 0; border: 0; border-radius: 50%; color: var(--text-muted); background: transparent; }
-.desktop-notification-content > header button:hover { color: var(--text-primary); background: var(--bg-soft); }
+.desktop-notification-content > header button:hover { color: var(--text-primary); background: var(--surface-soft); }
 .desktop-notification-copy { width: 100%; display: grid; gap: 5px; padding: 2px 0 11px; border: 0; color: inherit; background: transparent; text-align: left; }
 .desktop-notification-copy strong { overflow: hidden; font: 720 16px/1.35 var(--font-display); text-overflow: ellipsis; white-space: nowrap; }
 .desktop-notification-copy p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
 .desktop-notification-content > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 11px; border-top: 1px solid var(--border); }
 .desktop-notification-content > footer time { color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
 .desktop-notification-content > footer div { display: flex; gap: 6px; }
-.desktop-notification-content > footer button { min-height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); background: var(--bg-soft); font-size: 11px; }
+.desktop-notification-content > footer button { min-height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); background: var(--surface-soft); font-size: 11px; }
 .desktop-notification-content > footer button.is-primary { border-color: transparent; color: #fff; background: var(--accent); }
 @keyframes desktop-notification-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .desktop-notification-card { animation: none; } }
@@ -938,7 +938,7 @@
 }
 .timeline-h-allday-chip {
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--bg-panel);
   color: var(--text-primary);
   font-size: 12px;
   padding: 3px 10px;

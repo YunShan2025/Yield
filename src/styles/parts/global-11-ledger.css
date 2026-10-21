@@ -94,7 +94,7 @@
   border-radius: 999px;
   padding: 2px 9px;
   color: var(--text-secondary);
-  background: var(--surface);
+  background: var(--bg-panel);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;

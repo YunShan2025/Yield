@@ -1,5 +1,8 @@
-// 阶段 2 视觉基线截图：四主题 × (桌面 1600 / 移动 390)
+// 阶段 2 视觉基线截图：四主题 × (桌面 1600 / 移动 390) × 多个视图
 // 用法: node scripts/ui-snapshot.mjs <outDir> [baseUrl]
+//
+// 桌面端通过侧栏 .nav-item 切换视图；移动端走 ?shell=mobile 调试口 + 底部导航。
+// 时钟被固定，避免时间轴「此刻」标记随真实时间漂移。
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
@@ -19,7 +22,6 @@ async function loadPlaywright() {
   }
   throw new Error("playwright not found; set PLAYWRIGHT_PATH");
 }
-
 function findChrome() {
   const candidates = [
     process.env.CHROME_PATH,
@@ -33,48 +35,48 @@ function findChrome() {
 }
 
 const { chromium } = await loadPlaywright();
-
 const OUT = process.argv[2] || "docs/ui-baseline";
 const BASE = process.argv[3] || "http://localhost:4173";
 const THEMES = ["light", "dark", "dawn", "glass"];
-const VIEWPORTS = [
-  { name: "desktop", width: 1600, height: 1000 },
-  { name: "mobile", width: 390, height: 844 },
+const FIXED_TIME = new Date("2026-10-21T11:00:00+08:00");
+
+// 侧栏视图 id -> 文案（桌面端覆盖到的样式文件最多）
+const DESKTOP_VIEWS = [
+  ["today", "今日"],
+  ["ledger", "收支总览"],
+  ["growth", "成长"],
+  ["memos", "备忘录"],
+  ["weekly", "周清单"],
+  ["settings", "设置"],
+];
+// 移动端底部导航只有 4 项，其余走「更多」面板
+const MOBILE_VIEWS = [
+  ["today", "今日"],
+  ["more", "更多"],
 ];
 
 mkdirSync(OUT, { recursive: true });
-const browser = await chromium.launch({
-  executablePath: findChrome(),
-});
-const problems = [];
+const browser = await chromium.launch({ executablePath: findChrome() });
+const log = [];
 
-for (const vp of VIEWPORTS) {
-  const ctx = await browser.newContext({
-    viewport: { width: vp.width, height: vp.height },
-    deviceScaleFactor: 1,
-  });
+for (const vp of [{ name: "desktop", width: 1600, height: 1000 }, { name: "mobile", width: 390, height: 844 }]) {
+  const views = vp.name === "desktop" ? DESKTOP_VIEWS : MOBILE_VIEWS;
+  const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   const errors = [];
-  page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
-  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 200)); });
+  page.on("pageerror", (e) => errors.push(String(e).slice(0, 160)));
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 160)); });
 
+  await page.clock.install({ time: FIXED_TIME }).catch(() => {});
   const url = vp.name === "mobile" ? BASE + (BASE.includes("?") ? "&" : "?") + "shell=mobile" : BASE;
   await page.goto(url, { waitUntil: "networkidle" }).catch(() => {});
   await page.waitForTimeout(2000);
 
-  // 关闭新手引导（浏览器预览无 Tauri DB，onboardingComplete 无法持久化）
   for (const label of ["跳过", "暂不开启"]) {
     const btn = page.getByRole("button", { name: label }).first();
-    if (await btn.count().catch(() => 0)) {
-      await btn.click({ timeout: 3000 }).catch(() => {});
-      await page.waitForTimeout(400);
-      break;
-    }
+    if (await btn.count().catch(() => 0)) { await btn.click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(400); break; }
   }
-  // 浏览器预览下 Tauri IPC 报错会弹红色 toast，遮挡基线；定位并隐藏它
-  // 浏览器预览下 Tauri IPC 报错会弹 .toast 红条，遮挡基线；统一隐藏
   await page.addStyleTag({ content: ".toast { display: none !important; }" });
-  // 移除启动卡，避免遮挡基线
   await page.evaluate(() => document.getElementById("boot-splash")?.remove());
   await page.waitForTimeout(300);
 
@@ -83,26 +85,26 @@ for (const vp of VIEWPORTS) {
       document.documentElement.setAttribute("data-theme", t);
       document.documentElement.setAttribute("data-theme-mode", t);
     }, theme);
-    await page.waitForTimeout(500);
-    const file = join(OUT, `${vp.name}-${theme}.png`);
-    await page.screenshot({ path: file, fullPage: false });
-    const empty = await page.evaluate(() => (document.getElementById("root")?.childElementCount ?? 0));
-    problems.push(`${vp.name}/${theme}: root children=${empty}`);
+    await page.waitForTimeout(300);
+
+    for (const [view, label] of views) {
+      // 切视图：桌面点侧栏 .nav-item，移动点底部导航
+      const ok = await page.evaluate(({ view, label }) => {
+        const isMobile = document.querySelector(".mobile-nav, .mobile-bottom-nav") !== null;
+        const nodes = [...document.querySelectorAll(".nav-item, .mobile-nav-item, .mobile-nav button, .mobile-bottom-nav button")];
+        const hit = nodes.find((n) => (n.textContent || "").trim() === label);
+        if (hit) { hit.click(); return true; }
+        return false;
+      }, { view, label });
+      await page.waitForTimeout(700);
+      await page.screenshot({ path: join(OUT, `${vp.name}-${theme}-${view}.png`) });
+      log.push(`${vp.name}/${theme}/${view}: nav=${ok} title=${(await page.title())}`);
+    }
   }
-  if (errors.length) problems.push(`[${vp.name}] console errors: ${[...new Set(errors)].slice(0, 5).join(" | ")}`);
+  if (errors.length) log.push(`[${vp.name}] console: ${[...new Set(errors)].slice(0, 4).join(" | ")}`);
   await ctx.close();
 }
 
 await browser.close();
-console.log(problems.join("\n"));
+console.log(log.join("\n"));
 console.log("SNAPSHOT_DIR=" + OUT);
-
-
-
-
-
-
-
-
-
-

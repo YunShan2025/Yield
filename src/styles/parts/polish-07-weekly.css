@@ -217,7 +217,7 @@
 
 @supports (background: color-mix(in srgb, red 10%, blue)) {
   .weekly-day-task {
-    background: color-mix(in srgb, var(--bg-app) 70%, transparent);
+    background: color-mix(in srgb, var(--bg-root) 70%, transparent);
   }
 }
 
