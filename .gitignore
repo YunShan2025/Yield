@@ -40,3 +40,7 @@ src-tauri/gen/android/app/keystore.properties
 !.impeccable/config.json
 # 阶段 2 UI 视觉基线截图（由 scripts/ui-snapshot.mjs 生成，可随时重建，不入库）
 docs/ui-baseline/
+
+# 阶段 3 设计评审用的真实数据副本（由 scripts/design-review/prepare-db.mjs 生成）
+.tmp-design-review/
+

@@ -1,9 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+import { designReview } from "./scripts/design-review/vite-plugin.mjs";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // 设计评审：浏览器预览接真实数据副本，生产构建不经过这条路径
+    ...(process.env.YOUQIU_DESIGN_REVIEW === "1" ? [designReview()] : []),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
@@ -54,3 +59,5 @@ export default defineConfig({
     },
   },
 });
+
+
