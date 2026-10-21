@@ -159,17 +159,21 @@ export function AnniversariesView() {
 
       <div className="moments-body">
 
-      {composerOpen ?<div className="modal-backdrop" onMouseDown={() => !busy && setComposerOpen(false)}><section className="anni-composer anni-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-compose-title" onMouseDown={(event) => event.stopPropagation()}><header><div><h2 id="anni-compose-title">新建纪念日</h2></div><button type="button" aria-label="关闭" onClick={() => setComposerOpen(false)}>×</button></header>
-        <input
-          className="field"
-          placeholder="纪念日名称"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void submit();
-          }}
-        />
-        <div className="anni-composer-row">
+      {composerOpen ?<div className="modal-backdrop" onMouseDown={() => !busy && setComposerOpen(false)}><section className="anni-composer anni-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-compose-title" onMouseDown={(event) => event.stopPropagation()}><header><div><h2 id="anni-compose-title">新建纪念日</h2></div><button type="button" className="anni-close" aria-label="关闭" onClick={() => setComposerOpen(false)}><AppIcon name="close" size={14} /></button></header>
+        <div className="anni-field">
+          <label className="field-label">名称</label>
+          <input
+            className="field"
+            placeholder="纪念日名称"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void submit();
+            }}
+          />
+        </div>
+        <div className="anni-field">
+          <label className="field-label">历法</label>
           <div className="seg anni-cal-seg" role="group" aria-label="日历类型">
             <button
               type="button"
@@ -186,6 +190,9 @@ export function AnniversariesView() {
               农历
             </button>
           </div>
+        </div>
+        <div className="anni-field">
+          <label className="field-label">日期</label>
           {calendar === "solar" ? (
             <DatePicker
               value={eventDate}
@@ -229,24 +236,15 @@ export function AnniversariesView() {
               ) : null}
             </div>
           )}
-          <label className="anni-check">
-            <input
-              type="checkbox"
-              checked={recurYearly}
-              onChange={(event) => setRecurYearly(event.target.checked)}
-            />
-            每年循环
-          </label>
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ width: "auto" }}
-            disabled={busy || !canSubmit}
-            onClick={() => void submit()}
-          >
-            新建纪念日
-          </button>
         </div>
+        <label className="anni-check">
+          <input
+            type="checkbox"
+            checked={recurYearly}
+            onChange={(event) => setRecurYearly(event.target.checked)}
+          />
+          每年循环
+        </label>
         {calendar === "lunar" ? (
           <p className="anni-lunar-hint">
             {lunarSolarPreview
@@ -256,13 +254,35 @@ export function AnniversariesView() {
               : "该农历日在所选年份无效，请调整月日或闰月"}
           </p>
         ) : null}
-        <textarea
-          className="field"
-          rows={2}
-          placeholder="可选备注"
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
+        <div className="anni-field">
+          <label className="field-label">备注（可选）</label>
+          <textarea
+            className="field"
+            rows={2}
+            placeholder="写点什么，留给以后的自己"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </div>
+        <footer className="anni-composer-foot">
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={busy}
+            onClick={() => setComposerOpen(false)}
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ width: "auto" }}
+            disabled={busy || !canSubmit}
+            onClick={() => void submit()}
+          >
+            新建纪念日
+          </button>
+        </footer>
       </section></div> : null}
 
       {loading ? (
