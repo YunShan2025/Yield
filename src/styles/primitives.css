@@ -830,8 +830,8 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  min-height: 150px;
-  padding: 24px 28px;
+  min-height: 0;
+  padding: 20px 26px;
   overflow: hidden;
   color: var(--text-primary);
   border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
@@ -866,12 +866,12 @@ body {
 }
 
 .today-hero h3 {
-  margin: 9px 0 0;
+  margin: 0;
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: clamp(22px, 2.2vw, 30px);
-  font-weight: 730;
-  letter-spacing: -0.035em;
+  font-size: var(--font-size-h2);
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
 .today-hero p {
@@ -883,12 +883,12 @@ body {
   width: fit-content;
   margin-top: 10px;
   padding: 3px 8px;
-  color: var(--warning);
+  color: var(--warm-700);
   font-size: 11px;
   font-weight: 650;
-  border: 1px solid color-mix(in srgb, var(--warning) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warm-700) 22%, transparent);
   border-radius: 7px;
-  background: color-mix(in srgb, var(--warning) 7%, var(--surface-panel));
+  background: color-mix(in srgb, var(--warm-700) 8%, var(--surface-panel));
 }
 
 :root[data-theme="dark"] .today-hero {

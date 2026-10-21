@@ -80,8 +80,6 @@ export function DayBoard() {
   return (
     <div className={`scope-board ${isTodayView ? "is-deadline" : "is-plan"}`}>
       <TodayHero
-        cursor={cursor}
-        today={today}
         isTodayView={isTodayView}
         isInbox={isInboxView}
         conflictCount={conflictIds.size}

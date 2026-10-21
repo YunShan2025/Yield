@@ -1,16 +1,12 @@
 import type { CSSProperties } from "react";
 
 export function TodayHero({
-  cursor,
-  today,
   isTodayView,
   isInbox,
   conflictCount,
   doneCount,
   totalCount,
 }: {
-  cursor: string;
-  today: string;
   isTodayView: boolean;
   isInbox: boolean;
   conflictCount: number;
@@ -23,13 +19,6 @@ export function TodayHero({
   return (
     <section className={`today-hero ${isTodayView ? "is-deadline" : "is-plan"}`}>
       <div className="today-hero-copy">
-        <span className="today-eyebrow">
-          {isInbox
-            ? "积微 · 非今日任务"
-            : cursor === today
-              ? "积微 · 今日行动"
-              : "积微 · 当日安排"}
-        </span>
         <h3>
           {isInbox
             ? "不着急的事，先收进待办箱。"
@@ -49,17 +38,15 @@ export function TodayHero({
         ) : null}
       </div>
       {!isInbox ? (
-        <div
-          className="today-progress-ring"
-          style={{ "--progress": progress } as CSSProperties}
-          aria-label={`已完成 ${doneCount}/${totalCount}`}
-        >
-          <div>
-            <strong>
-              {doneCount}/{totalCount}
-            </strong>
-            <span>已完成</span>
-          </div>
+        <div className="today-hero-meter">
+          <span className="today-hero-meter-count">
+            <strong>{doneCount}</strong>
+            <span>/{totalCount}</span>
+          </span>
+          <span className="today-hero-meter-label">已完成</span>
+          <span className="today-hero-meter-track">
+            <i style={{ "--progress": `${progress}%` } as CSSProperties} />
+          </span>
         </div>
       ) : null}
     </section>
