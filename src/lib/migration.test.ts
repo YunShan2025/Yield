@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -284,6 +284,19 @@ describe("database migration declarations", () => {
     expect(sql).toContain("DROP INDEX IF EXISTS uq_tasks_repeat_occurrence");
     expect(sql).toContain("DROP INDEX IF EXISTS idx_tasks_generated_from");
     expect(sql).toContain("ALTER TABLE tasks DROP COLUMN generated_from_id");
+  });
+
+  it("目标的「归档」并入「已完成」：migration v25", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*25,\s*description:\s*"goal_merge_archived_into_completed",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match?.[1]).toContain(
+      "UPDATE goals SET status = 'completed' WHERE status = 'archived'",
+    );
   });
 
   it("目标也能进回收站：migration v24", () => {

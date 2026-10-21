@@ -472,7 +472,7 @@ export function TodayAgenda({
               { value: "", label: "全部目标" },
               { value: NO_GOAL_FILTER, label: "未关联目标" },
               ...goals
-                .filter((goal) => goal.status !== "archived")
+                .filter((goal) => goal.status === "active" || goal.status === "paused")
                 .map((goal) => ({ value: goal.id, label: goal.title })),
             ]}
           />

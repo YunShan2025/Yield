@@ -34,7 +34,7 @@ const {
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -63,11 +63,36 @@ async function seedGoal() {
   });
 }
 
+describe("目标的状态只有四个", () => {
+  it("历史 archived 目标并入已完成", async () => {
+    const goal = await seedGoal();
+    // 模拟 migration v25 之前的老数据
+    db.prepare("UPDATE goals SET status='archived' WHERE id=?").run(goal.id);
+    expect(goalRow(goal.id).status).toBe("archived");
+    db.prepare("UPDATE goals SET status='completed' WHERE status='archived'").run();
+    expect(goalRow(goal.id).status).toBe("completed");
+  });
+
+  it("默认只列出还在进行的目标，已完成的另算", async () => {
+    const active = await seedGoal();
+    const done = await seedGoal();
+    await updateGoal(done.id, { status: "completed" });
+    const listed = await fetchGoals();
+    expect(listed.map((g) => g.id)).toContain(active.id);
+    expect(listed.map((g) => g.id)).not.toContain(done.id);
+    // 传 true 时给全部未删除的
+    const all = await fetchGoals(true);
+    expect(all.map((g) => g.id)).toContain(done.id);
+  });
+});
+
 describe("目标可撤回", () => {
   it("放弃后能改回进行中", async () => {
     const goal = await seedGoal();
     await updateGoal(goal.id, { status: "abandoned" });
-    expect((await fetchGoals()).find((g) => g.id === goal.id)?.status).toBe("abandoned");
+    // 放弃的目标不在主列表里（收进"已放弃"区），要带 includeFinished 才看得到
+    expect((await fetchGoals(true)).find((g) => g.id === goal.id)?.status).toBe("abandoned");
+    expect((await fetchGoals()).map((g) => g.id)).not.toContain(goal.id);
     await updateGoal(goal.id, { status: "active" });
     expect((await fetchGoals()).find((g) => g.id === goal.id)?.status).toBe("active");
   });

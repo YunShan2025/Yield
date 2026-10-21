@@ -10,11 +10,16 @@ import { goalAcceptsSource, localDateKey } from "@/lib/growth";
 import { getDb } from "./client";
 
 /* Growth goals, contributions, milestones and achievements */
-export async function fetchGoals(includeArchived = false): Promise<Goal[]> {
+/**
+ * 目标列表。默认只给"还在进行"的（进行中 + 暂停）——已完成的收进完成区、
+ * 已放弃的收进放弃区，都不在主列表里，与项目 / 习惯的"已归档"分区同一套做法。
+ * includeFinished = true 时给全部未删除的目标。
+ */
+export async function fetchGoals(includeFinished = false): Promise<Goal[]> {
   const db = await getDb();
   return db.select<Goal[]>(
     `SELECT * FROM goals
-     WHERE deleted_at IS NULL ${includeArchived ? "" : "AND status != 'archived'"}
+     WHERE deleted_at IS NULL ${includeFinished ? "" : "AND status IN ('active','paused')"}
      ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END,
               updated_at DESC`,
   );

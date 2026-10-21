@@ -31,6 +31,13 @@ interface PaletteSection {
   items: PaletteItem[];
 }
 
+const GOAL_STATUS_LABELS: Record<Goal["status"], string> = {
+  active: "进行中",
+  paused: "已暂停",
+  completed: "已完成",
+  abandoned: "已放弃",
+};
+
 const GOAL_TYPE_LABELS: Record<Goal["goal_type"], string> = {
   milestone: "累计",
   measure: "数值",
@@ -173,7 +180,7 @@ export function CommandPalette() {
         kind: "goal",
         id: goal.id,
         title: goal.title,
-        meta: `${GOAL_TYPE_LABELS[goal.goal_type]} · ${goal.status === "archived" ? "已归档" : "目标"}`,
+        meta: `${GOAL_TYPE_LABELS[goal.goal_type]} · ${GOAL_STATUS_LABELS[goal.status]}`,
       }));
     if (goalItems.length) {
       next.push({ kind: "goal", label: "成长目标", icon: "sparkle", items: goalItems });

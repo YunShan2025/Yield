@@ -1484,6 +1484,18 @@ ALTER TABLE goals ADD COLUMN deleted_at TEXT;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 25,
+            description: "goal_merge_archived_into_completed",
+            // 目标的状态从五个收敛到四个：active / paused / completed / abandoned。
+            // 原来的 archived 与 completed 语义重叠（两个都在说"结束了"），而项目、
+            // 习惯、备忘录里"归档"是唯一表达"收起来了"的动作——按同一套约定，
+            // 目标上的"归档"就等于"已完成"。历史 archived 目标并入 completed。
+            sql: r#"
+UPDATE goals SET status = 'completed' WHERE status = 'archived';
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

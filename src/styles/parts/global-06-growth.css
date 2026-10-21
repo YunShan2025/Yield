@@ -85,6 +85,9 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-grid .empty-state { grid-column: 1 / -1; padding: 44px 24px; font-size: 13px; }
 .goal-card { display: block; width: 100%; padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-panel); color: var(--text-primary); text-align: left; cursor: pointer; box-shadow: var(--shadow-soft); transition: transform 140ms ease, border-color 140ms ease; }
 .goal-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+/* 收起来的目标（已完成 / 已放弃）弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
+.goal-card.is-finished { opacity: .72; box-shadow: none; }
+.goal-card.is-finished:hover { opacity: 1; }
 .goal-card-head { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: 11px; }
 .goal-card-head i { width: 10px; height: 10px; border-radius: 50%; }
 .goal-card h3 { margin: 14px 0 6px; font-size: 17px; }

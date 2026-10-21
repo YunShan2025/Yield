@@ -270,12 +270,14 @@ export interface Anniversary {
  * - staged   阶段：靠勾选阶段清单推进
  */
 export type GoalType = "milestone" | "measure" | "staged";
-export type GoalStatus =
-  | "active"
-  | "paused"
-  | "completed"
-  | "abandoned"
-  | "archived";
+/**
+ * 目标的状态。四个：
+ * - active    进行中
+ * - paused    暂停
+ * - completed 已完成（达成即止；对应项目 / 习惯里"归档"的那层意思）
+ * - abandoned 已放弃（可以改主意撤回）
+ */
+export type GoalStatus = "active" | "paused" | "completed" | "abandoned";
 
 export interface Goal {
   id: string;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalStatus, GoalType, Task } from "@/types";
+import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalType, Task } from "@/types";
 import {
   createAchievement,
   createGoal,
@@ -37,7 +37,6 @@ const GOAL_STATUS_LABEL: Record<Goal["status"], string> = {
   paused: "已暂停",
   completed: "已完成",
   abandoned: "已放弃",
-  archived: "已归档",
 };
 
 function toDateKey(date: Date) {
@@ -102,8 +101,7 @@ export function GrowthView() {
   const [color, setColor] = useState(COLORS[0]);
   const [achievementTitle, setAchievementTitle] = useState("");
   const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
-  /** 目标列表的状态筛选：默认"全部"（不含回收站里的）。 */
-  const [goalStatusFilter, setGoalStatusFilter] = useState<"all" | GoalStatus>("all");
+
   const today = todayDateString();
   const [stageTitle, setStageTitle] = useState("");
   const allTasks = useAppStore((state) => state.tasks);
@@ -339,22 +337,20 @@ export function GrowthView() {
       : goalKind === "staged"
         ? "阶段型目标：把大目标拆成几个可勾选的阶段，勾一个进一个。"
         : "任务完成与习惯打卡可按你声明的计量自动累计；重复动作交给「习惯」，目标只放要达成的结果。";
-  // 目标列表按状态筛选：已放弃 / 已归档也要能翻出来，否则"撤回"无从下手。
-  const visibleGoals = useMemo(() => {
-    if (goalStatusFilter === "all") return goals;
-    if (goalStatusFilter === "active") {
-      return goals.filter((goal) => goal.status === "active" || goal.status === "paused");
-    }
-    return goals.filter((goal) => goal.status === goalStatusFilter);
-  }, [goals, goalStatusFilter]);
-
-  const goalFilterOptions: Array<{ value: "all" | GoalStatus; label: string }> = [
-    { value: "all", label: "全部" },
-    { value: "active", label: "进行中" },
-    { value: "completed", label: "已完成" },
-    { value: "abandoned", label: "已放弃" },
-    { value: "archived", label: "已归档" },
-  ];
+  // 目标列表分区，与项目页 / 习惯页同一套做法：主区放还在进行的，
+  // 收起来的（已完成、已放弃）各自成区——"撤回"得到的目标找得回来。
+  const activeGoals = useMemo(
+    () => goals.filter((goal) => goal.status === "active" || goal.status === "paused"),
+    [goals],
+  );
+  const finishedGoals = useMemo(
+    () => goals.filter((goal) => goal.status === "completed"),
+    [goals],
+  );
+  const abandonedGoals = useMemo(
+    () => goals.filter((goal) => goal.status === "abandoned"),
+    [goals],
+  );
 
   /** 放弃 / 归档都能一键撤回：回到进行中。 */
   const resumeGoal = async (goal: Goal) => {
@@ -618,8 +614,9 @@ export function GrowthView() {
             <div className="goal-detail-actions">
               <div className="goal-manage-group">
                 {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
-                {/* 放弃与归档都能撤回：回到进行中。 */}
-                {["abandoned", "archived"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
+                {/* 已放弃可以改主意；已达成也能重新打开（进度没满时不会立刻再达成）。 */}
+                {selectedGoal.status === "abandoned" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
+                {selectedGoal.status === "completed" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>重新打开</button> : null}
                 <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
                 {["active", "paused"].includes(selectedGoal.status) ? (
                   <SelectMenu
@@ -628,17 +625,13 @@ export function GrowthView() {
                     ariaLabel="更多状态操作"
                     value=""
                     onChange={(value) => {
-                      if (!["completed", "abandoned", "archived"].includes(value)) return;
-                      void updateGoal(selectedGoal.id, { status: value as Goal["status"] }).then(() => {
-                        if (value === "archived") setSelectedGoalId(null);
-                        return refresh();
-                      });
+                      if (!["completed", "abandoned"].includes(value)) return;
+                      void updateGoal(selectedGoal.id, { status: value as Goal["status"] }).then(() => refresh());
                     }}
                     options={[
                       { value: "", label: "更多操作" },
                       { value: "completed", label: "标记完成" },
                       { value: "abandoned", label: "放弃目标" },
-                      { value: "archived", label: "归档" },
                     ]}
                   />
                 ) : null}
@@ -648,21 +641,48 @@ export function GrowthView() {
           </section>
         ) : (
           <>
-          <div className="goal-filter-row" role="tablist" aria-label="目标状态筛选">
-            {goalFilterOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                role="tab"
-                aria-selected={goalStatusFilter === option.value}
-                className={goalStatusFilter === option.value ? "is-active" : ""}
-                onClick={() => setGoalStatusFilter(option.value)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <section className="goal-grid">{visibleGoals.map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />)}{!visibleGoals.length ? <div className="empty-state">{goals.length ? "这个状态下还没有目标。" : "创建第一个长期目标，让每天的任务有更清晰的方向。"}</div> : null}</section>
+          <section aria-label="进行中的目标">
+            <div className="section-title-row">
+              <h3>进行中</h3>
+              <span className="tags-filtered-count">{activeGoals.length}</span>
+            </div>
+            <div className="goal-grid">
+              {activeGoals.map((goal) => (
+                <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />
+              ))}
+              {!activeGoals.length ? (
+                <div className="empty-state">
+                  创建第一个长期目标，让每天的任务有更清晰的方向。
+                </div>
+              ) : null}
+            </div>
+          </section>
+          {finishedGoals.length ? (
+            <section aria-label="已完成的目标">
+              <div className="section-title-row">
+                <h3>已完成</h3>
+                <span className="tags-filtered-count">{finishedGoals.length}</span>
+              </div>
+              <div className="goal-grid">
+                {finishedGoals.map((goal) => (
+                  <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+          {abandonedGoals.length ? (
+            <section aria-label="已放弃的目标">
+              <div className="section-title-row">
+                <h3>已放弃</h3>
+                <span className="tags-filtered-count">{abandonedGoals.length}</span>
+              </div>
+              <div className="goal-grid">
+                {abandonedGoals.map((goal) => (
+                  <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />
+                ))}
+              </div>
+            </section>
+          ) : null}
           </>
         )
       ) : null}
@@ -763,8 +783,9 @@ function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
   const target = resolveGoalTarget(goal);
   const progress = calculateGoalProgress(goal);
   const deadline = goalDeadlineInfo(goal, todayDateString());
+  const finished = goal.status === "completed" || goal.status === "abandoned";
   return (
-    <button className="goal-card" onClick={onOpen}>
+    <button className={`goal-card${finished ? " is-finished" : ""}`} onClick={onOpen}>
       <div className="goal-card-head"><i style={{ background: goal.color }} /><span>{GOAL_STATUS_LABEL[goal.status]}</span></div>
       <h3>{goal.title}</h3>
       <p>
