@@ -1,6 +1,6 @@
 .ledger-view {
-  --ledger-income: #2f8f68;
-  --ledger-expense: #df6670;
+  --ledger-income: var(--green-200);
+  --ledger-expense: var(--rose-450);
   --ledger-line: color-mix(in srgb, var(--border) 78%, var(--surface-panel));
   isolation: isolate;
   min-height: 100%;
@@ -114,7 +114,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface-raised);
-  box-shadow: 0 16px 36px rgb(15 23 42 / 18%);
+  box-shadow: 0 16px 36px var(--ink-950-m-18);
   font-size: 11px;
 }
 .ledger-budget-editor .ledger-checkbox { margin: 0; font-size: 11px; gap: 6px; }
@@ -137,7 +137,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), #78a1ee);
+  background: linear-gradient(90deg, var(--accent), var(--azure-500));
   transition: width 0.25s ease;
 }
 
@@ -339,7 +339,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   overflow: hidden;
   background: var(--surface-panel);
   border-left: 1px solid var(--border);
-  box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
+  box-shadow: -14px 0 42px var(--slate-200-11);
   color: var(--text-primary);
   animation: ledger-in 0.22s ease-out;
 }
@@ -401,7 +401,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 }
 .ledger-kind-tabs button.active {
   background: var(--surface-raised);
-  box-shadow: 0 2px 9px rgb(20 30 50 / 8%);
+  box-shadow: 0 2px 9px var(--ink-950-i-8);
   color: var(--text-primary);
   font-weight: 750;
 }
@@ -512,18 +512,18 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   left: 50%;
   bottom: 30px;
   transform: translateX(-50%);
-  background: #1e293b;
-  color: #fff;
+  background: var(--ink-900);
+  color: var(--white);
   border-radius: 11px;
   padding: 10px 14px;
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 12px 35px rgb(0 0 0 / 22%);
+  box-shadow: 0 12px 35px var(--black-22);
   font-size: 13px;
 }
 .ledger-toast button {
-  color: #a9c5ff;
+  color: var(--azure-100);
   background: none;
   border: 0;
   font-weight: 800;

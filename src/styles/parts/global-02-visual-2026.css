@@ -5,7 +5,7 @@ body {
 
 ::selection {
   color: var(--text-primary);
-  background: rgba(232, 170, 103, 0.32);
+  background: var(--warm-450-32);
 }
 
 button,
@@ -55,9 +55,9 @@ button:active:not(:disabled) {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(145deg, #6f93e8, #3f6fd6);
-  box-shadow: 0 6px 16px rgba(55, 95, 180, 0.22);
+  color: var(--white);
+  background: linear-gradient(145deg, var(--azure-650), var(--azure-950-a));
+  box-shadow: 0 6px 16px var(--navy-200-22);
   font-size: 18px;
   font-weight: 700;
 }
@@ -78,13 +78,13 @@ button:active:not(:disabled) {
 
 .btn-primary {
   border-radius: 11px;
-  background: linear-gradient(135deg, #82a0df, var(--accent));
-  box-shadow: 0 8px 20px rgba(98, 99, 168, 0.2);
+  background: linear-gradient(135deg, var(--steel-150), var(--accent));
+  box-shadow: 0 8px 20px var(--slate-150-20);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #8586c8, var(--accent-hover));
-  box-shadow: 0 10px 24px rgba(98, 99, 168, 0.26);
+  background: linear-gradient(135deg, var(--slate-100), var(--accent-hover));
+  box-shadow: 0 10px 24px var(--slate-150-26);
 }
 
 .nav-section-label {
@@ -102,8 +102,8 @@ button:active:not(:disabled) {
 
 .nav-item.active {
   position: relative;
-  background: linear-gradient(90deg, var(--accent-soft), rgba(98, 99, 168, 0.045));
-  box-shadow: inset 0 0 0 1px rgba(98, 99, 168, 0.08);
+  background: linear-gradient(90deg, var(--accent-soft), var(--slate-150-5));
+  box-shadow: inset 0 0 0 1px var(--slate-150-8);
 }
 
 .nav-item.active::before {
@@ -121,12 +121,12 @@ button:active:not(:disabled) {
   padding: 2px 6px;
   border-radius: 99px;
   text-align: center;
-  background: rgba(36, 51, 45, 0.045);
+  background: var(--green-300-5);
 }
 
 .main-workspace {
   background:
-    radial-gradient(circle at 94% 0%, rgba(232, 170, 103, 0.1), transparent 24%),
+    radial-gradient(circle at 94% 0%, var(--warm-450-10), transparent 24%),
     var(--surface-base);
 }
 
@@ -152,7 +152,7 @@ button:active:not(:disabled) {
 
 .seg button.active {
   background: var(--accent);
-  box-shadow: 0 4px 12px rgba(98, 99, 168, 0.22);
+  box-shadow: 0 4px 12px var(--slate-150-22);
 }
 
 .scope-board {
@@ -195,8 +195,8 @@ button:active:not(:disabled) {
 }
 
 .expand-task:hover {
-  border-color: rgba(98, 99, 168, 0.17);
-  box-shadow: 0 10px 27px rgba(45, 43, 67, 0.09);
+  border-color: var(--slate-150-17);
+  box-shadow: 0 10px 27px var(--slate-200-9);
   transform: translateY(-1px);
 }
 
@@ -207,7 +207,7 @@ button:active:not(:disabled) {
 
 .task-check {
   border-radius: 50%;
-  border-color: rgba(98, 99, 168, 0.36);
+  border-color: var(--slate-150-36);
 }
 
 .expand-task.is-done .task-check,
@@ -234,7 +234,7 @@ button:active:not(:disabled) {
 
 .board-col {
   border-radius: 17px;
-  background: rgba(255, 254, 250, 0.52);
+  background: var(--gold-100-52);
   backdrop-filter: blur(8px);
 }
 
@@ -248,9 +248,9 @@ button:active:not(:disabled) {
 .detail-panel {
   border-left-color: var(--border);
   background:
-    linear-gradient(180deg, rgba(98, 99, 168, 0.04), transparent 150px),
+    linear-gradient(180deg, var(--slate-150-4), transparent 150px),
     var(--surface-panel);
-  box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
+  box-shadow: -14px 0 42px var(--slate-200-11);
 }
 
 .panel-head {

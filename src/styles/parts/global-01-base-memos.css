@@ -246,7 +246,7 @@ select:focus {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface-panel);
-  box-shadow: var(--shadow-2, 0 16px 42px rgba(20, 31, 50, .18));
+  box-shadow: var(--shadow-2, 0 16px 42px var(--ink-950-h-18));
 }
 .memo-create-menu button { display: grid; width: 100%; gap: 2px; padding: 10px 11px; border: 0; border-radius: 8px; color: var(--text-primary); background: transparent; text-align: left; cursor: pointer; }
 .memo-create-menu button:hover { background: var(--surface-hover); }

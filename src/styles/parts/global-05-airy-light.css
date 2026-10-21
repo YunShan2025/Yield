@@ -1,18 +1,18 @@
 /* Airy light theme — intentionally minimal and low saturation. */
 .brand-mark {
-  color: #6379bb;
+  color: var(--steel-650);
   border-radius: 50%;
-  background: #eef1fb;
+  background: var(--paper-750);
   box-shadow: none;
 }
 
 .nav-side {
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--white-88);
 }
 
 .nav-side-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(135, 145, 165, 0.22) transparent;
+  scrollbar-color: var(--steel-500-22) transparent;
 }
 
 .nav-side-scroll::-webkit-scrollbar,
@@ -25,35 +25,35 @@
 .task-scroll::-webkit-scrollbar-thumb,
 .scope-board::-webkit-scrollbar-thumb {
   border-radius: 99px;
-  background: rgba(135, 145, 165, 0.22);
+  background: var(--steel-500-22);
 }
 
 input,
 textarea,
 select {
-  border-color: #e7eaf1;
-  background: #fbfcfe;
+  border-color: var(--mist-200);
+  background: var(--paper-100);
 }
 
 .btn-primary {
-  color: #fff;
-  background: #7b91d8;
-  box-shadow: 0 7px 16px rgba(113, 136, 212, 0.16);
+  color: var(--white);
+  background: var(--steel-300);
+  box-shadow: 0 7px 16px var(--steel-350-16);
 }
 
 .btn-primary:hover {
-  background: #6d84cd;
-  box-shadow: 0 8px 18px rgba(113, 136, 212, 0.2);
+  background: var(--steel-400);
+  box-shadow: 0 8px 18px var(--steel-350-20);
 }
 
 .nav-item.active {
-  color: #6379bb;
-  background: #f0f3fd;
+  color: var(--steel-650);
+  background: var(--paper-500);
   box-shadow: none;
 }
 
 .nav-item.active::before {
-  background: #8296d6;
+  background: var(--steel-250);
 }
 
 .workspace-top {
@@ -61,52 +61,52 @@ select {
 }
 
 .workspace-top h2 {
-  color: #303747;
+  color: var(--ink-200);
 }
 
 .seg {
-  border-color: #e7eaf2;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 5px 16px rgba(71, 82, 108, 0.07);
+  border-color: var(--mist-150);
+  background: var(--white-90);
+  box-shadow: 0 5px 16px var(--navy-550-7);
 }
 
 .seg button.active {
-  color: #fff;
-  background: #8397d8;
+  color: var(--white);
+  background: var(--steel-200);
   box-shadow: none;
 }
 
 .scope-card {
   min-height: 72px;
   padding: 15px 18px;
-  border: 1px solid #eaecf2;
-  box-shadow: 0 5px 16px rgba(78, 89, 116, 0.045);
+  border: 1px solid var(--paper-950-b);
+  box-shadow: 0 5px 16px var(--navy-300-5);
 }
 
 .scope-card strong {
-  color: #7187c9;
+  color: var(--steel-450);
 }
 
 .expand-task {
-  border: 1px solid #eaecf2;
-  box-shadow: 0 4px 14px rgba(78, 89, 116, 0.04);
+  border: 1px solid var(--paper-950-b);
+  box-shadow: 0 4px 14px var(--navy-300-4);
 }
 
 .expand-task:hover {
-  border-color: #dce2f2;
-  box-shadow: 0 7px 18px rgba(78, 89, 116, 0.07);
+  border-color: var(--mist-400);
+  box-shadow: 0 7px 18px var(--navy-300-7);
 }
 
 .task-check {
-  border-color: #cbd4e8;
+  border-color: var(--steel-100);
 }
 
 .empty-state,
 .scope-empty {
-  border: 1px dashed rgba(98, 99, 168, 0.22);
+  border: 1px dashed var(--slate-150-22);
   border-radius: 16px;
   color: var(--text-muted);
-  background: rgba(98, 99, 168, 0.04);
+  background: var(--slate-150-4);
 }
 
 @media (max-width: 960px) {
@@ -230,7 +230,7 @@ select {
   height: 88px;
   border-radius: 8px 0 0 8px;
   border-right: none;
-  box-shadow: -2px 0 8px rgba(31, 42, 55, 0.08);
+  box-shadow: -2px 0 8px var(--ink-950-a-8);
 }
 
 .nav-edge-expand {
@@ -240,7 +240,7 @@ select {
   height: 72px;
   border-radius: 0 8px 8px 0;
   border-left: none;
-  box-shadow: 2px 0 8px rgba(31, 42, 55, 0.08);
+  box-shadow: 2px 0 8px var(--ink-950-a-8);
 }
 
 .nav-edge-collapse:hover,
@@ -469,17 +469,17 @@ select {
 /* 标签页任务行的完成态：与日历/周历同一套「成就式」金色认可——✓ 金章、暖金底。
    不置灰、不划线、不降透明：完成是成就感，不是退场。 */
 .task-row.is-completed {
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
-  border-color: rgba(217, 119, 6, 0.28);
-  box-shadow: 0 1px 0 rgba(217, 119, 6, 0.12);
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  border-color: var(--amber-900-28);
+  box-shadow: 0 1px 0 var(--amber-900-12);
 }
 
 .task-row.is-completed .task-title {
-  color: #b45309;
+  color: var(--amber-950-a);
 }
 
 .task-row.is-completed .tags-task-due {
-  color: #b45309;
+  color: var(--amber-950-a);
 }
 
 .task-row.is-overdue .task-title {
@@ -507,9 +507,9 @@ select {
 }
 
 .task-row.is-completed .task-check {
-  background: linear-gradient(135deg, #fbbf24, #d97706);
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
   border-color: transparent;
-  color: #fff;
+  color: var(--white);
 }
 
 .task-title {
@@ -614,71 +614,71 @@ select {
 }
 
 .cal-task.is-done {
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
-  color: #b45309;
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  color: var(--amber-950-a);
 }
 
 .cal-task.is-done::before {
   content: "✓ ";
-  color: #d97706;
+  color: var(--amber-900);
   font-weight: 700;
 }
 
 /* 周/月历完成态暗色适配。 */
 :root[data-theme="dark"] .week-chip.is-done {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
+  background: var(--amber-750-14);
+  border-color: var(--amber-750-40);
+  color: var(--amber-700);
 }
 
 /* 标签页任务行完成态暗色适配（与周历完成态同一套金色）。 */
 :root[data-theme="dark"] .task-row.is-completed {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: var(--amber-750-14);
+  border-color: var(--amber-750-40);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] .task-row.is-completed .task-title,
 :root[data-theme="dark"] .task-row.is-completed .tags-task-due {
-  color: #fbbf24;
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .task-row.is-completed .task-check {
-  background: linear-gradient(135deg, #fbbf24, #d97706);
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
   border-color: transparent;
-  color: #fff;
+  color: var(--white);
 }
 
 :root[data-theme="dark"] .week-chip.is-done .week-chip-date {
-  color: #fbbf24;
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .week-event.is-done {
-  background: rgba(245, 158, 11, 0.14);
-  border-left-color: #f59e0b;
+  background: var(--amber-750-14);
+  border-left-color: var(--amber-750);
 }
 
 :root[data-theme="dark"] .week-event.is-done .week-event-time {
   background: none;
-  color: #fbbf24;
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .week-allday-event.is-done {
-  background: rgba(245, 158, 11, 0.14);
-  color: #fbbf24;
+  background: var(--amber-750-14);
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .week-allday-event.is-done::before {
-  color: #fbbf24;
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .cal-task.is-done {
-  background: rgba(245, 158, 11, 0.16);
-  color: #fbbf24;
+  background: var(--amber-750-16);
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .cal-task.is-done::before {
-  color: #fbbf24;
+  color: var(--amber-700);
 }
 
 .detail-panel {
@@ -727,7 +727,7 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(180deg, #fbfcfe 0%, var(--surface-base) 48%),
+    linear-gradient(180deg, var(--paper-100) 0%, var(--surface-base) 48%),
     var(--surface-base);
   min-height: 0;
   height: 100%;
@@ -741,7 +741,7 @@ select {
 .timeline-h-hours {
   display: flex;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--white-92);
   backdrop-filter: blur(6px);
   position: sticky;
   top: 0;
@@ -754,7 +754,7 @@ select {
   font-size: 11px;
   color: var(--text-muted);
   padding: 8px 10px;
-  border-left: 1px dashed rgba(31, 42, 55, 0.08);
+  border-left: 1px dashed var(--ink-950-a-8);
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
 }
@@ -768,8 +768,8 @@ select {
     to bottom,
     transparent 0,
     transparent 83px,
-    rgba(31, 42, 55, 0.07) 83px,
-    rgba(31, 42, 55, 0.07) 84px
+    var(--ink-950-a-7) 83px,
+    var(--ink-950-a-7) 84px
   );
 }
 
@@ -783,7 +783,7 @@ select {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(31, 42, 55, 0.06);
+  background: var(--ink-950-a-6);
 }
 
 .timeline-h-now {
@@ -791,7 +791,7 @@ select {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: #ef4444;
+  background: var(--rose-500);
   z-index: 3;
   pointer-events: none;
 }
@@ -804,7 +804,7 @@ select {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ef4444;
+  background: var(--rose-500);
 }
 
 .timeline-h-event {
@@ -818,13 +818,13 @@ select {
   gap: 6px;
   padding: 10px 14px 10px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(98, 99, 168, 0.22);
-  background: linear-gradient(135deg, #eef4ff 0%, #e4edff 100%);
+  border: 1px solid var(--slate-150-22);
+  background: linear-gradient(135deg, var(--paper-550) 0%, var(--paper-950) 100%);
   color: var(--text-primary);
   text-align: left;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(98, 99, 168, 0.12);
+  box-shadow: 0 4px 14px var(--slate-150-12);
   transition:
     transform 140ms ease,
     box-shadow 140ms ease,
@@ -843,29 +843,29 @@ select {
 }
 
 .timeline-h-event.p1 {
-  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e8 100%);
-  border-color: rgba(225, 29, 72, 0.2);
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.1);
+  background: linear-gradient(135deg, var(--rose-100) 0%, var(--rose-200) 100%);
+  border-color: var(--rose-550-20);
+  box-shadow: 0 4px 14px var(--rose-550-10);
 }
 
 .timeline-h-event.p1::before {
-  background: #e11d48;
+  background: var(--rose-550);
 }
 
 .timeline-h-event.p2 {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border-color: rgba(234, 88, 12, 0.2);
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.1);
+  background: linear-gradient(135deg, var(--amber-150) 0%, var(--amber-350) 100%);
+  border-color: var(--amber-800-20);
+  box-shadow: 0 4px 14px var(--amber-800-10);
 }
 
 .timeline-h-event.p2::before {
-  background: #ea580c;
+  background: var(--amber-800);
 }
 
 .timeline-h-event.p4 {
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
-  border-color: rgba(31, 42, 55, 0.1);
-  box-shadow: 0 4px 12px rgba(31, 42, 55, 0.06);
+  background: linear-gradient(135deg, var(--paper-300) 0%, var(--paper-900) 100%);
+  border-color: var(--ink-950-a-10);
+  box-shadow: 0 4px 12px var(--ink-950-a-6);
 }
 
 .timeline-h-event.p4::before {
@@ -874,37 +874,37 @@ select {
 
 .timeline-h-event:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(98, 99, 168, 0.18);
+  box-shadow: 0 8px 18px var(--slate-150-18);
   border-color: var(--accent);
 }
 
 .timeline-h-event.is-focus {
   border-color: var(--accent);
   box-shadow:
-    0 0 0 2px rgba(98, 99, 168, 0.25),
-    0 8px 18px rgba(98, 99, 168, 0.18);
+    0 0 0 2px var(--slate-150-25),
+    0 8px 18px var(--slate-150-18);
 }
 
 /* 完成事项的「成就式」呈现:金色认可——✓ 金章、暖金底、完成时刻标识。
    不置灰、不划线、不降透明:完成是成就感,不是退场。 */
 .timeline-h-event.is-done {
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
-  border-color: rgba(217, 119, 6, 0.28);
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.12);
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  border-color: var(--amber-900-28);
+  box-shadow: 0 4px 14px var(--amber-900-12);
 }
 
 .timeline-h-event.is-done::before {
-  background: linear-gradient(180deg, #f59e0b, #d97706);
+  background: linear-gradient(180deg, var(--amber-750), var(--amber-900));
 }
 
 .timeline-h-event.is-done:hover {
-  border-color: #d97706;
-  box-shadow: 0 8px 18px rgba(217, 119, 6, 0.2);
+  border-color: var(--amber-900);
+  box-shadow: 0 8px 18px var(--amber-900-20);
 }
 
 .timeline-h-event.is-done .timeline-h-event-time {
-  background: rgba(217, 119, 6, 0.12);
-  color: #b45309;
+  background: var(--amber-900-12);
+  color: var(--amber-950-a);
 }
 
 .timeline-h-event-done {
@@ -917,37 +917,37 @@ select {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24, #d97706);
-  color: #fff;
-  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.35);
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+  color: var(--white);
+  box-shadow: 0 1px 4px var(--amber-900-35);
 }
 
 .timeline-h-allday-chip.is-done {
-  background: #fff7e6;
-  border-color: rgba(217, 119, 6, 0.3);
-  color: #b45309;
+  background: var(--amber-300);
+  border-color: var(--amber-900-30);
+  color: var(--amber-950-a);
 }
 
 .timeline-h-allday-chip.is-done svg {
   margin-right: 4px;
   vertical-align: -2px;
-  color: #d97706;
+  color: var(--amber-900);
 }
 
 :root[data-theme="dark"] .timeline-h-event.is-done {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: var(--amber-750-14);
+  border-color: var(--amber-750-40);
 }
 
 :root[data-theme="dark"] .timeline-h-event.is-done .timeline-h-event-time {
-  background: rgba(245, 158, 11, 0.16);
-  color: #fbbf24;
+  background: var(--amber-750-16);
+  color: var(--amber-700);
 }
 
 :root[data-theme="dark"] .timeline-h-allday-chip.is-done {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.3);
-  color: #fbbf24;
+  background: var(--amber-750-14);
+  border-color: var(--amber-750-30);
+  color: var(--amber-700);
 }
 
 /* 今日/当日事项行:同一套成就式完成态。作用于 .day-agenda 作用域,
@@ -964,7 +964,7 @@ select {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
   opacity: 0;
   pointer-events: none;
   transition: opacity 260ms ease;
@@ -980,11 +980,11 @@ select {
 }
 
 .day-agenda .expand-task.is-done {
-  border-color: rgba(217, 119, 6, 0.28);
+  border-color: var(--amber-900-28);
 }
 
 .day-agenda .expand-task.is-done .expand-task-row:hover {
-  background: rgba(217, 119, 6, 0.06);
+  background: var(--amber-900-6);
 }
 
 .day-agenda .expand-task.is-done .task-title {
@@ -1001,21 +1001,21 @@ select {
   line-height: 1.2;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(217, 119, 6, 0.12);
-  color: #b45309;
+  background: var(--amber-900-12);
+  color: var(--amber-950-a);
   white-space: nowrap;
 }
 
 :root[data-theme="dark"] .day-agenda .expand-task::before {
-  background: rgba(245, 158, 11, 0.08);
+  background: var(--amber-750-8);
 }
 
 :root[data-theme="dark"] .day-agenda .expand-task.is-done {
-  border-color: rgba(245, 158, 11, 0.25);
+  border-color: var(--amber-750-25);
 }
 
 :root[data-theme="dark"] .day-agenda .expand-task.is-done .expand-task-row:hover {
-  background: rgba(245, 158, 11, 0.08);
+  background: var(--amber-750-8);
 }
 
 :root[data-theme="dark"] .day-agenda .expand-task.is-done .task-title {
@@ -1023,8 +1023,8 @@ select {
 }
 
 :root[data-theme="dark"] .done-at-chip {
-  background: rgba(245, 158, 11, 0.16);
-  color: #fbbf24;
+  background: var(--amber-750-16);
+  color: var(--amber-700);
 }
 
 .timeline-h-event-title {
@@ -1049,7 +1049,7 @@ select {
   font-variant-numeric: tabular-nums;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--white-85);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1060,11 +1060,11 @@ select {
   z-index: 120;
   width: 292px;
   padding: 16px;
-  border: 1px solid rgba(47, 111, 237, 0.18);
+  border: 1px solid var(--azure-950-18);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--white-98);
   color: var(--text-primary);
-  box-shadow: 0 18px 50px rgba(31, 42, 55, 0.2);
+  box-shadow: 0 18px 50px var(--ink-950-a-20);
   backdrop-filter: blur(14px);
   pointer-events: none;
   animation: timeline-popover-in 120ms ease-out;
@@ -1086,20 +1086,20 @@ select {
   flex: none;
   padding: 3px 7px;
   border-radius: 999px;
-  background: #edf3ff;
+  background: var(--paper-650);
   color: var(--accent);
   font-size: 11px;
   font-weight: 700;
 }
 
 .timeline-task-priority.p1 {
-  background: #fff1f2;
-  color: #e11d48;
+  background: var(--rose-100);
+  color: var(--rose-550);
 }
 
 .timeline-task-priority.p2 {
-  background: #fff7ed;
-  color: #c2410c;
+  background: var(--amber-150);
+  color: var(--amber-950);
 }
 
 .timeline-task-popover-meta {
@@ -1133,9 +1133,9 @@ select {
 }
 
 :root[data-theme="dark"] .timeline-task-popover {
-  border-color: rgba(121, 161, 245, 0.3);
-  background: rgba(27, 35, 49, 0.98);
-  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.42);
+  border-color: var(--azure-450-30);
+  background: var(--ink-950-c-98);
+  box-shadow: 0 20px 54px var(--black-42);
 }
 
 @keyframes timeline-popover-in {
@@ -1364,9 +1364,9 @@ select {
 /* 周历/月历与日历同一套「成就式」完成态:金色认可——✓ 金章、暖金底。
    不置灰、不划线、不降透明:完成是成就感,不是退场。 */
 .week-chip.is-done {
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
-  border-color: rgba(217, 119, 6, 0.28);
-  color: #b45309;
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  border-color: var(--amber-900-28);
+  color: var(--amber-950-a);
 }
 
 .week-chip.is-done::before {
@@ -1377,16 +1377,16 @@ select {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24, #d97706);
-  color: #fff;
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+  color: var(--white);
   font-size: 10px;
   line-height: 1;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.35);
+  box-shadow: 0 1px 3px var(--amber-900-35);
 }
 
 .week-chip.is-done .week-chip-date {
-  color: #b45309;
+  color: var(--amber-950-a);
 }
 
 .week-chip-date {
@@ -1429,13 +1429,13 @@ select {
 }
 
 .week-allday-event.is-done {
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
-  color: #b45309;
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  color: var(--amber-950-a);
 }
 
 .week-allday-event.is-done::before {
   content: "✓ ";
-  color: #d97706;
+  color: var(--amber-900);
   font-weight: 700;
 }
 
@@ -1550,12 +1550,12 @@ select {
 }
 
 .week-event.is-done {
-  background: linear-gradient(135deg, #fffbeb 0%, #fdf0d2 100%);
-  border-left-color: #d97706;
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  border-left-color: var(--amber-900);
 }
 
 .week-event.is-done .week-event-time {
-  color: #b45309;
+  color: var(--amber-950-a);
   opacity: 1;
 }
 
@@ -1570,11 +1570,11 @@ select {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24, #d97706);
-  color: #fff;
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+  color: var(--white);
   font-size: 10px;
   line-height: 1;
-  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.35);
+  box-shadow: 0 1px 3px var(--amber-900-35);
 }
 
 .week-now {
@@ -1638,7 +1638,7 @@ select {
 }
 
 .detail-footer .btn-ghost.danger:hover {
-  background: color-mix(in srgb, var(--danger-solid) 86%, #000);
+  background: color-mix(in srgb, var(--danger-solid) 86%, var(--black));
   color: var(--text-on-solid);
 }
 
@@ -1703,11 +1703,11 @@ select {
 }
 
 .detail-meta .prio.p1 {
-  color: #e11d48;
+  color: var(--rose-550);
 }
 
 .detail-meta .prio.p2 {
-  color: #ea580c;
+  color: var(--amber-800);
 }
 
 .field-label {

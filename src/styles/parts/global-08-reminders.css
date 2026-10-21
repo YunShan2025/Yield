@@ -235,7 +235,7 @@
 }
 
 .timer-card.is-running {
-  border-color: rgba(98, 99, 168, 0.45);
+  border-color: var(--slate-150-45);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 

@@ -67,9 +67,9 @@ body.nav-resizing {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(145deg, #6f93e8, #3f6fd6);
-  box-shadow: 0 6px 16px rgba(55, 95, 180, 0.22);
+  color: var(--white);
+  background: linear-gradient(145deg, var(--azure-650), var(--azure-950-a));
+  box-shadow: 0 6px 16px var(--navy-200-22);
 }
 
 .brand-caption {
@@ -86,8 +86,8 @@ body.nav-resizing {
 
 .nav-item.active {
   position: relative;
-  background: linear-gradient(90deg, var(--accent-soft), rgba(98, 99, 168, 0.04));
-  box-shadow: inset 0 0 0 1px rgba(98, 99, 168, 0.07);
+  background: linear-gradient(90deg, var(--accent-soft), var(--slate-150-4));
+  box-shadow: inset 0 0 0 1px var(--slate-150-7);
 }
 
 .nav-item.active::before {
@@ -101,13 +101,13 @@ body.nav-resizing {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #82a0df, var(--accent));
-  box-shadow: 0 8px 20px rgba(98, 99, 168, 0.19);
+  background: linear-gradient(135deg, var(--steel-150), var(--accent));
+  box-shadow: 0 8px 20px var(--slate-150-19);
 }
 
 .main-workspace {
   background:
-    radial-gradient(circle at 92% 0%, rgba(229, 154, 107, 0.09), transparent 25%),
+    radial-gradient(circle at 92% 0%, var(--warm-400-9), transparent 25%),
     var(--surface-base);
 }
 
@@ -139,21 +139,21 @@ body.nav-resizing {
 }
 
 .expand-task:hover {
-  border-color: rgba(98, 99, 168, 0.17);
-  box-shadow: 0 10px 27px rgba(45, 43, 67, 0.09);
+  border-color: var(--slate-150-17);
+  box-shadow: 0 10px 27px var(--slate-200-9);
   transform: translateY(-1px);
 }
 
 .task-check {
   border-radius: 50%;
-  border-color: rgba(98, 99, 168, 0.36);
+  border-color: var(--slate-150-36);
 }
 
 .detail-panel {
   background:
-    linear-gradient(180deg, rgba(98, 99, 168, 0.04), transparent 150px),
+    linear-gradient(180deg, var(--slate-150-4), transparent 150px),
     var(--surface-panel);
-  box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
+  box-shadow: -14px 0 42px var(--slate-200-11);
 }
 
 .detail-meta {
