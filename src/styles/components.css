@@ -1609,15 +1609,18 @@ select {
   background: var(--surface-hover);
 }
 
+/* 「删除任务」降权：破坏性动作不该是抽屉里最响的一块。点击还有二次确认，
+   红色留给悬停。 */
 .detail-footer .btn-ghost.danger {
-  border: 1px solid transparent;
-  background: var(--danger-solid);
-  color: var(--text-on-solid);
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--danger);
 }
 
 .detail-footer .btn-ghost.danger:hover {
-  background: color-mix(in srgb, var(--danger-solid) 86%, var(--black));
-  color: var(--text-on-solid);
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface-sunken));
+  color: var(--danger);
 }
 
 .detail-head-actions {
@@ -1659,23 +1662,31 @@ select {
   .detail-form-row { grid-template-columns: 1fr; }
 }
 
+/* 元信息：一列字段表，标签在左、值在右，发丝线分隔。
+   原来六张带边框的灰底小卡，是「同尺寸小卡当内容结构」—— 卡片是懒容器，
+   嵌套卡片更糟。 */
 .detail-meta-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr;
+  border-top: 1px solid var(--border);
 }
 
 .detail-meta {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-base);
-  border: 1px solid var(--border);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-meta > .field-label {
+  flex: 0 0 auto;
 }
 
 .detail-meta strong {
+  min-width: 0;
+  text-align: right;
   font-size: 13px;
   font-weight: 600;
 }

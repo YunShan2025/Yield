@@ -278,14 +278,6 @@ export function DetailDrawer() {
       {mode === "view" ? (
         <div className="detail-body detail-view">
           <div className="detail-view-hero">
-            <button
-              type="button"
-              className={`task-check ${task.status === "completed" ? "is-done" : ""}`}
-              title={task.status === "completed" ? "标为未完成" : "标为完成"}
-              onClick={() => void toggleComplete(task.id)}
-            >
-              {task.status === "completed" ? "✓" : ""}
-            </button>
             <h2 className="detail-view-title">{task.title}</h2>
           </div>
 
