@@ -10,7 +10,7 @@
   background:
     radial-gradient(circle at 88% 4%, color-mix(in srgb, var(--moment-blue) 11%, transparent), transparent 27%),
     radial-gradient(circle at 58% 86%, color-mix(in srgb, var(--moment-warm) 7%, transparent), transparent 25%),
-    var(--bg-root);
+    var(--surface-base);
 }
 
 /* 内容统一 28px 边距,与「今日」一致。 */
@@ -26,7 +26,7 @@
   padding: 16px 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 
 .anniversaries-page > .modal-backdrop { width: auto; margin: 0; }
@@ -37,7 +37,7 @@
 .anni-detail-dialog > header h2 { margin: 5px 0 0; font: 750 26px/1.2 var(--font-display); }
 .anni-detail-name { margin: -8px 0 14px; color: var(--text-primary); font: 650 15px/1.4 var(--font-display); }
 .anni-composer-dialog > header > button,
-.anni-detail-dialog > header > button { width: 34px; height: 34px; padding: 0; border-radius: 50%; color: var(--text-muted); background: var(--surface-soft); }
+.anni-detail-dialog > header > button { width: 34px; height: 34px; padding: 0; border-radius: 50%; color: var(--text-muted); background: var(--surface-sunken); }
 
 .anni-composer-row {
   display: flex;
@@ -90,7 +90,7 @@
   padding: 16px 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 
 .anni-upcoming h3 {
@@ -112,7 +112,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--accent) 8%, var(--bg-panel));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-panel));
   min-width: 140px;
   color: var(--text-primary);
   text-align: left;
@@ -133,7 +133,7 @@
   padding: 14px 16px;
   border-radius: 16px;
   border: 1px solid var(--border);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -174,15 +174,15 @@
 .anni-empty p { margin: 0 0 8px; color: var(--text-muted); }
 .anni-empty .btn-primary { width: auto; }
 
-.anni-detail-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; padding: 25px; border: 1px solid var(--border); border-radius: 24px; background: var(--bg-panel); box-shadow: 0 30px 90px rgba(26,37,58,.28); }
-.anni-detail-count { display: grid; justify-items: center; gap: 5px; margin: 6px 0 22px; padding: 26px; border: 1px solid color-mix(in srgb, var(--moment-warm) 22%, var(--border)); border-radius: 18px; background: color-mix(in srgb, var(--moment-warm) 8%, var(--bg-panel)); }
+.anni-detail-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; padding: 25px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface-panel); box-shadow: 0 30px 90px rgba(26,37,58,.28); }
+.anni-detail-count { display: grid; justify-items: center; gap: 5px; margin: 6px 0 22px; padding: 26px; border: 1px solid color-mix(in srgb, var(--moment-warm) 22%, var(--border)); border-radius: 18px; background: color-mix(in srgb, var(--moment-warm) 8%, var(--surface-panel)); }
 .anni-detail-count strong { color: var(--moment-warm); font: 780 clamp(42px,9vw,68px)/1 var(--font-display); letter-spacing: -.06em; }
 .anni-detail-count span { color: var(--text-secondary); font-size: 13px; }
 .anni-detail-dialog dl { display: grid; gap: 0; margin: 0; }
 .anni-detail-dialog dl > div { display: grid; grid-template-columns: 90px 1fr; gap: 15px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
 .anni-detail-dialog dt { color: var(--text-muted); font-size: 12px; }
 .anni-detail-dialog dd { margin: 0; color: var(--text-primary); font-size: 13px; text-align: right; }
-.anni-detail-dialog > section { margin-top: 20px; padding: 17px 18px; border-left: 4px solid var(--moment-warm); background: var(--surface-soft); }
+.anni-detail-dialog > section { margin-top: 20px; padding: 17px 18px; border-left: 4px solid var(--moment-warm); background: var(--surface-sunken); }
 .anni-detail-dialog > section span { color: var(--text-muted); font-size: 11px; font-weight: 750; }
 .anni-detail-dialog > section p { margin: 8px 0 0; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
 .anni-detail-dialog > footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }

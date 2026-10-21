@@ -13,11 +13,11 @@ input,
 textarea,
 select {
   transition:
-    color var(--transition),
-    border-color var(--transition),
-    background-color var(--transition),
-    box-shadow var(--transition),
-    transform var(--transition);
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
 }
 
 button:active:not(:disabled) {
@@ -26,7 +26,7 @@ button:active:not(:disabled) {
 
 .nav-side {
   border-right-color: var(--border);
-  background: color-mix(in srgb, var(--bg-panel) 94%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
   backdrop-filter: blur(18px);
 }
 
@@ -127,7 +127,7 @@ button:active:not(:disabled) {
 .main-workspace {
   background:
     radial-gradient(circle at 94% 0%, rgba(232, 170, 103, 0.1), transparent 24%),
-    var(--bg-root);
+    var(--surface-base);
 }
 
 .workspace-top {
@@ -143,7 +143,7 @@ button:active:not(:disabled) {
 .seg {
   padding: 4px;
   border-color: var(--border);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-1);
 }
 
 .seg button {
@@ -171,8 +171,8 @@ button:active:not(:disabled) {
 .scope-card {
   border-color: var(--border);
   border-radius: 15px;
-  background: color-mix(in srgb, var(--bg-panel) 94%, transparent);
-  box-shadow: var(--shadow-soft);
+  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
+  box-shadow: var(--shadow-1);
 }
 
 .scope-card strong {
@@ -190,8 +190,8 @@ button:active:not(:disabled) {
   margin-bottom: 9px;
   border-color: transparent;
   border-radius: 14px;
-  background: var(--bg-panel);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-1);
 }
 
 .expand-task:hover {
@@ -249,7 +249,7 @@ button:active:not(:disabled) {
   border-left-color: var(--border);
   background:
     linear-gradient(180deg, rgba(98, 99, 168, 0.04), transparent 150px),
-    var(--bg-panel);
+    var(--surface-panel);
   box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
 }
 
@@ -281,5 +281,5 @@ button:active:not(:disabled) {
 .detail-meta {
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-root);
+  background: var(--surface-base);
 }

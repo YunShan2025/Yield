@@ -23,12 +23,12 @@
   padding: 7px 30px 7px 10px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--bg-input) var(--select-arrow) no-repeat right 11px center;
+  background: var(--surface-input) var(--select-arrow) no-repeat right 11px center;
   color: var(--text-primary);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color var(--transition), background-color var(--transition), box-shadow var(--transition);
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .select-btn:hover:not(:disabled) {
@@ -43,7 +43,7 @@
 .select-btn.item-action-btn:hover:not(:disabled),
 .select-btn.item-action-btn:active:not(:disabled) {
   border-color: var(--accent);
-  background: var(--bg-input) var(--select-arrow) no-repeat right 11px center;
+  background: var(--surface-input) var(--select-arrow) no-repeat right 11px center;
 }
 
 /* 与输入框同一套「边框变色 + 3px 外扩环」焦点语言,不用外挂 outline。 */
@@ -68,8 +68,8 @@
   padding: 5px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--surface-elevated);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-1);
   animation: select-menu-in 0.14s ease-out;
 }
 
@@ -100,7 +100,7 @@
 
 .select-option:hover,
 .select-option.is-active {
-  background: var(--bg-hover);
+  background: var(--surface-hover);
 }
 
 .select-option.is-selected {
@@ -142,7 +142,7 @@
   padding: 8px 11px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--bg-input);
+  background: var(--surface-input);
 }
 
 /* ---- DatePicker:替代原生 input[type=date] 的自绘日历(样式对齐 TimePicker) ---- */
@@ -159,7 +159,7 @@
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--bg-input);
+  background: var(--surface-input);
   color: var(--text-primary);
   cursor: pointer;
   font: inherit;
@@ -189,8 +189,8 @@
   padding: 12px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: var(--surface-elevated);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-1);
   display: grid;
   gap: 8px;
   animation: time-picker-in 0.14s ease-out;

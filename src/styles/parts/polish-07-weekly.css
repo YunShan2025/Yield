@@ -50,7 +50,7 @@
   padding: 14px;
   border-radius: 16px;
   border: 1px solid var(--border);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   display: grid;
   gap: 8px;
 }
@@ -124,7 +124,7 @@
   padding: 12px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   min-width: 0;
 }
 
@@ -207,7 +207,7 @@
   align-items: center;
   border: 0;
   border-radius: 8px;
-  background: var(--bg-soft, var(--bg-panel));
+  background: var(--surface-sunken, var(--surface-panel));
   color: var(--text-primary);
   text-align: left;
   padding: 6px 7px;
@@ -217,7 +217,7 @@
 
 @supports (background: color-mix(in srgb, red 10%, blue)) {
   .weekly-day-task {
-    background: color-mix(in srgb, var(--bg-root) 70%, transparent);
+    background: color-mix(in srgb, var(--surface-base) 70%, transparent);
   }
 }
 
@@ -294,7 +294,7 @@
   padding: 13px 18px 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 
 .weekly-stat-track {
@@ -367,7 +367,7 @@
   height: 100%;
   border-radius: inherit;
   background: var(--accent);
-  transition: width var(--transition);
+  transition: width var(--motion-fast);
 }
 
 .weekly-stat-pct {

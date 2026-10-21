@@ -293,13 +293,13 @@
   border: 1px solid var(--border-strong);
   border-radius: 17px;
   text-align: left;
-  background: var(--surface-elevated);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-1);
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .theme-preview:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
-.theme-preview.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-soft); }
+.theme-preview.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-1); }
 
 .theme-preview-canvas {
   position: relative;
@@ -378,7 +378,7 @@
   padding: 11px 13px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--surface-soft);
+  background: var(--surface-sunken);
 }
 .theme-system-toggle input { width: 17px; height: 17px; accent-color: var(--accent); }
 .theme-system-toggle span { display: grid; gap: 2px; }
@@ -402,7 +402,7 @@
 :root[data-theme="dark"] .expand-task,
 :root[data-theme="dark"] .timeline-task-popover {
   border-color: rgba(220, 232, 250, .14);
-  background: var(--surface-elevated);
+  background: var(--surface-raised);
   box-shadow: 0 12px 30px rgba(0, 0, 0, .24);
 }
 

@@ -17,14 +17,14 @@
   border: 1px solid rgba(34, 55, 91, 0.12);
   background:
     radial-gradient(circle at 88% 0%, rgba(47, 111, 237, 0.06), transparent 28%),
-    var(--bg-root);
+    var(--surface-base);
 }
 
 :root[data-theme="dark"] .app-root {
   border: 1px solid rgba(220, 232, 250, 0.12);
   background:
     radial-gradient(circle at 88% 0%, rgba(112, 161, 255, 0.1), transparent 28%),
-    var(--bg-root);
+    var(--surface-base);
 }
 
 :root[data-theme="light"] .app-body,
@@ -38,7 +38,7 @@
 :root[data-theme="dark"] .nav-side {
   border-right: 1px solid var(--border);
   border-radius: 0;
-  background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
 }
 
 :root[data-theme="light"] .main-workspace,
@@ -51,7 +51,7 @@
 :root[data-theme="dawn"] .glass-titlebar {
   color: #1d2b45;
   border-bottom: 1px solid rgba(34, 55, 91, 0.08);
-  background: color-mix(in srgb, var(--bg-panel) 88%, #eef3fb);
+  background: color-mix(in srgb, var(--surface-panel) 88%, #eef3fb);
 }
 
 :root[data-theme="light"] .glass-titlebar-brand small,
@@ -98,7 +98,7 @@
 :root[data-theme="dark"] .glass-titlebar {
   color: #e8eef8;
   border-bottom: 1px solid rgba(220, 232, 250, 0.1);
-  background: color-mix(in srgb, var(--bg-rail) 88%, #0c121c);
+  background: color-mix(in srgb, var(--surface-rail) 88%, #0c121c);
 }
 
 :root[data-theme="dark"] .glass-titlebar-brand small {
@@ -130,12 +130,12 @@
     overflow: hidden;
     border-radius: var(--shell-radius);
     border: 1px solid rgba(34, 55, 91, 0.12);
-    background: var(--bg-root);
+    background: var(--surface-base);
   }
   :root[data-theme="system"] .glass-titlebar {
     color: #1d2b45;
     border-bottom: 1px solid rgba(34, 55, 91, 0.08);
-    background: color-mix(in srgb, var(--bg-panel) 88%, #eef3fb);
+    background: color-mix(in srgb, var(--surface-panel) 88%, #eef3fb);
   }
   :root[data-theme="system"] .glass-titlebar-brand small { color: rgba(29, 43, 69, 0.5); }
   :root[data-theme="system"] .glass-titlebar-controls button { color: rgba(29, 43, 69, 0.78); }
@@ -156,12 +156,12 @@
     overflow: hidden;
     border-radius: var(--shell-radius);
     border: 1px solid rgba(220, 232, 250, 0.12);
-    background: var(--bg-root);
+    background: var(--surface-base);
   }
   :root[data-theme="system"] .glass-titlebar {
     color: #e8eef8;
     border-bottom: 1px solid rgba(220, 232, 250, 0.1);
-    background: color-mix(in srgb, var(--bg-rail) 88%, #0c121c);
+    background: color-mix(in srgb, var(--surface-rail) 88%, #0c121c);
   }
   :root[data-theme="system"] .glass-titlebar-brand small { color: rgba(232, 238, 248, 0.5); }
   :root[data-theme="system"] .glass-titlebar-controls button { color: rgba(232, 238, 248, 0.86); }

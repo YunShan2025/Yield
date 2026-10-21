@@ -10,7 +10,7 @@ body {
   font-family: var(--font-body);
   font-size: 14.5px;
   color: var(--text-primary);
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--motion-fast), color var(--motion-fast);
 }
 
 button,
@@ -31,7 +31,7 @@ input,
 textarea,
 select {
   border: 1px solid var(--border-strong);
-  background: var(--bg-input);
+  background: var(--surface-input);
   border-radius: var(--radius-sm);
   padding: 8px 10px;
 }
@@ -60,7 +60,7 @@ select:focus {
   padding: 3px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 
 .memo-list-tabs button {
@@ -79,7 +79,7 @@ select:focus {
 
 .memo-list-tabs button.active {
   color: var(--accent);
-  background: var(--bg-selected);
+  background: var(--surface-selected);
   font-weight: 600;
 }
 
@@ -93,22 +93,22 @@ select:focus {
   padding: 12px 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
   min-width: 0;
-  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+  transition: border-color var(--motion-fast), background var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .memo-list-item:hover {
-  background: var(--bg-selected);
+  background: var(--surface-selected);
 }
 
 .memo-list-item.active {
   border-color: var(--accent);
-  background: var(--bg-selected);
+  background: var(--surface-selected);
 }
 
 .memo-list-title {
@@ -156,7 +156,7 @@ select:focus {
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-root);
+  background: var(--surface-base);
 }
 
 .data-health-head,
@@ -190,7 +190,7 @@ select:focus {
 .data-health-details > div {
   padding: 10px;
   border-radius: 9px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 
 .data-health-details dt {
@@ -245,11 +245,11 @@ select:focus {
   padding: 6px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-panel);
-  box-shadow: var(--shadow-floating, 0 16px 42px rgba(20, 31, 50, .18));
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-2, 0 16px 42px rgba(20, 31, 50, .18));
 }
 .memo-create-menu button { display: grid; width: 100%; gap: 2px; padding: 10px 11px; border: 0; border-radius: 8px; color: var(--text-primary); background: transparent; text-align: left; cursor: pointer; }
-.memo-create-menu button:hover { background: var(--bg-hover); }
+.memo-create-menu button:hover { background: var(--surface-hover); }
 .memo-create-menu strong { font-size: 13px; }
 .memo-create-menu span { color: var(--text-muted); font-size: 11px; }
 .memo-search {
@@ -261,20 +261,20 @@ select:focus {
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--text-muted);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 .memo-search input { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--text-primary); background: transparent; font: inherit; }
 .memo-list { margin-inline: -4px; padding-inline: 4px; }
-.memo-list-item { position: relative; padding: 12px 14px 12px 16px; border-color: var(--border); background: var(--bg-panel); }
+.memo-list-item { position: relative; padding: 12px 14px 12px 16px; border-color: var(--border); background: var(--surface-panel); }
 .memo-list-item::before { content: ""; position: absolute; left: 4px; top: 14px; bottom: 14px; width: 2px; border-radius: 4px; background: transparent; }
-.memo-list-item:hover { background: var(--bg-hover); }
-.memo-list-item.active { border-color: color-mix(in srgb, var(--accent) 20%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 55%, var(--bg-panel)); box-shadow: 0 6px 18px color-mix(in srgb, var(--text-primary) 4%, transparent); }
+.memo-list-item:hover { background: var(--surface-hover); }
+.memo-list-item.active { border-color: color-mix(in srgb, var(--accent) 20%, var(--border)); background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface-panel)); box-shadow: 0 6px 18px color-mix(in srgb, var(--text-primary) 4%, transparent); }
 .memo-list-item.active::before { background: var(--accent); }
 .memo-list-title-copy { min-width: 0; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; }
 .memo-list-time { flex: 0 0 auto; color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .memo-document-format { flex: 0 0 auto; padding: 2px 5px; border-radius: 5px; font: 750 9px/1.2 var(--font-body); letter-spacing: .03em; }
 .memo-document-format.is-richtext { color: var(--accent); background: var(--accent-soft); }
-.memo-document-format.is-markdown { color: var(--text-secondary); background: var(--bg-rail); }
+.memo-document-format.is-markdown { color: var(--text-secondary); background: var(--surface-rail); }
 .memo-empty-list { padding: 28px 14px; color: var(--text-muted); font-size: 12px; line-height: 1.7; text-align: center; }
 
 /* 详情抽屉:复用任务详情的 .detail-panel 骨架,略放宽以适合阅读。 */
@@ -304,7 +304,7 @@ select:focus {
   min-height: 92px;
   padding: 22px 30px 17px;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
   flex: 0 0 auto;
 }
 .memo-drawer-body .memo-document-head { min-height: 0; padding: 12px 26px 13px; }
@@ -333,7 +333,7 @@ select:focus {
 .memo-reading-surface ol { padding-left: 1.5em; }
 .memo-reading-surface a { color: var(--accent); text-underline-offset: 3px; }
 .memo-reading-surface code { padding: 2px 5px; border-radius: 5px; background: var(--accent-soft); }
-.memo-reading-surface pre { overflow: auto; padding: 14px; border-radius: 10px; background: var(--bg-root); }
+.memo-reading-surface pre { overflow: auto; padding: 14px; border-radius: 10px; background: var(--surface-base); }
 .memo-reading-empty { display: grid; place-items: center; align-content: center; gap: 8px; min-height: 320px; color: var(--text-muted); text-align: center; }
 .memo-reading-empty strong { color: var(--text-secondary); }
 .memo-reading-empty button { min-height: 34px; margin-top: 5px; padding: 0 12px; border: 0; border-radius: 9px; color: var(--accent); background: var(--accent-soft); cursor: pointer; }
@@ -346,7 +346,7 @@ select:focus {
   min-height: 45px;
   padding: 6px 30px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-root);
+  background: var(--surface-base);
   flex: 0 0 auto;
 }
 .memo-drawer-body .memo-rich-toolbar { padding-inline: 26px; }
@@ -380,7 +380,7 @@ select:focus {
   border: 0;
   outline: 0;
   color: var(--text-primary);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   font: 14px/1.8 ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   tab-size: 2;
 }

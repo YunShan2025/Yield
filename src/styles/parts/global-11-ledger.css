@@ -1,14 +1,14 @@
 .ledger-view {
   --ledger-income: #2f8f68;
   --ledger-expense: #df6670;
-  --ledger-line: color-mix(in srgb, var(--border) 78%, var(--bg-panel));
+  --ledger-line: color-mix(in srgb, var(--border) 78%, var(--surface-panel));
   isolation: isolate;
   min-height: 100%;
   overflow: auto;
   color: var(--text-primary);
   background:
     radial-gradient(circle at 88% 4%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 28%),
-    var(--bg-root);
+    var(--surface-base);
 }
 
 /* 页头(workspace-top)在上,内容统一 28px 边距。 */
@@ -34,7 +34,7 @@
   align-items: center;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--surface-elevated);
+  background: var(--surface-raised);
   overflow: hidden;
 }
 .ledger-month-switcher button {
@@ -61,10 +61,10 @@
 }
 .ledger-stat-grid article,
 .ledger-card {
-  background: var(--surface-elevated);
+  background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: 18px;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-1);
 }
 .ledger-stat-grid article {
   padding: 18px;
@@ -94,7 +94,7 @@
   border-radius: 999px;
   padding: 2px 9px;
   color: var(--text-secondary);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -113,7 +113,7 @@
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--surface-elevated);
+  background: var(--surface-raised);
   box-shadow: 0 16px 36px rgb(15 23 42 / 18%);
   font-size: 11px;
 }
@@ -172,7 +172,7 @@
   content: "";
   position: absolute;
   inset: 28px;
-  background: var(--surface-elevated);
+  background: var(--surface-raised);
   border-radius: 50%;
 }
 .ledger-donut span { z-index: 1; font-weight: 800; font-size: 13px; color: var(--text-primary); }
@@ -337,7 +337,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   border-left: 1px solid var(--border);
   box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
   color: var(--text-primary);
@@ -369,7 +369,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   gap: 8px;
   padding: 12px 20px 18px;
   border-top: 1px solid var(--border);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 .ledger-drawer-footer .btn-primary,
 .ledger-drawer-footer .btn-ghost { width: auto; min-height: 36px; }
@@ -382,11 +382,11 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   padding: 6px 8px;
   border-radius: 8px;
 }
-.ledger-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+.ledger-close:hover { background: var(--surface-hover); color: var(--text-primary); }
 .ledger-kind-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: var(--surface-soft);
+  background: var(--surface-sunken);
   padding: 4px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -400,7 +400,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   cursor: pointer;
 }
 .ledger-kind-tabs button.active {
-  background: var(--surface-elevated);
+  background: var(--surface-raised);
   box-shadow: 0 2px 9px rgb(20 30 50 / 8%);
   color: var(--text-primary);
   font-weight: 750;
@@ -421,7 +421,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   box-sizing: border-box;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--bg-input);
+  background: var(--surface-input);
   color: var(--text-primary);
   padding: 10px 11px;
   margin-top: 7px;
@@ -433,7 +433,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   margin-top: 7px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--bg-input);
+  background: var(--surface-input);
   padding: 0 10px;
 }
 .ledger-amount b { flex: none; font-size: 20px; color: var(--text-muted); }
@@ -476,7 +476,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   min-height: 76px;
   padding: 10px 4px 8px;
   border: 1px solid var(--border);
-  background: var(--bg-input);
+  background: var(--surface-input);
   border-radius: 11px;
   color: var(--text-secondary);
   display: flex;
@@ -500,7 +500,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 }
 .ledger-choice-grid button.active {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 9%, var(--bg-input));
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface-input));
   color: var(--text-primary);
 }
 .ledger-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -539,7 +539,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-input);
+  background: var(--surface-input);
 }
 .ledger-budget-input span {
   font-size: 20px;

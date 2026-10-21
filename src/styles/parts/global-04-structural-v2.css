@@ -25,7 +25,7 @@ body {
 }
 
 .main-workspace {
-  background: var(--bg-root);
+  background: var(--surface-base);
 }
 
 .timeline-dock-head {
@@ -45,11 +45,11 @@ body {
 .timeline-h-scroll {
   border-color: var(--border);
   border-radius: 14px;
-  background: var(--bg-root);
+  background: var(--surface-base);
 }
 
 .timeline-h-hours {
-  background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
 }
 
 .timeline-h-hour {
@@ -143,7 +143,7 @@ body {
   font-weight: 650;
   border: 1px solid color-mix(in srgb, var(--warning) 20%, transparent);
   border-radius: 7px;
-  background: color-mix(in srgb, var(--warning) 7%, var(--bg-panel));
+  background: color-mix(in srgb, var(--warning) 7%, var(--surface-panel));
 }
 
 :root[data-theme="dark"] .today-hero {
@@ -153,7 +153,7 @@ body {
     radial-gradient(circle at 88% 10%, rgba(112, 161, 255, 0.19), transparent 29%),
     radial-gradient(circle at 96% 92%, rgba(220, 151, 99, 0.08), transparent 24%),
     linear-gradient(120deg, #172944 0%, #172131 72%, #182130 100%);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-1);
 }
 
 :root[data-theme="dark"] .today-hero h3 {

@@ -1,6 +1,6 @@
 /* Final theme layer: kept last intentionally so legacy module styles inherit it. */
 .nav-side {
-  background: color-mix(in srgb, var(--bg-panel) 94%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
   backdrop-filter: blur(18px);
 }
 
@@ -108,7 +108,7 @@ body.nav-resizing {
 .main-workspace {
   background:
     radial-gradient(circle at 92% 0%, rgba(229, 154, 107, 0.09), transparent 25%),
-    var(--bg-root);
+    var(--surface-base);
 }
 
 .workspace-top {
@@ -129,8 +129,8 @@ body.nav-resizing {
 .scope-card,
 .expand-task {
   border-color: var(--border);
-  background: var(--bg-panel);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-1);
 }
 
 .expand-task {
@@ -152,12 +152,12 @@ body.nav-resizing {
 .detail-panel {
   background:
     linear-gradient(180deg, rgba(98, 99, 168, 0.04), transparent 150px),
-    var(--bg-panel);
+    var(--surface-panel);
   box-shadow: -14px 0 42px rgba(45, 43, 67, 0.11);
 }
 
 .detail-meta {
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-root);
+  background: var(--surface-base);
 }

@@ -193,7 +193,7 @@ export function MainApp() {
     }
   });
   useEffect(() => {
-    document.documentElement.style.setProperty("--side-w", `${navWidth}px`);
+    document.documentElement.style.setProperty("--layout-side-w", `${navWidth}px`);
     try {
       localStorage.setItem(NAV_WIDTH_KEY, String(navWidth));
     } catch {
@@ -392,9 +392,9 @@ export function MainApp() {
       navCollapsed ? "collapsed" : "expanded";
   }, [navCollapsed]);
 
-  // 侧栏宽度:写入 --side-w 供 .app-body 网格使用,并持久化(仅本地,不进数据库)。
+  // 侧栏宽度:写入 --layout-side-w 供 .app-body 网格使用,并持久化(仅本地,不进数据库)。
   useEffect(() => {
-    document.documentElement.style.setProperty("--side-w", `${navWidth}px`);
+    document.documentElement.style.setProperty("--layout-side-w", `${navWidth}px`);
     try {
       localStorage.setItem(NAV_WIDTH_KEY, String(navWidth));
     } catch {

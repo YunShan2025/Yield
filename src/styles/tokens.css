@@ -335,22 +335,5 @@
    旧名别名 —— 阶段 2 第 4 步的过渡层
    引用侧全量切到新名后，整段删除。
    ============================================================ */
-/* @legacy-alias:start */
-:root {
-  --bg-root: var(--surface-base);
-  --bg-panel: var(--surface-panel);
-  --bg-rail: var(--surface-rail);
-  --bg-hover: var(--surface-hover);
-  --bg-selected: var(--surface-selected);
-  --bg-input: var(--surface-input);
-  --surface-elevated: var(--surface-raised);
-  --surface-soft: var(--surface-sunken);
-  --shadow: var(--shadow-2);
-  --shadow-soft: var(--shadow-1);
-  --radius: var(--radius-lg);
-  --rail-w: var(--layout-rail-w);
-  --side-w: var(--layout-side-w);
-  --timeline-w: var(--layout-timeline-w);
-  --transition: var(--motion-fast);
-}
-/* @legacy-alias:end */
+
+

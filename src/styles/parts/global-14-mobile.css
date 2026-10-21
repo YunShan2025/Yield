@@ -95,7 +95,7 @@ html[data-shell="mobile"] .memo-list {
   overflow: visible;
 }
 
-/* 移动壳没有侧栏:单列布局,主区占满全宽(桌面侧 --side-w 网格不适用)。 */
+/* 移动壳没有侧栏:单列布局,主区占满全宽(桌面侧 --layout-side-w 网格不适用)。 */
 html[data-shell="mobile"] .app-body {
   grid-template-columns: 1fr;
 }
@@ -109,7 +109,7 @@ html[data-shell="mobile"] .app-body {
   grid-template-columns: repeat(4, 1fr);
   flex: none;
   border-top: 1px solid var(--border);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -287,7 +287,7 @@ html[data-shell="mobile"] .drag-handle {
   padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.24);
   animation: sheetUp 160ms ease;
 }
@@ -330,7 +330,7 @@ html[data-shell="mobile"] .drag-handle {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-root);
+  background: var(--surface-base);
   color: var(--text-primary);
   font: inherit;
   font-size: 13px;
@@ -396,7 +396,7 @@ html[data-shell="mobile"] body.ledger-drawer-open .mobile-nav {
   display: flex;
   flex-direction: column;
   overflow: auto;
-  background: var(--bg-root);
+  background: var(--surface-base);
   animation: sheetUp 180ms ease;
 }
 
@@ -410,7 +410,7 @@ html[data-shell="mobile"] body.ledger-drawer-open .mobile-nav {
   align-items: center;
   justify-content: space-between;
   padding: 20px 20px 10px;
-  background: var(--bg-root);
+  background: var(--surface-base);
   border-bottom: 1px solid var(--border);
 }
 
@@ -485,7 +485,7 @@ html[data-shell="mobile"] .command-search {
   top: 0;
   z-index: 2;
   padding: 10px 12px 11px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
 }
 
 html[data-shell="mobile"] .command-search-field {
@@ -545,7 +545,7 @@ html[data-shell="mobile"] .command-results button:hover {
 }
 
 html[data-shell="mobile"] .command-results button:active {
-  background: var(--bg-hover);
+  background: var(--surface-hover);
 }
 
 html[data-shell="mobile"] .command-empty {
@@ -917,7 +917,7 @@ html[data-shell="mobile"] .workspace-top,
 html[data-shell="mobile"] .growth-page .workspace-top.growth-top {
   position: sticky;
   top: 0;
-  background: var(--bg-root);
+  background: var(--surface-base);
   border-bottom: 1px solid var(--border);
 }
 
@@ -1113,7 +1113,7 @@ html[data-shell="mobile"] .completed-time-modal .modal-head {
   z-index: 2;
   margin: -20px -20px 0;
   padding: 14px 20px 10px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   border-bottom: 1px solid var(--border);
 }
 
@@ -1136,7 +1136,7 @@ html[data-shell="mobile"] .anni-detail-dialog > footer {
   bottom: -20px;
   margin: auto -20px calc(-20px - env(safe-area-inset-bottom, 0px));
   padding: 12px 20px env(safe-area-inset-bottom, 0px);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   border-top: 1px solid var(--border);
 }
 
@@ -1149,7 +1149,7 @@ html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
   display: flex;
   margin: auto -20px calc(-20px - env(safe-area-inset-bottom, 0px));
   padding: 12px 20px env(safe-area-inset-bottom, 0px);
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   border-top: 1px solid var(--border);
 }
 
@@ -1194,7 +1194,7 @@ html[data-shell="mobile"] .project-edit-actions .btn-ghost,
 html[data-shell="mobile"] .completed-time-actions .btn-ghost,
 html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
   border: 1px solid var(--border);
-  background: var(--bg-root);
+  background: var(--surface-base);
   color: var(--text-primary);
 }
 
@@ -1213,7 +1213,7 @@ html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-acti
 
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-ghost {
   border: 1px solid var(--border);
-  background: var(--bg-root);
+  background: var(--surface-base);
   color: var(--text-primary);
 }
 
@@ -1259,7 +1259,7 @@ html[data-shell="mobile"] .anni-detail-dialog > header {
   z-index: 2;
   margin: -20px -20px 14px;
   padding: 14px 20px 10px;
-  background: var(--bg-panel);
+  background: var(--surface-panel);
   border-bottom: 1px solid var(--border);
 }
 
@@ -1325,7 +1325,7 @@ html[data-shell="mobile"] .memo-list-item:hover {
 }
 
 html[data-shell="mobile"] .memo-list-item:active {
-  background: var(--bg-hover);
+  background: var(--surface-hover);
 }
 
 /* 备忘录卡片网格在手机上收成单列，卡片高度垫到舒适触控行。 */
