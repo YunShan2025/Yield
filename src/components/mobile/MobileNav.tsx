@@ -55,7 +55,7 @@ export function MobileNav({
     {
       key: "ledger",
       icon: "wallet",
-      label: "记账",
+      label: "记一笔",
       active: !moreActive && nav === "ledger",
       onPick: () => onNavigate("ledger"),
     },

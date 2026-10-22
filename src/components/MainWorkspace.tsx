@@ -42,6 +42,7 @@ import {
   type LedgerTransaction,
 } from "@/lib/db";
 import { DayBoard } from "@/components/today/DayBoard";
+import { TodayMobileView } from "@/components/mobile/views/TodayMobileView";
 
 const SettingsView = lazy(() =>
   import("@/components/SettingsView").then((module) => ({
@@ -894,6 +895,12 @@ export function MainWorkspace() {
       setDateScope("month");
     }
   }, [nav, setViewMode, setDateScope]);
+
+  // 移动端壳：今日页走单列卡片流（src/components/mobile/views/），
+  // 与桌面多栏工作台是两套视图层；共享语义 token，不共享结构。
+  if (isMobileShell() && (nav === "today" || nav === "myday")) {
+    return <TodayMobileView />;
+  }
 
   if (nav === "settings") {
     return (

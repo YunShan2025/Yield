@@ -1,0 +1,616 @@
+/* 有秋 · 移动端视图层（阶段 4）
+   ------------------------------------------------------------------
+   与桌面端是「同一视觉世界、两套视图层」：语义 token 共用，结构各写一套。
+   本文件只放移动端专属的页面级样式；叶子组件仍走 primitives.css。
+
+   字号一律用 rem —— 根字号由 WebView 跟随系统 font_scale，
+   几何（圆角、方点、轨道）保持 px，文字放大时布局不散。
+   ------------------------------------------------------------------ */
+
+html[data-shell="mobile"] {
+  --mt-pill-ink: var(--pill-ink);
+  --mt-pill-bg: 13%;
+}
+
+html[data-theme="dark"][data-shell="mobile"],
+html[data-theme="glass"][data-shell="mobile"] {
+  --mt-pill-ink: var(--pill-ink-dark);
+  --mt-pill-bg: 26%;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] {
+    --mt-pill-ink: var(--pill-ink-dark);
+    --mt-pill-bg: 26%;
+  }
+}
+
+/* ---------- 今日页骨架 ---------- */
+
+html[data-shell="mobile"] .mtoday {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+html[data-shell="mobile"] .mtoday-top {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 17px 18px 9px;
+}
+
+html[data-shell="mobile"] .mtoday-top-text h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: var(--text-heading);
+}
+
+html[data-shell="mobile"] .mtoday-top-text p {
+  margin: 4px 0 0;
+  font-size: 0.719rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .mtoday-icon-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mtoday-icon-btn:active {
+  background: var(--accent-soft);
+}
+
+html[data-shell="mobile"] .mtoday-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 9px 18px 76px;
+}
+
+/* ---------- 主视觉卡 ---------- */
+
+html[data-shell="mobile"] .mtoday-hero {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  padding: 19px 18px 20px;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 105% at 4% -16%, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 54%),
+    radial-gradient(86% 66% at 98% 118%, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(140deg, var(--mt-hero-a), var(--mt-hero-b));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 16px 30px -20px rgba(47, 111, 237, 0.62);
+}
+
+html[data-shell="mobile"] .mtoday-hero-num {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+html[data-shell="mobile"] .mtoday-hero-num b {
+  font-family: var(--font-num-display);
+  font-size: 3.75rem;
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.005em;
+  color: #fff;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+html[data-shell="mobile"] .mtoday-hero-num u {
+  text-decoration: none;
+  font-family: var(--font-num-display);
+  font-size: 1.563rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.58);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+html[data-shell="mobile"] .mtoday-hero-num em {
+  font-style: normal;
+  font-family: var(--font-body);
+  font-size: 0.781rem;
+  color: rgba(255, 255, 255, 0.76);
+  margin-left: 3px;
+}
+
+html[data-shell="mobile"] .mtoday-hero-side {
+  margin-top: 12px;
+  text-align: right;
+}
+
+html[data-shell="mobile"] .mtoday-segs {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+html[data-shell="mobile"] .mtoday-segs i {
+  width: 21px;
+  flex: 0 1 21px;
+  min-width: 3px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+html[data-shell="mobile"] .mtoday-segs i.on {
+  background: #fff;
+}
+
+html[data-shell="mobile"] .mtoday-hero-sub {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.719rem;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+html[data-shell="mobile"] .mtoday-wheat {
+  position: absolute;
+  right: -44px;
+  bottom: -52px;
+  width: 150px;
+  height: 150px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 17.4V6.9'/%3E%3Cpath d='M10 15.3c-2.3.2-3.6-.8-4-2.9 2.3-.1 3.6.9 4 2.9Z' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='7.6' cy='12.1' rx='2.35' ry='1.2' transform='rotate(53 7.6 12.1)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='12.4' cy='12.1' rx='2.35' ry='1.2' transform='rotate(-53 12.4 12.1)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='7.9' cy='8.9' rx='2.1' ry='1.1' transform='rotate(53 7.9 8.9)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='12.1' cy='8.9' rx='2.1' ry='1.1' transform='rotate(-53 12.1 8.9)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='10' cy='5.2' rx='1.15' ry='1.9' fill='%23ffffff' stroke='none'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0.10;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+
+/* ---------- 卡片 ---------- */
+
+html[data-shell="mobile"] .mtoday-card {
+  flex: none;
+  padding: 12px 15px;
+  border-radius: 16px;
+  background: var(--surface-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+html[data-theme="dark"][data-shell="mobile"] .mtoday-card,
+html[data-theme="glass"][data-shell="mobile"] .mtoday-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .mtoday-card {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+  }
+}
+
+html[data-shell="mobile"] .mtoday-shead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+html[data-shell="mobile"] .mtoday-shead h3 {
+  margin: 0;
+  font-size: 0.906rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--text-heading);
+}
+
+html[data-shell="mobile"] .mtoday-shead button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.719rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mtoday-hint {
+  font-size: 0.719rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .mtoday-empty {
+  margin: 2px 0 4px;
+  font-size: 0.812rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ---------- 推进目标 ---------- */
+
+html[data-shell="mobile"] .mtoday-goals {
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-shell="mobile"] .mtoday-goal {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  padding-left: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mtoday-gdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
+}
+
+html[data-shell="mobile"] .mtoday-gname {
+  font-size: 0.812rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+html[data-shell="mobile"] .mtoday-gbar {
+  flex: 1;
+  min-width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+html[data-shell="mobile"] .mtoday-gbar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+
+html[data-shell="mobile"] .mtoday-gval {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 今日时段：连续时段条 ---------- */
+
+html[data-shell="mobile"] .mtoday-trackwrap {
+  padding-top: 11px;
+}
+
+html[data-shell="mobile"] .mtoday-track {
+  position: relative;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 2px rgba(28, 48, 86, 0.07);
+}
+
+html[data-shell="mobile"] .mtoday-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+}
+
+html[data-shell="mobile"] .mtoday-seg.is-past {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+html[data-shell="mobile"] .mtoday-seg.is-cur {
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #ffffff));
+  box-shadow: 0 3px 10px -5px var(--accent);
+}
+
+html[data-shell="mobile"] .mtoday-seg.is-fut {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+html[data-shell="mobile"] .mtoday-cursor {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-primary);
+}
+
+html[data-shell="mobile"] .mtoday-cursor i {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  font-style: normal;
+  font-size: 0.625rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: var(--surface-panel);
+  padding: 2px 5px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+html[data-shell="mobile"] .mtoday-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.625rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 今日事项：界栏竖线 + 优先级方点 + 右侧完成 ---------- */
+
+html[data-shell="mobile"] .mtoday-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+html[data-shell="mobile"] .mtoday-row {
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mtoday-time {
+  width: 44px;
+  flex: none;
+  align-self: flex-start;
+  padding-top: 5.5px;
+}
+
+html[data-shell="mobile"] .mtoday-time b {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .mtoday-time i {
+  display: block;
+  font-style: normal;
+  font-size: 0.594rem;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .mtoday-rail {
+  position: relative;
+  width: 16px;
+  flex: none;
+  align-self: stretch;
+  margin: -3px 0;
+}
+
+html[data-shell="mobile"] .mtoday-rail::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .mtoday-row:first-child .mtoday-rail::before {
+  top: 12.9px;
+}
+
+html[data-shell="mobile"] .mtoday-row:last-child .mtoday-rail::before {
+  bottom: auto;
+  height: 12.9px;
+}
+
+html[data-shell="mobile"] .mtoday-dot {
+  position: absolute;
+  left: 4px;
+  top: 8.4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--prio-3);
+}
+
+html[data-shell="mobile"] .mtoday-row.pr1 .mtoday-dot { background: var(--prio-1); }
+html[data-shell="mobile"] .mtoday-row.pr2 .mtoday-dot { background: var(--prio-2); }
+html[data-shell="mobile"] .mtoday-row.pr3 .mtoday-dot { background: var(--prio-3); }
+html[data-shell="mobile"] .mtoday-row.pr4 .mtoday-dot { background: var(--prio-4); }
+
+html[data-shell="mobile"] .mtoday-body {
+  flex: 1;
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .mtoday-title {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+html[data-shell="mobile"] .mtoday-row.is-done .mtoday-title {
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .mtoday-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+html[data-shell="mobile"] .mtoday-pill {
+  font-size: 0.656rem;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 2px 6px;
+  border-radius: 5px;
+  letter-spacing: 0.01em;
+  background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
+  color: var(--mt-pill-ink);
+}
+
+html[data-shell="mobile"] .mtoday-check {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  align-self: center;
+  margin: -3px -8px -3px 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mtoday-check::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.6px solid var(--border-strong);
+  background: transparent;
+  box-sizing: border-box;
+}
+
+html[data-shell="mobile"] .mtoday-check.is-done::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+html[data-shell="mobile"] .mtoday-check.is-done::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  margin: -6.5px 0 0 -6.5px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9 17.5l-5-5'/%3E%3C/svg%3E") no-repeat center / 13px 13px;
+}
+
+/* ---------- 主操作 FAB ---------- */
+
+html[data-shell="mobile"] .mtoday-fab {
+  position: absolute;
+  right: 21px;
+  bottom: 18px;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 12px 26px -8px rgba(47, 111, 237, 0.62);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mtoday-fab::before,
+html[data-shell="mobile"] .mtoday-fab::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: var(--text-on-accent);
+  border-radius: 2px;
+}
+
+html[data-shell="mobile"] .mtoday-fab::before {
+  width: 18px;
+  height: 2.4px;
+  transform: translate(-50%, -50%);
+}
+
+html[data-shell="mobile"] .mtoday-fab::after {
+  width: 2.4px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+}
+/* ---------- 底部导航：浮起的白卡 ---------- */
+
+html[data-shell="mobile"] .mobile-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  flex: none;
+  margin: 0 14px 11px;
+  padding: 6px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  border-radius: 20px;
+  background: var(--surface-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -22px rgba(18, 32, 60, 0.5);
+}
+
+html[data-theme="dark"][data-shell="mobile"] .mobile-nav,
+html[data-theme="glass"][data-shell="mobile"] .mobile-nav {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -22px rgba(0, 0, 0, 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .mobile-nav {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -22px rgba(0, 0, 0, 0.9);
+  }
+}
+
+html[data-shell="mobile"] .mobile-nav-item {
+  gap: 4px;
+  min-height: 52px;
+  padding: 4px 4px 5px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+}
+
+html[data-shell="mobile"] .mobile-nav-item.active {
+  font-weight: 600;
+}
+
+html[data-shell="mobile"] .mobile-nav-icon svg {
+  width: 21px;
+  height: 21px;
+}

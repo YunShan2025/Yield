@@ -14,9 +14,14 @@
 /* @theme-independent:start */
 :root {
   /* 字体角色：display / body / label 三档（中文用系统字体，见 DESIGN.md §Typography） */
-  --font-display: "Microsoft YaHei UI", "PingFang SC", "Segoe UI Variable Display", "Segoe UI", sans-serif;
-  --font-body: "Microsoft YaHei UI", "PingFang SC", "Segoe UI Variable Text", "Segoe UI", sans-serif;
-  --font-label: "Microsoft YaHei UI", "PingFang SC", "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  /* 拉丁先行 + 中文系统栈：拉丁栈必须在前，Noto Sans SC 自带的拉丁字形才会让位
+     给 Inter / Segoe 的几何感。详见 DESIGN.md §Typography。 */
+  --font-display: "Inter", "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
+  --font-body: "Inter", "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
+  --font-label: "Inter", "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
+  /* 展示型数字：只给主视觉大数用。等宽数字 + Didone 衬线，与无衬线正文拉开气质。
+     生产建议自托管 Playfair Display（OFL，数字子集约 30KB），三端一致。 */
+  --font-num-display: "Bodoni MT", "Bodoni 72", "Playfair Display", Didot, "Times New Roman", Georgia, "Songti SC", serif;
 
   /* 间距刻度 */
   --space-xs: 4px;
@@ -385,6 +390,16 @@
   color-scheme: light;
 
   --surface-base: #f6f8fc;
+  /* 优先级色：界栏节点方点。四档按「最要紧 → 最次要」排，
+     P1 金 / P2 珊瑚 / P3 蓝 / P4 灰蓝。方点尺寸统一 9px，
+     颜色是唯一的优先级编码（完成态不靠淡化方点表达）。 */
+  --prio-1: #f0a92e;
+  --prio-2: #d9693f;
+  --prio-3: #5b7fb0;
+  --prio-4: #93a0b3;
+  /* 移动端主视觉卡的渐变端点 */
+  --mt-hero-a: #2f5fd8;
+  --mt-hero-b: #5d94f7;
   --surface-panel: #ffffff;
   --surface-raised: #ffffff;
   --surface-sunken: #f0f4fa;
@@ -495,6 +510,12 @@
   color-scheme: light;
 
   --surface-base: #dfeafe;
+  --prio-1: #d99423;
+  --prio-2: #c85c33;
+  --prio-3: #4a6c9c;
+  --prio-4: #7d8a9e;
+  --mt-hero-a: #3f6fd0;
+  --mt-hero-b: #7aa8f2;
   --surface-panel: rgba(255, 255, 255, 0.78);
   --surface-raised: rgba(255, 255, 255, 0.86);
   --surface-sunken: rgba(244, 248, 255, 0.78);
