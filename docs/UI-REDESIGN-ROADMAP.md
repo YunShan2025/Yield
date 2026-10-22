@@ -667,15 +667,20 @@ adb shell settings put system font_scale 1.0   # 还原
 
 ### 7.6 验收标准
 
+> **2026-10-22 进度**：「今日」页已重建为独立视图层并落地生产代码
+> （`4465c0f`）。下方勾选只反映**已验证**的状态，未做的如实留着。
+
 - [ ] `mobile-native` 清单 11 条**逐条在真机确认**
-- [ ] 移动端**有独立的信息架构**（不是桌面的竖屏版）
-- [ ] `src/components/mobile/views/` 存在，页面级组件与桌面分离
-- [ ] 叶子组件跨端共用，主题一致
-- [ ] Material 3 硬性项全部落地（48dp / FAB / top app bar / predictive back / edge-to-edge）
-- [ ] 四主题在真机上各截一轮
-- [ ] 深色 + `font_scale 1.3` 下无截断、无重叠
-- [ ] 主题切换在移动端生效
-- [ ] `npx tsc -b && npx vitest run` 通过
+- [~] 移动端**有独立的信息架构**（不是桌面的竖屏版）—— 今日页已完成；
+      待办箱 / 记一笔 / 更多三页仍复用桌面视图层
+- [x] `src/components/mobile/views/` 存在，页面级组件与桌面分离
+- [~] 叶子组件跨端共用，主题一致 —— 今日页用语义 token 着色，尚未整体收口
+- [~] Material 3 硬性项全部落地（48dp / FAB / top app bar / predictive back / edge-to-edge）
+      —— 今日页已落 48dp 命中区 / FAB / 顶栏；predictive back 与 edge-to-edge 未做
+- [ ] 四主题在真机上各截一轮 —— 浏览器评审库已验清昼 / 静夜两套，真机未验
+- [ ] 深色 + `font_scale 1.3` 下无截断、无重叠 —— 字号已改 rem 跟随系统缩放，真机未验
+- [x] 主题切换在移动端生效 —— 浏览器评审库已验清昼 / 静夜
+- [x] `npx tsc -b && npx vitest run` 通过（32 文件 / 224 用例）
 
 ---
 
