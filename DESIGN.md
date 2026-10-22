@@ -174,8 +174,13 @@ components:
 前端 `src/styles/tokens.css` 是唯一真相源。**语义层**（四主题同构）与**材质层**（仅玻璃主题有值）必须拆开 —— 现状是两者混在 `--bg-panel` 一格里，这是阶段 2 的核心改造。
 
 ```
-语义层  --surface-*  --text-*  --border-*  --accent*  --success/--warning/--danger  --focus-ring
+语义层  --surface-*  --text-*  --border-*  --accent*  --success/--warning/--danger  --prio-*  --focus-ring
 材质层  --shell-opacity  --shell-blur  --shell-saturate  --shell-tint  --shell-border  --shell-shadow
+
+**优先级色**（`--prio-1` … `--prio-4`，四主题同构）：任务优先级 1–4 的唯一颜色编码。
+P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`。
+用于今日清单界栏上的节点方点 —— 尺寸统一 9px，**颜色是唯一的优先级编码**，
+不要再用透明度或尺寸二次编码（会让「低优先级」与「已完成」撞在一起）。
 ```
 
 ### 四套主题（语义层取值）
@@ -294,17 +299,28 @@ components:
 
 ### 字体策略
 
-**保持系统字体**（决策已定）。理由：中文字体自托管的体积代价与「本地优先」定位冲突；中文系统字体（苹方 / 微软雅黑 / HarmonyOS Sans）品质不差，且自动跟随系统字号与语言。
+**系统字体优先，但不再只有微软雅黑一条路**（2026-10-22 阶段 4 修订）。
 
-**但要拆角色**：现状 `--font-display` 与 `--font-body` 是同一套字体，等于没有 display 字体。契约：
+原决策「保持系统字体」的理由仍然成立：整套中文 CJK 字体动辄十几 MB，自托管与「本地优先」定位冲突。
+但「系统字体」不等于「系统默认的那一款」—— 微软雅黑**没有 Light 字重**，
+`font-weight: 250` 会被渲染成常规体，大号数字因此粗笨、没有气质。改为「拉丁先行 + 中文系统栈」：
 
 | 角色 | 字体栈 | 用途 |
 |---|---|---|
-| display | `Microsoft YaHei UI` / `PingFang SC` / `Segoe UI Variable Display` | 页面大标题、目标名称、金额大数 |
-| body | `Microsoft YaHei UI` / `PingFang SC` / `Segoe UI Variable Text` | 正文、列表、说明 |
+| 拉丁 / 数字 | `Inter` → `SF Pro Display` → `Segoe UI Variable Display` → `Segoe UI` → `Roboto` | 数字、拉丁、金额 |
+| display | 拉丁栈 + `Noto Sans SC` → `HarmonyOS Sans SC` → `PingFang SC` → `Source Han Sans SC` → `Microsoft YaHei UI` | 页面大标题、目标名称 |
+| body | 拉丁栈 + `Noto Sans SC` → `HarmonyOS Sans SC` → `PingFang SC` → `Source Han Sans SC` → `Microsoft YaHei UI` | 正文、列表、说明 |
 | label | body 栈 | 字段标签、计数、元信息 |
+| num-display | `Bodoni MT` → `Bodoni 72` → `Playfair Display` → `Didot` → `Songti SC` → serif | **只给主视觉大数**，一屏最多一处 |
 
-数字与金额用 `font-variant-numeric: tabular-nums`，避免跳动。
+- **顺序有讲究**：拉丁栈必须排在中文栈前面，否则 `Noto Sans SC` 自带的拉丁字形会先命中，
+  数字就用不到 Inter / Segoe 的几何感了。
+- 选 `Noto Sans SC` 的唯一理由是它是**可变字重**（100–900），能真出细体。
+- 自托管建议：**只自托管拉丁**（Inter latin 子集，约 30–200KB）；中文不自托管，走系统栈 + 许可评估。
+- `num-display` 是 Didone 衬线，只出现在主视觉大数上，不进正文。
+  生产建议自托管 **Playfair Display**（OFL，数字子集约 30KB）让三端一致；纯系统栈时
+  Android 会回落到 Noto Serif，气质有差。
+- 数字与金额用 `font-variant-numeric: tabular-nums`，避免跳动。
 
 ### 字号刻度
 
@@ -321,6 +337,9 @@ components:
 - 正文行高 1.6；标题 1.25-1.35
 - 桌面正文字号 14px、移动 15px —— 移动端提高一档补偿密度差
 - **输入控件字号 ≥16px**（避免 iOS 聚焦时整页缩放），输入框不适用 14/15px 刻度
+- **移动端新写的视图层用 rem**（阶段 4 起）：根字号由 WebView 跟随系统 `font_scale`，
+  文字随之放大；几何（圆角、方点、轨道高度、内边距）仍用 px，
+  文字变大时布局不散。固定 px 的旧样式暂不批量改写。
 
 ## Layout
 
@@ -380,7 +399,8 @@ components:
 
 - 内容区**单列**，卡片之间 12px
 - 顶部应用栏承载屏幕上下文与返回；**不要**在顶部再放标题
-- 底部导航 4 项：今日 / 待办箱 / 记一笔 / 更多
+- 底部导航 4 项：今日 / 待办箱 / 记一笔 / 更多。**浮起的白卡**（圆角 20px、左右各留 14px、
+  不铺满整宽），选中项只换颜色（`--accent-strong`）与字重，**不加圆角底色块**
 - 主操作 FAB 一个（今日页"新建任务"、账本页"记一笔"）
 - 详情用**全屏页**，不用抽屉
 - edge-to-edge：内容避开状态栏、导航栏、刘海与键盘（IME inset）
@@ -466,6 +486,8 @@ components:
 - ❌ 卡片 / 列表 / 提示块上 **>1px 的单侧彩色边框**（现状 6 处，见 §9）
 - ❌ 标题上方的小标（kicker / eyebrow）—— 这是**绝对禁止项，没有任何 brief 能豁免**
 - ❌ "大数字 + 小标签 + 辅助统计 + 强调色"的 hero-metric 模板
+  —— **移动端今日页主视觉卡豁免**（阶段 4 定稿）。该卡按「大数字 + 分段进度 + 一个副统计」
+  实现，辅助统计只保留「还剩 N 件」一处，且数字本身不带图标瓦片
 - ❌ 渐变文字；强调靠字重或字号
 - ❌ 玻璃与模糊当装饰（只在整窗外壳与标题栏使用）
 - ❌ 硬偏移阴影 `box-shadow: 4px 4px 0`
@@ -489,6 +511,8 @@ components:
 | 时间轴 / 日历的刻度条 | **保留** —— 信息语义 |
 | 品牌题铭的强调条（`--brand-gold`） | **保留** —— 品牌语义 |
 | 周历事件块的优先级色条（`.week-event::before`） | **保留** —— 信息语义，与今日时间轴同一套优先级 |
+| 今日清单界栏上的节点方点（`.mtoday-dot`） | **保留** —— 信息语义，方点颜色编码优先级（`--prio-1..4`） |
+| 移动端主视觉卡的通栏进度条与分段条 | **保留** —— 数据语义，段数 = 今日事项条数 |
 
 > 检测器报的是线索不是结论。每条人工判定，误报写进本节，不要盲从。
 
