@@ -385,7 +385,10 @@ html[data-shell="mobile"] .mtoday-list {
 
 html[data-shell="mobile"] .mtoday-row {
   display: flex;
-  align-items: center;
+  /* 顶端对齐，不是居中：行高随「有没有胶囊」变化，居中会把没胶囊的行
+     整体下移 ~11px，事项名就跟界栏方点错开了。顶端对齐后标题永远
+     贴在内容区顶部，方点的固定偏移就恒定成立。 */
+  align-items: flex-start;
   padding: 3px 0;
   cursor: pointer;
   touch-action: manipulation;
