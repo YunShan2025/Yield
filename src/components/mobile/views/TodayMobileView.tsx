@@ -5,6 +5,7 @@ import {
   MobileTaskPillView,
   getMobileTaskPills,
 } from "@/components/mobile/MobileTaskPills";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { fetchGoals } from "@/lib/db";
@@ -148,7 +149,7 @@ export function TodayMobileView() {
     <div className="mtoday">
       <header className="mtoday-top">
         <div className="mtoday-top-text">
-          <h2>今日</h2>
+          <MobilePageTitle text="今日" />
           <p>{dateLabel}</p>
         </div>
         <button

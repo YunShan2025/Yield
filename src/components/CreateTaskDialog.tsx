@@ -146,7 +146,9 @@ export function CreateTaskDialog() {
     setSaving(false);
     if (!task) return;
     close();
-    selectTask(task.id);
+    // 移动壳建完即回列表（真机反馈：新建后不该再被详情弹层打断一次）；
+    // 桌面保留「建完即补内容」的抽屉流。
+    if (!isMobileShell()) selectTask(task.id);
   };
 
   return (

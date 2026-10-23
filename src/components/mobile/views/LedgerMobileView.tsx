@@ -10,6 +10,7 @@ import {
 } from "@/lib/db";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { LedgerEntrySheet } from "@/components/mobile/LedgerEntrySheet";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { addDays } from "@/lib/dates";
 
@@ -127,8 +128,8 @@ export function LedgerMobileView() {
     <div className="mtoday mledger">
       <header className="mtoday-top">
         <div className="mtoday-top-text">
-          <h2>记账</h2>
-          <p>{yearNum}年{monthNum}月账单</p>
+          <MobilePageTitle text="记账" />
+          <p>收支如水，观其波澜</p>
         </div>
         <div className="mledger-month-switch" role="group" aria-label="切换月份">
           <button

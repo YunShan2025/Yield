@@ -897,8 +897,7 @@ html[data-shell="mobile"] [role="button"] {
 }
 
 /* 100dvh 是 Chrome 108+；老旧 WebView 用 vh 兜底（adjustResize 下两者一致）。 */
-html[data-shell="mobile"] .create-task-modal,
-html[data-shell="mobile"] .modal {
+html[data-shell="mobile"] .create-task-modal {
   max-height: calc(100vh - 32px);
   overflow: auto;
 }
@@ -1100,17 +1099,6 @@ html[data-shell="mobile"] .ledger-toast {
 html[data-shell="mobile"] .expand-task-row {
   -webkit-touch-callout: none;
   user-select: none;
-}
-
-/* 拖拽手柄:移动端拖拽只从这里启动,行内长按留给操作面板。 */
-html[data-shell="mobile"] .drag-handle {
-  min-width: 34px;
-  min-height: 40px;
-  padding: 5px 4px;
-  color: var(--text-muted);
-  font-size: var(--font-size-label);
-  letter-spacing: -3px;
-  touch-action: none;
 }
 
 /* 长按操作面板（底部动作面板,替代悬停菜单/右键菜单）。 */
@@ -1501,75 +1489,8 @@ html[data-shell="mobile"] body.action-sheet-open .mobile-nav {
   display: none;
 }
 
-/* 「更多」页：底部导航上方的面板（2026-09-17 真机反馈：导航栏保持常驻，
-   方便直接切换，不再用「完成」按钮收口；返回键也能收起本面板）。 */
-.mobile-more {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  left: 0;
-  z-index: 45;
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  background: var(--surface-base);
-  animation: sheetUp calc(180ms * var(--motion-scale)) ease;
-}
-
-.mobile-more-head {
-  /* 页头钉住：更多页自身是滚动容器，头部 sticky 后滚动内容从页头下
-     穿过时标题不动（系统栏高度由 MainActivity 原生让位，页内无需 env）。 */
-  position: sticky;
-  top: 0;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 20px 10px;
-  background: var(--surface-base);
-  border-bottom: 1px solid var(--border);
-}
-
-.mobile-more-head h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--font-size-h2);
-}
-
-/* 次级入口按行展现（2026-09-16 真机反馈）：整宽一行一个入口，
-   图标在左、文案随行，不再 3 列方块。 */
-.mobile-more-grid {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 14px calc(24px + env(safe-area-inset-bottom, 0px));
-}
-
-.mobile-more-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
-  min-height: 50px;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-primary);
-  font-size: var(--font-size-body);
-  text-align: left;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.mobile-more-item:active {
-  background: var(--accent-soft);
-}
-
-.mobile-more-icon {
-  display: inline-flex;
-  color: var(--accent);
-}
+/* 「更多」页样式已迁到 mobile.css（.mobile-more / mmore-* 一族，
+   与今日/待办/记账同骨架的卡片改版，2026-10-23），此处只留路标。 */
 
 /* 弹窗与遮罩在小屏留边更少。 */
 html[data-shell="mobile"] .modal-backdrop {
@@ -1956,13 +1877,6 @@ html[data-shell="mobile"] .review-workspace .top-controls .review-hero-total {
   margin-left: 4px;
   padding-left: 10px;
   border-left: 1px solid var(--border);
-}
-
-/* 纪念日新增弹窗：日历段/日期选择换行排布，「收好这个日子」整行收口。 */
-html[data-shell="mobile"] .anni-composer-row .btn-primary {
-  width: 100%;
-  flex: 1 1 100%;
-  margin-top: 2px;
 }
 
 /* ---------- 5) 验收修复（2026-09-15 第二轮） ---------- */
@@ -2530,8 +2444,7 @@ html[data-shell="mobile"] .anni-detail-dialog > header > button {
 html[data-shell="mobile"] .anni-composer input,
 html[data-shell="mobile"] .anni-composer .select-btn,
 html[data-shell="mobile"] .anni-composer .seg button,
-html[data-shell="mobile"] .anni-composer .date-picker-trigger,
-html[data-shell="mobile"] .anni-composer-row .btn-primary {
+html[data-shell="mobile"] .anni-composer .date-picker-trigger {
   min-height: 48px;
 }
 

@@ -64,6 +64,55 @@ html[data-shell="mobile"] .mtoday-top-text p {
   line-height: 1;
   letter-spacing: 0.03em;
   color: var(--text-muted);
+  /* 页头小字（日期/白话注）用斜体做「注脚感」；WebView 对中文走合成斜体 */
+  font-style: italic;
+}
+
+/* 页头标题艺术化（F 墨渗蓝·F3 档 + I 逐字生长）：标题由 MobilePageTitle
+   逐字拆成 .mt-title-ch span。渐变挂在字级 span 上——background-clip:text 让
+   每字笔画透出「墨→品牌蓝」斜向渐变，逐字上浮动画时背景随笔画一起走；
+   若挂在 h2 上，裁剪层不会跟随子元素 transform，动画中会错位/隐形。
+   非覆盖层、不动版式。不支持 background-clip 的旧 WebView 里整段跳过，
+   标题保持纯色（避免 color:transparent 造成隐形字）。 */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  html[data-shell="mobile"] .mtoday-top-text h2 .mt-title-ch {
+    background-image: linear-gradient(110deg, color-mix(in srgb, var(--text-heading) 70%, var(--accent)) 0%, var(--accent) 48%, color-mix(in srgb, var(--accent) 45%, #cfe1ff) 115%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  html[data-theme="dark"][data-shell="mobile"] .mtoday-top-text h2 .mt-title-ch,
+  html[data-theme="glass"][data-shell="mobile"] .mtoday-top-text h2 .mt-title-ch {
+    background-image: linear-gradient(110deg, var(--text-heading) 0%, color-mix(in srgb, var(--text-heading) 45%, var(--accent-strong)) 48%, var(--accent-strong) 112%);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html[data-theme="system"][data-shell="mobile"] .mtoday-top-text h2 .mt-title-ch {
+      background-image: linear-gradient(110deg, #ffffff 0%, color-mix(in srgb, #ffffff 45%, #a8c6ff) 48%, #a8c6ff 112%);
+    }
+  }
+}
+
+/* 方案 I：进场（页头重挂载）时每字自下方 0.35em 上浮淡入，
+   animation-delay 按字序每字递增 90ms（由组件内联给出）；backwards 让
+   延迟期间保持隐藏起点。系统减弱动态时关闭，仅保留渐变字身。 */
+@keyframes mt-title-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em);
+  }
+}
+
+html[data-shell="mobile"] .mtoday-top-text h2 .mt-title-ch {
+  display: inline-block;
+  animation: mt-title-rise 520ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-shell="mobile"] .mtoday-top-text h2 .mt-title-ch {
+    animation: none;
+  }
 }
 
 html[data-shell="mobile"] .mtoday-icon-btn {
@@ -107,13 +156,24 @@ html[data-shell="mobile"] .mtoday-hero {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
+/* 三页顶卡尽量等大：宽度天然相等（同一滚动容器），高度以今日/记账顶卡的
+   自然高（≈136.7px）为基准统一 min-height，内容略少的待办摘要卡被撑平；
+   大字号下三卡随内容一起增高。 */
+html[data-shell="mobile"] .mtoday-hero,
+html[data-shell="mobile"] .minbox-summary {
+  min-height: 8.6rem;
+}
+
 html[data-shell="mobile"] .mtoday-hero-num {
   display: flex;
   align-items: baseline;
   gap: 7px;
 }
 
-html[data-shell="mobile"] .mtoday-hero-num b {
+/* 三页顶卡主数字同族同档：今日「已完成」/ 待办「待整理」/ 记账「月支出」。
+   记账 ¥ 前缀、今日 /总数 后缀（u）保持小一级，勿与此档位混淆。 */
+html[data-shell="mobile"] .mtoday-hero-num b,
+html[data-shell="mobile"] .minbox-summary-total b {
   font-family: var(--font-num-display);
   font-size: 3.75rem;
   font-weight: 400;
@@ -781,7 +841,7 @@ html[data-shell="mobile"] .minbox-batchbar-actions button:focus-visible {
 html[data-shell="mobile"] .minbox-summary {
   position: relative;
   overflow: hidden;
-  padding: 14px 16px 13px;
+  padding: 19px 16px 20px;
   background: var(--accent-faint);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
@@ -810,16 +870,6 @@ html[data-shell="mobile"] .minbox-summary-total {
   align-items: baseline;
   gap: 6px;
   min-width: 0;
-}
-
-html[data-shell="mobile"] .minbox-summary-total b {
-  font-family: var(--font-num-display);
-  font-size: 2.125rem;
-  font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.005em;
-  color: var(--accent-strong);
-  font-variant-numeric: lining-nums tabular-nums;
 }
 
 html[data-shell="mobile"] .minbox-summary-total span {
@@ -1864,58 +1914,143 @@ html[data-shell="mobile"] .mledger-month-stat {
   }
 }
 
-/* ---------- 更多页：典故分组列表 ---------- */
+/* ---------- 更多页：典故分组卡片（2026-10-23 改版） ----------
+   与「今日 / 待办 / 记账」同骨架：mtoday-top 页头 + mtoday-scroll 卡片流。
+   行式入口对齐记账明细行（mledger-tx）：图标方块在左、标题随行、右缘
+   chevron 提示可点；分组释义缩成一句白话，典故全文收进「设置 · 命名缘起」。 */
 
-html[data-shell="mobile"] .mobile-more-search {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--surface-inset);
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+/* 面板绝对铺满 .app-body（MainApp 把它渲染在 app-body 内）：与底部导航是
+   flex 兄弟，底缘天然止于导航上方——导航卡高度随系统字号伸缩都不受影响，
+   不再用 fixed + bottom 硬编码导航占位（旧 56px/78px 在放大字号下均会盖住
+   导航卡上沿）。z-8：盖住页面内容与 FAB（z-6），低于详情抽屉（z-30）、
+   动作面板（z-62/63）与命令面板（z-95）；导航条按注释不加 z-index，
+   靠结构而非层叠避让。 */
+html[data-shell="mobile"] .mobile-more {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  animation: sheetUp calc(180ms * var(--motion-scale)) ease;
 }
 
-html[data-shell="mobile"] .mobile-more-search:active {
+/* 面板下缘已让开底部导航，滚动区不再留今日/记账那种 FAB 档位的 76px 底空。 */
+html[data-shell="mobile"] .mobile-more .mtoday-scroll {
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 分组名用展示字体：桌面侧栏「积微 / 观澜 / 有恒 / 百工」的典故气质；
+   释义一句话走 muted，字号放大时先挤掉释义、不折行不撑破。 */
+html[data-shell="mobile"] .mmore-group .mtoday-shead h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+/* 分组注解（"每天的小积累"等）：与页头副题同款斜体注脚感；
+   作用域限更多页，不动今日/待办复用 .mtoday-hint 的计数徽标。 */
+html[data-shell="mobile"] .mmore-group .mtoday-shead .mtoday-hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+html[data-shell="mobile"] .mmore-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 行间发丝线（设置式列表）；卡片本身已有 12px 内衬，线不用再做缩进。 */
+html[data-shell="mobile"] .mmore-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+html[data-shell="mobile"] .mmore-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 140ms ease;
+}
+
+html[data-shell="mobile"] .mmore-item:active {
   background: var(--accent-soft);
 }
 
-html[data-shell="mobile"] .mobile-more-group {
-  padding: 0 14px;
+html[data-shell="mobile"] .mmore-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
-html[data-shell="mobile"] .mobile-more-group + .mobile-more-group {
-  margin-top: 4px;
+/* 图标方块：记账明细行同款几何（10px 圆角），色相取 accent 淡底，
+   四套主题都由语义 token 推导，不新增色值。 */
+html[data-shell="mobile"] .mmore-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-panel));
+  color: var(--accent-strong);
 }
 
-html[data-shell="mobile"] .mobile-more-group-head {
-  padding: 14px 12px 4px;
-}
-
-html[data-shell="mobile"] .mobile-more-group-head h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 0.9375rem;
-  font-weight: 600;
+html[data-shell="mobile"] .mmore-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-heading);
 }
 
-html[data-shell="mobile"] .mobile-more-group-head p {
-  margin: 2px 0 0;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--text-tertiary);
+/* 右缘箭头：chevron 转 90° 指向右，语义是「进入」而非「展开」。 */
+html[data-shell="mobile"] .mmore-go {
+  display: inline-flex;
+  color: var(--text-muted);
+  transform: rotate(-90deg);
 }
 
-html[data-shell="mobile"] .mobile-more-list {
+/* 收尾页脚：品牌一行，把典故全文引到设置页的「命名缘起」。 */
+html[data-shell="mobile"] .mmore-foot {
   display: flex;
-  flex-direction: column;
-  padding: 0 0 8px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 0 2px;
+  color: var(--text-muted);
+  font-size: 0.719rem;
+  letter-spacing: 0.03em;
+}
+
+@media (hover: hover) {
+  html[data-shell="mobile"] .mmore-item:hover {
+    background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-shell="mobile"] .mmore-item {
+    transition: none;
+  }
 }
 
 /* ==================================================================
@@ -2108,6 +2243,9 @@ html[data-shell="mobile"] .detail-footer .btn-ghost {
   border: 1px solid var(--border);
   background: var(--surface-base);
   color: var(--text-primary);
+  /* 两列等宽布局里「编辑」与「完成」是平级动作，字重跟 btn-primary（600）
+     对齐；「取消」（编辑态）与整行「删除任务」同族，一并为 600。 */
+  font-weight: 600;
 }
 
 html[data-shell="mobile"] .detail-footer .btn-ghost.danger {

@@ -732,10 +732,13 @@ export function MainApp() {
       <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
         <div className={`app-body ${detailOpen ? "detail-open" : ""}`}>
           <MainWorkspace />
+          {/* 「更多」面板渲染在 app-body 内（absolute 铺满主区）：与底部导航
+              是 flex 兄弟，天然止于导航上方——导航卡高度随系统字号变化也不会
+              遮挡（原 fixed + bottom:56px 硬编码在浮起导航卡下盖住导航条）。 */}
+          {moreOpen ? <MobileMoreSheet onNavigate={navigateFromMore} /> : null}
           {detailOpen ? <DetailDrawer /> : null}
         </div>
         <MobileNav moreActive={moreOpen} onMore={toggleMore} onNavigate={navigateMobile} />
-        {moreOpen ? <MobileMoreSheet onNavigate={navigateFromMore} /> : null}
         <CommandPalette />
         {createTaskOpen ? <CreateTaskDialog /> : null}
         <AppConfirmHost />

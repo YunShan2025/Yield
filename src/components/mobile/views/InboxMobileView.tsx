@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { AppIcon } from "@/components/AppIcon";
 import { DatePicker } from "@/components/DatePicker";
+import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import {
   MobileTaskPillView,
   getMobileTaskPills,
@@ -403,7 +404,7 @@ export function InboxMobileView() {
     >
       <header className="mtoday-top">
         <div className="mtoday-top-text">
-          <h2>待办</h2>
+          <MobilePageTitle text="待办" />
           <p>{pending ? "逾期优先，按日期整理" : "暂无待办"}</p>
         </div>
       </header>
