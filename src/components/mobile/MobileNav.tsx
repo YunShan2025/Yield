@@ -14,7 +14,7 @@ type MobileTab = {
   onPick: () => void;
 };
 
-/** 底部导航:今日 / 待办箱 / 记账 / 更多。「记账」切到账本页,录入走页面内入口。
+/** 底部导航:今日 / 待办 / 记账 / 更多。「记账」是月度账单统计页,录入走页面 FAB 弹层。
  *  导航统一走 onNavigate(由 MainApp 提供):维护返回键语义与「更多」面板开关。
  *  四个标签是同一层级的单选：「更多」面板打开时其余三个不亮，
  *  点其余三个则收起面板并切换，任何时刻至多一个高亮。 */
@@ -47,7 +47,7 @@ export function MobileNav({
     {
       key: "inbox",
       icon: "inbox",
-      label: "待办箱",
+      label: "待办",
       count: counts.inbox,
       active: !moreActive && nav === "inbox",
       onPick: () => onNavigate("inbox"),
@@ -55,7 +55,7 @@ export function MobileNav({
     {
       key: "ledger",
       icon: "wallet",
-      label: "记一笔",
+      label: "记账",
       active: !moreActive && nav === "ledger",
       onPick: () => onNavigate("ledger"),
     },

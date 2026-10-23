@@ -160,7 +160,7 @@
 1. 在移动分支挂载 `<CommandPalette />`。
 2. 选一个触摸可达的入口。可选项：
    - `src/components/mobile/MobileMoreSheet.tsx` 的「更多」网格首项加「搜索」；
-   - 或在 `src/components/mobile/MobileNav.tsx` 增加一个搜索位（注意底部导航目前是「今日 / 待办箱 / 记账 / 更多」四个同级单选，加项要重新分配层级）。
+   - 或在 `src/components/mobile/MobileNav.tsx` 增加一个搜索位（注意底部导航目前是「今日 / 待办 / 记账 / 更多」四个同级单选，加项要重新分配层级）。
 3. 面板样式核对：`.command-backdrop` 有移动端 `inset` 垫片（`src/styles/parts/global-14-mobile.css` 顶部），但没有移动端专属的搜索面板高度 / 键盘规避规则。建议在移动端限制面板高度（如 `min(72dvh, ...)`）、结果行触摸目标 ≥ 44px，并处理软键盘弹起时的滚动。
 4. 移动端不需要移植 `Ctrl/Cmd+K`；触摸端也没有 ↑↓ 键，结果行本身必须可点，且点击后要收起软键盘。Esc 关闭对移动端无意义，返回键收起面板的语义建议接入 `src/lib/mobileBack.ts` 的 `pushBackHandler`。
 

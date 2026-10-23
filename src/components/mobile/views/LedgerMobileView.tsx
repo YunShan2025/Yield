@@ -1,27 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  createLedgerTransaction,
-  fetchLedgerAccounts,
-  fetchLedgerCategories,
+  fetchLedgerCategorySummary,
   fetchLedgerTransactions,
+  fetchLedgerTrend,
   formatLedgerMoney,
-  parseAmountToCents,
-  type LedgerAccount,
-  type LedgerCategory,
-  type LedgerKind,
+  type LedgerCategorySummary,
+  type LedgerMonthSummary,
   type LedgerTransaction,
 } from "@/lib/db";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
-
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function currentMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+import { LedgerEntrySheet } from "@/components/mobile/LedgerEntrySheet";
+import { useTodayDate } from "@/lib/useTodayDate";
+import { addDays } from "@/lib/dates";
 
 const CATEGORY_ICONS: Record<string, AppIconName> = {
   food: "food", car: "car", bag: "bag", home: "home", play: "music",
@@ -30,213 +20,341 @@ const CATEGORY_ICONS: Record<string, AppIconName> = {
   zap: "zap", back: "back",
 };
 
+function currentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function moveMonth(month: string, delta: number) {
+  const [year, value] = month.split("-").map(Number);
+  const d = new Date(year, value - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthDayLabel(date: string) {
+  const [, month, day] = date.split("-");
+  return `${Number(month)}月${Number(day)}日`;
+}
+
 function timeLabel(iso: string) {
   const d = new Date(iso);
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+/** 大数字专用：只留数值（带千分位、两位小数），货币符号由外层衬线 ¥ 承担。 */
+function moneyNum(cents: number) {
+  return new Intl.NumberFormat("zh-CN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
+const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+/** 久远日期在日头里补一个星期，翻看明细时更容易对上日子。 */
+function weekdayLabel(date: string) {
+  return WEEKDAYS[new Date(`${date}T00:00:00`).getDay()];
+}
+
 /**
- * 移动端「记一笔」—— 页面内快速录入，不是弹窗。
- * 金额是页面主视觉；保存后留在本页并清空金额（连续记账）。
- * 收支总览从顶部应用栏进入。
+ * 移动端「记账」—— 以账单统计与展示为主：月度总览、支出去向、
+ * 六个月流向与按日分组的明细。新建与修改走 FAB 打开的底部弹层。
  */
 export function LedgerMobileView() {
-  const [kind, setKind] = useState<LedgerKind>("expense");
-  const [amount, setAmount] = useState("");
-  const [categories, setCategories] = useState<LedgerCategory[]>([]);
-  const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
-  const [categoryId, setCategoryId] = useState(0);
-  const [accountId, setAccountId] = useState(0);
-  const [recent, setRecent] = useState<LedgerTransaction[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [savedAt, setSavedAt] = useState(0);
+  const today = useTodayDate();
+  const [month, setMonth] = useState(currentMonth);
+  const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
+  const [summary, setSummary] = useState<LedgerCategorySummary[]>([]);
+  const [trend, setTrend] = useState<LedgerMonthSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sheet, setSheet] = useState<null | { editing: LedgerTransaction | null }>(null);
 
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      const [cats, accts] = await Promise.all([
-        fetchLedgerCategories("expense"),
-        fetchLedgerAccounts(),
-      ]);
-      if (!alive) return;
-      setCategories(cats);
-      setAccounts(accts);
-      if (cats.length && !cats.some((c) => c.id === categoryId))
-        setCategoryId(cats[0].id);
-      if (accts.length && !accts.some((a) => a.id === accountId))
-        setAccountId(accts[0].id);
-    })();
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const reload = () => {
-    void fetchLedgerTransactions(currentMonth()).then((rows) => {
-      setRecent(rows.slice(0, 8));
+  const load = useCallback(() => {
+    void Promise.all([
+      fetchLedgerTransactions(month),
+      fetchLedgerCategorySummary(month),
+      fetchLedgerTrend(month),
+    ]).then(([tx, categories, months]) => {
+      setTransactions(tx);
+      setSummary(categories);
+      setTrend(months);
+      setLoading(false);
     });
-  };
+  }, [month]);
 
   useEffect(() => {
-    reload();
+    setLoading(true);
+    load();
+    const reload = () => load();
     window.addEventListener("youqiu:data-changed", reload);
-    return () => window.removeEventListener("youqiu:data-changed", reload);
-  }, []);
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => {
+      window.removeEventListener("youqiu:data-changed", reload);
+      window.removeEventListener("youqiu:sync-applied", reload);
+    };
+  }, [load]);
 
-  const kindCategories = useMemo(
-    () => categories.filter((c) => c.kind === kind),
-    [categories, kind],
+  const expense = transactions.reduce(
+    (sum, row) => (row.type === "expense" ? sum + row.amount_cents : sum),
+    0,
   );
+  const income = transactions.reduce(
+    (sum, row) => (row.type === "income" ? sum + row.amount_cents : sum),
+    0,
+  );
+  const isCurrentMonth = month === currentMonth();
+  const monthNum = Number(month.slice(5, 7));
+  const yearNum = Number(month.slice(0, 4));
+  const yesterday = addDays(today, -1);
+  const dayLabel = (date: string) =>
+    date === today ? "今天" : date === yesterday ? "昨天" : monthDayLabel(date);
 
-  const switchKind = (next: LedgerKind) => {
-    setKind(next);
-    void fetchLedgerCategories(next).then((cats) => {
-      setCategories((prev) => {
-        const others = prev.filter((c) => c.kind !== next);
-        return [...cats, ...others];
-      });
-      if (cats.length) setCategoryId(cats[0].id);
+  const grouped = useMemo(() => {
+    const map = new Map<string, LedgerTransaction[]>();
+    transactions.forEach((tx) => {
+      const list = map.get(tx.date);
+      if (list) list.push(tx);
+      else map.set(tx.date, [tx]);
     });
-  };
+    return [...map.entries()];
+  }, [transactions]);
 
-  const save = async () => {
-    const cents = parseAmountToCents(amount);
-    if (cents === null || cents <= 0) return;
-    if (!categoryId || !accountId) return;
-    setSaving(true);
-    try {
-      await createLedgerTransaction({
-        kind,
-        amountCents: cents,
-        categoryId,
-        accountId,
-        occurredOn: todayStr(),
-      });
-      setAmount("");
-      setSavedAt(Date.now());
-      reload();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const dateLabel = (() => {
-    const d = new Date();
-    return `${d.getMonth() + 1}月${d.getDate()}日`;
-  })();
+  const chartMax = Math.max(
+    1,
+    ...trend.map((item) => Math.max(item.expense_cents, item.income_cents)),
+  );
+  const topCategories = summary.slice(0, 5);
 
   return (
     <div className="mtoday mledger">
       <header className="mtoday-top">
         <div className="mtoday-top-text">
-          <h2>记一笔</h2>
-          <p>{dateLabel}</p>
+          <h2>记账</h2>
+          <p>{yearNum}年{monthNum}月账单</p>
+        </div>
+        <div className="mledger-month-switch" role="group" aria-label="切换月份">
+          <button
+            type="button"
+            className="mtoday-icon-btn"
+            aria-label="上个月"
+            onClick={() => setMonth(moveMonth(month, -1))}
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+          <strong>
+            {yearNum === new Date().getFullYear()
+              ? `${monthNum}月`
+              : `${yearNum}年${monthNum}月`}
+          </strong>
+          <button
+            type="button"
+            className="mtoday-icon-btn"
+            aria-label="下个月"
+            disabled={isCurrentMonth}
+            onClick={() => setMonth(moveMonth(month, 1))}
+          >
+            <span aria-hidden="true">›</span>
+          </button>
         </div>
       </header>
 
       <div className="mtoday-scroll">
-        <section className="mledger-hero" aria-label="记一笔">
-          <div className="mledger-amount">
-            <span className="mledger-currency">¥</span>
-            <input
-              className="mledger-amount-input"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))}
-              aria-label="金额"
-            />
+        <section className="mtoday-hero" aria-label="月度收支总览">
+          <div className="mtoday-hero-num">
+            <u>¥</u>
+            <b>{moneyNum(expense)}</b>
+            <em>{monthNum}月支出</em>
           </div>
-          <div className="mledger-kind">
-            <button
-              type="button"
-              className={kind === "expense" ? "on" : ""}
-              onClick={() => switchKind("expense")}
-            >
-              支出
-            </button>
-            <button
-              type="button"
-              className={kind === "income" ? "on" : ""}
-              onClick={() => switchKind("income")}
-            >
-              收入
-            </button>
-          </div>
-          <div className="mledger-chips">
-            {kindCategories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                className={`mledger-chip${cat.id === categoryId ? " on" : ""}`}
-                style={{ "--chip-color": cat.color } as React.CSSProperties}
-                onClick={() => setCategoryId(cat.id)}
-              >
-                <AppIcon name={CATEGORY_ICONS[cat.icon] ?? "dots"} size={16} />
-                <span>{cat.name}</span>
-              </button>
-            ))}
-          </div>
-          <div className="mledger-fields">
-            <label className="mledger-field">
-              <span>账户</span>
-              <select
-                value={accountId}
-                onChange={(e) => setAccountId(Number(e.target.value))}
-              >
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
+          <div className="mtoday-hero-side">
+            {summary.length ? (
+              <div className="mledger-mix" aria-hidden="true">
+                {summary.map((item) => (
+                  <i
+                    key={item.category_id}
+                    style={{ flexGrow: item.amount_cents, background: item.color }}
+                  />
                 ))}
-              </select>
-            </label>
-            <label className="mledger-field">
-              <span>日期</span>
-              <span>今天</span>
-            </label>
+              </div>
+            ) : null}
+            <span className="mtoday-hero-sub">
+              收入 {formatLedgerMoney(income)} · 结余 {formatLedgerMoney(income - expense)}
+              {" · "}{transactions.length} 笔
+            </span>
           </div>
-          <button
-            type="button"
-            className="mledger-save"
-            disabled={saving || !amount}
-            onClick={() => void save()}
-          >
-            {saving ? "保存中…" : "保存"}
-          </button>
+          <span className="mtoday-wheat" aria-hidden="true" />
         </section>
 
-        {recent.length ? (
-          <section className="mtoday-card" aria-label="近期流水">
-            <div className="mtoday-shead">
-              <h3>今日流水</h3>
-            </div>
-            <ul className="mledger-txlist">
-              {recent.map((tx) => (
-                <li key={tx.id} className="mledger-tx">
+        <section className="mtoday-card" aria-label="支出去向">
+          <div className="mtoday-shead">
+            <h3>支出去向</h3>
+            <span className="mledger-month-stat">{summary.length} 类</span>
+          </div>
+          {topCategories.length ? (
+            topCategories.map((item) => (
+              <div className="mledger-comp" key={item.category_id}>
+                <div className="mledger-comp-line">
+                  <i style={{ background: item.color }} aria-hidden="true" />
+                  <span>{item.name}</span>
+                  <em>
+                    {expense ? Math.round((item.amount_cents / expense) * 100) : 0}%
+                  </em>
+                  <b>{formatLedgerMoney(item.amount_cents)}</b>
+                </div>
+                <div className="mledger-comp-bar">
                   <i
-                    className="mledger-tx-dot"
-                    style={{ background: tx.category_color }}
+                    style={{
+                      width: `${Math.max(
+                        4,
+                        Math.round(
+                          (item.amount_cents / topCategories[0].amount_cents) * 100,
+                        ),
+                      )}%`,
+                      background: item.color,
+                    }}
                   />
-                  <span className="mledger-tx-main">
-                    <b>{tx.note || tx.category_name}</b>
-                    <i>{tx.category_name} · {tx.account_name}</i>
-                  </span>
-                  <span className={`mledger-tx-amt ${tx.type === "expense" ? "out" : "in"}`}>
-                    {tx.type === "expense" ? "−" : "+"}
-                    {formatLedgerMoney(tx.amount_cents)}
-                  </span>
-                  <span className="mledger-tx-time">{timeLabel(tx.created_at)}</span>
-                </li>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="mtoday-empty">记下几笔支出后，这里会出现清晰的构成。</p>
+          )}
+        </section>
+
+        <section className="mtoday-card" aria-label="六个月流向">
+          <div className="mtoday-shead">
+            <h3>六个月流向</h3>
+            <span className="mledger-legend">
+              <i className="inc" aria-hidden="true" />收入
+              <i className="exp" aria-hidden="true" />支出
+            </span>
+          </div>
+          {trend.length ? (
+            <div className="mledger-trend">
+              {trend.map((item) => (
+                <div
+                  className={`mledger-trend-col${item.month === month ? " on" : ""}`}
+                  key={item.month}
+                >
+                  <div className="mledger-trend-bars">
+                    <i
+                      className="inc"
+                      style={{
+                        height: `${Math.max(
+                          3,
+                          Math.round((item.income_cents / chartMax) * 100),
+                        )}%`,
+                      }}
+                    />
+                    <i
+                      className="exp"
+                      style={{
+                        height: `${Math.max(
+                          3,
+                          Math.round((item.expense_cents / chartMax) * 100),
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <small>{Number(item.month.slice(5))}月</small>
+                </div>
               ))}
-            </ul>
-          </section>
-        ) : null}
+            </div>
+          ) : (
+            <p className="mtoday-empty">还没有趋势数据。</p>
+          )}
+        </section>
+
+        <section className="mtoday-card" aria-label="收支明细">
+          <div className="mtoday-shead">
+            <h3>明细</h3>
+            <span className="mledger-month-stat">{transactions.length} 笔</span>
+          </div>
+          {loading ? (
+            <p className="mtoday-empty">正在汇总账目…</p>
+          ) : grouped.length ? (
+            grouped.map(([date, items]) => {
+              const dayExpense = items.reduce(
+                (sum, tx) => (tx.type === "expense" ? sum + tx.amount_cents : sum),
+                0,
+              );
+              const dayIncome = items.reduce(
+                (sum, tx) => (tx.type === "income" ? sum + tx.amount_cents : sum),
+                0,
+              );
+              return (
+                <div className="mledger-day" key={date}>
+                  <div className="mledger-day-head">
+                    <span className={date === today ? "is-today" : undefined}>
+                      {dayLabel(date)}
+                      {date === today || date === yesterday
+                        ? ""
+                        : ` ${weekdayLabel(date)}`}
+                    </span>
+                    <b className={!dayExpense && dayIncome ? "is-in" : undefined}>
+                      {dayExpense ? "−" : "+"}
+                      {formatLedgerMoney(dayExpense || dayIncome)}
+                    </b>
+                  </div>
+                  <ul className="mledger-txlist">
+                    {items.map((tx) => (
+                      <li key={tx.id}>
+                        <button
+                          type="button"
+                          className="mledger-tx"
+                          onClick={() => setSheet({ editing: tx })}
+                        >
+                          <span
+                            className="mledger-tx-icon"
+                            style={{
+                              background: `color-mix(in srgb, ${tx.category_color} 18%, var(--surface-panel))`,
+                              color: `color-mix(in srgb, ${tx.category_color} 55%, var(--text-primary))`,
+                            }}
+                          >
+                            <AppIcon
+                              name={CATEGORY_ICONS[tx.category_icon] ?? "dots"}
+                              size={15}
+                            />
+                          </span>
+                          <span className="mledger-tx-main">
+                            <b>{tx.category_name}</b>
+                            <i>
+                              {tx.note ? `${tx.note} · ` : ""}
+                              {tx.account_name} · {timeLabel(tx.created_at)}
+                            </i>
+                          </span>
+                          <span
+                            className={`mledger-tx-amt ${tx.type === "expense" ? "out" : "in"}`}
+                          >
+                            {tx.type === "expense" ? "−" : "+"}
+                            {formatLedgerMoney(tx.amount_cents)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })
+          ) : (
+            <p className="mtoday-empty">这个月还没有记录。点右下角 ＋ 记下第一笔。</p>
+          )}
+        </section>
       </div>
 
-      {savedAt ? (
-        <p key={savedAt} className="mledger-toast" aria-live="polite">已记一笔</p>
+      <button
+        type="button"
+        className="mtoday-fab"
+        aria-label="记一笔"
+        onClick={() => setSheet({ editing: null })}
+      />
+
+      {sheet ? (
+        <LedgerEntrySheet
+          editing={sheet.editing}
+          today={today}
+          onClose={() => setSheet(null)}
+          onSaved={load}
+        />
       ) : null}
     </div>
   );

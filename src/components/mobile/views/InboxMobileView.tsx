@@ -44,7 +44,7 @@ function InboxSummary({
   hint: string;
 }) {
   return (
-    <section className="mtoday-card minbox-summary" aria-label="待办箱概况">
+    <section className="mtoday-card minbox-summary" aria-label="待办概况">
       <div className="minbox-summary-top">
         <span className="minbox-summary-total">
           <b>{pending}</b>
@@ -197,7 +197,7 @@ function InboxTaskRow({
 }
 
 /**
- * 移动端「待办箱」—— 待办事项卡片流。
+ * 移动端「待办」—— 待办事项卡片流。
  * 顶部摘要给出逾期 / 已排期 / 未安排的数量，列表按这三组整理；
  * 活跃任务才入列，完成项原地淡出后退场。
  * 行内保留优先级方点、日期徽标、项目/标签胶囊与完成圆钮，
@@ -403,7 +403,7 @@ export function InboxMobileView() {
     >
       <header className="mtoday-top">
         <div className="mtoday-top-text">
-          <h2>待办箱</h2>
+          <h2>待办</h2>
           <p>{pending ? "逾期优先，按日期整理" : "暂无待办"}</p>
         </div>
       </header>
@@ -471,11 +471,11 @@ export function InboxMobileView() {
             </section>
           </>
         ) : (
-          <section className="mtoday-card minbox-empty" aria-label="待办箱为空">
+          <section className="mtoday-card minbox-empty" aria-label="待办为空">
             <span className="minbox-empty-mark" aria-hidden="true">
               <AppIcon name="inbox" size={22} />
             </span>
-            <h3>待办箱空了</h3>
+            <h3>待办空了</h3>
             <p>想到什么，先记下来，稍后再安排日期。</p>
             <button
               type="button"

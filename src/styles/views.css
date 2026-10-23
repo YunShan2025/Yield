@@ -2187,6 +2187,72 @@ html[data-shell="mobile"] .anni-detail-dialog {
   overscroll-behavior: contain;
 }
 
+/* ——— 「新建任务」归入底部弹层家族（2026-10-23，与「待办」详情面板同族）———
+   全屏桌面窗 → 92dvh 底部面板：顶部圆角 + 握把、浮层面板色、同款 sheetUp
+   入场。定位照 action-sheet 直接锚定视口底，不再依赖 backdrop 居中；
+   AppConfirm 复用小确认框不受影响。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 0 auto;
+  width: min(100vw, 560px);
+  height: auto;
+  max-height: 92vh;
+  max-height: 92dvh;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--mobile-overlay-surface);
+  box-shadow: 0 -18px 48px var(--ink-950-m-24);
+  animation: sheetUp calc(180ms * var(--motion-scale)) ease-out;
+}
+
+/* 握把：弹窗本体是滚动容器，握把 sticky 在面板顶与页头同排钉住。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal)::before {
+  content: "";
+  position: sticky;
+  top: -20px;
+  z-index: 3;
+  flex: none;
+  align-self: center;
+  width: 36px;
+  height: 4px;
+  margin: -12px 0 12px;
+  border-radius: 2px;
+  background: var(--border-strong);
+}
+
+/* 页头改贴在握把正下方（-16 = 抵到面板外缘再让出握把的 4px）。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head {
+  top: -16px;
+  margin: 0 -20px;
+  background: var(--mobile-overlay-surface);
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-actions:not(.app-confirm-actions) {
+  background: var(--mobile-overlay-surface);
+}
+
+/* 字段标签换成 field-label 的「灰标签小字」语言（与待办详情行同款）。
+   控件走 font: inherit 会连字号一起继承，需显式回正到正文。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label {
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label input,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label select,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label textarea,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label .select-btn {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
 /* 弹窗改纵向 flex：动作条的 margin-top:auto 在内容不足一屏时把它推到
    底部（sticky 只在内容溢出时才钉住，短表单会悬在内容后），内容溢出时
    auto 归零、动作条随内容流并由 sticky 钉底——两种情况都贴屏底。
