@@ -43,6 +43,8 @@ import {
 } from "@/lib/db";
 import { DayBoard } from "@/components/today/DayBoard";
 import { TodayMobileView } from "@/components/mobile/views/TodayMobileView";
+import { InboxMobileView } from "@/components/mobile/views/InboxMobileView";
+import { LedgerMobileView } from "@/components/mobile/views/LedgerMobileView";
 
 const SettingsView = lazy(() =>
   import("@/components/SettingsView").then((module) => ({
@@ -900,6 +902,14 @@ export function MainWorkspace() {
   // 与桌面多栏工作台是两套视图层；共享语义 token，不共享结构。
   if (isMobileShell() && (nav === "today" || nav === "myday")) {
     return <TodayMobileView />;
+  }
+
+  if (isMobileShell() && nav === "inbox") {
+    return <InboxMobileView />;
+  }
+
+  if (isMobileShell() && nav === "ledger") {
+    return <LedgerMobileView />;
   }
 
   if (nav === "settings") {

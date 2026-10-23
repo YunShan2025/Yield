@@ -392,6 +392,10 @@ html[data-shell="mobile"] .mtoday-row {
   padding: 3px 0;
   cursor: pointer;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background 140ms ease;
 }
 
 html[data-shell="mobile"] .mtoday-time {
@@ -478,6 +482,18 @@ html[data-shell="mobile"] .mtoday-row.is-done .mtoday-title {
   color: var(--text-muted);
 }
 
+html[data-shell="mobile"] .mtoday-row:focus-visible,
+html[data-shell="mobile"] .minbox-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 10px;
+}
+
+html[data-shell="mobile"] .mtoday-row:active,
+html[data-shell="mobile"] .minbox-row:active {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
 html[data-shell="mobile"] .mtoday-pills {
   display: flex;
   align-items: center;
@@ -511,6 +527,8 @@ html[data-shell="mobile"] .mtoday-check {
   place-items: center;
   cursor: pointer;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease;
 }
 
 html[data-shell="mobile"] .mtoday-check::before {
@@ -539,6 +557,16 @@ html[data-shell="mobile"] .mtoday-check.is-done::after {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9 17.5l-5-5'/%3E%3C/svg%3E") no-repeat center / 13px 13px;
 }
 
+html[data-shell="mobile"] .mtoday-check:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -6px;
+  border-radius: 50%;
+}
+
+html[data-shell="mobile"] .mtoday-check:active {
+  transform: scale(0.9);
+}
+
 /* ---------- 主操作 FAB ---------- */
 
 html[data-shell="mobile"] .mtoday-fab {
@@ -553,6 +581,20 @@ html[data-shell="mobile"] .mtoday-fab {
   box-shadow: 0 12px 26px -8px rgba(47, 111, 237, 0.62);
   cursor: pointer;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+html[data-shell="mobile"] .mtoday-fab:focus-visible {
+  outline: 3px solid var(--text-on-accent);
+  outline-offset: -3px;
+}
+
+html[data-shell="mobile"] .mtoday-fab:active {
+  transform: scale(0.94);
+  box-shadow: 0 8px 18px -8px rgba(47, 111, 237, 0.58);
 }
 
 html[data-shell="mobile"] .mtoday-fab::before,
@@ -576,6 +618,635 @@ html[data-shell="mobile"] .mtoday-fab::after {
   height: 18px;
   transform: translate(-50%, -50%);
 }
+
+/* ---------- 待办箱：无时间轴的整理列表 ---------- */
+
+html[data-shell="mobile"] .minbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 7px 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    background 140ms ease;
+}
+
+html[data-shell="mobile"] .minbox-row + .minbox-row {
+  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+html[data-shell="mobile"] .minbox-main {
+  flex: 1;
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .minbox-title {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+html[data-shell="mobile"] .minbox-row.is-done .minbox-title {
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .minbox-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+html[data-shell="mobile"] .minbox-pdot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 2px;
+  background: var(--prio-3);
+}
+
+html[data-shell="mobile"] .minbox-pdot.pr1 { background: var(--prio-1); }
+html[data-shell="mobile"] .minbox-pdot.pr2 { background: var(--prio-2); }
+html[data-shell="mobile"] .minbox-pdot.pr3 { background: var(--prio-3); }
+html[data-shell="mobile"] .minbox-pdot.pr4 { background: var(--prio-4); }
+
+html[data-shell="mobile"] .minbox-due {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 0.656rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .minbox-due.is-overdue {
+  color: var(--text-overdue);
+  background: color-mix(in srgb, var(--text-overdue) 12%, transparent);
+}
+
+html[data-shell="mobile"] .minbox-due.is-today,
+html[data-shell="mobile"] .minbox-due.is-soon {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+html[data-shell="mobile"] .minbox-due.is-scheduled {
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+}
+
+html[data-shell="mobile"] .minbox-due.is-none {
+  color: var(--text-muted);
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+}
+
+html[data-shell="mobile"] .minbox-row.is-leaving {
+  opacity: 0;
+  transform: translateX(8px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-shell="mobile"] .mtoday-row,
+  html[data-shell="mobile"] .mtoday-check,
+  html[data-shell="mobile"] .mtoday-fab,
+  html[data-shell="mobile"] .minbox-row {
+    transition: none;
+  }
+
+  html[data-shell="mobile"] .mtoday-check:active,
+  html[data-shell="mobile"] .minbox-more:active,
+  html[data-shell="mobile"] .mtoday-fab:active {
+    transform: none;
+  }
+}
+
+/* ---------- 待办箱 P1：摘要 / 三分组 / 批量整理 / 空态 ---------- */
+
+html[data-shell="mobile"] .minbox .mtoday-shead {
+  align-items: center;
+}
+
+html[data-shell="mobile"] .minbox-shead-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .minbox-shead-actions button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 15px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.719rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .minbox-shead-actions button:active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+html[data-shell="mobile"] .minbox-shead-actions button:focus-visible,
+html[data-shell="mobile"] .minbox-batchbar-head-actions button:focus-visible,
+html[data-shell="mobile"] .minbox-batchbar-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 摘要条：白卡 + 三段比例条，不重复今日页的大面积渐变 hero。 */
+html[data-shell="mobile"] .minbox-summary {
+  padding: 14px 16px 13px;
+}
+
+html[data-shell="mobile"] .minbox-summary-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+html[data-shell="mobile"] .minbox-summary-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .minbox-summary-total b {
+  font-family: var(--font-num-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0;
+  color: var(--text-heading);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+html[data-shell="mobile"] .minbox-summary-total span {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .minbox-summary-hint {
+  font-size: 0.719rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+html[data-shell="mobile"] .minbox-summary-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+}
+
+html[data-shell="mobile"] .minbox-summary-bar i {
+  display: block;
+  flex: 1 1 0;
+  min-width: 4px;
+  height: 100%;
+  border-radius: 3px;
+}
+
+html[data-shell="mobile"] .minbox-summary-bar i.is-overdue {
+  background: var(--text-overdue);
+}
+
+html[data-shell="mobile"] .minbox-summary-bar i.is-scheduled {
+  background: var(--accent);
+}
+
+html[data-shell="mobile"] .minbox-summary-bar i.is-none {
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .minbox-summary-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+}
+
+html[data-shell="mobile"] .minbox-summary-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.719rem;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .minbox-summary-legend i {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .minbox-summary-legend span.is-overdue i {
+  background: var(--text-overdue);
+}
+
+html[data-shell="mobile"] .minbox-summary-legend span.is-scheduled i {
+  background: var(--accent);
+}
+
+html[data-shell="mobile"] .minbox-summary-legend span.is-none i {
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .minbox-summary-legend b {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 三分组：逾期 → 已排期 → 未安排，组标题只做轻分隔。 */
+html[data-shell="mobile"] .minbox-group + .minbox-group {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+html[data-shell="mobile"] .minbox-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 1px;
+}
+
+html[data-shell="mobile"] .minbox-group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.719rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+html[data-shell="mobile"] .minbox-group-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .minbox-group.is-overdue .minbox-group-title {
+  color: var(--text-overdue);
+}
+
+html[data-shell="mobile"] .minbox-group.is-overdue .minbox-group-dot {
+  background: var(--text-overdue);
+}
+
+html[data-shell="mobile"] .minbox-group.is-scheduled .minbox-group-dot {
+  background: var(--accent);
+}
+
+html[data-shell="mobile"] .minbox-group.is-none .minbox-group-dot {
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .minbox-group-count {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 9px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: 0.656rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .minbox-group.is-overdue .minbox-group-count {
+  color: var(--text-overdue);
+  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
+}
+
+/* 行尾操作组：更多与完成钮共用同一条光学金线；长按仍是快捷路径。 */
+html[data-shell="mobile"] .minbox-actions {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  flex: none;
+  margin-right: -8px;
+}
+
+html[data-shell="mobile"] .minbox-actions .minbox-more {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+@media (hover: hover) {
+  html[data-shell="mobile"] .minbox-actions .minbox-more:hover {
+    background: var(--surface-sunken);
+    color: var(--text-secondary);
+  }
+}
+
+html[data-shell="mobile"] .minbox-actions .minbox-more:active {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  transform: scale(0.94);
+}
+
+html[data-shell="mobile"] .minbox-actions .minbox-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -6px;
+  border-radius: 50%;
+}
+
+html[data-shell="mobile"] .minbox-actions .mtoday-check {
+  margin: 0;
+}
+
+/* 批量选择：行首方形选择框，替代完成圆钮。 */
+html[data-shell="mobile"] .minbox-selectbox {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  align-self: center;
+  padding: 0;
+  border: 1.6px solid var(--border-strong);
+  border-radius: 6px;
+  box-sizing: border-box;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .minbox-selectbox.is-selected {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+html[data-shell="mobile"] .minbox-selectbox.is-selected::after {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin: 0 auto;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9 17.5l-5-5'/%3E%3C/svg%3E") no-repeat center / 12px 12px;
+}
+
+html[data-shell="mobile"] .minbox-selectbox:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+html[data-shell="mobile"] .minbox.is-selecting .mtoday-scroll {
+  padding-bottom: 196px;
+}
+
+html[data-shell="mobile"] .minbox.is-selecting.is-date-open .mtoday-scroll {
+  padding-bottom: 252px;
+}
+
+/* 批量条：替代 FAB 浮在页面底部。 */
+html[data-shell="mobile"] .minbox-batchbar {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  z-index: 6;
+  padding: 12px 14px;
+  border-radius: 16px;
+  animation: minboxBatchIn calc(150ms * var(--motion-scale)) ease-out;
+}
+
+@keyframes minboxBatchIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html[data-shell="mobile"] .minbox-batchbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .minbox-batchbar-head b {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+html[data-shell="mobile"] .minbox-batchbar-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+html[data-shell="mobile"] .minbox-batchbar-head-actions button {
+  min-height: 30px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.719rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .minbox-batchbar-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+html[data-shell="mobile"] .minbox-batchbar-actions button {
+  min-height: 42px;
+  padding: 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .minbox-batchbar-actions button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+html[data-shell="mobile"] .minbox-batchbar-actions button.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+html[data-shell="mobile"] .minbox-batchbar-actions button.danger {
+  color: var(--text-overdue);
+}
+
+html[data-shell="mobile"] .minbox-batch-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.719rem;
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .minbox-batch-date > span {
+  flex: none;
+}
+
+html[data-shell="mobile"] .minbox-batch-date .date-picker {
+  flex: 1;
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .minbox-batch-date .date-picker-trigger {
+  width: 100%;
+}
+
+/* 空态：独立卡片 + 直接记一件事。 */
+html[data-shell="mobile"] .minbox-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px 28px;
+  text-align: center;
+}
+
+html[data-shell="mobile"] .minbox-empty-mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  border-radius: 15px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+html[data-shell="mobile"] .minbox-empty h3 {
+  margin: 0;
+  font-size: 0.938rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--text-heading);
+}
+
+html[data-shell="mobile"] .minbox-empty p {
+  max-width: 15rem;
+  margin: 5px 0 0;
+  font-size: 0.812rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .minbox-empty-cta {
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: inherit;
+  font-size: 0.813rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .minbox-empty-cta:active {
+  opacity: 0.86;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-shell="mobile"] .minbox-batchbar {
+    animation: none;
+  }
+}
+
+/* 操作面板、批量条都直接压在列表上。dawn 的 --surface-panel 是半透明白，
+   glass 更是玻璃面，沿用卡片色会透出下方任务文字；浮层统一换成不透明表面。 */
+html[data-shell="mobile"] {
+  --mobile-overlay-surface: var(--surface-panel);
+}
+
+html[data-theme="dawn"][data-shell="mobile"] {
+  --mobile-overlay-surface: var(--paper-100);
+}
+
+html[data-theme="glass"][data-shell="mobile"] {
+  --mobile-overlay-surface: #161e2c;
+}
+
+html[data-shell="mobile"] .action-sheet,
+html[data-shell="mobile"] .minbox-batchbar {
+  background: var(--mobile-overlay-surface);
+}
+
 /* ---------- 底部导航：浮起的白卡 ---------- */
 
 html[data-shell="mobile"] .mobile-nav {
@@ -616,4 +1287,322 @@ html[data-shell="mobile"] .mobile-nav-item.active {
 html[data-shell="mobile"] .mobile-nav-icon svg {
   width: 21px;
   height: 21px;
+}
+
+/* ---------- 记一笔（底部导航 ③）· 页面内快速录入 ---------- */
+
+html[data-shell="mobile"] .mledger-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+html[data-shell="mobile"] .mledger-save:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+html[data-shell="mobile"] .mledger-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 14px 14px;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-panel);
+}
+
+html[data-shell="mobile"] .mledger-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+html[data-shell="mobile"] .mledger-currency {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+html[data-shell="mobile"] .mledger-amount-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-bottom: 2px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-heading);
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  padding: 4px 0 6px;
+  outline: none;
+  caret-color: var(--accent);
+}
+
+html[data-shell="mobile"] .mledger-amount-input:focus {
+  border-bottom-color: var(--accent);
+  outline: none;
+}
+
+html[data-shell="mobile"] .mledger-amount-input::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+
+html[data-shell="mobile"] .mledger-kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 12px;
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+html[data-shell="mobile"] .mledger-kind button {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+html[data-shell="mobile"] .mledger-kind button.on {
+  background: var(--surface-panel);
+  color: var(--text-heading);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(18, 32, 60, 0.08);
+}
+
+html[data-theme="dark"][data-shell="mobile"] .mledger-kind button.on,
+html[data-theme="glass"][data-shell="mobile"] .mledger-kind button.on {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html[data-shell="mobile"] .mledger-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+
+html[data-shell="mobile"] .mledger-chips::-webkit-scrollbar {
+  display: none;
+}
+
+html[data-shell="mobile"] .mledger-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-panel);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+html[data-shell="mobile"] .mledger-chip.on {
+  border-color: var(--chip-color, var(--accent));
+  background: color-mix(in srgb, var(--chip-color, var(--accent)) 12%, transparent);
+  color: var(--chip-color, var(--accent));
+  font-weight: 600;
+}
+
+html[data-shell="mobile"] .mledger-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+html[data-shell="mobile"] .mledger-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+html[data-shell="mobile"] .mledger-field > span:first-child {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+html[data-shell="mobile"] .mledger-field select,
+html[data-shell="mobile"] .mledger-field > span:last-child {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-inset);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+html[data-shell="mobile"] .mledger-txlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+html[data-shell="mobile"] .mledger-tx {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-shell="mobile"] .mledger-tx:last-child {
+  border-bottom: 0;
+}
+
+html[data-shell="mobile"] .mledger-tx-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+html[data-shell="mobile"] .mledger-tx-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+html[data-shell="mobile"] .mledger-tx-main b {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+html[data-shell="mobile"] .mledger-tx-main i {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+html[data-shell="mobile"] .mledger-tx-amt {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .mledger-tx-amt.out {
+  color: var(--text-primary);
+}
+
+html[data-shell="mobile"] .mledger-tx-amt.in {
+  color: var(--positive, #16a34a);
+}
+
+html[data-shell="mobile"] .mledger-tx-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .mledger-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 82px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 9px 20px;
+  border-radius: 22px;
+  background: var(--text-inverse, #1a2234);
+  color: var(--text-inverse, #fff);
+  font-size: 0.8125rem;
+  pointer-events: none;
+  animation: toastIn 260ms ease;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ---------- 更多页：典故分组列表 ---------- */
+
+html[data-shell="mobile"] .mobile-more-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-inset);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-shell="mobile"] .mobile-more-search:active {
+  background: var(--accent-soft);
+}
+
+html[data-shell="mobile"] .mobile-more-group {
+  padding: 0 14px;
+}
+
+html[data-shell="mobile"] .mobile-more-group + .mobile-more-group {
+  margin-top: 4px;
+}
+
+html[data-shell="mobile"] .mobile-more-group-head {
+  padding: 14px 12px 4px;
+}
+
+html[data-shell="mobile"] .mobile-more-group-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+html[data-shell="mobile"] .mobile-more-group-head p {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+html[data-shell="mobile"] .mobile-more-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 8px;
 }

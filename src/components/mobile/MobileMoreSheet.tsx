@@ -2,20 +2,50 @@ import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { useAppStore } from "@/store/app";
 import type { NavId } from "@/types";
 
-/** 更多页收纳的次级入口:今日/待办箱/记账已在底部导航,其余全部收进这里。 */
-const MORE_ITEMS: { id: NavId; label: string; icon: AppIconName }[] = [
-  { id: "week", label: "周清单", icon: "review" },
-  { id: "growth", label: "成长", icon: "sparkle" },
-  { id: "habits", label: "习惯", icon: "heart" },
-  { id: "review", label: "复盘", icon: "review" },
-  { id: "reminders", label: "提醒", icon: "timer" },
-  { id: "memos", label: "备忘录", icon: "memo" },
-  { id: "projects", label: "项目", icon: "layers" },
-  { id: "ledger", label: "收支总览", icon: "wallet" },
-  { id: "anniversaries", label: "纪念日", icon: "heart" },
-  { id: "tags", label: "标签", icon: "tag" },
-  { id: "trash", label: "回收站", icon: "trash" },
-  { id: "settings", label: "设置", icon: "settings" },
+/** 更多页按侧栏典故分组的次级入口（MOBILE-IA §3.2）。 */
+const MORE_GROUPS: {
+  name: string;
+  origin: string;
+  items: { id: NavId; label: string; icon: AppIconName }[];
+}[] = [
+  {
+    name: "积微",
+    origin: "《荀子·强国》「积微，月不胜日。」每天的小积累，胜过攒着一起做",
+    items: [{ id: "week", label: "周清单", icon: "review" }],
+  },
+  {
+    name: "观澜",
+    origin: "《孟子·尽心上》「观水有术，必观其澜。」收支如水，可观其波澜",
+    items: [{ id: "ledger", label: "收支总览", icon: "wallet" }],
+  },
+  {
+    name: "有恒",
+    origin: "《论语·述而》「得见有恒者，斯可矣。」成长靠的是不间断的人",
+    items: [
+      { id: "growth", label: "成长", icon: "sparkle" },
+      { id: "habits", label: "习惯", icon: "heart" },
+      { id: "review", label: "复盘", icon: "review" },
+    ],
+  },
+  {
+    name: "百工",
+    origin: "《论语·子张》「百工居肆以成其事。」先利其器，再善其事",
+    items: [
+      { id: "reminders", label: "提醒", icon: "timer" },
+      { id: "memos", label: "备忘录", icon: "memo" },
+      { id: "projects", label: "项目", icon: "layers" },
+      { id: "tags", label: "标签", icon: "tag" },
+    ],
+  },
+  {
+    name: "更多",
+    origin: "",
+    items: [
+      { id: "anniversaries", label: "纪念日", icon: "heart" },
+      { id: "settings", label: "设置", icon: "settings" },
+      { id: "trash", label: "回收站", icon: "trash" },
+    ],
+  },
 ];
 
 /** 更多页：底部导航上方的面板。导航交给 onNavigate（MainApp 维护返回键语义）；
@@ -36,32 +66,38 @@ export function MobileMoreSheet({ onNavigate }: { onNavigate: (id: NavId) => voi
             <span className="brand-caption">Yield · 服田力穑，乃亦有秋</span>
           </div>
         </div>
-      </header>
-      <div className="mobile-more-grid">
         <button
           type="button"
-          className="mobile-more-item"
+          className="mobile-more-search"
           onClick={openCommandPalette}
         >
-          <span className="mobile-more-icon">
-            <AppIcon name="search" size={21} />
-          </span>
+          <AppIcon name="search" size={18} />
           <span>搜索</span>
         </button>
-        {MORE_ITEMS.map(({ id, label, icon }) => (
-          <button
-            key={id}
-            type="button"
-            className="mobile-more-item"
-            onClick={() => onNavigate(id)}
-          >
-            <span className="mobile-more-icon">
-              <AppIcon name={icon} size={21} />
-            </span>
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
+      </header>
+      {MORE_GROUPS.map((group) => (
+        <section key={group.name} className="mobile-more-group">
+          <div className="mobile-more-group-head">
+            <h3>{group.name}</h3>
+            <p>{group.origin}</p>
+          </div>
+          <div className="mobile-more-list">
+            {group.items.map(({ id, label, icon }) => (
+              <button
+                key={id}
+                type="button"
+                className="mobile-more-item"
+                onClick={() => onNavigate(id)}
+              >
+                <span className="mobile-more-icon">
+                  <AppIcon name={icon} size={19} />
+                </span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

@@ -1,26 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { AppIcon } from "@/components/AppIcon";
+import {
+  MobileTaskPillView,
+  getMobileTaskPills,
+} from "@/components/mobile/MobileTaskPills";
+import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { fetchGoals } from "@/lib/db";
 import { calculateGoalProgress, resolveGoalTarget } from "@/lib/growth";
 import {
   ensureEndAfterStart,
   parseTimeToMinutes,
-  todayDateString,
 } from "@/lib/dates";
-import { mixHex } from "@/lib/color";
-import type { Goal, Project, Tag, Task } from "@/types";
+import { useTodayDate } from "@/lib/useTodayDate";
+import type { Goal, Task } from "@/types";
 
 /** 一天的分钟数 —— 今日时段条按 0–24h 铺满。 */
 const DAY_MINUTES = 24 * 60;
-
-/** 触摸屏长按行弹出操作面板的时长（与桌面今日清单一致）。 */
-const LONG_PRESS_MS = 480;
-
-/** 浅色主题下胶囊文字朝黑混、深色主题朝白混，比例固定以保证对比度。 */
-const PILL_INK_LIGHT = "#0b1428";
-const PILL_INK_DARK = "#ffffff";
 
 type Band = { start: number; end: number };
 
@@ -54,26 +51,6 @@ function round1(value: number): number {
   return Math.round(Number(value) * 10) / 10;
 }
 
-/** 今日事项的彩色胶囊：项目在前、标签在后，最多两枚。 */
-function taskPills(
-  task: Task,
-  projects: Project[],
-  tags: Tag[],
-  tagMap: Record<string, string[]>,
-): { name: string; color: string }[] {
-  const out: { name: string; color: string }[] = [];
-  const project = task.project_id
-    ? projects.find((item) => item.id === task.project_id)
-    : undefined;
-  if (project) out.push({ name: project.name, color: project.color });
-  const tagIds = tagMap[task.id] ?? [];
-  const tag = tagIds.length
-    ? tags.find((item) => tagIds.includes(item.id))
-    : undefined;
-  if (tag) out.push({ name: tag.name, color: tag.color });
-  return out;
-}
-
 /**
  * 移动端「今日」页 —— 单列卡片流，与桌面多栏工作台是两套视图层。
  *
@@ -93,16 +70,12 @@ export function TodayMobileView() {
   const requestFocus = useAppStore((s) => s.requestFocus);
   const setNav = useAppStore((s) => s.setNav);
 
-  const today = todayDateString();
+  const today = useTodayDate();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [now, setNow] = useState(() => new Date());
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
-  const pressRef = useRef<{
-    timer: number | undefined;
-    fired: boolean;
-  }>({ timer: undefined, fired: false });
 
-  // 「现在」每分钟走一格，跨零点时日期也跟着翻。
+  // 「现在」每分钟走一格，时段条上的当前位置也跟着走。
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
@@ -170,33 +143,6 @@ export function TodayMobileView() {
     () => goals.filter((goal) => goal.status === "active"),
     [goals],
   );
-
-  const endPress = () => {
-    if (pressRef.current.timer !== undefined) {
-      window.clearTimeout(pressRef.current.timer);
-      pressRef.current.timer = undefined;
-    }
-  };
-
-  const startPress = (task: Task) => (event: React.TouchEvent) => {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest("button, input, textarea, select, a")) return;
-    endPress();
-    pressRef.current.fired = false;
-    pressRef.current.timer = window.setTimeout(() => {
-      pressRef.current.timer = undefined;
-      pressRef.current.fired = true;
-      setSheetTask(task);
-    }, LONG_PRESS_MS);
-  };
-
-  const openRow = (task: Task) => () => {
-    if (pressRef.current.fired) {
-      pressRef.current.fired = false;
-      return;
-    }
-    selectTask(task.id);
-  };
 
   return (
     <div className="mtoday">
@@ -338,15 +284,13 @@ export function TodayMobileView() {
             <ul className="mtoday-list">
               {todaysTasks.map((task) => {
                 const done = task.status === "completed";
-                const pills = taskPills(task, projects, tags, tagMap);
+                const pills = getMobileTaskPills(task, projects, tags, tagMap);
                 return (
-                  <li
+                  <MobileTaskRow
                     key={task.id}
                     className={`mtoday-row pr${task.priority}${done ? " is-done" : ""}`}
-                    onTouchStart={startPress(task)}
-                    onTouchEnd={endPress}
-                    onTouchCancel={endPress}
-                    onClick={openRow(task)}
+                    onActivate={() => selectTask(task.id)}
+                    onLongPress={() => setSheetTask(task)}
                   >
                     <span className="mtoday-time">
                       <b>{task.due_time ?? "全天"}</b>
@@ -360,27 +304,7 @@ export function TodayMobileView() {
                       {pills.length ? (
                         <span className="mtoday-pills">
                           {pills.map((pill) => (
-                            <span
-                              key={pill.name}
-                              className="mtoday-pill"
-                              style={
-                                {
-                                  "--pill-color": pill.color,
-                                  "--pill-ink": mixHex(
-                                    pill.color,
-                                    PILL_INK_LIGHT,
-                                    0.55,
-                                  ),
-                                  "--pill-ink-dark": mixHex(
-                                    pill.color,
-                                    PILL_INK_DARK,
-                                    0.45,
-                                  ),
-                                } as React.CSSProperties
-                              }
-                            >
-                              {pill.name}
-                            </span>
+                            <MobileTaskPillView key={pill.key} pill={pill} />
                           ))}
                         </span>
                       ) : null}
@@ -395,7 +319,7 @@ export function TodayMobileView() {
                         void toggleComplete(task.id);
                       }}
                     />
-                  </li>
+                  </MobileTaskRow>
                 );
               })}
             </ul>

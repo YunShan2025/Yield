@@ -1123,20 +1123,36 @@ html[data-shell="mobile"] .drag-handle {
   z-index: 62;
   border: 0;
   background: var(--ink-950-m-38);
+  animation: backdropIn calc(160ms * var(--motion-scale)) ease-out;
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .action-sheet {
   position: fixed;
-  right: 12px;
-  bottom: 12px;
-  left: 12px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 63;
-  padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  margin: 0 auto;
+  max-height: min(78vh, 720px);
+  overflow: hidden;
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: var(--surface-panel);
-  box-shadow: 0 18px 44px var(--ink-950-m-24);
-  animation: sheetUp calc(160ms * var(--motion-scale)) ease;
+  box-shadow: 0 -18px 48px var(--ink-950-m-24);
+  animation: sheetUp calc(180ms * var(--motion-scale)) ease-out;
 }
 
 /* fadeUp 的 from 帧带 translate(-50%, 8px)——那是给 left:50% 居中的
@@ -1145,7 +1161,7 @@ html[data-shell="mobile"] .drag-handle {
 @keyframes sheetUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -1153,74 +1169,318 @@ html[data-shell="mobile"] .drag-handle {
   }
 }
 
+.action-sheet-grip {
+  width: 36px;
+  height: 4px;
+  flex: none;
+  align-self: center;
+  border-radius: 2px;
+  background: var(--border-strong);
+  margin: 0 auto 14px;
+}
+
+.action-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.action-sheet-heading {
+  flex: 1;
+  min-width: 0;
+}
+
 .action-sheet-title {
-  margin: 0 0 10px;
+  display: -webkit-box;
+  margin: 0;
   overflow: hidden;
+  color: var(--text-heading);
+  font-size: var(--font-size-body);
+  font-weight: 650;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.action-sheet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0 0;
   color: var(--text-secondary);
   font-size: var(--font-size-label);
-  font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.action-sheet-due.is-overdue {
+  color: var(--text-overdue);
+}
+
+.action-sheet-due.is-today,
+.action-sheet-due.is-soon {
+  color: var(--accent-strong);
+}
+
+.action-sheet-close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  margin: -6px -6px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.action-sheet-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+.action-sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.action-sheet-section {
+  margin-top: 22px;
+}
+
+.action-sheet-section-title {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .action-sheet-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .action-sheet-grid button,
-.action-sheet-priority button,
-.action-sheet-danger,
-.action-sheet-cancel {
-  min-height: 44px;
+.action-sheet-priority-button {
+  min-height: 48px;
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-md);
-  background: var(--surface-base);
+  background: var(--surface-sunken);
   color: var(--text-primary);
   font: inherit;
   font-size: var(--font-size-label);
+  font-weight: 500;
   cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.action-sheet-grid button:active,
+.action-sheet-priority-button:active {
+  transform: scale(0.98);
+}
+
+.action-sheet-grid button:focus-visible,
+.action-sheet-priority-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .action-sheet-grid button.active,
-.action-sheet-priority button.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 650;
+.action-sheet-priority-button.active {
   background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 650;
 }
 
-.action-sheet-priority {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-top: 8px;
+.action-sheet-grid.is-short .action-sheet-custom {
+  grid-column: 1 / -1;
 }
 
 .action-sheet-date {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 52px;
   margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
   font-size: var(--font-size-label);
 }
 
 .action-sheet-date .field {
   flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.action-sheet-clear {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--font-size-label);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.action-sheet-clear:focus-visible,
+.action-sheet-cancel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+.action-sheet-priority {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.action-sheet-priority-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.action-sheet-priority-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--prio-3);
+}
+
+.action-sheet-priority-button.pr1 .action-sheet-priority-dot {
+  background: var(--prio-1);
+}
+
+.action-sheet-priority-button.pr2 .action-sheet-priority-dot {
+  background: var(--prio-2);
+}
+
+.action-sheet-priority-button.pr3 .action-sheet-priority-dot {
+  background: var(--prio-3);
+}
+
+.action-sheet-priority-button.pr4 .action-sheet-priority-dot {
+  background: var(--prio-4);
 }
 
 .action-sheet-danger {
+  display: flex;
   width: 100%;
-  margin-top: 10px;
-  color: var(--text-overdue, var(--rose-600));
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--text-overdue) 9%, transparent);
+  color: var(--text-overdue);
+  font: inherit;
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.action-sheet-danger:active {
+  transform: scale(0.98);
+}
+
+.action-sheet-danger:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
 }
 
 .action-sheet-cancel {
   width: 100%;
-  margin-top: 8px;
+  min-height: 48px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--font-size-label);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 140ms ease;
+}
+
+@media (hover: hover) {
+  .action-sheet-close:hover,
+  .action-sheet-clear:hover,
+  .action-sheet-cancel:hover {
+    background: var(--surface-sunken);
+  }
+
+  .action-sheet-close:hover {
+    color: var(--text-secondary);
+  }
+
+  .action-sheet-grid button:hover,
+  .action-sheet-priority-button:hover {
+    background: color-mix(in srgb, var(--border-strong) 28%, transparent);
+  }
+
+  .action-sheet-danger:hover {
+    background: color-mix(in srgb, var(--text-overdue) 14%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-sheet,
+  .action-sheet-backdrop {
+    animation: none;
+  }
+
+  .action-sheet-grid button,
+  .action-sheet-priority-button,
+  .action-sheet-danger {
+    transition: none;
+  }
+
+  .action-sheet-grid button:active,
+  .action-sheet-priority-button:active,
+  .action-sheet-danger:active {
+    transform: none;
+  }
 }
 
 /* 「记一笔」抽屉在移动壳里占满全屏（width:100vw）：打开期间隐藏底部导航。
@@ -1228,6 +1488,16 @@ html[data-shell="mobile"] .drag-handle {
    导航条，四个导航图标叠在「取消/保存记录」上方；全屏录入时导航也本该
    隐藏。桌面无 data-shell="mobile"，此规则不生效。 */
 html[data-shell="mobile"] body.ledger-drawer-open .mobile-nav {
+  display: none;
+}
+
+/* 任务操作面板同样是模态浮层：面板底部会落到导航条上，打开期间把导航
+   收起，关闭后恢复。桌面无 data-shell="mobile"，不受影响。 */
+html[data-shell="mobile"] body.action-sheet-open {
+  overflow: hidden;
+}
+
+html[data-shell="mobile"] body.action-sheet-open .mobile-nav {
   display: none;
 }
 
