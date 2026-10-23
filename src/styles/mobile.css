@@ -1362,7 +1362,6 @@ html[data-shell="mobile"] .mledger-amount-input {
   width: 100%;
   min-width: 0;
   border: 0;
-  border-bottom: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
   border-radius: 0;
   background: transparent;
   color: var(--accent-strong);
@@ -1371,15 +1370,10 @@ html[data-shell="mobile"] .mledger-amount-input {
   font-weight: 400;
   letter-spacing: 0;
   line-height: 1.15;
-  padding: 2px 0 6px;
+  padding: 2px 0 4px;
   outline: none;
   caret-color: var(--accent);
   font-variant-numeric: lining-nums tabular-nums;
-}
-
-html[data-shell="mobile"] .mledger-amount-input:focus {
-  border-bottom-color: var(--accent);
-  outline: none;
 }
 
 html[data-shell="mobile"] .mledger-amount-input::placeholder {
@@ -1415,119 +1409,59 @@ html[data-shell="mobile"] .mledger-quick button:active {
   color: var(--accent-strong);
 }
 
-html[data-shell="mobile"] .mledger-kind {
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: start;
-  width: max-content;
-  border-radius: 12px;
-  background: var(--surface-sunken);
-  overflow: hidden;
+/* —— 弹层表单：全面复用「待办 ···」面板的 section + 等分 grid 灰底按钮语言 ——
+   按钮 DNA（48px/sunken/radius-md/active accent-soft）来自 .action-sheet-grid，
+   这里只加列数变体与分类的色彩签名。 */
+html[data-shell="mobile"] .mledger-sheet .mledger-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-html[data-shell="mobile"] .mledger-kind button {
-  min-height: 40px;
-  min-width: 76px;
-  border: 0;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 150ms ease, color 150ms ease;
+html[data-shell="mobile"] .mledger-sheet .mledger-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-html[data-shell="mobile"] .mledger-kind button.on {
-  background: var(--surface-panel);
-  color: var(--text-heading);
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(18, 32, 60, 0.08);
-}
-
-html[data-theme="dark"][data-shell="mobile"] .mledger-kind button.on,
-html[data-theme="glass"][data-shell="mobile"] .mledger-kind button.on {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-/* 分类弹层里自动换行，全部类别一屏看全 */
-html[data-shell="mobile"] .mledger-chips {
+/* 分类钮：图标 + 名，选中用类别色做底调（颜色即身份，优先于通用 accent） */
+html[data-shell="mobile"] .mledger-cat {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-html[data-shell="mobile"] .mledger-chip {
-  flex: none;
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 7px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  background: var(--surface-sunken);
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: border-color 150ms ease, background 150ms ease;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding-inline: 4px;
 }
 
-html[data-shell="mobile"] .mledger-chip.on {
-  border-color: var(--chip-color, var(--accent));
-  background: color-mix(in srgb, var(--chip-color, var(--accent)) 12%, transparent);
-  color: var(--chip-color, var(--accent));
-  font-weight: 600;
+html[data-shell="mobile"] .mledger-cat span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* —— 弹层表单：与任务详情面板同族的「灰标签 + 值」行式结构 —— */
-html[data-shell="mobile"] .mledger-rows {
-  margin-top: 14px;
-  border-top: 1px solid var(--border);
+html[data-shell="mobile"] .mledger-cat.active {
+  background: color-mix(in srgb, var(--chip-color, var(--accent)) 16%, var(--surface-panel));
+  color: color-mix(in srgb, var(--chip-color, var(--accent)) 72%, var(--text-heading));
+  font-weight: 650;
 }
 
-html[data-shell="mobile"] .mledger-row {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-html[data-shell="mobile"] .mledger-row .field-label {
-  margin-bottom: 0;
-}
-
-html[data-shell="mobile"] .mledger-row-block {
-  display: block;
-}
-
-html[data-shell="mobile"] .mledger-row-block .field-label {
-  margin-bottom: 9px;
-}
-
-html[data-shell="mobile"] .mledger-select,
-html[data-shell="mobile"] .mledger-date,
+/* 备注：灰底无边框输入行，与 grid 按钮同形 */
 html[data-shell="mobile"] .mledger-note-input {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 8px 11px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-panel);
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.875rem;
   outline: none;
+  transition: background 140ms ease, border-color 140ms ease;
 }
 
-html[data-shell="mobile"] .mledger-select:focus-visible,
-html[data-shell="mobile"] .mledger-date:focus-visible,
 html[data-shell="mobile"] .mledger-note-input:focus-visible {
   border-color: var(--accent);
+  background: var(--surface-panel);
 }
 
 html[data-shell="mobile"] .mledger-error {
@@ -1548,39 +1482,6 @@ html[data-shell="mobile"] .mledger-sheet-foot {
 html[data-shell="mobile"] .mledger-sheet-foot .mledger-save {
   flex: 1;
   margin-top: 0;
-}
-
-html[data-shell="mobile"] .mledger-sheet-del {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 48px;
-  padding: 0 18px;
-  border: 1px solid color-mix(in srgb, var(--danger) 32%, var(--border));
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--danger);
-  font-size: 0.875rem;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html[data-shell="mobile"] .mledger-sheet-del:active {
-  background: color-mix(in srgb, var(--danger) 8%, transparent);
-}
-
-html[data-theme="dark"][data-shell="mobile"] .mledger-date::-webkit-calendar-picker-indicator,
-html[data-theme="glass"][data-shell="mobile"] .mledger-date::-webkit-calendar-picker-indicator {
-  filter: invert(0.75);
-}
-
-@media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .mledger-date::-webkit-calendar-picker-indicator {
-    filter: invert(0.75);
-  }
 }
 
 /* ---------- 表头月份切换：紧凑左右箭头 + 居中月份 ---------- */

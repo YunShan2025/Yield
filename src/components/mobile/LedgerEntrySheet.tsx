@@ -14,6 +14,8 @@ import {
 } from "@/lib/db";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { confirmAction } from "@/components/AppConfirm";
+import { DatePicker } from "@/components/DatePicker";
+import { addDays } from "@/lib/dates";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import { useAppStore } from "@/store/app";
 
@@ -26,10 +28,16 @@ const CATEGORY_ICONS: Record<string, AppIconName> = {
 
 const SHEET_TITLE_ID = "ledger-entry-sheet-title";
 
+function monthDayLabel(date: string) {
+  const [, month, day] = date.split("-");
+  return `${Number(month)}月${Number(day)}日`;
+}
+
 /**
  * 移动端「记一笔」底部弹层：记账页的 FAB（新建）与明细行（编辑）打开。
- * 结构与任务详情面板同族：白色面板 + 灰标签/值行（.field-label + 发丝分隔线），
- * 底部动作栏放保存/删除；金额输入保留页面的衬线大字语言。
+ * 全面沿用「待办 ···」操作面板的语言：action-sheet-section 分组 +
+ * 等分 grid 灰底按钮（类型/分类/账户/日期全部点选，零原生控件），
+ * 编辑态用 danger 卡删除；金额输入保留页面的衬线大字签名。
  */
 export function LedgerEntrySheet({
   editing,
@@ -43,6 +51,7 @@ export function LedgerEntrySheet({
   onSaved: () => void;
 }) {
   const setToast = useAppStore((state) => state.setToast);
+  const yesterday = addDays(today, -1);
   const [kind, setKind] = useState<LedgerKind>(editing?.type ?? "expense");
   const [amount, setAmount] = useState(
     editing ? (editing.amount_cents / 100).toFixed(2) : "",
@@ -52,11 +61,16 @@ export function LedgerEntrySheet({
   const [categoryId, setCategoryId] = useState(editing?.category_id ?? 0);
   const [accountId, setAccountId] = useState(editing?.account_id ?? 0);
   const [date, setDate] = useState(editing?.date ?? today);
+  const [customDateOpen, setCustomDateOpen] = useState(
+    Boolean(editing && editing.date !== today && editing.date !== yesterday),
+  );
   const [note, setNote] = useState(editing?.note ?? "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  const isOtherDate = date !== today && date !== yesterday;
 
   useEffect(() => {
     let alive = true;
@@ -109,6 +123,11 @@ export function LedgerEntrySheet({
       setCategories((prev) => [...cats, ...prev.filter((c) => c.kind !== next)]);
       setCategoryId(cats.find((c) => c.is_enabled)?.id ?? 0);
     });
+  };
+
+  const pickDate = (next: string) => {
+    setDate(next);
+    setCustomDateOpen(next !== today && next !== yesterday);
   };
 
   const save = async () => {
@@ -228,95 +247,133 @@ export function LedgerEntrySheet({
               </button>
             ))}
           </div>
-          <div className="mledger-rows">
-            <div className="mledger-row">
-              <span className="field-label">类型</span>
-              <div className="mledger-kind">
-                <button
-                  type="button"
-                  className={kind === "expense" ? "on" : ""}
-                  onClick={() => switchKind("expense")}
-                >
-                  支出
-                </button>
-                <button
-                  type="button"
-                  className={kind === "income" ? "on" : ""}
-                  onClick={() => switchKind("income")}
-                >
-                  收入
-                </button>
-              </div>
-            </div>
-            <div className="mledger-row mledger-row-block">
-              <span className="field-label">{kind === "expense" ? "支出分类" : "收入分类"}</span>
-              <div className="mledger-chips">
-                {activeCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    className={`mledger-chip${cat.id === categoryId ? " on" : ""}`}
-                    style={{ "--chip-color": cat.color } as React.CSSProperties}
-                    onClick={() => setCategoryId(cat.id)}
-                  >
-                    <AppIcon name={CATEGORY_ICONS[cat.icon] ?? "dots"} size={16} />
-                    <span>{cat.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="mledger-row">
-              <span className="field-label">账户</span>
-              <select
-                className="mledger-select"
-                value={accountId}
-                aria-label="账户"
-                onChange={(e) => setAccountId(Number(e.target.value))}
+
+          <section className="action-sheet-section">
+            <div className="action-sheet-section-title">类型</div>
+            <div className="action-sheet-grid">
+              <button
+                type="button"
+                className={kind === "expense" ? "active" : ""}
+                onClick={() => switchKind("expense")}
               >
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+                支出
+              </button>
+              <button
+                type="button"
+                className={kind === "income" ? "active" : ""}
+                onClick={() => switchKind("income")}
+              >
+                收入
+              </button>
             </div>
-            <div className="mledger-row">
-              <span className="field-label">日期</span>
-              <input
-                type="date"
-                className="mledger-date"
-                value={date}
-                aria-label="记账日期"
-                onChange={(e) => setDate(e.target.value || today)}
-              />
+          </section>
+
+          <section className="action-sheet-section">
+            <div className="action-sheet-section-title">
+              {kind === "expense" ? "支出分类" : "收入分类"}
             </div>
-            <div className="mledger-row">
-              <span className="field-label">备注</span>
-              <input
-                className="mledger-note-input"
-                maxLength={60}
-                value={note}
-                placeholder="这笔钱花在了哪里"
-                aria-label="备注（可选）"
-                onChange={(e) => setNote(e.target.value)}
-              />
+            <div className="action-sheet-grid mledger-grid-4">
+              {activeCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`mledger-cat${cat.id === categoryId ? " active" : ""}`}
+                  style={{ "--chip-color": cat.color } as React.CSSProperties}
+                  onClick={() => setCategoryId(cat.id)}
+                >
+                  <AppIcon name={CATEGORY_ICONS[cat.icon] ?? "dots"} size={15} />
+                  <span>{cat.name}</span>
+                </button>
+              ))}
             </div>
-          </div>
+          </section>
+
+          <section className="action-sheet-section">
+            <div className="action-sheet-section-title">账户</div>
+            <div className="action-sheet-grid mledger-grid-3">
+              {accounts.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  className={a.id === accountId ? "active" : ""}
+                  onClick={() => setAccountId(a.id)}
+                >
+                  {a.name}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="action-sheet-section">
+            <div className="action-sheet-section-title">日期</div>
+            <div className="action-sheet-grid mledger-grid-3">
+              <button
+                type="button"
+                className={date === today ? "active" : ""}
+                onClick={() => pickDate(today)}
+              >
+                今天
+              </button>
+              <button
+                type="button"
+                className={date === yesterday ? "active" : ""}
+                onClick={() => pickDate(yesterday)}
+              >
+                昨天
+              </button>
+              <button
+                type="button"
+                className={`action-sheet-custom${isOtherDate ? " active" : ""}`}
+                aria-expanded={customDateOpen}
+                onClick={() => setCustomDateOpen((v) => !v)}
+              >
+                {isOtherDate ? monthDayLabel(date) : "自选日期…"}
+              </button>
+            </div>
+            {customDateOpen ? (
+              <label className="action-sheet-date">
+                <span>记账日期</span>
+                <DatePicker
+                  value={date}
+                  onChange={(next) => {
+                    if (!next) return;
+                    setDate(next);
+                    if (next === today || next === yesterday) setCustomDateOpen(false);
+                  }}
+                  ariaLabel="记账日期"
+                />
+              </label>
+            ) : null}
+          </section>
+
+          <section className="action-sheet-section">
+            <div className="action-sheet-section-title">备注</div>
+            <input
+              className="mledger-note-input"
+              maxLength={60}
+              value={note}
+              placeholder="这笔钱花在了哪里（可选）"
+              aria-label="备注（可选）"
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </section>
+
           {error ? (
             <p className="mledger-error" role="alert">{error}</p>
           ) : null}
-        </div>
-        <footer className="mledger-sheet-foot">
+
           {editing ? (
             <button
               type="button"
-              className="mledger-sheet-del"
+              className="action-sheet-danger"
               onClick={() => void remove()}
             >
-              <AppIcon name="trash" size={15} />
-              <span>删除</span>
+              <AppIcon name="trash" size={16} />
+              移入回收站
             </button>
           ) : null}
+        </div>
+        <footer className="mledger-sheet-foot">
           <button
             type="button"
             className="mledger-save"

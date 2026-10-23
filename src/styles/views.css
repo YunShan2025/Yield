@@ -2253,6 +2253,38 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label .sele
   letter-spacing: normal;
 }
 
+/* 控件同族：白底描边 → sunken 无边框（与「待办 ···」面板的灰底按钮同调），
+   focus 时浮回白底 + 描边，保留「正在填写」的反馈。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) input,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) textarea,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .select-btn,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .date-picker-trigger {
+  border: 1px solid transparent;
+  background: var(--surface-sunken);
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) input:focus-visible,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) textarea:focus-visible,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .select-btn:active,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .select-btn[aria-expanded="true"],
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .date-picker-trigger:active,
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .date-picker-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--surface-panel);
+}
+
+/* 字段节奏 16 → 12px，对齐 section 语言的密度 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) > * + * {
+  margin-top: 12px;
+}
+
+/* 页头标题对齐 action-sheet-title（body/650），去掉桌面弹窗的大标题感 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head h3 {
+  font-size: var(--font-size-body);
+  font-weight: 650;
+  letter-spacing: normal;
+}
+
 /* 弹窗改纵向 flex：动作条的 margin-top:auto 在内容不足一屏时把它推到
    底部（sticky 只在内容溢出时才钉住，短表单会悬在内容后），内容溢出时
    auto 归零、动作条随内容流并由 sticky 钉底——两种情况都贴屏底。
