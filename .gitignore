@@ -44,6 +44,9 @@ docs/ui-baseline/
 # 阶段 3 设计评审用的真实数据副本（由 scripts/design-review/prepare-db.mjs 生成）
 .tmp-design-review/
 
+# OpenChamber 浏览器走查截图（设计评审时生成，可随时重建，不入库）
+.openchamber/
+
 # 本地 dev server 日志（scripts 启动时生成，不入库）
 .dev.log
 .dev.log.err
