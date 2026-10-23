@@ -4,6 +4,7 @@
 > 范围：桌面端工作区中**尚未提交**的改动，基线为 v1.2.0（commit `c9e9cec`）
 > 需求来源：`docs/PRODUCT_REVIEW.md` 的 P0-1、P0-2、P1-1、P1-2，以及随后按验收反馈追加的 UI 收敛
 > 相关文档：`docs/CHANGES.md`（版本记录，已按主题记录这批改动）、`docs/ARCHITECTURE.md`（表结构现状）、`docs/local/android-sync-plan.md`（移动端计划，本地文档）
+> **2026-10-23 勘误**：`src/styles/` 已重构为 `tokens / primitives / components / views / mobile` 五个文件，本文提到的 `parts/global-*.css`、`polish-*` 均为历史位置（内容已并入对应新文件）。移动端覆写现在统一写 `src/styles/mobile.css`。各条改动记录本身按当时情况保留，不改写。
 
 ## 0. 这份文档怎么用
 
@@ -289,7 +290,7 @@
 ## 8. 移动端重点核对清单
 
 1. **移动壳分支**：`src/app/MainApp.tsx` 的 `if (isMobileShell())` 分支，确认命令面板已挂载、入口已安排、返回键语义已接入 `src/lib/mobileBack.ts`。
-2. **移动样式入口**：`src/styles/parts/global-14-mobile.css`（级联顺序 `tokens → global-00…14 → polish-*`，不可重排）。所有移动端覆写放在这里或更后面的 polish 文件。
+2. **移动样式入口**：`src/styles/mobile.css`（级联顺序 `tokens → primitives → components → views → mobile`，不可重排）。所有移动端覆写都写在这里。
 3. **移动组件**：`src/components/mobile/MobileNav.tsx`、`MobileMoreSheet.tsx`、`TaskActionSheet.tsx`，以及共用的 `src/components/today/BatchToolbar.tsx`。
 4. **触摸可达性**：完成/打卡按钮、命令面板结果行、习惯卡片操作按钮的触摸目标建议 ≥ 44px；无 hover 场景要有按下态或选中态。
 5. **软键盘**：命令面板搜索、记账备注、任务标题输入在 Android 上弹键盘后不应遮挡结果或提交按钮（`adjustResize` 与滚动容器）。

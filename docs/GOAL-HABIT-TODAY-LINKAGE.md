@@ -325,7 +325,7 @@
 | `src/types/index.ts` | `Task.repeat_rule` / `TaskDraft.repeat_rule` / `TaskUpdate.repeat_rule` 移除 |
 | `src/lib/db/client.ts:69` | 行映射去掉 `repeat_rule` |
 | `src/lib/db/tasks.ts` | 建/改任务的 INSERT/UPDATE 去掉该列；`spawnRepeatOccurrence`、`recycleGeneratedOccurrences` 整段删除 |
-| `src/lib/repeat.ts` | 任务侧重复逻辑删除（`nextOccurrence`、`nextUpcomingOccurrence`、`nextRepeatTaskDraft`、`isRecyclableGeneratedTask`、`weeklyRuleFromDate`、`monthlyRuleFromDate`…）；**保留** `parseRepeatRule` / `stringifyRepeatRule` / `describeRepeatRule` / `toggleWeekday` / `WEEKDAY_OPTIONS` 供习惯复用；**新增** `matchesRepeatRule` |
+| `src/lib/repeat.ts` | 任务侧重复逻辑删除（`nextOccurrence`、`nextUpcomingOccurrence`、`nextRepeatTaskDraft`、`isRecyclableGeneratedTask`、`weeklyRuleFromDate`、`monthlyRuleFromDate`…）；**保留** `parseRepeatRule` / `stringifyRepeatRule` / `toggleWeekday` / `WEEKDAY_OPTIONS` 供习惯复用（其中 `describeRepeatRule` 后于 2026-10 死代码清理中删除，习惯侧实际使用 `describeHabitSchedule`）；**新增** `matchesRepeatRule` |
 | `src/components/CreateTaskDialog.tsx` | 删除「重复」下拉与星期选择器 |
 | `src/components/DetailDrawer.tsx` | 删除「重复」的显示与编辑 |
 | `src/components/RepeatWeekdayPicker.tsx` | **迁到习惯表单**（可改名 `HabitSchedulePicker`） |

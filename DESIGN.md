@@ -32,8 +32,6 @@ colors:
   border: "rgba(34, 55, 91, 0.09)"
   border-strong: "rgba(34, 55, 91, 0.16)"
   focus-ring: "rgba(47, 111, 237, 0.28)"
-  shell-tint-outer: "rgba(18, 26, 40, 0.92)"
-  shell-tint-inner: "rgba(10, 14, 24, 0.9)"
 typography:
   display:
     fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
@@ -171,11 +169,11 @@ components:
 
 ### 语义色板
 
-前端 `src/styles/tokens.css` 是唯一真相源。**语义层**（四主题同构）与**材质层**（仅玻璃主题有值）必须拆开 —— 现状是两者混在 `--bg-panel` 一格里，这是阶段 2 的核心改造。
+前端 `src/styles/tokens.css` 是唯一真相源。**语义层**（四主题同构）与外壳材质表现分离：曾经的材质层配置（`--shell-*` 六项）因无任何 `var()` 消费方，已在 2026-10 死代码清理中移除，晨曦/璃幕的磨砂效果由各主题块与壳规则直接提供。
 
 ```
 语义层  --surface-*  --text-*  --border-*  --accent*  --success/--warning/--danger  --prio-*  --focus-ring
-材质层  --shell-opacity  --shell-blur  --shell-saturate  --shell-tint  --shell-border  --shell-shadow
+```
 
 **优先级色**（`--prio-1` … `--prio-4`，四主题同构）：任务优先级 1–4 的唯一颜色编码。
 P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`。
@@ -554,6 +552,8 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
         --motion-fast/base/slow  --motion-ease-out  --motion-ease-in
 布局层  --layout-rail-w  --layout-side-w  --layout-side-rail  --layout-timeline-w
 ```
+
+> **注 · 材质层已移除**：上表「材质层」六项在阶段 2 后随玻璃落地收敛为具体规则，因无 `var()` 消费方，2026-10 死代码清理时已从 tokens.css 删除。
 
 > **注 1 · 侧栏单列 `--surface-rail`**：本表原写 `--bg-rail` 合并进 `--surface-sunken`。但 `--bg-rail`
 > 同时承担两种角色 —— 侧栏底色（`polish-03-solid-shells.css`）与进度条凹槽（`g06` / `g08`）。

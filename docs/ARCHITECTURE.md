@@ -11,9 +11,9 @@
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ WebView 前端（React 19 + TypeScript）                      │
-│  src/components/*  界面组件（29 个 + today/ 子模块四件）     │
+│  src/components/*  界面组件（29 个 + today/ 子模块五件）     │
 │  src/app/MainApp.tsx  页面壳 + 全局副作用中枢                │
-│  src/store/app.ts   Zustand 全局状态（929 行，单 store）    │
+│  src/store/app.ts   Zustand 全局状态（741 行，单 store）    │
 │  src/lib/*          领域纯函数 + 业务规则（可单测）           │
 │  src/lib/db/*       SQLite 访问层（按域拆分）               │
 │  src/lib/sync/*     桌面 ↔ Android 数据同步引擎（可选）      │
@@ -42,7 +42,7 @@
 | 构建 | Vite | 6.4 | 开发服务器 + 前端产物（Android 产物 target chrome83） |
 | 测试 | Vitest + happy-dom | 3.2 / 20 | 29 文件 / 187 用例 |
 | 富文本 | react-markdown + remark-gfm | 10 | 备忘录 Markdown 渲染 |
-| 拖拽/虚拟列表 | @dnd-kit、@tanstack/react-virtual | 6/10/3 | 任务排序、长列表 |
+| 拖拽 | @dnd-kit | 6/10/3 | 任务排序 |
 | 农历 | lunar-typescript | 1.8 | 纪念日农历换算 |
 | 数据同步 | 自研（`src/lib/sync/`） | — | 飞书云盘 JSONL 日志 + HLC 合并 |
 | Rust 侧 | tauri 2（tray-icon/protocol-asset）、serde、jni（Android content:// 读取）、tauri-plugin-{sql,notification,autostart,dialog,fs,http,opener} | 2.x | 系统能力 |
@@ -52,17 +52,17 @@
 ```
 src/
   main.tsx            入口；BootError 启动失败兜底屏
-  app/MainApp.tsx     页面壳 + 全局副作用中枢（871 行）
-  store/app.ts        Zustand store：全部状态与 action（929 行）
-  components/         29 个界面组件；today/ 为今日页子组件四件；mobile/ 移动壳组件
-  lib/                领域纯函数（today/repeat/planning/growth/…）23 个模块
-  lib/db/             SQLite 访问层，按域拆 11 个模块 + client.ts
+  app/MainApp.tsx     页面壳 + 全局副作用中枢（790 行）
+  store/app.ts        Zustand store：全部状态与 action（741 行）
+  components/         29 个界面组件；today/ 为今日页子组件五件；mobile/ 移动壳组件（含 views/ 三个移动视图与 MobilePageTitle 共享页头标题）
+  lib/                领域纯函数（today/repeat/planning/growth/…）26 个模块
+  lib/db/             SQLite 访问层，按域拆 10 个模块 + client.ts
   lib/sync/           同步引擎：HLC 时钟、飞书云盘传输、日志合并、outbox
   types/index.ts      全部 TS 类型（单一真源）
-  styles/             index.css 级联入口 + parts/（22 个层叠文件）
+  styles/             index.css 级联入口 + tokens / primitives / components / views / mobile 五个层叠文件
 scripts/              release-check.mjs、图标/安装包资产生成脚本
 src-tauri/
-  src/lib.rs          应用入口、migrations、commands、托盘（1493 行）
+  src/lib.rs          应用入口、migrations、commands、托盘（1727 行）
   src/os_reminders.rs OS 级提醒调度（271 行）
   capabilities/permissions/  最小权限白名单
   gen/android/        Android 工程（提交入库，含签名与权限定制）
@@ -73,8 +73,8 @@ src-tauri/
 - **状态**：单 store 模式。所有视图从 `useAppStore` 取状态、调 action；action 内部调用 `lib/` 纯函数与 `lib/db/` 完成 IO。没有跨 store、没有 Context 分发。
 - **副作用中枢**：`MainApp.tsx` 集中持有全局 effect——专注计时（1s `tickFocus`）、系统提醒同步（串行队列 `enqueueReminderPass`，全量/补发双定时器，补发周期 6h）、托盘事件（`tray:today`、`main:hidden-to-tray`）、自动备份（6h 周期 + `autoBackupRunningRef` 并发守卫）、数据同步触发（启动/回前台/手动）、toast 自毁计时。
 - **数据库访问**：`src/lib/db/client.ts` 统一连接；写操作经 `withDatabaseWrite` 用 `navigator.locks`（锁名 `youqiu:database-write`）串行化，嵌套调用在同一队列回合执行避免死锁。连接后设置 `PRAGMA foreign_keys=ON / journal_mode=WAL / synchronous=NORMAL / busy_timeout=5000`。
-- **移动壳**：同一组件树按 `lib/platform.ts` 的 shell 探测分支渲染——Android 为底部导航 + 竖屏布局（`data-shell="mobile"`），桌面为侧栏 + 命令面板 + 托盘；移动端专属交互（长按操作面板、拖拽手柄）在 `components/mobile/`。
-- **样式**：`src/styles/index.css` 为级联入口，顺序刻意勿重排：`tokens` → `global-00…14`（按页面/功能域分文件）→ `polish-*`（后期覆盖层）。同特异性按加载顺序取胜，全局兜底必要时以 `!important` 对抗容器层 shorthand。
+- **移动壳**：同一组件树按 `lib/platform.ts` 的 shell 探测分支渲染——Android 为底部导航 + 竖屏布局（`data-shell="mobile"`），桌面为侧栏 + 命令面板 + 托盘；移动端专属交互（长按动作面板、侧滑关闭）在 `components/mobile/`。
+- **样式**：`src/styles/index.css` 为级联入口，顺序刻意勿重排：`tokens` → `primitives` → `components` → `views` → `mobile`。同特异性按加载顺序取胜；全局已清零 `!important`（`scripts/ui-css-audit.mjs` 把关），移动样式只进 `mobile.css`。
 - **类型**：`src/types/index.ts` 是唯一类型真源，前后端数据经 `lib/db/*` 的 `mapXxx` 行映射函数对齐（DB 蛇形命名 → TS 驼峰）。
 
 ## 6. 后端（Rust）
@@ -146,8 +146,8 @@ src-tauri/
 
 ## 12. 审查附注（复杂度热点，后续演进参考）
 
-- `src/store/app.ts`（929 行）与 `src/lib/db/tasks.ts`（801 行）是最大的两个模块，继续加功能时优先考虑按域拆分而非追加；
-- `src-tauri/src/lib.rs`（1493 行）混合了入口、迁移、11 个 command、Android content:// 读取与托盘，若命令继续增多应拆出 `commands/` 模块；
-- 样式层 22 个文件的级联顺序是隐性契约，新增覆盖一律走 `polish-*` 追加层，不重排 `global-*`；
+- `src/components/MainWorkspace.tsx`（1051 行）与 `src/components/GrowthView.tsx`（809 行）是最大的两个模块，`src/app/MainApp.tsx`（790 行）、`src/store/app.ts`（741 行）次之，继续加功能时优先考虑按域拆分而非追加；
+- `src-tauri/src/lib.rs`（1727 行）混合了入口、迁移、11 个 command、Android content:// 读取与托盘，若命令继续增多应拆出 `commands/` 模块；
+- 样式层五个文件（`tokens → primitives → components → views → mobile`）的级联顺序是隐性契约，不可重排；移动端新增覆盖一律追加进 `mobile.css`，且不得引入 `!important`（`scripts/ui-css-audit.mjs` 把关）；
 - 备份/恢复与同步合并是数据安全关键路径，改动必须同时更新 `migration.test.ts`、`backup.test.ts` 与 `lib/sync/` 的契约断言；
 - 同步数据面变更纪律：新增同步表/列时必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。
