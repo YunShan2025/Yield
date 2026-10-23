@@ -36,11 +36,6 @@ function monthDayLabel(date: string) {
   return `${Number(month)}月${Number(day)}日`;
 }
 
-function timeLabel(iso: string) {
-  const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-
 /** 大数字专用：只留数值（带千分位、两位小数），货币符号由外层衬线 ¥ 承担。 */
 function moneyNum(cents: number) {
   return new Intl.NumberFormat("zh-CN", {
@@ -334,7 +329,7 @@ export function LedgerMobileView() {
                             <b>{tx.category_name}</b>
                             <i>
                               {tx.note ? `${tx.note} · ` : ""}
-                              {tx.account_name} · {timeLabel(tx.created_at)}
+                              {tx.account_name}
                             </i>
                           </span>
                           <span

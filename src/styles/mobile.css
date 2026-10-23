@@ -1550,9 +1550,10 @@ html[data-shell="mobile"] .mledger-day-head {
 }
 
 html[data-shell="mobile"] .mledger-day-head span {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 /* 今天所在的一组用强调色小药丸标记，日期行一眼定位 */
@@ -1565,9 +1566,9 @@ html[data-shell="mobile"] .mledger-day-head span.is-today {
 }
 
 html[data-shell="mobile"] .mledger-day-head b {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--text-heading);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
