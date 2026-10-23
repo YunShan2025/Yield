@@ -29,7 +29,7 @@ export async function captureSettingWrite(db: SqlClient, key: string): Promise<v
   );
 }
 
-export interface DrainResult {
+interface DrainResult {
   /** 序列化好的日志行（不含 header），调用方负责追加进本地日志文件。 */
   lines: string[];
   drained: number;
@@ -423,7 +423,7 @@ async function adoptTagUpdate(
 }
 
 /** 列白名单过滤：远端日志里的未知键丢弃，id 一律以 row_id 为准。 */
-export function projectRowData(
+function projectRowData(
   table: SyncTableName,
   rowId: string,
   data: Record<string, unknown>,

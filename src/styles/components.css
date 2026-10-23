@@ -417,14 +417,6 @@ select {
   color: var(--text-on-accent);
 }
 
-.chip {
-  padding: 3px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: var(--font-size-caption);
-}
-
 .task-scroll {
   flex: 1;
   overflow: auto;
@@ -1783,32 +1775,6 @@ select {
   color: var(--accent);
 }
 
-.subtask-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.subtask-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.drop-zone {
-  border: 1.5px dashed var(--border-strong);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  background: var(--surface-base);
-}
-
-.drop-zone.active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-
 /* ── 原 global-06-growth.css ────────────────────────────────────────── */
 /* Growth goals v1.4 */
 .growth-page {
@@ -2033,7 +1999,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* 习惯页:与「今日」同构的页头 + 统一 28px 内容边距。 */
 .habits-view { overflow: auto; }
 .habits-body { display: flex; flex-direction: column; gap: 12px; padding: 0 28px 28px; }
-.habits-section { display: grid; gap: 12px; }
 .habits-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2500,7 +2465,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
    默认的 stretch 会把同行控件一起拉伸成不等高，看起来整行错位。 */
 .create-task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; align-items: start; }
 .create-task-hint { margin: -4px 0 0; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1.45; }
-.create-task-weekdays { display: grid; gap: 8px; }
 .repeat-weekday-picker { display: flex; flex-wrap: wrap; gap: 6px; }
 .repeat-weekday-chip {
   width: 34px;
@@ -2568,14 +2532,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .project-edit-actions .btn-ghost {
   width: auto;
   min-width: 108px;
-}
-
-.modal {
-  width: min(480px, 92vw);
-  background: var(--surface-panel);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-2);
 }
 
 .empty-state {
@@ -3743,44 +3699,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   color: var(--text-secondary);
   font-size: var(--font-size-label);
 }
-
-.anni-upcoming {
-  margin: 18px 0;
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-panel);
-}
-
-.anni-upcoming h3 {
-  margin: 0 0 10px;
-  font-size: var(--font-size-body);
-  color: var(--text-muted);
-}
-
-.anni-upcoming-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.anni-chip {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface-panel));
-  min-width: 140px;
-  color: var(--text-primary);
-  text-align: left;
-  cursor: pointer;
-}
-.anni-chip:hover { border-color: color-mix(in srgb, var(--moment-warm) 35%, var(--border)); transform: translateY(-1px); }
-
-.anni-chip strong { font-size: var(--font-size-body); }
-.anni-chip span { font-size: var(--font-size-caption); color: var(--text-muted); }
 
 .anni-list {
   display: flex;
@@ -5482,19 +5400,6 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-size: var(--font-size-caption);
 }
 
-.weekly-stat-pct {
-  flex: none;
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 1100px) {
-  .weekly-goal-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* 当周日历列数跟随容器宽度:≥780 七列单行,≥480 两列,更窄单列 */
 @container (max-width: 779px) {
   .weekly-day-grid {
@@ -5509,9 +5414,6 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 @media (max-width: 720px) {
-  .weekly-goal-grid {
-    grid-template-columns: 1fr;
-  }
   .weekly-stat-track {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

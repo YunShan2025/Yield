@@ -1,7 +1,7 @@
 import { privacySafeNotification } from "@/lib/privacy";
 import type { Task } from "@/types";
 
-export type NativeReminderPlan = {
+type NativeReminderPlan = {
   reminderId: string;
   taskId: string;
   title: string;
@@ -43,9 +43,9 @@ export function buildNativeReminderPlans(
 }
 
 export const OS_REMINDER_LIMIT = 48;
-export const OS_REMINDER_MAX_AHEAD_MS = 90 * 24 * 60 * 60 * 1000;
+const OS_REMINDER_MAX_AHEAD_MS = 90 * 24 * 60 * 60 * 1000;
 
-export type OsReminderWindow = {
+type OsReminderWindow = {
   windowed: NativeReminderPlan[];
   overflow: NativeReminderPlan[];
   truncated: boolean;

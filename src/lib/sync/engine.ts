@@ -19,7 +19,7 @@ import { SYNC_SCHEMA_VERSION } from "./tables";
 import type { SyncTransport } from "./transport";
 
 /** 本设备日志文件的持久化（plugin-fs 实现挂应用数据目录；测试用内存）。 */
-export interface SyncFileStore {
+interface SyncFileStore {
   readLocal(): Promise<string | null>;
   /** 追加若干数据行（不含 header；实现保证换行与原子性）。 */
   appendLocal(lines: string[]): Promise<void>;
@@ -27,7 +27,7 @@ export interface SyncFileStore {
   rewriteLocal(text: string): Promise<void>;
 }
 
-export interface SyncPersistHooks {
+interface SyncPersistHooks {
   persistClock(state: { p: number; l: number }): Promise<void>;
   persistRemoteState(file: string, state: LogReadState): Promise<void>;
   persistLastSync(summary: SyncSummary): Promise<void>;
@@ -44,7 +44,7 @@ export interface SyncSummary {
 
 export type SyncTrigger = "startup" | "resume" | "manual" | "debounce" | "exit";
 
-export interface SyncDeps {
+interface SyncDeps {
   db: SqlClient;
   clock: HlcClock;
   /** 本设备日志文件名，如 "desktop.jsonl"。 */

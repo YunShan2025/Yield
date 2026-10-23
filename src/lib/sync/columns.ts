@@ -7,7 +7,7 @@
 
 import type { SyncTableName } from "./tables";
 
-export interface TableSpec {
+interface TableSpec {
   /** 主键列；复合主键用数组（如 task_tags）。 */
   idColumns: string[];
   /** 主键是否 INTEGER（ledger 系列）；缺省为 TEXT（uuid）。 */

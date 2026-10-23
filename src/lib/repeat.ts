@@ -42,23 +42,6 @@ export function toggleWeekday(weekdays: number[], day: number): number[] {
   });
 }
 
-export function describeRepeatRule(rule: RepeatRule | null): string {
-  if (!rule) return "不重复";
-  if (rule.frequency === "daily") return "每天";
-  if (rule.frequency === "weekly") {
-    if (rule.weekdays?.length) {
-      const labels = WEEKDAY_OPTIONS.filter((d) =>
-        rule.weekdays!.includes(d.value),
-      ).map((d) => d.label);
-      return labels.length ? `每周${labels.join("")}` : "每周";
-    }
-    return "每周";
-  }
-  if (rule.frequency === "monthly") return "每月";
-  if (rule.frequency === "custom") return "每月最后周五";
-  return "不重复";
-}
-
 /** 习惯的排期说明：空规则 = 浮动次数模式（每周 N 次，不指定日子）。 */
 export function describeHabitSchedule(rule: RepeatRule | null): string {
   if (!rule) return "每周若干次";

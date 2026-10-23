@@ -1,5 +1,5 @@
 /** Runtime platform helper (Tauri desktop). */
-export type DesktopPlatform = "macos" | "windows" | "linux" | "unknown";
+type DesktopPlatform = "macos" | "windows" | "linux" | "unknown";
 
 export function detectDesktopPlatform(): DesktopPlatform {
   const ua = navigator.userAgent.toLowerCase();

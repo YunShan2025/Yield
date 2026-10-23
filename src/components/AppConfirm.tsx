@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { create } from "zustand";
 
-export type ConfirmOptions = {
+type ConfirmOptions = {
   title: string;
   description?: string;
   confirmText?: string;
@@ -10,7 +10,7 @@ export type ConfirmOptions = {
   danger?: boolean;
 };
 
-export type PromptOptions = {
+type PromptOptions = {
   title: string;
   description?: string;
   /** 输入框预填值 */

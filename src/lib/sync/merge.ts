@@ -24,7 +24,7 @@ export interface MergeBackend {
   setState(table: SyncTableName, rowId: string, hlc: Hlc): Promise<void>;
 }
 
-export interface MergeOutcome {
+interface MergeOutcome {
   applied: number;
   skipped: number;
   failed: number;

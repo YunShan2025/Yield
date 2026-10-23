@@ -1,4 +1,4 @@
-export type NotificationCopy = {
+type NotificationCopy = {
   title: string;
   body: string;
 };

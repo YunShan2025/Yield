@@ -1,7 +1,7 @@
 import type { Task } from "@/types";
 import { parseTimeToMinutes } from "@/lib/dates";
 
-export type TimelineTaskInput = Pick<
+type TimelineTaskInput = Pick<
   Task,
   | "id"
   | "title"
@@ -11,7 +11,7 @@ export type TimelineTaskInput = Pick<
   | "end_time"
 >;
 
-export type TimelineTimedBlock = {
+type TimelineTimedBlock = {
   task: TimelineTaskInput;
   /** Minutes from midnight, clamped into the same day. */
   start: number;
@@ -19,7 +19,7 @@ export type TimelineTimedBlock = {
   lane: number;
 };
 
-export type TimelineLayout = {
+type TimelineLayout = {
   /** First hour label shown on the axis. */
   startHour: number;
   /** Exclusive end hour; the axis pixel range ends at endHour * 60. */
@@ -31,9 +31,9 @@ export type TimelineLayout = {
 };
 
 /** 事件块最小渲染宽度（px）与块间最小间隙（px）。 */
-export const TIMELINE_MIN_EVENT_W = 168;
+const TIMELINE_MIN_EVENT_W = 168;
 const TIMELINE_EVENT_GAP = 8;
-export const BASE_PX_PER_MIN = 96 / 60; // 每小时 96px
+const BASE_PX_PER_MIN = 96 / 60; // 每小时 96px
 /** 拥挤时最多放大到每小时 240px，再挤就靠纵向分行兜底。 */
 const MAX_PX_PER_MIN = 240 / 60;
 

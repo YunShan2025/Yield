@@ -4,7 +4,7 @@ import { isActiveTask } from "@/lib/tasks";
 
 const ORDER_STORAGE_KEY = "minimal.todayOrder";
 
-export type TodayOrderRecord = { date: string; ids: string[] };
+type TodayOrderRecord = { date: string; ids: string[] };
 
 /**
  * Manual agenda order is per-day UI state (localStorage), not sort_order:

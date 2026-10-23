@@ -45,7 +45,7 @@ function minutesToTime(minutes: number): string {
   ).padStart(2, "0")}`;
 }
 
-export type AvailableTimeSlot = {
+type AvailableTimeSlot = {
   start: string;
   end: string;
 };

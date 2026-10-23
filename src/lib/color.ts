@@ -6,7 +6,7 @@
  */
 
 /** 解析 #rgb / #rrggbb / #rrggbbaa；认不出来时返回 null。 */
-export function parseHex(hex: string): [number, number, number] | null {
+function parseHex(hex: string): [number, number, number] | null {
   const raw = hex.trim().replace(/^#/, "");
   if (raw.length === 3) {
     const [r, g, b] = raw.split("");
@@ -53,10 +53,3 @@ export function mixHex(from: string, to: string, amount: number): string {
   );
 }
 
-/** #rrggbb + 透明度 → rgba()。解析失败时返回半透明黑，视觉上不崩。 */
-export function withAlpha(hex: string, alpha: number): string {
-  const parsed = parseHex(hex);
-  if (!parsed) return `rgba(0, 0, 0, ${alpha})`;
-  const a = Math.max(0, Math.min(1, alpha));
-  return `rgba(${parsed[0]}, ${parsed[1]}, ${parsed[2]}, ${a})`;
-}

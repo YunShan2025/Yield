@@ -1,7 +1,7 @@
 import { isTaskInWeek } from "@/lib/weeklyChecklist";
 import type { Goal, Project, Tag, Task } from "@/types";
 
-export type WeekReviewMetrics = {
+type WeekReviewMetrics = {
   /** 本周归属根任务总数（含已取消之外的全部状态）。 */
   total: number;
   /** 本周归属根任务中已完成的数量。 */
@@ -13,7 +13,7 @@ export type WeekReviewMetrics = {
 
 export type ReviewDimension = "goal" | "project" | "tag";
 
-export type ReviewGroup = {
+type ReviewGroup = {
   key: string;
   label: string;
   color: string | null;

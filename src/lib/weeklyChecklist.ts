@@ -4,7 +4,7 @@ import type { Tag, Task } from "@/types";
 
 export type WeeklyCategoryId = "work" | "life" | "health" | "learning" | "other";
 
-export type WeeklyCategory = {
+type WeeklyCategory = {
   id: WeeklyCategoryId;
   label: string;
   color: string;
@@ -47,7 +47,7 @@ export function shiftWeek(anchor: string, deltaWeeks: number): string {
   return addDays(localWeekStartKey(new Date(`${anchor}T12:00:00`)), deltaWeeks * 7);
 }
 
-export function taskDateInWeek(task: Task): string | null {
+function taskDateInWeek(task: Task): string | null {
   if (task.due_date) return task.due_date;
   if (task.completed_at) {
     const stamp = Date.parse(task.completed_at);
@@ -103,14 +103,14 @@ export function categoryColor(
   return WEEKLY_CATEGORIES.find((item) => item.id === categoryId)?.color ?? fallback;
 }
 
-export type DayBucket = {
+type DayBucket = {
   date: string;
   tasks: Task[];
   done: number;
   total: number;
 };
 
-export type CategoryBucket = {
+type CategoryBucket = {
   category: WeeklyCategory;
   tasks: Task[];
   done: number;
@@ -118,7 +118,7 @@ export type CategoryBucket = {
   progress: number;
 };
 
-export type WeekStats = {
+type WeekStats = {
   total: number;
   done: number;
   remaining: number;

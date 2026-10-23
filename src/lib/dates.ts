@@ -115,9 +115,9 @@ export function formatDueDate(date: string | null): string {
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
 
-export type DueDateTone = "overdue" | "today" | "soon" | "scheduled" | "none";
+type DueDateTone = "overdue" | "today" | "soon" | "scheduled" | "none";
 
-export interface DueDateBadge {
+interface DueDateBadge {
   label: string;
   tone: DueDateTone;
   /** 完整日期，供 title/aria-label 使用。 */

@@ -38,7 +38,7 @@ const KEY_REMOTE_STATES = "sync_remote_states";
 const KEY_LAST_SUMMARY = "sync_last_summary";
 const KEY_REPAIRS_DONE = "sync_repairs_done";
 
-export type SyncPhase = "idle" | "running" | "ok" | "error";
+type SyncPhase = "idle" | "running" | "ok" | "error";
 
 interface SyncStore {
   phase: SyncPhase;
@@ -114,7 +114,7 @@ function emptySummaryWith(error: string): SyncSummary {
   return { ok: false, pushed: 0, pulled: 0, errors: [error], finishedAt: nowIso() };
 }
 
-export class SyncService {
+class SyncService {
   private clock: HlcClock | null = null;
   private transport: SyncTransport | null = null;
   private configSignature = "";

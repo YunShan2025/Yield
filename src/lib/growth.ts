@@ -67,7 +67,7 @@ export function calculateGoalProgress(goal: Goal): number {
   return Math.max(0, Math.min(100, (moved / span) * 100));
 }
 
-export interface GoalDeadlineInfo {
+interface GoalDeadlineInfo {
   /** 距目标日期的自然日数；0 表示今天到期。 */
   daysLeft: number;
   /** 按剩余时间与目标跨度的比例判断进度是否落后。 */

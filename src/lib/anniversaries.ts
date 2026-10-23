@@ -139,7 +139,7 @@ export function lunarToSolarYmd(
   return null;
 }
 
-export type AnniversaryLike = Pick<Anniversary, "event_date" | "recur_yearly"> &
+type AnniversaryLike = Pick<Anniversary, "event_date" | "recur_yearly"> &
   Partial<Pick<Anniversary, "calendar" | "lunar_month" | "lunar_day" | "lunar_leap">>;
 
 function isLunar(item: AnniversaryLike): boolean {
@@ -199,7 +199,7 @@ export function nextAnniversaryDate(
   return null;
 }
 
-export function daysBetween(from: string, to: string): number {
+function daysBetween(from: string, to: string): number {
   const a = new Date(`${from}T12:00:00`).getTime();
   const b = new Date(`${to}T12:00:00`).getTime();
   return Math.round((b - a) / 86_400_000);

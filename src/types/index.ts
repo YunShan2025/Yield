@@ -31,7 +31,7 @@ export type NavId =
   | "ledger";
 
 /** 命令面板跳转到页内实体时携带的聚焦目标。 */
-export type FocusKind = "memo" | "goal" | "project" | "anniversary" | "ledger";
+type FocusKind = "memo" | "goal" | "project" | "anniversary" | "ledger";
 
 export interface FocusRequest {
   kind: FocusKind;
@@ -40,7 +40,7 @@ export interface FocusRequest {
   date?: string;
 }
 
-export type RepeatFrequency = "daily" | "weekly" | "monthly" | "custom";
+type RepeatFrequency = "daily" | "weekly" | "monthly" | "custom";
 
 export interface RepeatRule {
   frequency: RepeatFrequency;
@@ -122,7 +122,7 @@ export interface Memo {
   updated_at: string;
 }
 
-export type TimerKind = "interval" | "task";
+type TimerKind = "interval" | "task";
 
 export interface Timer {
   id: string;

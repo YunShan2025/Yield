@@ -28,7 +28,7 @@ export function computeNavCounts(
 
 export type InboxGroupId = "overdue" | "scheduled" | "unscheduled";
 
-export interface InboxTaskGroup {
+interface InboxTaskGroup {
   id: InboxGroupId;
   tasks: Task[];
 }
@@ -135,7 +135,7 @@ export function filterTasksByView(
   return sortTasks(list);
 }
 
-export function sortTasks(tasks: Task[]): Task[] {
+function sortTasks(tasks: Task[]): Task[] {
   const pending = tasks
     .filter(isActiveTask)
     .sort((a, b) => a.sort_order - b.sort_order);

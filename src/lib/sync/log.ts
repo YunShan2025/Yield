@@ -9,7 +9,7 @@
 import { parseHlc, type Hlc } from "./hlc";
 import { isSyncTable, SYNC_SCHEMA_VERSION, type SyncTableName } from "./tables";
 
-export type SyncOp = "upsert" | "delete";
+type SyncOp = "upsert" | "delete";
 
 export interface SyncLogEntry {
   hlc: Hlc;
@@ -22,9 +22,9 @@ export interface SyncLogEntry {
   data?: Record<string, unknown>;
 }
 
-export const LOG_FORMAT_VERSION = 1;
+const LOG_FORMAT_VERSION = 1;
 
-export interface LogHeader {
+interface LogHeader {
   kind: "header";
   format_v: number;
   device: string;
@@ -134,7 +134,7 @@ export type LogReadState = {
   header: string | null;
 };
 
-export type LogIncrement = {
+type LogIncrement = {
   entries: SyncLogEntry[];
   next: LogReadState;
   /** 因 header 变化或行数回退而从头重读。 */

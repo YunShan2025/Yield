@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { mixHex } from "@/lib/color";
 import type { Project, Tag, Task } from "@/types";
 
-export type MobileTaskPill = {
+type MobileTaskPill = {
   key: string;
   name: string;
   color: string;

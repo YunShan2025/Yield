@@ -138,14 +138,6 @@ select:focus {
   background: var(--surface-selected);
 }
 
-.memo-list-title {
-  font-weight: 600;
-  font-size: var(--font-size-label);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* 列表卡片：标题一行、时间一行，正文点击后才在抽屉里展示 */
 .memo-list-title-copy {
   min-width: 0;
@@ -734,12 +726,6 @@ button:active:not(:disabled) {
 
 .detail-body {
   padding: 15px 20px 24px;
-}
-
-.detail-view-hero {
-  align-items: flex-start;
-  padding: 8px 0 18px;
-  border-bottom: 1px solid var(--border);
 }
 
 .detail-view-title {
