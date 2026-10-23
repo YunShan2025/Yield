@@ -2359,11 +2359,12 @@ html[data-shell="mobile"] .completed-time-modal .modal-head {
 }
 
 /* 「新建任务」页头/节奏修正（必须写在上面的共享钉顶规则之后才生效）：
-   页头不再负 margin 压在握把上，而是贴握把正下方（-16 = 抵到面板外缘
-   再让出握把占的 4px），去掉桌面弹窗的分隔线，底色跟面板一致；
+   页头静止时贴握把正下方（不再负 margin 压盖），底色跟面板一致、去分隔线；
+   钉住时仍走共享规则的 top:-20（与面板顶齐平）——页头若留任何负 top 余量，
+   滚动内容都会从面板顶缘与页头之间的缝里露出来（实测 -16 露 4px）。
+   握把 ::before 也是 top:-20 + z-index:3，钉住时浮在页头背景上，同「记一笔」。
    字段节奏 16 → 12px，对齐 section 语言的密度。 */
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head {
-  top: -16px;
   margin: 0 -20px;
   background: var(--mobile-overlay-surface);
   border-bottom: 0;
