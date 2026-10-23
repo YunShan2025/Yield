@@ -2151,3 +2151,16 @@ html[data-shell="mobile"] .detail-body:not(.detail-view) .date-picker-trigger[ar
   border-color: var(--accent);
   background: var(--surface-panel);
 }
+
+/* 字段顺序与「新建任务」弹层一致：标题、说明 → 优先级/项目/标签/目标 →
+   日期、开始/截止时间殿后（新建弹层的「时间安排」就在面板底部）。
+   用 flex order 只改移动壳的视觉顺序，DOM 与桌面版不动——第 1/2/3 子元素
+   （标题/说明/日期）在 DetailDrawer.tsx 中固定，time-range 紧随日期。 */
+html[data-shell="mobile"] .detail-body:not(.detail-view) > .detail-form-row {
+  order: 2;
+}
+
+html[data-shell="mobile"] .detail-body:not(.detail-view) > div:nth-child(3),
+html[data-shell="mobile"] .detail-body:not(.detail-view) > .time-range {
+  order: 3;
+}
