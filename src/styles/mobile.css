@@ -1634,6 +1634,9 @@ html[data-shell="mobile"] .mledger-tx-main b {
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--text-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 html[data-shell="mobile"] .mledger-tx-main i {

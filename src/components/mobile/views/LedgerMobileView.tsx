@@ -315,6 +315,8 @@ export function LedgerMobileView() {
                         >
                           <span
                             className="mledger-tx-icon"
+                            role="img"
+                            aria-label={tx.category_name}
                             style={{
                               background: `color-mix(in srgb, ${tx.category_color} 18%, var(--surface-panel))`,
                               color: `color-mix(in srgb, ${tx.category_color} 55%, var(--text-primary))`,
@@ -326,11 +328,9 @@ export function LedgerMobileView() {
                             />
                           </span>
                           <span className="mledger-tx-main">
-                            <b>{tx.category_name}</b>
-                            <i>
-                              {tx.note ? `${tx.note} · ` : ""}
-                              {tx.account_name}
-                            </i>
+                            {/* 备注即事件名；没写备注的回落类别名，标题不留空 */}
+                            <b>{tx.note || tx.category_name}</b>
+                            <i>{tx.account_name}</i>
                           </span>
                           <span
                             className={`mledger-tx-amt ${tx.type === "expense" ? "out" : "in"}`}
