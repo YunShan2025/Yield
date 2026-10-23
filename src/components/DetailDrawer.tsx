@@ -11,6 +11,7 @@ import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import { fetchGoals } from "@/lib/db";
 import {
   ensureEndAfterStart,
+  formatDueDateBadge,
   formatTimeRange,
   nowTimeString,
 } from "@/lib/dates";
@@ -231,6 +232,11 @@ export function DetailDrawer() {
     ? projects.find((item) => item.id === task.project_id) ?? null
     : null;
   const timeText = formatTimeRange(task.due_time, task.end_time);
+  // 截止相对徽标复用待办箱文案；已完成不标逾期。「已排期」类日期文字已含日期，
+  // 徽标省略——label 仅由移动壳经 data-badge 注入，桌面版外观不变。
+  const dueBadge =
+    task.status === "completed" ? null : formatDueDateBadge(task.due_date);
+  const dueFlag = dueBadge && dueBadge.tone !== "scheduled" ? dueBadge : null;
   const goal = task.goal_id
     ? goals.find((item) => item.id === task.goal_id) ?? null
     : null;
@@ -285,7 +291,13 @@ export function DetailDrawer() {
         <div className="detail-body detail-view">
           {/* 打开抽屉最常看的是「什么时候」，先给日期与时间。 */}
           <p className="detail-lead">
-            <span>{task.due_date ?? "未设日期"}</span>
+            <span
+              className={`detail-lead-date${dueFlag ? ` is-${dueFlag.tone}` : ""}`}
+              data-badge={dueFlag?.label}
+              title={dueFlag?.title}
+            >
+              {task.due_date ?? "未设日期"}
+            </span>
             {timeText ? <span className="detail-lead-time">{timeText}</span> : null}
           </p>
 
