@@ -397,9 +397,6 @@
   --prio-2: #d9693f;
   --prio-3: #5b7fb0;
   --prio-4: #93a0b3;
-  /* 移动端主视觉卡的渐变端点 */
-  --mt-hero-a: #2f5fd8;
-  --mt-hero-b: #5d94f7;
   --surface-panel: #ffffff;
   --surface-raised: #ffffff;
   --surface-sunken: #f0f4fa;
@@ -514,8 +511,6 @@
   --prio-2: #c85c33;
   --prio-3: #4a6c9c;
   --prio-4: #7d8a9e;
-  --mt-hero-a: #3f6fd0;
-  --mt-hero-b: #7aa8f2;
   --surface-panel: rgba(255, 255, 255, 0.78);
   --surface-raised: rgba(255, 255, 255, 0.86);
   --surface-sunken: rgba(244, 248, 255, 0.78);

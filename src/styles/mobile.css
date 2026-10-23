@@ -95,7 +95,7 @@ html[data-shell="mobile"] .mtoday-scroll {
   padding: 9px 18px 76px;
 }
 
-/* ---------- 主视觉卡 ---------- */
+/* ---------- 淡蓝顶卡（今日主卡与待办箱摘要卡同族，accent-faint 底） ---------- */
 
 html[data-shell="mobile"] .mtoday-hero {
   position: relative;
@@ -103,11 +103,8 @@ html[data-shell="mobile"] .mtoday-hero {
   overflow: hidden;
   padding: 19px 18px 20px;
   border-radius: 16px;
-  background:
-    radial-gradient(120% 105% at 4% -16%, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 54%),
-    radial-gradient(86% 66% at 98% 118%, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0) 60%),
-    linear-gradient(140deg, var(--mt-hero-a), var(--mt-hero-b));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 16px 30px -20px rgba(47, 111, 237, 0.62);
+  background: var(--accent-faint);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
 html[data-shell="mobile"] .mtoday-hero-num {
@@ -122,7 +119,7 @@ html[data-shell="mobile"] .mtoday-hero-num b {
   font-weight: 400;
   line-height: 0.86;
   letter-spacing: -0.005em;
-  color: #fff;
+  color: var(--accent-strong);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -131,7 +128,7 @@ html[data-shell="mobile"] .mtoday-hero-num u {
   font-family: var(--font-num-display);
   font-size: 1.563rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.58);
+  color: var(--text-muted);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -139,7 +136,7 @@ html[data-shell="mobile"] .mtoday-hero-num em {
   font-style: normal;
   font-family: var(--font-body);
   font-size: 0.781rem;
-  color: rgba(255, 255, 255, 0.76);
+  color: var(--text-secondary);
   margin-left: 3px;
 }
 
@@ -160,11 +157,11 @@ html[data-shell="mobile"] .mtoday-segs i {
   min-width: 3px;
   height: 8px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.28);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 html[data-shell="mobile"] .mtoday-segs i.on {
-  background: #fff;
+  background: var(--accent);
 }
 
 html[data-shell="mobile"] .mtoday-hero-sub {
@@ -172,7 +169,7 @@ html[data-shell="mobile"] .mtoday-hero-sub {
   margin-top: 8px;
   font-size: 0.719rem;
   letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.70);
+  color: var(--text-secondary);
 }
 
 html[data-shell="mobile"] .mtoday-wheat {
@@ -181,8 +178,10 @@ html[data-shell="mobile"] .mtoday-wheat {
   bottom: -52px;
   width: 150px;
   height: 150px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 17.4V6.9'/%3E%3Cpath d='M10 15.3c-2.3.2-3.6-.8-4-2.9 2.3-.1 3.6.9 4 2.9Z' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='7.6' cy='12.1' rx='2.35' ry='1.2' transform='rotate(53 7.6 12.1)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='12.4' cy='12.1' rx='2.35' ry='1.2' transform='rotate(-53 12.4 12.1)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='7.9' cy='8.9' rx='2.1' ry='1.1' transform='rotate(53 7.9 8.9)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='12.1' cy='8.9' rx='2.1' ry='1.1' transform='rotate(-53 12.1 8.9)' fill='%23ffffff' stroke='none'/%3E%3Cellipse cx='10' cy='5.2' rx='1.15' ry='1.9' fill='%23ffffff' stroke='none'/%3E%3C/svg%3E") no-repeat center / contain;
-  opacity: 0.10;
+  background: var(--accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 17.4V6.9'/%3E%3Cpath d='M10 15.3c-2.3.2-3.6-.8-4-2.9 2.3-.1 3.6.9 4 2.9Z' fill='%23000000' stroke='none'/%3E%3Cellipse cx='7.6' cy='12.1' rx='2.35' ry='1.2' transform='rotate(53 7.6 12.1)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='12.4' cy='12.1' rx='2.35' ry='1.2' transform='rotate(-53 12.4 12.1)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='7.9' cy='8.9' rx='2.1' ry='1.1' transform='rotate(53 7.9 8.9)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='12.1' cy='8.9' rx='2.1' ry='1.1' transform='rotate(-53 12.1 8.9)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='10' cy='5.2' rx='1.15' ry='1.9' fill='%23000000' stroke='none'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 17.4V6.9'/%3E%3Cpath d='M10 15.3c-2.3.2-3.6-.8-4-2.9 2.3-.1 3.6.9 4 2.9Z' fill='%23000000' stroke='none'/%3E%3Cellipse cx='7.6' cy='12.1' rx='2.35' ry='1.2' transform='rotate(53 7.6 12.1)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='12.4' cy='12.1' rx='2.35' ry='1.2' transform='rotate(-53 12.4 12.1)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='7.9' cy='8.9' rx='2.1' ry='1.1' transform='rotate(53 7.9 8.9)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='12.1' cy='8.9' rx='2.1' ry='1.1' transform='rotate(-53 12.1 8.9)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='10' cy='5.2' rx='1.15' ry='1.9' fill='%23000000' stroke='none'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0.14;
   transform: rotate(-10deg);
   pointer-events: none;
 }
@@ -198,12 +197,15 @@ html[data-shell="mobile"] .mtoday-card {
 }
 
 html[data-theme="dark"][data-shell="mobile"] .mtoday-card,
-html[data-theme="glass"][data-shell="mobile"] .mtoday-card {
+html[data-theme="dark"][data-shell="mobile"] .mtoday-hero,
+html[data-theme="glass"][data-shell="mobile"] .mtoday-card,
+html[data-theme="glass"][data-shell="mobile"] .mtoday-hero {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
 }
 
 @media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .mtoday-card {
+  html[data-theme="system"][data-shell="mobile"] .mtoday-card,
+  html[data-theme="system"][data-shell="mobile"] .mtoday-hero {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
   }
 }
@@ -775,9 +777,24 @@ html[data-shell="mobile"] .minbox-batchbar-actions button:focus-visible {
   outline-offset: 2px;
 }
 
-/* 摘要条：白卡 + 三段比例条，不重复今日页的大面积渐变 hero。 */
+/* 摘要条：与今日主卡同族的淡蓝顶卡（accent-faint 底 + 衬线大数字 + 三段比例条）。 */
 html[data-shell="mobile"] .minbox-summary {
+  position: relative;
+  overflow: hidden;
   padding: 14px 16px 13px;
+  background: var(--accent-faint);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+html[data-theme="dark"][data-shell="mobile"] .minbox-summary,
+html[data-theme="glass"][data-shell="mobile"] .minbox-summary {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .minbox-summary {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+  }
 }
 
 html[data-shell="mobile"] .minbox-summary-top {
@@ -797,11 +814,11 @@ html[data-shell="mobile"] .minbox-summary-total {
 
 html[data-shell="mobile"] .minbox-summary-total b {
   font-family: var(--font-num-display);
-  font-size: 1.75rem;
+  font-size: 2.125rem;
   font-weight: 400;
   line-height: 0.9;
-  letter-spacing: 0;
-  color: var(--text-heading);
+  letter-spacing: -0.005em;
+  color: var(--accent-strong);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -825,7 +842,7 @@ html[data-shell="mobile"] .minbox-summary-bar {
   margin-top: 12px;
   overflow: hidden;
   border-radius: 3px;
-  background: var(--surface-sunken);
+  background: color-mix(in srgb, var(--border-strong) 60%, transparent);
 }
 
 html[data-shell="mobile"] .minbox-summary-bar i {
@@ -888,6 +905,15 @@ html[data-shell="mobile"] .minbox-summary-legend b {
   color: var(--text-secondary);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* 摘要卡水印：与今日主卡同图，缩小一档免压过内容。 */
+html[data-shell="mobile"] .minbox-summary .mtoday-wheat {
+  width: 118px;
+  height: 118px;
+  right: -38px;
+  bottom: -44px;
+  opacity: 0.1;
 }
 
 /* 三分组：逾期 → 已排期 → 未安排，组标题只做轻分隔。 */

@@ -72,6 +72,7 @@ function InboxSummary({
           </span>
         ))}
       </div>
+      <span className="mtoday-wheat" aria-hidden="true" />
     </section>
   );
 }
