@@ -123,7 +123,8 @@ export function LedgerMobileView() {
     1,
     ...trend.map((item) => Math.max(item.expense_cents, item.income_cents)),
   );
-  const topCategories = summary.slice(0, 5);
+  // 与「8 类」计数、顶卡色条保持同一口径：全部类别都列出来，不再截前 5。
+  const topCategories = summary;
 
   return (
     <div className="mtoday mledger">
@@ -190,31 +191,32 @@ export function LedgerMobileView() {
             <span className="mledger-month-stat">{summary.length} 类</span>
           </div>
           {topCategories.length ? (
-            topCategories.map((item) => (
-              <div className="mledger-comp" key={item.category_id}>
-                <div className="mledger-comp-line">
-                  <i style={{ background: item.color }} aria-hidden="true" />
-                  <span>{item.name}</span>
-                  <em>
-                    {expense ? Math.round((item.amount_cents / expense) * 100) : 0}%
-                  </em>
-                  <b>{formatLedgerMoney(item.amount_cents)}</b>
+            topCategories.map((item) => {
+              const pct = expense ? Math.round((item.amount_cents / expense) * 100) : 0;
+              return (
+                <div className="mledger-comp" key={item.category_id}>
+                  <div className="mledger-comp-line">
+                    <i style={{ background: item.color }} aria-hidden="true" />
+                    <span>{item.name}</span>
+                    <em>{pct === 0 ? "<1" : pct}%</em>
+                    <b>{formatLedgerMoney(item.amount_cents)}</b>
+                  </div>
+                  <div className="mledger-comp-bar">
+                    <i
+                      style={{
+                        width: `${Math.max(
+                          4,
+                          Math.round(
+                            (item.amount_cents / topCategories[0].amount_cents) * 100,
+                          ),
+                        )}%`,
+                        background: item.color,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="mledger-comp-bar">
-                  <i
-                    style={{
-                      width: `${Math.max(
-                        4,
-                        Math.round(
-                          (item.amount_cents / topCategories[0].amount_cents) * 100,
-                        ),
-                      )}%`,
-                      background: item.color,
-                    }}
-                  />
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p className="mtoday-empty">记下几笔支出后，这里会出现清晰的构成。</p>
           )}
