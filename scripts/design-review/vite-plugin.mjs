@@ -16,8 +16,15 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const REVIEW_DB = resolve(HERE, "..", "..", ".tmp-design-review", "app.db");
 const SHIM = join(HERE, "sql-shim.mjs");
 
-// tauri-plugin-sql 用 $1/$2 位置绑定；node:sqlite 只认 ?，按出现顺序翻译
+// tauri-plugin-sql 用 $1/$2 位置绑定，同一序号可在 SQL 里出现多次；
+// node:sqlite 只认 ?，每个 ? 独立占一个绑定值。翻译时按 SQL 里
+// 引用出现的顺序逐个展开，重复的 $N 在绑定数组里重复取该参数。
 const toPositional = (sql) => sql.replace(/\$(\d+)/g, "?");
+
+function expandBindValues(sql, bindValues) {
+  const refs = [...sql.matchAll(/\$(\d+)/g)].map((m) => Number(m[1]) - 1);
+  return refs.map((n) => bindValues?.[n] ?? null);
+}
 
 export function designReview() {
   let db = null;
@@ -53,12 +60,13 @@ export function designReview() {
             const { kind, sql, bindValues } = JSON.parse(raw || "{}");
             const database = open();
             const stmt = database.prepare(toPositional(sql));
+            const bound = expandBindValues(sql, bindValues);
             if (kind === "select") {
-              const rows = stmt.all(...(bindValues ?? []));
+              const rows = stmt.all(...bound);
               res.setHeader("content-type", "application/json");
               res.end(JSON.stringify({ rows: rows.map((r) => ({ ...r })) }));
             } else {
-              const info = stmt.run(...(bindValues ?? []));
+              const info = stmt.run(...bound);
               res.setHeader("content-type", "application/json");
               res.end(JSON.stringify({
                 rowsAffected: Number(info.changes ?? 0),
