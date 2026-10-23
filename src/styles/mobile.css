@@ -145,23 +145,23 @@ html[data-shell="mobile"] .mtoday-hero-side {
   text-align: right;
 }
 
-html[data-shell="mobile"] .mtoday-segs {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
-html[data-shell="mobile"] .mtoday-segs i {
-  width: 21px;
-  flex: 0 1 21px;
-  min-width: 3px;
+/* 今日完成进度条：轨道 + accent 填充（完成比例），几何对齐记账顶卡的
+   占比条（8px 高 / 4px 圆角），轨道用「待办」概况卡同族的中性灰（accent
+   淡底上 16% accent 轨道会误读为满条）；填充带过渡，勾选完成时进度平滑推进 */
+html[data-shell="mobile"] .mtoday-progress {
   height: 8px;
+  margin-bottom: 9px;
+  overflow: hidden;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  background: color-mix(in srgb, var(--border-strong) 60%, transparent);
 }
 
-html[data-shell="mobile"] .mtoday-segs i.on {
+html[data-shell="mobile"] .mtoday-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
   background: var(--accent);
+  transition: width 260ms ease;
 }
 
 html[data-shell="mobile"] .mtoday-hero-sub {

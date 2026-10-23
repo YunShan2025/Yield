@@ -169,10 +169,13 @@ export function TodayMobileView() {
             <em>件已完成</em>
           </div>
           <div className="mtoday-hero-side">
-            <div className="mtoday-segs" aria-hidden="true">
-              {Array.from({ length: totalCount }, (_, index) => (
-                <i key={index} className={index < doneCount ? "on" : ""} />
-              ))}
+            {/* 连续进度条（轨道 + 完成比例填充），与「待办」/「记账」顶卡的占比条同族 */}
+            <div className="mtoday-progress" aria-hidden="true">
+              <i
+                style={{
+                  width: totalCount ? `${Math.round((doneCount / totalCount) * 100)}%` : "0%",
+                }}
+              />
             </div>
             <span className="mtoday-hero-sub">还剩 {remaining} 件</span>
           </div>
