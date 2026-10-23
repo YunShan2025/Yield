@@ -1565,10 +1565,15 @@ html[data-shell="mobile"] .mledger-day-head span.is-today {
   font-weight: 600;
 }
 
+/* 日净做成中性灰底小药丸：与 14px 裸数字的笔目金额在形状/底色/字号
+   三个维度同时区分开——「组汇总」与「明细」一眼可辨（同「今天」药丸一族） */
 html[data-shell="mobile"] .mledger-day-head b {
-  font-size: 0.8125rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
   font-weight: 650;
-  color: var(--text-heading);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
