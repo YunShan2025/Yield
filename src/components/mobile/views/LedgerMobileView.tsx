@@ -68,6 +68,7 @@ export function LedgerMobileView() {
   const [trend, setTrend] = useState<LedgerMonthSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState<null | { editing: LedgerTransaction | null }>(null);
+  const [compExpanded, setCompExpanded] = useState(false);
 
   const load = useCallback(() => {
     void Promise.all([
@@ -84,6 +85,7 @@ export function LedgerMobileView() {
 
   useEffect(() => {
     setLoading(true);
+    setCompExpanded(false);
     load();
     const reload = () => load();
     window.addEventListener("youqiu:data-changed", reload);
@@ -123,8 +125,8 @@ export function LedgerMobileView() {
     1,
     ...trend.map((item) => Math.max(item.expense_cents, item.income_cents)),
   );
-  // 与「8 类」计数、顶卡色条保持同一口径：全部类别都列出来，不再截前 5。
-  const topCategories = summary;
+  // 构成默认只列前 3 类，「展开全部 N 类」看全量（与计数、顶卡色条同口径）。
+  const visibleCategories = compExpanded ? summary : summary.slice(0, 3);
 
   return (
     <div className="mtoday mledger">
@@ -190,8 +192,8 @@ export function LedgerMobileView() {
             <h3>支出去向</h3>
             <span className="mledger-month-stat">{summary.length} 类</span>
           </div>
-          {topCategories.length ? (
-            topCategories.map((item) => {
+          {visibleCategories.length ? (
+            visibleCategories.map((item) => {
               const pct = expense ? Math.round((item.amount_cents / expense) * 100) : 0;
               return (
                 <div className="mledger-comp" key={item.category_id}>
@@ -207,7 +209,7 @@ export function LedgerMobileView() {
                         width: `${Math.max(
                           4,
                           Math.round(
-                            (item.amount_cents / topCategories[0].amount_cents) * 100,
+                            (item.amount_cents / summary[0].amount_cents) * 100,
                           ),
                         )}%`,
                         background: item.color,
@@ -220,6 +222,17 @@ export function LedgerMobileView() {
           ) : (
             <p className="mtoday-empty">记下几笔支出后，这里会出现清晰的构成。</p>
           )}
+          {summary.length > 3 ? (
+            <button
+              type="button"
+              className="mledger-comp-more"
+              aria-expanded={compExpanded}
+              onClick={() => setCompExpanded((v) => !v)}
+            >
+              <span>{compExpanded ? "收起" : `展开全部 ${summary.length} 类`}</span>
+              <AppIcon name="chevron" size={14} />
+            </button>
+          ) : null}
         </section>
 
         <section className="mtoday-card" aria-label="六个月流向">

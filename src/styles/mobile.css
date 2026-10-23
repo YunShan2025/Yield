@@ -1804,6 +1804,39 @@ html[data-shell="mobile"] .mledger-comp-bar {
   overflow: hidden;
 }
 
+/* 构成「展开全部 N 类 / 收起」：安静的通栏文字按钮，chevron 翻转指示状态 */
+html[data-shell="mobile"] .mledger-comp-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+html[data-shell="mobile"] .mledger-comp-more:active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+html[data-shell="mobile"] .mledger-comp-more svg {
+  transition: transform 150ms ease;
+}
+
+html[data-shell="mobile"] .mledger-comp-more[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
 html[data-shell="mobile"] .mledger-comp-bar i {
   display: block;
   height: 100%;
