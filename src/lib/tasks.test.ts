@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Task } from "@/types";
-import { computeNavCounts } from "./tasks";
+import { computeNavCounts, groupInboxTasks } from "./tasks";
 
 function task(overrides: Partial<Task> & { id: string }): Task {
   return {
@@ -71,5 +71,74 @@ describe("computeNavCounts", () => {
       today,
     );
     expect(counts.inbox).toBe(0);
+  });
+});
+
+describe("groupInboxTasks", () => {
+  const today = "2026-09-14";
+
+  it("groups overdue, scheduled and unscheduled tasks in triage order", () => {
+    const groups = groupInboxTasks(
+      [
+        task({ id: "s-later", due_date: "2026-09-16", priority: 1 }),
+        task({
+          id: "u-low",
+          priority: 3,
+          created_at: "2026-09-10T00:00:00.000Z",
+        }),
+        task({ id: "o-new", due_date: "2026-09-12", priority: 1 }),
+        task({
+          id: "u-high",
+          priority: 1,
+          created_at: "2026-09-11T00:00:00.000Z",
+        }),
+        task({ id: "o-old", due_date: "2026-09-10", priority: 4 }),
+        task({ id: "s-soon", due_date: "2026-09-15", priority: 3 }),
+      ],
+      today,
+    );
+
+    expect(groups.map((group) => group.id)).toEqual([
+      "overdue",
+      "scheduled",
+      "unscheduled",
+    ]);
+    expect(groups[0].tasks.map((item) => item.id)).toEqual([
+      "o-old",
+      "o-new",
+    ]);
+    expect(groups[1].tasks.map((item) => item.id)).toEqual([
+      "s-soon",
+      "s-later",
+    ]);
+    expect(groups[2].tasks.map((item) => item.id)).toEqual([
+      "u-high",
+      "u-low",
+    ]);
+  });
+
+  it("omits empty groups and puts tasks due today in scheduled", () => {
+    const groups = groupInboxTasks(
+      [task({ id: "today-task", due_date: today })],
+      today,
+    );
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ id: "scheduled" });
+    expect(groups[0].tasks.map((item) => item.id)).toEqual(["today-task"]);
+  });
+
+  it("keeps completed tasks in their original group for exit animation", () => {
+    const groups = groupInboxTasks(
+      [
+        task({
+          id: "done-overdue",
+          due_date: "2026-09-10",
+          status: "completed",
+        }),
+      ],
+      today,
+    );
+    expect(groups[0].id).toBe("overdue");
+    expect(groups[0].tasks[0].id).toBe("done-overdue");
   });
 });

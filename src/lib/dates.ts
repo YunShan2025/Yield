@@ -115,6 +115,73 @@ export function formatDueDate(date: string | null): string {
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
 
+export type DueDateTone = "overdue" | "today" | "soon" | "scheduled" | "none";
+
+export interface DueDateBadge {
+  label: string;
+  tone: DueDateTone;
+  /** 完整日期，供 title/aria-label 使用。 */
+  title: string;
+}
+
+/** YYYY-MM-DD → 日历日序号；用 UTC 计算，避开夏令时导致的“相差几天”误差。 */
+function parseCalendarDate(
+  date: string,
+): { year: number; month: number; day: number; dayNumber: number } | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const ms = Date.UTC(year, month - 1, day);
+  const check = new Date(ms);
+  if (
+    check.getUTCFullYear() !== year ||
+    check.getUTCMonth() !== month - 1 ||
+    check.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return { year, month, day, dayNumber: ms / 86_400_000 };
+}
+
+/**
+ * 待办箱的截止日期徽标：逾期天数 / 今天 / 明天 / 后天 / 周X / 月日。
+ * 只负责展示，不改变任务日期；today 参数便于测试。
+ */
+export function formatDueDateBadge(
+  date: string | null,
+  today: string = todayDateString(),
+): DueDateBadge {
+  if (!date) return { label: "未安排", tone: "none", title: "无截止日期" };
+  const target = parseCalendarDate(date);
+  const base = parseCalendarDate(today);
+  if (!target || !base) {
+    return { label: "未安排", tone: "none", title: "无截止日期" };
+  }
+
+  const diff = target.dayNumber - base.dayNumber;
+  const title = `截止 ${formatLongDate(date)}`;
+  if (diff < 0) {
+    return { label: `逾期 ${-diff} 天`, tone: "overdue", title };
+  }
+  if (diff === 0) return { label: "今天", tone: "today", title };
+  if (diff === 1) return { label: "明天", tone: "soon", title };
+  if (diff === 2) return { label: "后天", tone: "soon", title };
+  if (diff <= 6) {
+    const weekday = "日一二三四五六"[
+      new Date(target.dayNumber * 86_400_000).getUTCDay()
+    ];
+    return { label: `周${weekday}`, tone: "soon", title };
+  }
+
+  const label =
+    target.year === base.year
+      ? `${target.month}月${target.day}日`
+      : `${target.year}年${target.month}月${target.day}日`;
+  return { label, tone: "scheduled", title };
+}
+
 export function parseDate(date: string): Date {
   const [y, m, d] = date.split("-").map(Number);
   return new Date(y, m - 1, d);

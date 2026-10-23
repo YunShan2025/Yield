@@ -26,6 +26,68 @@ export function computeNavCounts(
   };
 }
 
+export type InboxGroupId = "overdue" | "scheduled" | "unscheduled";
+
+export interface InboxTaskGroup {
+  id: InboxGroupId;
+  tasks: Task[];
+}
+
+function byCreatedAt(a: Task, b: Task): number {
+  return (
+    (a.created_at ?? "").localeCompare(b.created_at ?? "") ||
+    a.id.localeCompare(b.id)
+  );
+}
+
+function byPriority(a: Task, b: Task): number {
+  return a.priority - b.priority || byCreatedAt(a, b);
+}
+
+function byDueDate(a: Task, b: Task): number {
+  return (
+    (a.due_date ?? "").localeCompare(b.due_date ?? "") ||
+    byPriority(a, b)
+  );
+}
+
+/**
+ * 待办箱三分组：逾期 / 已排期 / 未安排。
+ * 调用方负责只传入需要展示的根任务；这里不按状态过滤，
+ * 这样刚完成、正在退场的任务仍能留在原分组里淡出。
+ * 逾期按最早到期排，已排期按最近到期排，未安排按优先级排。
+ */
+export function groupInboxTasks(
+  tasks: Task[],
+  today: string,
+): InboxTaskGroup[] {
+  const groups: InboxTaskGroup[] = [
+    {
+      id: "overdue",
+      tasks: tasks
+        .filter((task) => {
+          const due = task.due_date ?? "";
+          return due !== "" && due < today;
+        })
+        .sort(byDueDate),
+    },
+    {
+      id: "scheduled",
+      tasks: tasks
+        .filter((task) => {
+          const due = task.due_date ?? "";
+          return due !== "" && due >= today;
+        })
+        .sort(byDueDate),
+    },
+    {
+      id: "unscheduled",
+      tasks: tasks.filter((task) => !task.due_date).sort(byPriority),
+    },
+  ];
+  return groups.filter((group) => group.tasks.length > 0);
+}
+
 /** 项目里只放一次性交付物：重复性的日常动作属于习惯，不进项目。 */
 export function projectTasks(tasks: Task[], projectId: string): Task[] {
   return tasks.filter(
