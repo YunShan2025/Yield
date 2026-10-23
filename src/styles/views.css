@@ -2274,6 +2274,36 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .date-picke
 
 /* 字段节奏 16 → 12px 的修正与页头修正同写在 §9 共享规则之后。 */
 
+/* 时间安排去卡片化：「…」面板语言里没有带色块卡片的先例，
+   拉平成普通字段组——卡片容器透明去边，小标题换成 section-title
+   字体语言，状态角标从 accent 药丸降为灰字（warn 保留警示色），
+   时/分下拉露出面板白底后自然显为灰底小钮。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-time-card {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-time-head strong {
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-time-state {
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-time-state.warn {
+  background: transparent;
+  color: var(--warning);
+}
+
 /* 页头标题对齐 action-sheet-title（body/650），去掉桌面弹窗的大标题感 */
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head h3 {
   font-size: var(--font-size-body);
