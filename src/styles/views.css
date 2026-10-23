@@ -2222,25 +2222,21 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal)::before {
   background: var(--border-strong);
 }
 
-/* 页头改贴在握把正下方（-16 = 抵到面板外缘再让出握把的 4px）。 */
-html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head {
-  top: -16px;
-  margin: 0 -20px;
-  background: var(--mobile-overlay-surface);
-}
+/* 页头贴握把下方的覆盖写在 §9 共享钉顶规则之后（同优先级靠后胜出），
+   见文件下方「create-task 页头/节奏修正」。 */
 
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-actions:not(.app-confirm-actions) {
   background: var(--mobile-overlay-surface);
 }
 
-/* 字段标签换成 field-label 的「灰标签小字」语言（与待办详情行同款）。
+/* 字段标签直接用「…」面板 section-title 的字体语言（13px/600/0.02em 灰字），
    控件走 font: inherit 会连字号一起继承，需显式回正到正文。 */
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label {
-  gap: 6px;
+  gap: 8px;
   color: var(--text-muted);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-label);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label input,
@@ -2249,18 +2245,21 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label texta
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) label .select-btn {
   color: var(--text-primary);
   font-size: var(--font-size-body);
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: normal;
 }
 
 /* 控件同族：白底描边 → sunken 无边框（与「待办 ···」面板的灰底按钮同调），
+   圆角/字重同步对齐（radius-md 12px、500 与 grid 按钮同字重），
    focus 时浮回白底 + 描边，保留「正在填写」的反馈。 */
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) input,
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) textarea,
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .select-btn,
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .date-picker-trigger {
   border: 1px solid transparent;
+  border-radius: var(--radius-md);
   background: var(--surface-sunken);
+  font-weight: 500;
 }
 
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) input:focus-visible,
@@ -2273,10 +2272,7 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .date-picke
   background: var(--surface-panel);
 }
 
-/* 字段节奏 16 → 12px，对齐 section 语言的密度 */
-html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) > * + * {
-  margin-top: 12px;
-}
+/* 字段节奏 16 → 12px 的修正与页头修正同写在 §9 共享规则之后。 */
 
 /* 页头标题对齐 action-sheet-title（body/650），去掉桌面弹窗的大标题感 */
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head h3 {
@@ -2330,6 +2326,21 @@ html[data-shell="mobile"] .completed-time-modal .modal-head {
   padding: 14px 20px 10px;
   background: var(--surface-panel);
   border-bottom: 1px solid var(--border);
+}
+
+/* 「新建任务」页头/节奏修正（必须写在上面的共享钉顶规则之后才生效）：
+   页头不再负 margin 压在握把上，而是贴握把正下方（-16 = 抵到面板外缘
+   再让出握把占的 4px），去掉桌面弹窗的分隔线，底色跟面板一致；
+   字段节奏 16 → 12px，对齐 section 语言的密度。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head {
+  top: -16px;
+  margin: 0 -20px;
+  background: var(--mobile-overlay-surface);
+  border-bottom: 0;
+}
+
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) > * + * {
+  margin-top: 12px;
 }
 
 /* 关闭按钮从 30px 垫到 40px 触控目标。 */
