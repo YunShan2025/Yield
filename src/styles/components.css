@@ -448,6 +448,11 @@ select {
   color: var(--text-overdue);
 }
 
+/* 整行同一语气：逾期行的截止日不再留在辅助灰里（移动壳逾期组同为 overdue 墨）。 */
+.task-row.is-overdue .tags-task-due {
+  color: var(--text-overdue);
+}
+
 .task-check {
   position: relative;
   width: 22px;
@@ -1668,6 +1673,12 @@ select {
 .detail-lead-time {
   color: var(--text-secondary);
   font-weight: 600;
+}
+
+/* 到期语气统一：is-overdue 由 formatDueDateBadge 一直挂在桌面抽屉日期上，
+   此前只有移动壳有样式、桌面是死类——接通契约墨色，与标签行标题同一种红。 */
+.detail-lead-date.is-overdue {
+  color: var(--text-overdue);
 }
 
 .detail-view-title {
