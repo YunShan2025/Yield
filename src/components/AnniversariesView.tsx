@@ -18,6 +18,9 @@ import {
 import { todayDateString } from "@/lib/dates";
 import { SelectMenu } from "@/components/SelectMenu";
 import { AppIcon } from "@/components/AppIcon";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
 import type { Anniversary } from "@/types";
@@ -142,7 +145,11 @@ export function AnniversariesView() {
       {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧直达「新建纪念日」。 */}
       <div className="workspace-top">
         <div>
-          <h2>纪念日</h2>
+          <h2 aria-label={isMobileShell() ? "纪念日" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="纪念日" /> : "纪念日"}
+
+          </h2>
           <p className="workspace-subtitle">重要的日子都在这里，离现在最近的会先被看见。</p>
         </div>
         <div className="top-controls">
@@ -150,12 +157,31 @@ export function AnniversariesView() {
         </div>
       </div>
 
-      {/* 与「今日」同款的暖色引导框。 */}
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <h3>把值得记住的日子，好好收藏。</h3>
-        </div>
-      </section>
+      {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡：读数 + 下一个纪念日。 */}
+      {isMobileShell() ? (
+        <MobileGuideCard
+          value={sorted.length}
+          unit="个"
+          label="纪念日"
+          hint={
+            sorted.length
+              ? (() => {
+                  const head = anniversaryHeadline(sorted[0], today);
+                  if (head.daysLeft === null) return sorted[0].title;
+                  return head.daysLeft === 0
+                    ? `${sorted[0].title} · 就是今天`
+                    : `下一个 ${sorted[0].title} · 还有 ${head.daysLeft} 天`;
+                })()
+              : "还没有收藏的日子"
+          }
+        />
+      ) : (
+        <section className="today-hero guide-hero">
+          <div className="today-hero-copy">
+            <h3>把值得记住的日子，好好收藏。</h3>
+          </div>
+        </section>
+      )}
 
       <div className="moments-body">
 

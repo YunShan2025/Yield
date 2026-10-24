@@ -4,6 +4,9 @@ import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
 import { AppIcon } from "@/components/AppIcon";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
 import type { Project } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
@@ -124,7 +127,11 @@ export function ProjectsView() {
     <main className="main-workspace projects-view">
       <div className="workspace-top">
         <div>
-          <h2>项目</h2>
+          <h2 aria-label={isMobileShell() ? "项目" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="项目" /> : "项目"}
+
+          </h2>
           <p className="workspace-subtitle">组织长期事项，聚合相关任务</p>
         </div>
         <div className="top-controls">
@@ -139,19 +146,28 @@ export function ProjectsView() {
       </div>
 
       <div className="projects-scroll">
-        {/* 与「今日/成长」同款的暖色引导框。 */}
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <h3>百工居肆以成其事。</h3>
-          </div>
-          <div className="today-hero-meter">
-            <span className="today-hero-meter-count">
-              <strong>{projects.length}</strong>
-              <span>个</span>
-            </span>
-            <span className="today-hero-meter-label">项目</span>
-          </div>
-        </section>
+        {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡。 */}
+        {isMobileShell() ? (
+          <MobileGuideCard
+            value={projects.length}
+            unit="个"
+            label="项目在册"
+            hint={`${projects.filter((project) => selectProjectTasks(tasks, project.id).length).length} 个进行中 · 已归档 ${archivedProjects.length} 个`}
+          />
+        ) : (
+          <section className="today-hero guide-hero">
+            <div className="today-hero-copy">
+              <h3>百工居肆以成其事。</h3>
+            </div>
+            <div className="today-hero-meter">
+              <span className="today-hero-meter-count">
+                <strong>{projects.length}</strong>
+                <span>个</span>
+              </span>
+              <span className="today-hero-meter-label">项目</span>
+            </div>
+          </section>
+        )}
         {/* 未开始：还没有任务的项目；进行中：已挂上任务的项目。 */}
         {(() => {
           const notStarted = projects.filter(

@@ -4,6 +4,8 @@ import { fetchGoalEntries, fetchGoals } from "@/lib/db";
 import { todayDateString } from "@/lib/dates";
 import type { Goal, GoalEntry } from "@/types";
 import { localDateKey } from "@/lib/growth";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import {
   aggregateReviewByGoal,
   aggregateReviewByProject,
@@ -94,7 +96,11 @@ export function ReviewView() {
       {/* 与「今日」同构的标题区:h2 标题 + 副标题(含当周区间),右侧为周切换与完成数。 */}
       <div className="workspace-top">
         <div>
-          <h2>复盘</h2>
+          <h2 aria-label={isMobileShell() ? "复盘" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="复盘" /> : "复盘"}
+
+          </h2>
           <p className="workspace-subtitle">{weekStart} ～ {weekEnd} · 不只看完成了多少，也看看精力落在哪里。</p>
         </div>
         <div className="top-controls">
@@ -124,11 +130,15 @@ export function ReviewView() {
       </div>
 
       {/* 与「今日」同款的暖色引导框。 */}
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <h3>回头看，是为了走得更稳。</h3>
-        </div>
-      </section>
+      {/* 与「今日」同款的暖色引导框。移动壳不出现：页头已有「N 件事情完成」
+          读数与摘要指标，格言卡属于桌面内容。 */}
+      {isMobileShell() ? null : (
+        <section className="today-hero guide-hero">
+          <div className="today-hero-copy">
+            <h3>回头看，是为了走得更稳。</h3>
+          </div>
+        </section>
+      )}
 
       <div className="review-body">
       <section className="review-metrics" aria-label="本周摘要">

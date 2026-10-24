@@ -4,6 +4,9 @@ import { confirmAction } from "@/components/AppConfirm";
 import { filterTasksByView, taskRowClassName } from "@/lib/tasks";
 import { formatDueDate, formatDayStamp } from "@/lib/dates";
 import { AppIcon } from "@/components/AppIcon";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
 import type { Tag } from "@/types";
 
@@ -151,7 +154,11 @@ export function TagsView() {
     <main className="main-workspace tags-view">
       <div className="workspace-top">
         <div>
-          <h2>标签</h2>
+          <h2 aria-label={isMobileShell() ? "标签" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="标签" /> : "标签"}
+
+          </h2>
           <p className="workspace-subtitle">
             给项目与任务分类打标，项目自带标签，周清单的目标分栏也按同名标签自动汇总。
           </p>
@@ -166,19 +173,36 @@ export function TagsView() {
           </button>
         </div>
       </div>
-      {/* 与「今日」同款的暖色引导框。 */}
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <h3>把散落的事，按线归拢。</h3>
-        </div>
-        <div className="today-hero-meter">
-          <span className="today-hero-meter-count">
-            <strong>{tags.length}</strong>
-            <span>个</span>
-          </span>
-          <span className="today-hero-meter-label">标签</span>
-        </div>
-      </section>
+      {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡：读数 + 标签使用分布。 */}
+      {isMobileShell() ? (
+        <MobileGuideCard
+          value={tags.length}
+          unit="个"
+          label="标签在册"
+          segments={tags
+            .map((tag, index) => ({
+              label: tag.name,
+              value: (counts[tag.id]?.projects ?? 0) + (counts[tag.id]?.tasks ?? 0),
+              color: tag.color || TAG_PALETTE[index % TAG_PALETTE.length],
+            }))
+            .filter((segment) => segment.value > 0)
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 4)}
+        />
+      ) : (
+        <section className="today-hero guide-hero">
+          <div className="today-hero-copy">
+            <h3>把散落的事，按线归拢。</h3>
+          </div>
+          <div className="today-hero-meter">
+            <span className="today-hero-meter-count">
+              <strong>{tags.length}</strong>
+              <span>个</span>
+            </span>
+            <span className="today-hero-meter-label">标签</span>
+          </div>
+        </section>
+      )}
       <div className="tags-body">
         <section className="tags-manager" aria-label="标签管理">
           {tags.length ? (

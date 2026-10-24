@@ -19,6 +19,9 @@ import { useAppStore } from "@/store/app";
 import { todayDateString } from "@/lib/dates";
 import { SelectMenu } from "@/components/SelectMenu";
 import { AppIcon } from "@/components/AppIcon";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";import {
   activityLevelFromValue,
   calculateGoalProgress,
@@ -405,7 +408,11 @@ export function GrowthView() {
       {/* 与「今日/待办箱」同构的标题区:h2 标题 + 副标题,右侧直达「新建目标」。 */}
       <div className="workspace-top growth-top">
         <div>
-          <h2>成长</h2>
+          <h2 aria-label={isMobileShell() ? "成长" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="成长" /> : "成长"}
+
+          </h2>
           <p className="workspace-subtitle">每一步都算数。</p>
         </div>
         <div className="top-controls">
@@ -415,12 +422,22 @@ export function GrowthView() {
         </div>
       </div>
       {/* 与「今日」同款的引导框:eyebrow + 标语 + 一句注释。 */}
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <h3>看见每一天累积的成长。</h3>
-          <p className="today-hero-note">日复一日，功在不舍。</p>
-        </div>
-      </section>
+      {/* 与「今日」同款的引导框（eyebrow + 标语 + 一句注释）。移动壳换数据型顶卡。 */}
+      {isMobileShell() ? (
+        <MobileGuideCard
+          value={currentStreak}
+          unit="天"
+          label="连续成长"
+          hint={`活跃 ${activeDateKeys.length} 天 · 最长 ${longestStreak} 天`}
+        />
+      ) : (
+        <section className="today-hero guide-hero">
+          <div className="today-hero-copy">
+            <h3>看见每一天累积的成长。</h3>
+            <p className="today-hero-note">日复一日，功在不舍。</p>
+          </div>
+        </section>
+      )}
 
       <nav className="growth-tabs">
         {(["overview", "goals", "achievements"] as GrowthTab[]).map((item) => (

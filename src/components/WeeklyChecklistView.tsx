@@ -12,6 +12,9 @@ import {
   type WeeklyCategoryId,
 } from "@/lib/weeklyChecklist";
 import { ExpandRow } from "@/components/ExpandRow";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 
 function formatMd(date: string) {
   const [, m, d] = date.split("-");
@@ -82,7 +85,11 @@ export function WeeklyChecklistView() {
     <main className="main-workspace weekly-checklist">
       <div className="workspace-top weekly-checklist-top">
         <div>
-          <h2>周清单</h2>
+          <h2 aria-label={isMobileShell() ? "周清单" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="周清单" /> : "周清单"}
+
+          </h2>
           <p className="workspace-subtitle">
             {weekStart} ～ {weekEnd} · 给这一周定下目标，完成一件划掉一件。
           </p>
@@ -109,21 +116,36 @@ export function WeeklyChecklistView() {
           >
             下周 ›
           </button>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => {
-              setNav("today");
-              setDateScope("week");
-            }}
-          >
-            打开周历
-          </button>
+          {!isMobileShell() ? (
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => {
+                setNav("today");
+                setDateScope("week");
+              }}
+            >
+              打开周历
+            </button>
+          ) : null}
         </div>
       </div>
 
       {/* 与「今日」同款的暖色引导框。右侧承载本周完成进度 —— 引导块要么有数据，
-          要么不出现。 */}
+          要么不出现。移动壳换数据型顶卡：大读数 + 七日周条概览（与待办顶卡同语言）。 */}
+      {isMobileShell() ? (
+        <MobileGuideCard
+          value={stats.done}
+          unit={stats.total ? `/${stats.total}` : undefined}
+          label="本周已完成"
+          hint={stats.total ? `完成率 ${donePct}%` : "本周暂无任务"}
+          bars={days.map((day) => ({
+            label: weekdayShort(day.date),
+            ratio: day.total ? day.done / day.total : 0,
+            isToday: day.date === today,
+          }))}
+        />
+      ) : (
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
           <h3>把一周摊开来看。</h3>
@@ -140,6 +162,7 @@ export function WeeklyChecklistView() {
           </span>
         </div>
       </section>
+      )}
 
       {/* 本周任务：按分类聚合，一行一条。点行就地展开这一类的任务 —— 分类是「按标签
           分组」的口径，当周日历是「按天」的口径，两个视角不重复。 */}

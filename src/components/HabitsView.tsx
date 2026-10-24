@@ -15,6 +15,9 @@ import {
 } from "@/lib/repeat";
 import { WeekdayPicker } from "@/components/WeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import type { RepeatRule } from "@/types";
 
@@ -206,7 +209,11 @@ export function HabitsView() {
     <main className="main-workspace habits-view">
       <div className="workspace-top">
         <div>
-          <h2>习惯</h2>
+          <h2 aria-label={isMobileShell() ? "习惯" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="习惯" /> : "习惯"}
+
+          </h2>
           <p className="workspace-subtitle">每天打一次卡，连续天数会替你记得。</p>
         </div>
         <div className="top-controls">
@@ -217,12 +224,21 @@ export function HabitsView() {
       </div>
 
       <div className="habits-body">
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <h3>让坚持成为默认选项。</h3>
-            <p className="today-hero-note">小步不断，胜过心血来潮。</p>
-          </div>
-        </section>
+        {isMobileShell() ? (
+          <MobileGuideCard
+            value={habits.filter((habit) => checksFor(habit.id).some((c) => c.check_date === today)).length}
+            unit={`/${habits.length}`}
+            label="今日已打卡"
+            hint={`已有打卡记录 ${inProgress.length} 个`}
+          />
+        ) : (
+          <section className="today-hero guide-hero">
+            <div className="today-hero-copy">
+              <h3>让坚持成为默认选项。</h3>
+              <p className="today-hero-note">小步不断，胜过心血来潮。</p>
+            </div>
+          </section>
+        )}
 
         <section>
           <div className="section-title-row">

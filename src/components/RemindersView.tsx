@@ -3,9 +3,11 @@ import { useAppStore } from "@/store/app";
 import type { Timer } from "@/types";
 import { formatCountdown, intervalLabel, liveRemaining } from "@/lib/timers";
 import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import { TimeDropdown } from "@/components/TimePicker";
 import { AppIcon } from "@/components/AppIcon";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 
 /** 当前时刻起 sec 秒后的钟点（HH:MM），用于「预计几点提醒」预览。 */
 function finishClockIn(seconds: number): string {
@@ -125,7 +127,11 @@ export function RemindersView() {
       {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧为计时类型切换与新建按钮。 */}
       <div className="workspace-top">
         <div>
-          <h2>提醒</h2>
+          <h2 aria-label={isMobileShell() ? "提醒" : undefined}>
+
+            {isMobileShell() ? <MobileTitleChars text="提醒" /> : "提醒"}
+
+          </h2>
           <p className="workspace-subtitle">临时事项用倒计时，喝水、护眼等固定节奏用循环提醒。</p>
         </div>
         <div className="top-controls">
@@ -155,17 +161,22 @@ export function RemindersView() {
         </div>
       </div>
 
-      {/* 与「今日/成长」同款的暖色引导框。 */}
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <h3>关掉窗口，提醒也不会丢。</h3>
-          <p className="today-hero-note">
-            {isMobileShell()
-              ? "到期提醒由系统送达，应用退到后台也能收到。"
-              : "到期提醒由系统送达；彻底退出请用托盘菜单的「退出应用」。"}
-          </p>
-        </div>
-      </section>
+      {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡。 */}
+      {isMobileShell() ? (
+        <MobileGuideCard
+          value={countdowns.length + intervals.length}
+          unit="个"
+          label="排程提醒"
+          hint={runningCount ? `${runningCount} 个运行中` : "当前都在休息"}
+        />
+      ) : (
+        <section className="today-hero guide-hero">
+          <div className="today-hero-copy">
+            <h3>关掉窗口，提醒也不会丢。</h3>
+            <p className="today-hero-note">到期提醒由系统送达；彻底退出请用托盘菜单的「退出应用」。</p>
+          </div>
+        </section>
+      )}
 
       <div className="reminders-body">
         <section className={`timer-status-rail ${active ? "has-active" : ""}`} aria-label="提醒状态">

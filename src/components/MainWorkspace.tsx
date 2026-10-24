@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useAppStore } from "@/store/app";
 import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import {
   boardColumns,
   filterTasksByView,
@@ -985,7 +986,9 @@ export function MainWorkspace() {
     return (
       <main className="main-workspace">
         <div className="workspace-top">
-          <h2>{getViewTitle("trash")}</h2>
+          <h2 aria-label={isMobileShell() ? getViewTitle("trash") : undefined}>
+            {isMobileShell() ? <MobileTitleChars text={getViewTitle("trash")} /> : getViewTitle("trash")}
+          </h2>
         </div>
         <TrashView />
       </main>

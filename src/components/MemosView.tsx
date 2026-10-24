@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AppIcon } from "@/components/AppIcon";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { isMobileShell } from "@/lib/platform";
+import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction, promptAction } from "@/components/AppConfirm";
 import { useAppStore } from "@/store/app";
 import { createMemo, deleteMemo, fetchMemos, updateMemo } from "@/lib/db";
@@ -216,7 +219,11 @@ export function MemosView() {
     {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧直达「新建」。 */}
     <div className="workspace-top">
       <div>
-        <h2>备忘录</h2>
+        <h2 aria-label={isMobileShell() ? "备忘录" : undefined}>
+
+          {isMobileShell() ? <MobileTitleChars text="备忘录" /> : "备忘录"}
+
+        </h2>
         <p className="workspace-subtitle">随手记下的想法与灵感，都收在这里。</p>
       </div>
       <div className="top-controls">
@@ -227,12 +234,21 @@ export function MemosView() {
       </div>
     </div>
 
-    {/* 与「今日」同款的暖色引导框。 */}
-    <section className="today-hero guide-hero">
-      <div className="today-hero-copy">
-        <h3>好记性不如烂笔头。</h3>
-      </div>
-    </section>
+    {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡。 */}
+    {isMobileShell() ? (
+      <MobileGuideCard
+        value={activeCount}
+        unit="条"
+        label="备忘在册"
+        hint={`已归档 ${archivedCount} 条`}
+      />
+    ) : (
+      <section className="today-hero guide-hero">
+        <div className="today-hero-copy">
+          <h3>好记性不如烂笔头。</h3>
+        </div>
+      </section>
+    )}
 
     <div className="memo-body">
       <div className="memo-toolbar">
