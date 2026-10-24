@@ -2653,12 +2653,14 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   padding: 2px 10px 12px 30px;
 }
 
+/* 项目操作条常驻在行上（attach 项目本身，不随展开收起）：
+   缩进对齐 body 里的任务链接，发丝线把操作与标题/任务隔开。 */
 .expand-row-foot {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  padding-top: 8px;
+  padding: 8px 10px 10px 30px;
   border-top: 1px solid var(--border);
 }
 

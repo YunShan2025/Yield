@@ -4563,11 +4563,11 @@ html[data-theme="glass"][data-shell="mobile"] .expand-row-body {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 65%, transparent);
 }
 
-/* 面板底部动作条：贴着灰底内缘收口，发丝线与行同值；
-   上距清零（基础档的 8px 内距一并盖掉），与任务行同一根分隔线的节奏。 */
+/* 面板底部动作条：现在是行上的常驻条——发丝线把操作与标题行/任务块隔开，
+   收合时按钮就贴在项目名下一档，展开时落在任务灰底之外。 */
 html[data-shell="mobile"] .expand-row-foot {
-  margin-top: 0;
-  padding-top: 0;
+  margin-top: 6px;
+  padding: 8px 0 10px;
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 

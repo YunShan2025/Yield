@@ -17,6 +17,7 @@ export function ExpandRow({
   accent,
   toggleTitle,
   children,
+  foot,
   bodyClassName,
   className,
   rowId,
@@ -35,6 +36,8 @@ export function ExpandRow({
   accent?: string;
   toggleTitle?: string;
   children?: ReactNode;
+  /** 附着在行上、不随展开收起的动作条（编辑/归档/删除属于项目本身，不是任务的）。 */
+  foot?: ReactNode;
   bodyClassName?: string;
   /** 行级状态类（移动壳用它承载「整组已完成」的成就标记）。 */
   className?: string;
@@ -66,6 +69,7 @@ export function ExpandRow({
         {actions ? <div className="expand-row-actions">{actions}</div> : null}
       </div>
       {open ? <div className={`expand-row-body${bodyClassName ? ` ${bodyClassName}` : ""}`}>{children}</div> : null}
+      {foot}
     </article>
   );
 }

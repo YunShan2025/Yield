@@ -220,6 +220,14 @@ export function ProjectsView() {
                   <h3>进行中</h3>
                   <span className="tags-filtered-count">{inProgress.length}</span>
                 </div>
+                {!projects.length ? (
+                  /* 空态不穿 projects-grid 的白卡：像纪念日页一样直接落在画布上，免得卡中套盒。 */
+                  <div className="empty-state anni-empty">
+                    <strong>这里还没有项目</strong>
+                    <p>同一件事的相关任务，放进同一个项目一起推进。</p>
+                    <button className="btn-primary" onClick={openCreate}>创建第一个项目</button>
+                  </div>
+                ) : inProgress.length ? (
                 <div className="projects-grid">
                   {inProgress.map((project) => {
                     const projectTasks = selectProjectTasks(tasks, project.id);
@@ -241,21 +249,17 @@ export function ProjectsView() {
                         title={project.name}
                         trailing={`${projectTasks.length} 项任务 · 已完成 ${done}`}
                         toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
+                        foot={<PanelFoot onEdit={() => beginEditProject(project)} onArchive={() => void archiveProject(project.id)} onDelete={() => void deleteActiveProject()} />}
                       >
                         <ProjectTaskPanel
                           tasks={projectTasks}
                           tags={tags}
-                          onEdit={() => beginEditProject(project)}
-                          onArchive={() => void archiveProject(project.id)}
-                          onDelete={() => void deleteActiveProject()}
                         />
                       </ExpandRow>
                     );
                   })}
-                  {!projects.length ? (
-                    <div className="scope-empty">创建第一个项目来组织相关任务。</div>
-                  ) : null}
                 </div>
+                ) : null}
               </section>
 
               {notStarted.length ? (
@@ -278,8 +282,13 @@ export function ProjectsView() {
                           title={project.name}
                           trailing="暂无任务"
                           toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
+                          foot={<PanelFoot onEdit={() => beginEditProject(project)} onArchive={() => void archiveProject(project.id)} onDelete={() => void deleteActiveProject()} />}
                         >
-                          <p className="expand-row-empty">这个项目还没有挂任务。</p>
+                          {/* 编辑/归档/删除附着在项目行本身，收起也可见。 */}
+                          <ProjectTaskPanel
+                            tasks={selectProjectTasks(tasks, project.id)}
+                            tags={tags}
+                          />
                         </ExpandRow>
                       );
                     })}
@@ -318,13 +327,11 @@ export function ProjectsView() {
                         : "暂无任务"
                     }
                     toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
+                    foot={<PanelFoot archived onRestore={() => void restoreProject(project.id)} onDelete={() => void deleteActiveProject()} />}
                   >
                     <ProjectTaskPanel
                       tasks={projectTasks}
                       tags={tags}
-                      archived
-                      onRestore={() => void restoreProject(project.id)}
-                      onDelete={() => void deleteActiveProject()}
                     />
                   </ExpandRow>
                 );
@@ -432,23 +439,13 @@ export function ProjectsView() {
   );
 }
 
-/** 展开在行内的任务面板：任务列表 + 右对齐的操作。 */
+/** 展开在行内的任务面板：任务列表（操作已上移到行 foot，附着于项目本身）。 */
 function ProjectTaskPanel({
   tasks,
   tags,
-  archived,
-  onEdit,
-  onArchive,
-  onRestore,
-  onDelete,
 }: {
   tasks: ReturnType<typeof useAppStore.getState>["tasks"];
   tags: ReturnType<typeof useAppStore.getState>["tags"];
-  archived?: boolean;
-  onEdit?: () => void;
-  onArchive?: () => void;
-  onRestore?: () => void;
-  onDelete: () => void;
 }) {
   const selectTask = useAppStore((s) => s.selectTask);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
@@ -507,13 +504,6 @@ function ProjectTaskPanel({
         ) : (
           <p className="expand-row-empty">这个项目还没有挂任务。</p>
         )}
-        <PanelFoot
-          archived={archived}
-          onEdit={onEdit}
-          onArchive={onArchive}
-          onRestore={onRestore}
-          onDelete={onDelete}
-        />
         {sheetTask ? (
           <TaskActionSheet
             task={sheetTask}
@@ -550,13 +540,6 @@ function ProjectTaskPanel({
           {showAllTasks ? "收起任务列表" : `展开全部 ${sortedTasks.length} 项任务`}
         </button>
       ) : null}
-      <PanelFoot
-        archived={archived}
-        onEdit={onEdit}
-        onArchive={onArchive}
-        onRestore={onRestore}
-        onDelete={onDelete}
-      />
     </div>
   );
 }
