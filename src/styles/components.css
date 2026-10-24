@@ -3732,6 +3732,13 @@ body.nav-resizing {
   gap: 9px;
 }
 
+/* 图标与文字对齐：<svg> 默认 inline，会坐在文字基线上、下方多出 descender 间隙，
+   把图标盒撑到 21px，glyph 视觉中心比文字高约 1.5px，看着「不同行」。置块级去掉基线
+   间隙，图标盒收到 SVG 自身 17px，由 .nav-item-label 的 align-items:center 与文字居中对齐。 */
+.nav-item-icon svg {
+  display: block;
+}
+
 .brand-mark {
   display: grid;
   place-items: center;
