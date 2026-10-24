@@ -5,10 +5,14 @@ import { filterTasksByView, taskRowClassName } from "@/lib/tasks";
 import { formatDueDate, formatDayStamp } from "@/lib/dates";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
+import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
+import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
+import { useTodayDate } from "@/lib/useTodayDate";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
-import type { Tag } from "@/types";
+import type { Tag, Task } from "@/types";
 
 const TAG_PALETTE = [
   "#5B8FF9",
@@ -66,6 +70,9 @@ export function TagsView() {
   const removeTag = useAppStore((s) => s.removeTag);
   const selectTask = useAppStore((s) => s.selectTask);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
+  const setNav = useAppStore((s) => s.setNav);
+  const requestFocus = useAppStore((s) => s.requestFocus);
+  const today = useTodayDate();
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createColor, setCreateColor] = useState(COLOR_SWATCHES[0]);
@@ -73,6 +80,7 @@ export function TagsView() {
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
+  const [sheetTask, setSheetTask] = useState<Task | null>(null);
 
   const counts = useMemo(() => {
     // 统计口径：项目优先——先数带该标签的项目数，再数「无所属项目」且带
@@ -263,63 +271,129 @@ export function TagsView() {
                       </>
                     }
                   >
-                    {detailProjects.length ? (
-                      <div className="tags-project-section">
-                        <h4>项目</h4>
-                        <div className="tags-project-list">
-                          {detailProjects.map((project) => (
-                            <div key={project.id} className="tags-project-row">
-                              <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
-                              <p className="tags-project-name">{project.name}</p>
-                              <span className="tags-task-due">
-                                {tasks.filter((task) => task.project_id === project.id && !task.deleted_at).length} 项任务
-                              </span>
+                    {isMobileShell() ? (
+                      <>
+                        {detailProjects.length ? (
+                          <>
+                            <div className="mrow-section">项目</div>
+                            <ul className="mrow-list">
+                              {detailProjects.map((project) => {
+                                const count = tasks.filter(
+                                  (task) =>
+                                    task.project_id === project.id && !task.deleted_at,
+                                ).length;
+                                return (
+                                  <MobileTaskRow
+                                    key={project.id}
+                                    className="mrow mrow-plain"
+                                    label={`${project.name}，${count} 项任务`}
+                                    /* 项目行没有任务级操作：长按无意义；点行去项目页定位。 */
+                                    pressEnabled={false}
+                                    onActivate={() => {
+                                      setNav("projects");
+                                      requestFocus({ kind: "project", id: project.id });
+                                    }}
+                                    onLongPress={() => {}}
+                                  >
+                                    <span
+                                      className="tag-card-dot"
+                                      style={{ background: project.color }}
+                                      aria-hidden
+                                    />
+                                    <span className="mrow-main">
+                                      <span className="mrow-title">{project.name}</span>
+                                    </span>
+                                    <span className="mrow-tail">{count} 项</span>
+                                  </MobileTaskRow>
+                                );
+                              })}
+                            </ul>
+                          </>
+                        ) : null}
+                        {detailTasks.length ? (
+                          <>
+                            <div className="mrow-section">任务</div>
+                            <ul className="mrow-list">
+                              {detailTasks.map((task) => (
+                                <MobileTaskLine
+                                  key={task.id}
+                                  task={task}
+                                  today={today}
+                                  projects={projects}
+                                  tags={tags}
+                                  tagMap={tagMap}
+                                  showTagPill={false}
+                                  doneStamp
+                                  onOpen={() => selectTask(task.id)}
+                                  onComplete={() => void toggleComplete(task.id)}
+                                  onMore={() => setSheetTask(task)}
+                                />
+                              ))}
+                            </ul>
+                          </>
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        {detailProjects.length ? (
+                          <div className="tags-project-section">
+                            <h4>项目</h4>
+                            <div className="tags-project-list">
+                              {detailProjects.map((project) => (
+                                <div key={project.id} className="tags-project-row">
+                                  <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
+                                  <p className="tags-project-name">{project.name}</p>
+                                  <span className="tags-task-due">
+                                    {tasks.filter((task) => task.project_id === project.id && !task.deleted_at).length} 项任务
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    {detailTasks.length ? (
-                      <div className="tags-task-section">
-                        <h4>任务</h4>
-                        <div className="tags-task-list">
-                          {detailTasks.map((task) => (
-                            <div
-                              key={task.id}
-                              className={taskRowClassName(task, false)}
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => selectTask(task.id)}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  selectTask(task.id);
-                                }
-                              }}
-                            >
-                              <button
-                                type="button"
-                                className="task-check"
-                                aria-label={task.status === "completed" ? "标记为未完成" : "标记为完成"}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  void toggleComplete(task.id);
-                                }}
-                              >
-                                {task.status === "completed" ? "✓" : ""}
-                              </button>
-                              <p className="task-title">{task.title}</p>
-                              <span className="tags-task-due">
-                                {task.completed_at
-                                  ? formatDayStamp(task.completed_at)
-                                  : task.due_date
-                                    ? formatDueDate(task.due_date)
-                                    : "无日期"}
-                              </span>
+                          </div>
+                        ) : null}
+                        {detailTasks.length ? (
+                          <div className="tags-task-section">
+                            <h4>任务</h4>
+                            <div className="tags-task-list">
+                              {detailTasks.map((task) => (
+                                <div
+                                  key={task.id}
+                                  className={taskRowClassName(task, false)}
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => selectTask(task.id)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                      selectTask(task.id);
+                                    }
+                                  }}
+                                >
+                                  <button
+                                    type="button"
+                                    className="task-check"
+                                    aria-label={task.status === "completed" ? "标记为未完成" : "标记为完成"}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      void toggleComplete(task.id);
+                                    }}
+                                  >
+                                    {task.status === "completed" ? "✓" : ""}
+                                  </button>
+                                  <p className="task-title">{task.title}</p>
+                                  <span className="tags-task-due">
+                                    {task.completed_at
+                                      ? formatDayStamp(task.completed_at)
+                                      : task.due_date
+                                        ? formatDueDate(task.due_date)
+                                        : "无日期"}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                     {!detailProjects.length && !detailTasks.length ? (
                       <div className="tags-filtered-empty">
                         该标签下暂无项目或独立任务。新建项目时可选择标签；未归属项目的任务也可在详情里打上「{tag.name}」。
@@ -429,6 +503,14 @@ export function TagsView() {
             </div>
           </form>
         </div>
+      ) : null}
+
+      {sheetTask ? (
+        <TaskActionSheet
+          task={sheetTask}
+          cursor={today}
+          onClose={() => setSheetTask(null)}
+        />
       ) : null}
     </main>
   );

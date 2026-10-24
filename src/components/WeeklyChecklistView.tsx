@@ -1,6 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
-import { todayDateString } from "@/lib/dates";
 import { currentDateStreak } from "@/lib/growth";
 import {
   buildWeekBuckets,
@@ -11,10 +10,17 @@ import {
   weekdayShort,
   type WeeklyCategoryId,
 } from "@/lib/weeklyChecklist";
+import { useTodayDate } from "@/lib/useTodayDate";
 import { ExpandRow } from "@/components/ExpandRow";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
+import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
+import type { Task } from "@/types";
+
+/** 移动壳里一个分类默认只露这么多条：sunken 子面板被拉成十几条会吃满一屏。 */
+const MOBILE_TASK_PREVIEW = 5;
 
 function formatMd(date: string) {
   const [, m, d] = date.split("-");
@@ -25,6 +31,7 @@ export function WeeklyChecklistView() {
   const tasks = useAppStore((s) => s.tasks);
   const tags = useAppStore((s) => s.tags);
   const tagMap = useAppStore((s) => s.tagMap);
+  const projects = useAppStore((s) => s.projects);
   const calendarCursor = useAppStore((s) => s.calendarCursor);
   const setCalendarCursor = useAppStore((s) => s.setCalendarCursor);
   const setNav = useAppStore((s) => s.setNav);
@@ -32,7 +39,7 @@ export function WeeklyChecklistView() {
   const toggleComplete = useAppStore((s) => s.toggleComplete);
   const selectTask = useAppStore((s) => s.selectTask);
   const habitChecks = useAppStore((s) => s.habitChecks);
-  const today = todayDateString();
+  const today = useTodayDate();
 
   const weekDates = useMemo(
     () => mondayWeekDates(calendarCursor || today),
@@ -49,6 +56,9 @@ export function WeeklyChecklistView() {
   const donePct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
   // 哪个分类展开着：点哪行就在哪行下面展开，不另起一块。
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  // 移动壳：展开的分类里默认只露前 MOBILE_TASK_PREVIEW 条，切分类回到预览。
+  const [showAllTasks, setShowAllTasks] = useState(false);
+  const [sheetTask, setSheetTask] = useState<Task | null>(null);
 
   // 周节奏放在周清单：今日页只留今天要做的事，周统计归这里。
   const weekChecks = useMemo(
@@ -171,11 +181,21 @@ export function WeeklyChecklistView() {
         <div className="weekly-goal-list">
           {categories.map((bucket) => {
             const on = expandedCategory === bucket.category.id;
+            const visibleTasks =
+              isMobileShell() && !showAllTasks
+                ? bucket.tasks.slice(0, MOBILE_TASK_PREVIEW)
+                : bucket.tasks;
             return (
               <ExpandRow
                 key={bucket.category.id}
                 open={on}
-                onToggle={() => setExpandedCategory(on ? null : bucket.category.id)}
+                className={
+                  bucket.total && bucket.done === bucket.total ? "is-clear" : undefined
+                }
+                onToggle={() => {
+                  setShowAllTasks(false);
+                  setExpandedCategory(on ? null : bucket.category.id);
+                }}
                 accent={bucket.category.color}
                 rowId={bucket.category.id}
                 dot={
@@ -191,24 +211,58 @@ export function WeeklyChecklistView() {
                 toggleTitle={on ? "收起这一类" : "查看这一类的任务"}
               >
                 {bucket.tasks.length ? (
-                  <div className="weekly-goal-tasks">
-                    {bucket.tasks.map((task) => (
-                      <button
-                        key={task.id}
-                        type="button"
-                        className={`weekly-goal-task${task.status === "completed" ? " is-done" : ""}`}
-                        onClick={() => selectTask(task.id)}
-                      >
-                        <span className="weekly-goal-task-state" aria-hidden>
-                          {task.status === "completed" ? "✓" : "○"}
-                        </span>
-                        <span className="weekly-goal-task-title">{task.title}</span>
-                        {task.due_date ? (
-                          <span className="weekly-goal-task-due">{task.due_date.slice(5)}</span>
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
+                  isMobileShell() ? (
+                    /* 移动壳：与今日/待办同一行件。分类是「四类」的粗分组，行里
+                       的项目 / 标签胶囊正好补上「这条到底属于哪件事」。 */
+                    <ul className="mrow-list">
+                      {visibleTasks.map((task) => (
+                        <MobileTaskLine
+                          key={task.id}
+                          task={task}
+                          today={today}
+                          projects={projects}
+                          tags={tags}
+                          tagMap={tagMap}
+                          doneStamp
+                          onOpen={() => selectTask(task.id)}
+                          onComplete={() => void toggleComplete(task.id)}
+                          onMore={() => setSheetTask(task)}
+                        />
+                      ))}
+                      {bucket.tasks.length > MOBILE_TASK_PREVIEW ? (
+                        <li>
+                          <button
+                            type="button"
+                            className="mrow-toggle"
+                            onClick={() => setShowAllTasks((value) => !value)}
+                          >
+                            {showAllTasks
+                              ? "收起任务列表"
+                              : `展开全部 ${bucket.tasks.length} 项`}
+                          </button>
+                        </li>
+                      ) : null}
+                    </ul>
+                  ) : (
+                    <div className="weekly-goal-tasks">
+                      {bucket.tasks.map((task) => (
+                        <button
+                          key={task.id}
+                          type="button"
+                          className={`weekly-goal-task${task.status === "completed" ? " is-done" : ""}`}
+                          onClick={() => selectTask(task.id)}
+                        >
+                          <span className="weekly-goal-task-state" aria-hidden>
+                            {task.status === "completed" ? "✓" : "○"}
+                          </span>
+                          <span className="weekly-goal-task-title">{task.title}</span>
+                          {task.due_date ? (
+                            <span className="weekly-goal-task-due">{task.due_date.slice(5)}</span>
+                          ) : null}
+                        </button>
+                      ))}
+                    </div>
+                  )
                 ) : (
                   <p className="expand-row-empty">这一类本周没有任务。</p>
                 )}
@@ -224,7 +278,9 @@ export function WeeklyChecklistView() {
           {days.map((day) => (
             <div
               key={day.date}
-              className={`weekly-day-col ${day.date === today ? "is-today" : ""}`}
+              className={`weekly-day-col ${day.date === today ? "is-today" : ""}${
+                day.total && day.done === day.total ? " is-clear" : ""
+              }`}
             >
               <header>
                 <strong>周{weekdayShort(day.date)}</strong>
@@ -242,41 +298,69 @@ export function WeeklyChecklistView() {
                   </div>
                 </div>
               </header>
-              <ul>
-                {day.tasks.length === 0 ? (
-                  <li className="weekly-day-empty">空闲</li>
-                ) : (
-                  day.tasks.slice(0, 8).map((task) => {
-                    const cat = resolveCategoryId(task.id, tagMap, tags);
-                    return (
-                      <li key={task.id}>
-                        <button
-                          type="button"
-                          className={`weekly-day-task ${task.status === "completed" ? "is-done" : ""}`}
-                          onClick={() => selectTask(task.id)}
-                        >
-                          <span
-                            className="weekly-dot"
-                            style={{ background: categoryColor(cat) }}
-                          />
-                          <span className="weekly-day-title">{task.title}</span>
-                          <span
-                            className="weekly-day-check"
-                            role="checkbox"
-                            aria-checked={task.status === "completed"}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void toggleComplete(task.id);
-                            }}
+              {isMobileShell() ? (
+                /* 移动壳：day 变体——那一列本身就是日期，不再挂日期药丸；
+                   行首分类色点保留（这一列里唯一的分组线索）。 */
+                <ul className="mrow-list">
+                  {day.tasks.length === 0 ? (
+                    <li className="weekly-day-empty">空闲</li>
+                  ) : (
+                    day.tasks.slice(0, 8).map((task) => (
+                      <MobileTaskLine
+                        key={task.id}
+                        task={task}
+                        today={today}
+                        projects={projects}
+                        tags={tags}
+                        tagMap={tagMap}
+                        variant="day"
+                        dotColor={categoryColor(
+                          resolveCategoryId(task.id, tagMap, tags),
+                        )}
+                        onOpen={() => selectTask(task.id)}
+                        onComplete={() => void toggleComplete(task.id)}
+                        onMore={() => setSheetTask(task)}
+                      />
+                    ))
+                  )}
+                </ul>
+              ) : (
+                <ul>
+                  {day.tasks.length === 0 ? (
+                    <li className="weekly-day-empty">空闲</li>
+                  ) : (
+                    day.tasks.slice(0, 8).map((task) => {
+                      const cat = resolveCategoryId(task.id, tagMap, tags);
+                      return (
+                        <li key={task.id}>
+                          <button
+                            type="button"
+                            className={`weekly-day-task ${task.status === "completed" ? "is-done" : ""}`}
+                            onClick={() => selectTask(task.id)}
                           >
-                            {task.status === "completed" ? "✓" : "○"}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })
-                )}
-              </ul>
+                            <span
+                              className="weekly-dot"
+                              style={{ background: categoryColor(cat) }}
+                            />
+                            <span className="weekly-day-title">{task.title}</span>
+                            <span
+                              className="weekly-day-check"
+                              role="checkbox"
+                              aria-checked={task.status === "completed"}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void toggleComplete(task.id);
+                              }}
+                            >
+                              {task.status === "completed" ? "✓" : "○"}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              )}
             </div>
           ))}
         </div>
@@ -313,6 +397,14 @@ export function WeeklyChecklistView() {
           </div>
         </div>
       </section>
+
+      {sheetTask ? (
+        <TaskActionSheet
+          task={sheetTask}
+          cursor={today}
+          onClose={() => setSheetTask(null)}
+        />
+      ) : null}
     </main>
   );
 }

@@ -5,13 +5,20 @@ import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
+import { MobileTaskPillView } from "@/components/mobile/MobileTaskPills";
+import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
+import { useTodayDate } from "@/lib/useTodayDate";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
-import type { Project } from "@/types";
+import type { Project, Task } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import { formatDayStamp } from "@/lib/dates";
 import { softDeleteProject, updateProject } from "@/lib/db";
+
+/** 移动壳与项目面板默认露出的任务条数。 */
+const MOBILE_TASK_PREVIEW = 5;
 
 export function ProjectsView() {
   const projects = useAppStore((state) => state.projects);
@@ -192,6 +199,11 @@ export function ProjectsView() {
                       <ExpandRow
                         key={project.id}
                         open={on}
+                        className={
+                          projectTasks.length && done === projectTasks.length
+                            ? "is-clear"
+                            : undefined
+                        }
                         onToggle={() => setActiveProjectId(on ? null : project.id)}
                         accent={projectColor(project)}
                         rowId={project.id}
@@ -413,21 +425,93 @@ function ProjectTaskPanel({
   onDelete: () => void;
 }) {
   const selectTask = useAppStore((s) => s.selectTask);
+  const toggleComplete = useAppStore((s) => s.toggleComplete);
+  const tagMap = useAppStore((s) => s.tagMap);
+  const today = useTodayDate();
   const [showAllTasks, setShowAllTasks] = useState(false);
-  const tagName = tags.find((tag) => tag.id === project.tag_id)?.name;
+  const [sheetTask, setSheetTask] = useState<Task | null>(null);
+  const tag = tags.find((item) => item.id === project.tag_id);
   // 完成时间倒序（未完成在后）；默认只展示前五条，可展开全部
   const sortedTasks = [...tasks].sort(
     (a, b) =>
       (Date.parse(b.completed_at ?? "") || 0) -
       (Date.parse(a.completed_at ?? "") || 0),
   );
-  const visibleTasks = showAllTasks ? sortedTasks : sortedTasks.slice(0, 5);
+  const canToggleAll = sortedTasks.length > MOBILE_TASK_PREVIEW;
+  const visibleTasks = showAllTasks
+    ? sortedTasks
+    : sortedTasks.slice(0, MOBILE_TASK_PREVIEW);
+
+  if (isMobileShell()) {
+    /* 移动壳：面板不再嵌第二层 .expand-row-body（桌面那份嵌了两层，内边距被叠了
+       两次）；任务行走统一行件，项目本身就是归属所以不再挂项目胶囊。 */
+    return (
+      <div className="mrow-panel">
+        {tag || canToggleAll ? (
+          <div className="mrow-panel-head">
+            {tag ? (
+              <MobileTaskPillView
+                pill={{ key: `tag-${tag.id}`, name: tag.name, color: tag.color }}
+              />
+            ) : (
+              <span />
+            )}
+            {canToggleAll ? (
+              <button
+                type="button"
+                className="mrow-toggle"
+                onClick={() => setShowAllTasks((v) => !v)}
+              >
+                {showAllTasks ? "收起" : `展开全部 ${sortedTasks.length} 项`}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {sortedTasks.length ? (
+          <ul className="mrow-list">
+            {visibleTasks.map((task) => (
+              <MobileTaskLine
+                key={task.id}
+                task={task}
+                today={today}
+                projects={[]}
+                tags={tags}
+                tagMap={tagMap}
+                showProjectPill={false}
+                doneStamp
+                onOpen={() => selectTask(task.id)}
+                onComplete={() => void toggleComplete(task.id)}
+                onMore={() => setSheetTask(task)}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="expand-row-empty">这个项目还没有挂任务。</p>
+        )}
+        <PanelFoot
+          archived={archived}
+          onEdit={onEdit}
+          onArchive={onArchive}
+          onRestore={onRestore}
+          onDelete={onDelete}
+        />
+        {sheetTask ? (
+          <TaskActionSheet
+            task={sheetTask}
+            cursor={today}
+            onClose={() => setSheetTask(null)}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="expand-row-body">
-      {tagName ? (
+      {tag ? (
         <span className="project-card-tag">
           <i className="tag-card-dot" aria-hidden />
-          {tagName}
+          {tag.name}
         </span>
       ) : null}
       <div className="project-task-links">
@@ -444,7 +528,7 @@ function ProjectTaskPanel({
           </button>
         ))}
       </div>
-      {sortedTasks.length > 5 ? (
+      {canToggleAll ? (
         <button
           type="button"
           className="btn-ghost project-tasks-toggle"
@@ -453,43 +537,68 @@ function ProjectTaskPanel({
           {showAllTasks ? "收起任务列表" : `展开全部 ${sortedTasks.length} 项任务`}
         </button>
       ) : null}
-      <div className="expand-row-foot">
-        {onEdit ? (
-          <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
-            <AppIcon name="edit" size={14} />
-            <span>编辑</span>
-          </button>
-        ) : null}
-        {archived ? (
-          onRestore ? (
-            <button
-              type="button"
-              className="item-action-btn item-action-archive"
-              onClick={onRestore}
-            >
-              <AppIcon name="review" size={14} />
-              <span>恢复</span>
-            </button>
-          ) : null
-        ) : onArchive ? (
+      <PanelFoot
+        archived={archived}
+        onEdit={onEdit}
+        onArchive={onArchive}
+        onRestore={onRestore}
+        onDelete={onDelete}
+      />
+    </div>
+  );
+}
+
+/** 面板底部动作条：编辑 / 归档（已归档则给恢复）/ 删除。两端共用。 */
+function PanelFoot({
+  archived,
+  onEdit,
+  onArchive,
+  onRestore,
+  onDelete,
+}: {
+  archived?: boolean;
+  onEdit?: () => void;
+  onArchive?: () => void;
+  onRestore?: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="expand-row-foot">
+      {onEdit ? (
+        <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
+          <AppIcon name="edit" size={14} />
+          <span>编辑</span>
+        </button>
+      ) : null}
+      {archived ? (
+        onRestore ? (
           <button
             type="button"
             className="item-action-btn item-action-archive"
-            onClick={onArchive}
+            onClick={onRestore}
           >
-            <AppIcon name="archive" size={14} />
-            <span>归档</span>
+            <AppIcon name="review" size={14} />
+            <span>恢复</span>
           </button>
-        ) : null}
+        ) : null
+      ) : onArchive ? (
         <button
           type="button"
-          className="item-action-btn item-action-danger quiet-danger"
-          onClick={onDelete}
+          className="item-action-btn item-action-archive"
+          onClick={onArchive}
         >
-          <AppIcon name="trash" size={14} />
-          <span>删除</span>
+          <AppIcon name="archive" size={14} />
+          <span>归档</span>
         </button>
-      </div>
+      ) : null}
+      <button
+        type="button"
+        className="item-action-btn item-action-danger quiet-danger"
+        onClick={onDelete}
+      >
+        <AppIcon name="trash" size={14} />
+        <span>删除</span>
+      </button>
     </div>
   );
 }

@@ -17,6 +17,7 @@ export function ExpandRow({
   toggleTitle,
   children,
   bodyClassName,
+  className,
   rowId,
 }: {
   open: boolean;
@@ -32,11 +33,13 @@ export function ExpandRow({
   toggleTitle?: string;
   children?: ReactNode;
   bodyClassName?: string;
+  /** 行级状态类（移动壳用它承载「整组已完成」的成就标记）。 */
+  className?: string;
   rowId?: string;
 }) {
   return (
     <article
-      className={`expand-row${open ? " is-open" : ""}`}
+      className={`expand-row${open ? " is-open" : ""}${className ? ` ${className}` : ""}`}
       data-expand-row={rowId}
       style={accent ? ({ "--tag-accent": accent } as CSSProperties) : undefined}
     >
