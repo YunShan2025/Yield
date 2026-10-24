@@ -259,34 +259,38 @@ export function HabitsView() {
               />
             ))}
             {!inProgress.length ? (
-              <div className="scope-empty">还没有已开始打卡的习惯。</div>
+              /* 与项目页同规：只有整页一条习惯都没有才引导创建；只是还没人
+                 开打卡，说的是「还没开始」，不喊「创建第一个」。 */
+              <div className="scope-empty">
+                {notStarted.length ? "还没有已开始打卡的习惯。" : "创建第一个习惯开始追踪。"}
+              </div>
             ) : null}
           </div>
         </section>
 
-        <section aria-label="未开始习惯">
-          <div className="section-title-row">
-            <h3>未开始</h3>
-            <span className="tags-filtered-count">{notStarted.length}</span>
-          </div>
-          <div className="habits-grid">
-            {notStarted.map((habit) => (
-              <HabitCard
-                key={habit.id}
-                habit={habit}
-                checks={[]}
-                today={today}
-                {...linkedGoalFor(habit)}
-                onEdit={() => openEdit(habit)}
-                onArchive={() => void archiveHabit(habit.id)}
-                onDelete={() => void removeHabitWithConfirm(habit)}
-              />
-            ))}
-            {!notStarted.length ? (
-              <div className="scope-empty">创建第一个习惯开始追踪。</div>
-            ) : null}
-          </div>
-        </section>
+        {/* 与项目页同规：空分组整段不渲染，不给「未开始」摆一句假空状态。 */}
+        {notStarted.length ? (
+          <section aria-label="未开始习惯">
+            <div className="section-title-row">
+              <h3>未开始</h3>
+              <span className="tags-filtered-count">{notStarted.length}</span>
+            </div>
+            <div className="habits-grid">
+              {notStarted.map((habit) => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  checks={[]}
+                  today={today}
+                  {...linkedGoalFor(habit)}
+                  onEdit={() => openEdit(habit)}
+                  onArchive={() => void archiveHabit(habit.id)}
+                  onDelete={() => void removeHabitWithConfirm(habit)}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {archivedHabits.length ? (
           <section aria-label="已归档习惯">
@@ -553,15 +557,29 @@ function HabitCard({
           className={`habit-week-progress${weekFull ? " is-full" : ""}`}
           aria-label={`本周已打卡 ${weekDone}/${weekTarget} 次`}
         >
+          {/* 周一→周日每日一枚打卡点：打过=实色，今天补一圈光环，
+              周节奏一眼可见；次数计数靠右，与任务行注记同一档。 */}
+          <span className="habit-week-dots" aria-hidden="true">
+            {weekDates.map((date) => {
+              const done = checks.some((item) => item.check_date === date);
+              return (
+                <i
+                  key={date}
+                  className={`habit-week-dot${done ? " is-done" : ""}${date === today ? " is-today" : ""}`}
+                />
+              );
+            })}
+          </span>
           <em>
             本周 {weekDone}/{weekTarget} 次
           </em>
         </div>
       </div>
+      {/* 动作钮与项目页 PanelFoot 同一套：共享 .item-action-* 类，两端同观感。 */}
       <div className="habit-card-actions">
         <button
           type="button"
-          className="habit-action-btn habit-edit-btn"
+          className="item-action-btn item-action-edit"
           onClick={onEdit}
         >
           <AppIcon name="edit" size={14} />
@@ -570,7 +588,7 @@ function HabitCard({
         {archived ? (
           <button
             type="button"
-            className="habit-action-btn habit-archive-btn"
+            className="item-action-btn item-action-archive"
             onClick={onRestore}
           >
             <AppIcon name="review" size={14} />
@@ -579,7 +597,7 @@ function HabitCard({
         ) : (
           <button
             type="button"
-            className="habit-action-btn habit-archive-btn"
+            className="item-action-btn item-action-archive"
             onClick={onArchive}
           >
             <AppIcon name="archive" size={14} />
@@ -588,7 +606,7 @@ function HabitCard({
         )}
         <button
           type="button"
-          className="habit-action-btn habit-delete-btn quiet-danger"
+          className="item-action-btn item-action-danger quiet-danger"
           onClick={onDelete}
         >
           <AppIcon name="trash" size={14} />

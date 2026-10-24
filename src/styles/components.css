@@ -1148,10 +1148,12 @@ select {
   min-width: 0;
 }
 
+/* kicker 小标题：与标签页分节标签同一档（600 + 次级墨色），不再弱成注释色。 */
 .week-board-kicker {
   font-size: var(--font-size-caption);
+  font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .scope-summary {
@@ -1804,7 +1806,9 @@ select {
 /* Chrome 83 WebView（模拟器）无 aspect-ratio 且 border/background 的 color-mix
    整条声明失效：格子高塌 0、无边框无底色，整张热力图“没有格子”。
    基础规则给固定格高 + 纯变量边框/底色，增强放 @supports。 */
-.heat-cell { width: 100%; height: clamp(9px, 1.4vw, 13px); padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-panel); }
+/* 小格子用 3px 微圆角读作方块：--radius-sm（8px）在 9-14px 的格子上
+   会把半径撑过格宽一半，整张热力图看起来是一排排圆点。 */
+.heat-cell { width: 100%; height: clamp(9px, 1.4vw, 13px); padding: 0; border: 1px solid var(--border); border-radius: 3px; background: var(--surface-panel); }
 @supports (aspect-ratio: 1) {
   .heat-cell { height: auto; aspect-ratio: 1; }
 }
@@ -1843,6 +1847,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* 收起来的目标（已完成 / 已放弃）弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
 .goal-card.is-finished { opacity: .72; box-shadow: none; }
 .goal-card.is-finished:hover { opacity: 1; }
+/* 总览「进行中的目标 / 最近成就」的卡片直排在面板里：卡片之间补与 goal-grid
+   同档的间隙（桌面 14、移动壳 10）。此前紧贴成一片，圆角卡片互碰像叠在一起。 */
+.growth-panel > .goal-card + .goal-card,
+.growth-panel > .achievement-card + .achievement-card { margin-top: 14px; }
 .goal-card-head { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-caption); }
 .goal-card-head i { width: 10px; height: 10px; border-radius: 50%; }
 .goal-card h3 { margin: 14px 0 6px; font-size: var(--font-size-h3); }
@@ -1999,6 +2007,18 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .habit-week-progress { display: flex; align-items: center; gap: 8px; }
 .habit-week-progress em { flex: 0 0 auto; color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
 .habit-week-progress.is-full em { color: var(--accent-strong); font-weight: 700; }
+/* 周打卡点：周一→周日每日一枚。打过填 accent，今日（无论打过与否）补一圈
+   淡环标出「今天在哪」；没打的日子只留浅轨道，整条读作本周的节奏。 */
+.habit-week-dots { display: inline-flex; align-items: center; gap: 6px; }
+.habit-week-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.habit-week-dot.is-done { background: var(--accent); box-shadow: none; }
+.habit-week-dot.is-today { box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 45%, transparent); }
 /* 列表/卡片动作按钮组：习惯卡先落地，今日/待办行、标签、项目、回收站、
    计时器等复用同一套 .item-action-* 观感。 */
 .habit-card-actions,
@@ -2009,7 +2029,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   justify-content: flex-end;
   gap: 7px;
 }
-.habit-action-btn,
 .item-action-btn {
   display: inline-flex;
   align-items: center;
@@ -2028,15 +2047,12 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   transition: transform var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast), box-shadow var(--motion-fast);
 }
 .item-action-cluster .item-action-btn { flex: none; }
-.habit-action-btn:hover:not(:disabled),
 .item-action-btn:hover:not(:disabled) {
   border-color: var(--border-strong);
   color: var(--text-primary);
   background: var(--surface-hover);
 }
-.habit-action-btn:active:not(:disabled),
 .item-action-btn:active:not(:disabled) { transform: translateY(0); }
-.habit-action-btn:disabled,
 .item-action-btn:disabled { opacity: .42; cursor: not-allowed; }
 .habits-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .habits-card-head strong {
@@ -2128,19 +2144,16 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   .item-action-primary.is-flash > svg { animation: none; }
   .item-action-primary::after { transition: none; }
 }
-.habit-edit-btn:hover:not(:disabled),
 .item-action-edit:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   color: var(--accent);
   background: var(--accent-soft);
 }
-.habit-archive-btn:hover:not(:disabled),
 .item-action-archive:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--brand-gold) 38%, var(--border));
   color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
   background: color-mix(in srgb, var(--brand-gold) 10%, var(--surface-panel));
 }
-.habit-delete-btn,
 .item-action-danger {
   border-color: color-mix(in srgb, var(--danger) 24%, var(--border));
   color: var(--danger);
@@ -2160,7 +2173,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
 }
 
-.habit-delete-btn:hover:not(:disabled),
 .item-action-danger:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
   color: var(--text-on-solid);
@@ -2210,7 +2222,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
-  .habit-action-btn { width: 100%; }
+  .habit-card-actions .item-action-btn { width: 100%; }
   .memo-detail-panel .detail-footer .item-action-btn {
     flex: 1 1 calc(50% - 4px);
   }
@@ -2583,6 +2595,19 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   white-space: nowrap;
 }
 
+/* 标题后的标签胶囊：浅色底 + 标签名，底色就是标签的颜色。 */
+.expand-row-tag {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--text-label);
+  background: color-mix(in srgb, var(--pill-color, var(--accent)) 12%, transparent);
+}
+
 .expand-row-meta {
   min-width: 0;
   overflow: hidden;
@@ -2595,8 +2620,9 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .expand-row-trailing {
   margin-left: auto;
   flex: none;
-  color: var(--text-label);
+  color: var(--text-secondary);
   font-size: var(--font-size-caption);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -2674,38 +2700,26 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   outline-offset: 1px;
 }
 
-.tags-filtered header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.tags-filtered h3 {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0;
-  font-size: var(--font-size-h3);
-}
-
 .tags-filtered-count {
   min-width: 22px;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  color: var(--text-label);
+  color: var(--text-secondary);
   background: color-mix(in srgb, var(--tag-accent, var(--accent)) 12%, transparent);
   font-size: var(--font-size-caption);
+  font-weight: 600;
   text-align: center;
 }
 
-/* 标签筛选区：项目与任务分成两个区块，行内名称与任务标题同字号（14px）。 */
+/* 标签筛选区：项目与任务分成两个区块。小节标签与移动壳 .mrow-section 统一样式：
+   caption 字号 + 600 + 次级墨色 + 微字距（移动壳为 0.719rem，同档观感）。 */
 .tags-project-section h4,
 .tags-task-section h4 {
   margin: 14px 0 0;
   color: var(--text-secondary);
-  font-size: var(--font-size-label);
-  font-weight: 700;
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .tags-task-list {
@@ -2757,26 +2771,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   grid-template-columns: 1fr;
   margin-top: 12px;
 }
-
-/* 项目详情区：统计行右侧的标签徽标 */
-.project-card-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: auto;
-  height: auto;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  color: var(--text-secondary);
-  background: color-mix(in srgb, var(--tag-accent, var(--accent)) 12%, transparent);
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
-}
-
-.project-card-tag .tag-card-dot { width: 8px; height: 8px; }
-
-/* 展开区里是 grid，标签芯片要按内容宽度，不要拉满一行 */
-.expand-row-body > .project-card-tag { justify-self: start; }
 
 /* 任务链接区：默认只展示前五条（倒序），可展开全部，不做高度截断 */
 .project-task-links {
@@ -4245,7 +4239,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 .settings-version-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .settings-version-card span { color: var(--accent-strong); font-size: var(--font-size-caption); font-weight: 800; letter-spacing: .08em; }
 .settings-version-card h3 { margin: 4px 0; }
-.settings-version-card p { margin: 0; color: var(--text-muted); font-size: var(--font-size-caption); }
+.settings-version-card p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 600; font-variant-numeric: tabular-nums; }
 .settings-version-card > button { flex: 0 0 auto; }
 @media (max-width: 640px) { .desktop-notification-stack { top: 44px; right: 16px; } }
 
@@ -4354,18 +4348,6 @@ html[data-nav="railed"] .nav-edge-collapse {
 
 .section-title-row > span {
   color: var(--text-label);
-  font-size: var(--font-size-caption);
-}
-
-.project-card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-panel);
-}
-
-.project-card p {
-  color: var(--text-muted);
   font-size: var(--font-size-caption);
 }
 
@@ -4670,8 +4652,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 :root[data-theme="dark"] .scope-card,
-:root[data-theme="dark"] .expand-task,
-:root[data-theme="dark"] .project-card {
+:root[data-theme="dark"] .expand-task {
   color: var(--text-primary);
   border-color: var(--border-strong);
   background: var(--surface-panel);
@@ -4697,8 +4678,7 @@ html[data-nav="railed"] .nav-edge-collapse {
   }
 
   :root[data-theme="system"] .scope-card,
-  :root[data-theme="system"] .expand-task,
-  :root[data-theme="system"] .project-card {
+  :root[data-theme="system"] .expand-task {
     color: var(--text-primary);
     border-color: var(--border-strong);
     background: var(--surface-panel);

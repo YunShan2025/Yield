@@ -290,7 +290,7 @@ export function SettingsView() {
             void updateSettings({ notifyAhead: Number(e.target.value) || 30 })
           }
         />
-        <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "6px 0 0" }}>
+        <p className="settings-hint">
           单个任务可在任务详情里单独设置提前量；不单独设置时使用这里的默认值。
         </p>
         {!isMobileShell() ? (
@@ -306,12 +306,12 @@ export function SettingsView() {
                 <small>登录 Windows 后自动启动有秋</small>
               </span>
             </label>
-            <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            <p className="settings-hint">
               关闭主窗口会收到托盘，不会退出；彻底退出请用托盘「退出应用」。
             </p>
           </>
         ) : (
-          <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+          <p className="settings-hint">
             Android 端提醒由系统计划通知送达；把有秋加入电池优化白名单可避免提醒被延迟。
           </p>
         )}
@@ -325,7 +325,7 @@ export function SettingsView() {
 
       <section className="settings-card" style={{ marginTop: 12 }}>
         <h3>隐私</h3>
-        <p>本地优先，任务数据仅保存在本机。默认不上传任何日志与任务内容。</p>
+        <p className="settings-hint">本地优先，任务数据仅保存在本机。默认不上传任何日志与任务内容。</p>
         <label className="settings-toggle">
           <input
             type="checkbox"
@@ -356,7 +356,7 @@ export function SettingsView() {
             <small>每 6 小时保存一份备份，自动保留最近 10 个版本</small>
           </span>
         </label>
-        <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+        <p className="settings-hint">
           最近一次备份：
           {settings.autoBackupLastError
             ? `失败${
@@ -549,7 +549,7 @@ function SyncSettingsCard() {
   return (
     <section className="settings-card" style={{ marginTop: 12 }}>
       <h3>数据同步</h3>
-      <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+      <p className="settings-hint" style={{ margin: "4px 0 12px" }}>
         在两台设备上填写同一份飞书应用凭据（企业自建应用），有秋通过飞书云盘交换增量日志并按时间戳合并。
         触发时机：启动、回到前台、手动。凭据只保存在本机，不进备份文件。
       </p>
@@ -610,7 +610,7 @@ function SyncSettingsCard() {
           {busy === "backfill" ? "回填中…" : "生成初始基线"}
         </button>
       </div>
-      <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "8px 0 0" }}>
+      <p className="settings-hint">
         状态：
         {running ? "同步中…" : phase === "ok" ? "正常" : phase === "error" ? "异常" : "未运行"}
         {lastSummary
@@ -639,9 +639,9 @@ function ReminderSyncStatusCard() {
         : "未授权";
   const failed = Boolean(sync.lastError) && !sync.osAvailable;
   return (
-    <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.7 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", alignItems: "baseline" }}>
-        <strong style={{ color: "var(--text-heading)" }}>系统提醒</strong>
+    <div className="reminder-sync-card">
+      <div className="reminder-sync-status">
+        <strong>系统提醒</strong>
         <span>状态：{osLabel}</span>
         <span>通知权限：{permLabel}</span>
         <span>
@@ -650,12 +650,12 @@ function ReminderSyncStatusCard() {
           {sync.overflowCount ? ` · 另有 ${sync.overflowCount} 条待应用补发` : ""}
         </span>
       </div>
-      <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "6px 0 0" }}>
+      <p className="settings-hint">
         {isMobileShell()
           ? "Android 端由系统计划通知（闹钟）准时送达；未授予精确闹钟时可能延迟数分钟，被系统强停后需重新打开应用补发。"
           : `完全退出后，最近 ${OS_REMINDER_LIMIT} 条、90 天内的提醒仍会由系统准时弹出，其余等应用再次运行时补发${sync.truncated ? "；当前已超出上限，队列每 6 小时自动补入" : ""}。`}
       </p>
-      <p style={{ color: "var(--text-muted)", fontSize: 12, margin: "4px 0 0" }}>
+      <p className="settings-hint">
         最近一次同步：
         {failed
           ? `失败 · ${sync.lastError}`

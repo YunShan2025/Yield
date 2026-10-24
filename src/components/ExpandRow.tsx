@@ -10,6 +10,7 @@ export function ExpandRow({
   onToggle,
   dot,
   title,
+  tag,
   meta,
   trailing,
   actions,
@@ -24,6 +25,8 @@ export function ExpandRow({
   onToggle: () => void;
   dot?: ReactNode;
   title: ReactNode;
+  /** 紧跟标题的小胶囊（如项目所属标签：标签色底 + 标签名）。 */
+  tag?: ReactNode;
   meta?: ReactNode;
   /** 右对齐的计数/状态。 */
   trailing?: ReactNode;
@@ -53,6 +56,7 @@ export function ExpandRow({
         >
           {dot}
           <strong className="expand-row-title">{title}</strong>
+          {tag}
           {meta ? <span className="expand-row-meta">{meta}</span> : null}
           {trailing ? <span className="expand-row-trailing">{trailing}</span> : null}
           <span className={`expand-row-caret${open ? " open" : ""}`} aria-hidden>

@@ -199,6 +199,36 @@ select:focus {
   font-size: var(--font-size-caption);
 }
 
+/* 设置提示：与全应用统一辅助文字档（次级墨色 + 600 + tabular，
+   状态行里带时间戳/计数）。 */
+.settings-hint {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 系统提醒状态卡：标题与状态短句同行换行，短句走统一辅助档。 */
+.reminder-sync-card {
+  margin-top: 12px;
+  line-height: 1.7;
+}
+.reminder-sync-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.reminder-sync-status strong {
+  color: var(--text-heading);
+  font-size: var(--font-size-label);
+  font-weight: 700;
+}
+
 .data-health-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

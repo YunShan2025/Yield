@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
 import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
@@ -6,14 +7,12 @@ import { confirmAction } from "@/components/AppConfirm";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
-import { MobileTaskPillView } from "@/components/mobile/MobileTaskPills";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
-import { useGoals } from "@/lib/useGoals";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
-import type { Goal, Project, Task } from "@/types";
+import type { Project, Task } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import { formatDayStamp } from "@/lib/dates";
 import { softDeleteProject, updateProject } from "@/lib/db";
@@ -26,7 +25,6 @@ export function ProjectsView() {
   const archivedProjects = useAppStore((state) => state.archivedProjects);
   const tags = useAppStore((state) => state.tags);
   const tasks = useAppStore((state) => state.tasks);
-  const { goalById } = useGoals();
   const addProject = useAppStore((state) => state.addProject);
   const archiveProject = useAppStore((state) => state.archiveProject);
   const restoreProject = useAppStore((state) => state.restoreProject);
@@ -48,6 +46,20 @@ export function ProjectsView() {
   /** 项目颜色不自选：跟随所选标签的颜色；无标签时保留原色兜底。 */
   const projectColor = (project: Project) =>
     tags.find((tag) => tag.id === project.tag_id)?.color ?? project.color;
+
+  /** 项目名后挂标签胶囊：浅色底 + 标签名，底色就是标签的颜色。 */
+  const projectTagChip = (project: Project) => {
+    const tag = tags.find((item) => item.id === project.tag_id);
+    if (!tag) return undefined;
+    return (
+      <span
+        className="expand-row-tag"
+        style={{ "--pill-color": tag.color } as CSSProperties}
+      >
+        {tag.name}
+      </span>
+    );
+  };
 
   const activeProject =
     projects.find((p) => p.id === activeProjectId) ??
@@ -209,16 +221,14 @@ export function ProjectsView() {
                         onToggle={() => setActiveProjectId(on ? null : project.id)}
                         accent={projectColor(project)}
                         rowId={project.id}
-                        dot={<span className="tag-card-dot" aria-hidden />}
+                        tag={projectTagChip(project)}
                         title={project.name}
                         trailing={`${projectTasks.length} 项任务 · 已完成 ${done}`}
                         toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
                       >
                         <ProjectTaskPanel
-                          project={project}
                           tasks={projectTasks}
                           tags={tags}
-                          goalById={goalById}
                           onEdit={() => beginEditProject(project)}
                           onArchive={() => void archiveProject(project.id)}
                           onDelete={() => void deleteActiveProject()}
@@ -248,7 +258,7 @@ export function ProjectsView() {
                           onToggle={() => setActiveProjectId(on ? null : project.id)}
                           accent={projectColor(project)}
                           rowId={project.id}
-                          dot={<span className="tag-card-dot" aria-hidden />}
+                          tag={projectTagChip(project)}
                           title={project.name}
                           trailing="暂无任务"
                           toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
@@ -284,7 +294,7 @@ export function ProjectsView() {
                     onToggle={() => setActiveProjectId(on ? null : project.id)}
                     accent={projectColor(project)}
                     rowId={project.id}
-                    dot={<span className="tag-card-dot" aria-hidden />}
+                    tag={projectTagChip(project)}
                     title={project.name}
                     trailing={
                       projectTasks.length
@@ -294,10 +304,8 @@ export function ProjectsView() {
                     toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
                   >
                     <ProjectTaskPanel
-                      project={project}
                       tasks={projectTasks}
                       tags={tags}
-                      goalById={goalById}
                       archived
                       onRestore={() => void restoreProject(project.id)}
                       onDelete={() => void deleteActiveProject()}
@@ -410,20 +418,16 @@ export function ProjectsView() {
 
 /** 展开在行内的任务面板：任务列表 + 右对齐的操作。 */
 function ProjectTaskPanel({
-  project,
   tasks,
   tags,
-  goalById,
   archived,
   onEdit,
   onArchive,
   onRestore,
   onDelete,
 }: {
-  project: Project;
   tasks: ReturnType<typeof useAppStore.getState>["tasks"];
   tags: ReturnType<typeof useAppStore.getState>["tags"];
-  goalById?: Map<string, Goal>;
   archived?: boolean;
   onEdit?: () => void;
   onArchive?: () => void;
@@ -436,7 +440,6 @@ function ProjectTaskPanel({
   const today = useTodayDate();
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
-  const tag = tags.find((item) => item.id === project.tag_id);
   // 完成时间倒序（未完成在后）；默认只展示前五条，可展开全部
   const sortedTasks = [...tasks].sort(
     (a, b) =>
@@ -450,27 +453,21 @@ function ProjectTaskPanel({
 
   if (isMobileShell()) {
     /* 移动壳：面板不再嵌第二层 .expand-row-body（桌面那份嵌了两层，内边距被叠了
-       两次）；任务行走统一行件，项目本身就是归属所以不再挂项目胶囊。 */
+       两次）；任务行走统一行件的精简档——项目即归属、标签在行首胶囊、目标不标注，
+       每行只剩优先级色点 + 标题，与右侧日期、完成圆钮一条线。 */
     return (
       <div className="mrow-panel">
-        {tag || canToggleAll ? (
+        {/* 标签已由行内色片表达，面板头只在需要「展开全部」时出现。 */}
+        {canToggleAll ? (
           <div className="mrow-panel-head">
-            {tag ? (
-              <MobileTaskPillView
-                pill={{ key: `tag-${tag.id}`, name: tag.name, color: tag.color }}
-              />
-            ) : (
-              <span />
-            )}
-            {canToggleAll ? (
-              <button
-                type="button"
-                className="mrow-toggle"
-                onClick={() => setShowAllTasks((v) => !v)}
-              >
-                {showAllTasks ? "收起" : `展开全部 ${sortedTasks.length} 项`}
-              </button>
-            ) : null}
+            <span />
+            <button
+              type="button"
+              className="mrow-toggle"
+              onClick={() => setShowAllTasks((v) => !v)}
+            >
+              {showAllTasks ? "收起" : `展开全部 ${sortedTasks.length} 项`}
+            </button>
           </div>
         ) : null}
         {sortedTasks.length ? (
@@ -483,8 +480,7 @@ function ProjectTaskPanel({
                 projects={[]}
                 tags={tags}
                 tagMap={tagMap}
-                goalById={goalById}
-                showProjectPill={false}
+                dotInTitle
                 doneStamp
                 onOpen={() => selectTask(task.id)}
                 onComplete={() => void toggleComplete(task.id)}
@@ -515,12 +511,6 @@ function ProjectTaskPanel({
 
   return (
     <div className="expand-row-body">
-      {tag ? (
-        <span className="project-card-tag">
-          <i className="tag-card-dot" aria-hidden />
-          {tag.name}
-        </span>
-      ) : null}
       <div className="project-task-links">
         {visibleTasks.map((task) => (
           <button key={task.id} type="button" onClick={() => selectTask(task.id)}>

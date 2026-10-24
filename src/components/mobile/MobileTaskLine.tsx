@@ -41,6 +41,7 @@ export function MobileTaskLine({
   doneStamp = false,
   showProjectPill = true,
   showTagPill = true,
+  dotInTitle = false,
   onOpen,
   onComplete,
   onMore,
@@ -53,7 +54,7 @@ export function MobileTaskLine({
   /** 目标表索引（`useGoals()` 在宿主页面取一次）；给了才显示目标徽标。 */
   goalById?: Map<string, Goal>;
   variant?: "list" | "day";
-  /** `day` 变体的行首分类色点（`categoryColor`）。 */
+  /** `day` 变体的行首分类色点（`categoryColor`）；`dotInTitle` 时给色也用它压过优先级色。 */
   dotColor?: string;
   /** 右对齐小注；`doneStamp` 未命中时用它。 */
   tail?: ReactNode;
@@ -61,6 +62,8 @@ export function MobileTaskLine({
   doneStamp?: boolean;
   showProjectPill?: boolean;
   showTagPill?: boolean;
+  /** 精简行（项目 / 标签面板）：色点并入标题行，不再挂第二行元信息；色点默认优先级色，`dotColor` 可指定。 */
+  dotInTitle?: boolean;
   onOpen: () => void;
   onComplete: () => void;
   onMore: () => void;
@@ -82,7 +85,7 @@ export function MobileTaskLine({
 
   return (
     <MobileTaskRow
-      className={`mrow${done ? " is-done" : ""}${isDay ? " is-dense" : ""}`}
+      className={`mrow${done ? " is-done" : ""}${isDay ? " is-dense" : ""}${dotInTitle ? " is-single" : ""}`}
       label={task.title}
       onActivate={onOpen}
       onLongPress={onMore}
@@ -91,8 +94,17 @@ export function MobileTaskLine({
         <i className="mrow-cdot" style={{ background: dotColor }} aria-hidden="true" />
       ) : null}
       <span className="mrow-main">
-        <span className="mrow-title">{task.title}</span>
-        {hasMeta ? (
+        <span className="mrow-title">
+          {dotInTitle ? (
+            <i
+              className={`minbox-pdot pr${task.priority}`}
+              style={dotColor ? { background: dotColor } : undefined}
+              aria-hidden="true"
+            />
+          ) : null}
+          {task.title}
+        </span>
+        {!dotInTitle && hasMeta ? (
           <span className="mrow-meta">
             {isDay ? null : (
               <>

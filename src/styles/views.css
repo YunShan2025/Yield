@@ -296,7 +296,6 @@ html:not([data-desktop-widget]) #root {
 :root[data-theme="dawn"] .scope-card,
 :root[data-theme="dawn"] .expand-task,
 :root[data-theme="dawn"] .settings-card,
-:root[data-theme="dawn"] .project-card,
 :root[data-theme="dawn"] .timeline-task-popover {
   border-color: var(--navy-450-12);
   border-radius: var(--radius-lg);
@@ -511,7 +510,6 @@ html:not([data-desktop-widget]) #root {
 }
 
 :root[data-theme="glass"] .brand-caption,
-:root[data-theme="glass"] .text-muted,
 :root[data-theme="glass"] .task-meta,
 :root[data-theme="glass"] .nav-item,
 :root[data-theme="glass"] .nav-count,
@@ -533,7 +531,6 @@ html:not([data-desktop-widget]) #root {
 :root[data-theme="glass"] .scope-card,
 :root[data-theme="glass"] .expand-task,
 :root[data-theme="glass"] .settings-card,
-:root[data-theme="glass"] .project-card,
 :root[data-theme="glass"] .timeline-task-popover {
   border-color: var(--white-16);
   border-radius: var(--radius-lg);
@@ -619,7 +616,7 @@ html:not([data-desktop-widget]) #root {
 }
 
 .theme-section-heading h3 { margin: 0; }
-.theme-section-heading p { margin: 5px 0 0; color: var(--text-secondary); }
+.theme-section-heading p { margin: 5px 0 0; color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 600; }
 .theme-section-heading > span {
   padding: 6px 10px;
   border-radius: var(--radius-pill);
@@ -774,7 +771,6 @@ html:not([data-desktop-widget]) #root {
   text-shadow: none;
 }
 
-:root[data-theme="dark"] .text-muted,
 :root[data-theme="dark"] input::placeholder,
 :root[data-theme="dark"] textarea::placeholder,
 :root[data-theme="dark"] .field::placeholder {
@@ -796,7 +792,6 @@ html:not([data-desktop-widget]) #root {
   font-weight: 700;
 }
 
-:root[data-theme="dawn"] .text-muted,
 :root[data-theme="dawn"] .task-meta,
 :root[data-theme="dawn"] .nav-item,
 :root[data-theme="dawn"] .brand-caption,
@@ -1646,7 +1641,8 @@ html[data-shell="mobile"] .day-agenda .expand-task-row > .item-action-edit > spa
   display: none;
 }
 
-/* 习惯卡片动作区：两列换行会把「删除」甩到第二行，改成三钮等分一行。 */
+/* 习惯卡片动作区：两列换行会把「删除」甩到第二行，改成三钮等分一行。
+   外观（灰底/32px/删除淡红）走 mobile.css 与面板底部动作条的共享规则。 */
 html[data-shell="mobile"] .habit-card-actions {
   display: flex;
   grid-template-columns: none;
@@ -1655,20 +1651,25 @@ html[data-shell="mobile"] .habit-card-actions {
   width: 100%;
 }
 
-html[data-shell="mobile"] .habit-card-actions .habit-action-btn {
+html[data-shell="mobile"] .habit-card-actions .item-action-btn {
   flex: 1 1 0;
   width: auto;
   min-width: 0;
-  min-height: 32px;
-  padding: 6px 8px;
-  gap: 4px;
-  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
 /* 应用内通知卡叠层：窄屏锚定在底部导航上方——顶部悬浮会盖住
    日/周/月切换器与「新建任务」按钮（实测发现）。 */
 html[data-shell="mobile"] .desktop-notification-stack {
+  top: auto;
+  right: 12px;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  left: 12px;
+}
+
+/* 版本更新提示卡与通知叠层同锚点（移动壳也挂载 VersionUpdateNotice，
+   设置页「检查更新」按钮才不是死按钮）。 */
+html[data-shell="mobile"] .version-update-notice {
   top: auto;
   right: 12px;
   bottom: calc(66px + env(safe-area-inset-bottom, 0px));
@@ -2506,11 +2507,6 @@ html[data-shell="mobile"] .reminders-stack {
 
 html[data-shell="mobile"] .timer-card {
   padding: 14px;
-}
-
-/* 触摸屏没有 hover：项目卡片同理不做悬浮位移。 */
-html[data-shell="mobile"] .tag-card:hover {
-  transform: none;
 }
 
 /* 提醒页头：tabs 与「＋ 新建倒计时/循环提醒」与标题同行并靠右

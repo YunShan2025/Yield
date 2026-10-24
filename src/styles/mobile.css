@@ -290,16 +290,19 @@ html[data-shell="mobile"] .mtoday-shead button {
   padding: 0;
   font-family: inherit;
   font-size: 0.719rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   touch-action: manipulation;
 }
 
+/* 辅助文字统一档（同标签页 .mrow-section / 计数注记）：0.719rem + 600 + 次级墨色。 */
 html[data-shell="mobile"] .mtoday-hint {
   font-size: 0.719rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -589,6 +592,15 @@ html[data-shell="mobile"] .minbox-meta .goal-chip {
 }
 
 html[data-shell="mobile"] .mtoday-pill {
+  background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
+}
+
+/* 项目行标题后的标签胶囊：并入上面那组行内徽标的共用规格，别再各写一套。 */
+html[data-shell="mobile"] .expand-row-tag {
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 0.656rem;
+  letter-spacing: 0.01em;
   background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
 }
 
@@ -1035,8 +1047,8 @@ html[data-shell="mobile"] .minbox-group-count {
   padding: 1px 5px;
   border-radius: 9px;
   background: var(--surface-sunken);
-  color: var(--text-muted);
-  font-size: 0.656rem;
+  color: var(--text-secondary);
+  font-size: 0.719rem;
   font-weight: 600;
   line-height: 1.35;
   text-align: center;
@@ -1885,8 +1897,9 @@ html[data-shell="mobile"] .mledger-trend-bars i.exp {
 }
 
 html[data-shell="mobile"] .mledger-trend-col small {
-  font-size: 0.656rem;
-  color: var(--text-muted);
+  font-size: 0.719rem;
+  font-weight: 600;
+  color: var(--text-secondary);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -3026,7 +3039,9 @@ html[data-shell="mobile"] .review-metrics strong {
 
 html[data-shell="mobile"] .growth-metrics small,
 html[data-shell="mobile"] .review-metrics small {
-  font-size: 0.656rem;
+  font-size: 0.719rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* ---------- 5) 周清单：七日横向滑动 + 段落卡片化 ---------- */
@@ -3135,6 +3150,12 @@ html[data-shell="mobile"] .goal-card {
   padding: 14px 15px;
 }
 
+/* 总览面板里直排的目标/成就卡片：间距与移动壳 goal-grid 同为 10px。 */
+html[data-shell="mobile"] .growth-panel > .goal-card + .goal-card,
+html[data-shell="mobile"] .growth-panel > .achievement-card + .achievement-card {
+  margin-top: 10px;
+}
+
 html[data-shell="mobile"] .goal-card h3 {
   margin: 10px 0 4px;
 }
@@ -3193,22 +3214,46 @@ html[data-shell="mobile"] .habits-card {
   padding: 13px 15px;
 }
 
-/* 打卡/编辑/归档三钮已在 views.css 折成一排：这里换成 action-sheet 的
-   灰底语言，去掉桌面描边按钮的「小方块」感。 */
-html[data-shell="mobile"] .habit-card-actions .habit-action-btn {
-  min-height: 40px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
+/* 卡片纵向节奏收紧：正文行距、到动作行的间距贴近展开面板的密度。 */
+html[data-shell="mobile"] .habit-card {
+  gap: 8px;
 }
 
-html[data-shell="mobile"] .habit-card-actions .item-action-primary {
-  background: var(--accent);
+html[data-shell="mobile"] .habit-card-main {
+  gap: 4px;
 }
 
-html[data-shell="mobile"] .habit-card-actions .item-action-primary.is-done {
-  background: var(--accent);
+/* 卡片辅助文字与标签页同档：0.719rem + 600 + 次级墨色，数字 tabular。 */
+html[data-shell="mobile"] .habits-card-meta,
+html[data-shell="mobile"] .habits-card-schedule {
+  color: var(--text-secondary);
+  font-size: 0.719rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
+
+/* 周打卡点在左、次数注记靠右：与任务行「信息左、注记右」同一读法；
+   达标时注记转强调色（沿用桌面 is-full 语义）。 */
+html[data-shell="mobile"] .habit-week-progress {
+  margin-top: 4px;
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .habit-week-progress em {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 0.719rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-shell="mobile"] .habit-week-progress.is-full em {
+  color: var(--accent-strong);
+}
+
+/* 动作钮与项目面板底部动作条同源（.expand-row-foot 共享规则见下）：
+   灰底等分、删除淡红底，两端与项目页完全一致。 */
 
 /* 项目 / 标签 / 周清单的 ExpandRow 列表装进卡片面板：行与行发丝线（桌面原样），
    行高垫到 48dp，行尾动作钮收小。 */
@@ -3242,6 +3287,13 @@ html[data-shell="mobile"] .expand-row-toggle {
   min-height: 48px;
 }
 
+/* 项目列表密度：行高 40（触控热区仍是整行含发丝线），标签页同档，标签页、周复盘的其余部分保持原档。 */
+html[data-shell="mobile"] .projects-view .expand-row-toggle,
+html[data-shell="mobile"] .tags-view .expand-row-toggle {
+  min-height: 40px;
+  padding: 2px;
+}
+
 /* 列表行装进卡片后，末行不再拖一条贴卡片内缘的发丝线。 */
 html[data-shell="mobile"] .projects-grid .expand-row:last-child,
 html[data-shell="mobile"] .tags-grid .expand-row:last-child,
@@ -3258,8 +3310,10 @@ html[data-shell="mobile"] .expand-row-actions .item-action-btn {
   background: var(--surface-sunken);
 }
 
-html[data-shell="mobile"] .expand-row-foot .item-action-btn {
-  min-height: 40px;
+/* 面板底部动作条按钮：灰底无描边。习惯卡的动作行与它同源，一并命中。 */
+html[data-shell="mobile"] .expand-row-foot .item-action-btn,
+html[data-shell="mobile"] .habit-card-actions .item-action-btn {
+  min-height: 32px;
   border: 0;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
@@ -3270,12 +3324,14 @@ html[data-shell="mobile"] .expand-row-foot {
   justify-content: stretch;
 }
 
-html[data-shell="mobile"] .expand-row-foot .item-action-btn {
+html[data-shell="mobile"] .expand-row-foot .item-action-btn,
+html[data-shell="mobile"] .habit-card-actions .item-action-btn {
   flex: 1 1 0;
   min-width: 0;
 }
 
-html[data-shell="mobile"] .expand-row-foot .item-action-btn.item-action-danger {
+html[data-shell="mobile"] .expand-row-foot .item-action-btn.item-action-danger,
+html[data-shell="mobile"] .habit-card-actions .item-action-btn.item-action-danger {
   background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
   color: var(--text-overdue);
 }
@@ -3594,28 +3650,113 @@ html[data-shell="mobile"] .main-workspace > .settings-card:first-of-type {
   margin-top: 9px !important;
 }
 
+/* 节头与其他页 mtoday-shead h3 同档。 */
 html[data-shell="mobile"] .settings-card h3 {
-  font-size: 0.938rem;
+  font-size: 0.906rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
 }
 
+/* 外观卡：四张主题卡竖排近一屏高，移动壳折成 2×2——画布压矮缩放、
+   保留名称与气质标签，长描述在小卡里放不下，隐去。 */
 html[data-shell="mobile"] .theme-gallery {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 html[data-shell="mobile"] .theme-preview {
   border-radius: var(--radius-md);
+  grid-template-rows: 72px auto;
 }
 
+/* 窄窗断点给画布 min-height:92px，会把画布顶出 72px 行、盖住主题名，
+   移动壳连 min-height 一起归到 72。 */
+html[data-shell="mobile"] .theme-preview-canvas {
+  min-height: 72px;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas::before {
+  top: 9px;
+  right: 9px;
+  bottom: 8px;
+  left: 30px;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas::after {
+  left: 7px;
+  top: 7px;
+  bottom: 7px;
+  width: 16px;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas i {
+  left: 39px;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas i:nth-child(1) {
+  top: 21px;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas i:nth-child(2) {
+  top: 33px;
+  width: 52%;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas i:nth-child(3) {
+  display: none;
+}
+
+html[data-shell="mobile"] .theme-preview-canvas b {
+  right: 16px;
+  bottom: 14px;
+  width: 22px;
+  height: 11px;
+}
+
+html[data-shell="mobile"] .theme-preview-copy {
+  padding: 9px 10px 10px;
+  gap: 2px;
+}
+
+html[data-shell="mobile"] .theme-preview-copy em {
+  display: none;
+}
+
+/* 开关改成 iOS 式设置行：文字在左、开关在右。原生 checkbox 用
+   appearance:none + radial-gradient 画滑块（老 WebView 的 input 伪元素
+   不可靠，纯背景渐变在 Chrome 83 也稳）。 */
 html[data-shell="mobile"] .settings-toggle {
   align-items: center;
+  gap: 12px;
   min-height: 44px;
   margin: 4px 0;
 }
 
-html[data-shell="mobile"] .settings-toggle input {
-  width: 26px;
+html[data-shell="mobile"] .settings-toggle input[type="checkbox"],
+html[data-shell="mobile"] .theme-system-toggle input[type="checkbox"] {
+  order: 2;
+  flex: none;
+  width: 44px;
   height: 26px;
-  margin: 0;
+  margin: 0 0 0 auto;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 13px;
+  background-color: var(--surface-sunken);
+  background-image: radial-gradient(circle at 13px 13px, var(--white) 0 10px, transparent 10.5px);
+  background-repeat: no-repeat;
+  background-size: 26px 26px;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  cursor: pointer;
+  transition: background-color calc(140ms * var(--motion-scale)) ease, background-position calc(140ms * var(--motion-scale)) ease;
+}
+
+html[data-shell="mobile"] .settings-toggle input[type="checkbox"]:checked,
+html[data-shell="mobile"] .theme-system-toggle input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  background-position: 18px 0;
+  box-shadow: inset 0 0 0 1px transparent;
 }
 
 /* 设置页输入与按钮：sunken 控件 + 小药丸按钮，与弹层家族同语言。 */
@@ -3644,8 +3785,17 @@ html[data-shell="mobile"] .settings-card .btn-ghost {
   background: var(--surface-sunken);
 }
 
+/* 卡片是设置语境：实色蓝（页面级 CTA 语言）在卡里太响，
+   主/次按钮统一收成 sunken 小药丸，只靠文案分主次。 */
 html[data-shell="mobile"] .settings-card .btn-primary {
+  border: 0;
   box-shadow: none;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+html[data-shell="mobile"] .settings-card .btn-primary:disabled {
+  opacity: 0.42;
 }
 
 html[data-shell="mobile"] .settings-card .btn-ghost.danger {
@@ -3902,8 +4052,9 @@ html[data-shell="mobile"] .guide-stat-label {
 html[data-shell="mobile"] .guide-stat-hint {
   margin-left: auto;
   align-self: center;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: 0.719rem;
+  font-weight: 600;
   text-align: right;
 }
 
@@ -3946,9 +4097,10 @@ html[data-shell="mobile"] .guide-stat-col.is-today .guide-stat-track > i {
 }
 
 html[data-shell="mobile"] .guide-stat-col em {
-  font-size: 0.656rem;
+  font-size: 0.719rem;
   font-style: normal;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 html[data-shell="mobile"] .guide-stat-col.is-today em {
@@ -3980,6 +4132,7 @@ html[data-shell="mobile"] .guide-stat-legend span {
   gap: 5px;
   color: var(--text-secondary);
   font-size: 0.719rem;
+  font-weight: 600;
 }
 
 html[data-shell="mobile"] .guide-stat-legend i {
@@ -4062,7 +4215,9 @@ html[data-shell="mobile"] .weekly-stat-label {
 }
 
 html[data-shell="mobile"] .weekly-stat-note {
-  font-size: 0.656rem;
+  font-size: 0.719rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* ---------- 16) 方案 C（2026-10-24）：展开层分层 + 五个任务行族并入 .mrow ----------
@@ -4081,7 +4236,7 @@ html[data-shell="mobile"] .expand-row.is-open {
 
 html[data-shell="mobile"] .expand-row-body {
   gap: 0;
-  margin: 2px 0 8px;
+  margin: 2px 0 4px;
   padding: 2px 10px;
   border-radius: 12px;
   background: var(--surface-sunken);
@@ -4093,18 +4248,21 @@ html[data-theme="glass"][data-shell="mobile"] .expand-row-body {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 65%, transparent);
 }
 
-/* 面板底部动作条：贴着灰底内缘收口，发丝线与行同值。 */
+/* 面板底部动作条：贴着灰底内缘收口，发丝线与行同值；
+   上距清零（基础档的 8px 内距一并盖掉），与任务行同一根分隔线的节奏。 */
 html[data-shell="mobile"] .expand-row-foot {
-  margin-top: 6px;
+  margin-top: 0;
+  padding-top: 0;
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
-/* 16.2 行件：容器与行本体。 */
+/* 16.2 行件：容器与行本体。间距全部交给行间发丝线（gap/padding 清零后，
+   末行与动作条的分隔和任务间分隔同为一根 1px 线，节奏一致）。 */
 html[data-shell="mobile"] .mrow-panel {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px 0;
+  gap: 0;
+  padding: 0;
 }
 
 html[data-shell="mobile"] .mrow-panel-head {
@@ -4118,16 +4276,18 @@ html[data-shell="mobile"] .mrow-panel-head .mrow-toggle {
   margin-left: auto;
 }
 
-/* 分组小标签（标签页的「项目 / 任务」两段）。 */
+/* 分组小标签（标签页的「项目 / 任务」两段）：比注释档提一级——半粗 + 次级墨色，
+   压得住小节开头但仍让行标题（0.875rem）当头。 */
 html[data-shell="mobile"] .mrow-section {
-  padding: 8px 0 0;
-  color: var(--text-muted);
-  font-size: 0.656rem;
+  padding: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.719rem;
+  font-weight: 600;
   letter-spacing: 0.04em;
 }
 
 html[data-shell="mobile"] .expand-row-body > .mrow-section:first-child {
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
 html[data-shell="mobile"] .mrow-list {
@@ -4159,6 +4319,14 @@ html[data-shell="mobile"] .mrow {
 
 html[data-shell="mobile"] .mrow + .mrow {
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+/* 面板内的精简行（项目/标签面板）：完成钮 48 热区抵满 40 行高，border 会再顶出 1px，
+   首行无分隔就比后续行矮 1px。改用内描边画发丝线，行高严格 40、首行不再例外。 */
+html[data-shell="mobile"] .mrow.is-single + .mrow.is-single,
+html[data-shell="mobile"] .mrow-plain + .mrow-plain {
+  border-top: 0;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--border) 65%, transparent);
 }
 
 /* 触摸屏的按压反馈：整行轻染，不依赖 hover。 */
@@ -4209,8 +4377,9 @@ html[data-shell="mobile"] .mrow-tail {
   align-self: center;
   flex: none;
   padding-right: 2px;
-  color: var(--text-label);
-  font-size: 0.688rem;
+  color: var(--text-secondary);
+  font-size: 0.719rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -4225,6 +4394,29 @@ html[data-shell="mobile"] .mrow.is-dense {
   padding: 3px 0;
 }
 
+/* single = 项目面板的精简任务行：色点 + 标题单档信息量，交叉轴居中让标题、
+   右侧日期与完成圆钮落在同一条水平线上。密度再收一档：行距全部交给 1px 发丝线，
+   行高 40；完成钮保持 48 热区，负margin 后恰好贴齐行边界，相邻热区相接不重叠。 */
+html[data-shell="mobile"] .mrow.is-single {
+  align-items: center;
+  min-height: 40px;
+  padding: 0;
+}
+
+html[data-shell="mobile"] .mrow.is-single .mtoday-check {
+  margin: -4px -8px -4px 0;
+}
+
+/* 色点从元信息行挪进标题后按行内盒排布：inline-block 才吃得到宽高，
+   基线下沉 1px 与 0.875rem 文字取得光学居中。 */
+html[data-shell="mobile"] .mrow.is-single .minbox-pdot {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: baseline;
+  position: relative;
+  top: -1px;
+}
+
 /* 密集档只收内边距，字号不再单独下调：当周日历的事件名要和今日、待办同一档
    （行高本来由 48dp 的完成钮决定，标题从 13.5px 抬到 14px 不会把一屏七天挤散）。 */
 
@@ -4235,8 +4427,10 @@ html[data-shell="mobile"] .mrow-cdot {
   border-radius: 2px;
 }
 
+/* plain = 标签页项目行：整行交叉轴居中，名称、色块与右侧项数同一条水平线。 */
 html[data-shell="mobile"] .mrow-plain {
-  min-height: 44px;
+  min-height: 40px;
+  align-items: center;
 }
 
 /* 项目小节下的任务行：只保留单行截断，字号墨色与今日、待办、当周日历同一档
@@ -4245,18 +4439,15 @@ html[data-shell="mobile"] .mrow-plain .mrow-title {
   -webkit-line-clamp: 1;
 }
 
-html[data-shell="mobile"] .mrow-plain .tag-card-dot {
-  align-self: center;
-}
-
 /* 16.4 「展开全部」收成文本式小钮（同 mtoday-shead 右端的「整理」）。 */
 html[data-shell="mobile"] .mrow-toggle {
   padding: 7px 0;
   border: 0;
   background: none;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-family: inherit;
   font-size: 0.719rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
   touch-action: manipulation;

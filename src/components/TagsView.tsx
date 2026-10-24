@@ -9,7 +9,6 @@ import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
-import { useGoals } from "@/lib/useGoals";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
@@ -74,7 +73,6 @@ export function TagsView() {
   const setNav = useAppStore((s) => s.setNav);
   const requestFocus = useAppStore((s) => s.requestFocus);
   const today = useTodayDate();
-  const { goalById } = useGoals();
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createColor, setCreateColor] = useState(COLOR_SWATCHES[0]);
@@ -280,15 +278,23 @@ export function TagsView() {
                             <div className="mrow-section">项目</div>
                             <ul className="mrow-list">
                               {detailProjects.map((project) => {
-                                const count = tasks.filter(
+                                const projectTasks = tasks.filter(
                                   (task) =>
                                     task.project_id === project.id && !task.deleted_at,
-                                ).length;
+                                );
+                                /* 色块统一走优先级语义：取项目下未完成任务的最高优先级，全部完成回落 P3。 */
+                                const topPriority = projectTasks.reduce(
+                                  (best, task) =>
+                                    task.status !== "completed"
+                                      ? Math.min(best, task.priority)
+                                      : best,
+                                  3,
+                                );
                                 return (
                                   <MobileTaskRow
                                     key={project.id}
                                     className="mrow mrow-plain"
-                                    label={`${project.name}，${count} 项任务`}
+                                    label={`${project.name}，${projectTasks.length} 项任务`}
                                     /* 项目行没有任务级操作：长按无意义；点行去项目页定位。 */
                                     pressEnabled={false}
                                     onActivate={() => {
@@ -297,15 +303,11 @@ export function TagsView() {
                                     }}
                                     onLongPress={() => {}}
                                   >
-                                    <span
-                                      className="tag-card-dot"
-                                      style={{ background: project.color }}
-                                      aria-hidden
-                                    />
+                                    <i className={`minbox-pdot pr${topPriority}`} aria-hidden="true" />
                                     <span className="mrow-main">
                                       <span className="mrow-title">{project.name}</span>
                                     </span>
-                                    <span className="mrow-tail">{count} 项</span>
+                                    <span className="mrow-tail">{projectTasks.length} 项</span>
                                   </MobileTaskRow>
                                 );
                               })}
@@ -324,8 +326,7 @@ export function TagsView() {
                                   projects={projects}
                                   tags={tags}
                                   tagMap={tagMap}
-                                  goalById={goalById}
-                                  showTagPill={false}
+                                  dotInTitle
                                   doneStamp
                                   onOpen={() => selectTask(task.id)}
                                   onComplete={() => void toggleComplete(task.id)}

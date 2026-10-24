@@ -268,11 +268,10 @@ export function TodayMobileView() {
         </section>
 
         <section className="mtoday-card" aria-label="今日事项">
+          {/* 节头不设「查看全部」：这里本就完整列出截止今天的任务，
+              旧按钮跳 setNav("today") 落在当前页、点了无响应，已移除。 */}
           <div className="mtoday-shead">
             <h3>今日事项</h3>
-            <button type="button" onClick={() => setNav("today")}>
-              查看全部 ›
-            </button>
           </div>
           {todaysTasks.length ? (
             <ul className="mtoday-list">
