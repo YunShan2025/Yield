@@ -51,7 +51,7 @@ const [VW, VH] = String(flags.vp || "1440x900").split("x").map(Number);
 const FIXED_TIME = new Date("2026-10-21T11:00:00+08:00"); // 与 ui-snapshot 同步，避免「此刻」漂移
 
 const VIEW_LABELS = {
-  today: "今日", inbox: "待办箱", ledger: "收支总览", growth: "成长",
+  today: "今日", inbox: "待办箱", ledger: "收支总览", growth: "成长", review: "复盘",
   memos: "备忘录", weekly: "周清单", settings: "设置",
 };
 const views = String(flags.views || "today").split(",").map((v) => {
