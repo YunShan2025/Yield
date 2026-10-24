@@ -579,19 +579,10 @@ html[data-shell="mobile"] .mtoday-pill {
   background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
 }
 
-/* 完成态写在标题上，不写在徽标上：标题淡一档并划线（划线是桌面同类行的一贯做法，也让
-   「淡」读得出是完成而非渲染坏了）。淡一档停在 --text-secondary：app 惯用的
-   --text-muted 压在 sunken 子面板（#f0f4fa）上只有 4.35:1、压在 13% 色底上 3.8:1，
-   正是「有的名字浅得看不清」的来源。
-   徽标不参与淡出：三枚的字色在每一行都保持同一个值（上面那条共用规则），完成与否由
-   标题的划线与行尾的勾选圈说——一行里只有状态在变，颜色信息不会跟着抖。 */
-html[data-shell="mobile"] .mtoday-row.is-done .mtoday-title,
-html[data-shell="mobile"] .minbox-row.is-done .minbox-title,
-html[data-shell="mobile"] .mrow.is-done .mrow-title {
-  color: var(--text-secondary);
-  text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--text-secondary) 55%, transparent);
-}
+/* 完成态不在标题上：移动壳里完成行与未完成行的字体、墨色、行样式完全一样，深浅只由
+   行尾那枚圈（勾上 / 空着）来说。因此这里刻意没有 .is-done 的标题规则——
+   淡一档或划线都会让同一列名字深浅不一，看着像渲染坏了（--text-muted 压在 sunken
+   子面板上也只有 4.35:1）。徽标同理不参与状态：三枚在每一行都是同一个墨色。 */
 
 html[data-shell="mobile"] .mtoday-check {
   position: relative;
@@ -4206,7 +4197,7 @@ html[data-shell="mobile"] .mrow-tail {
   align-self: center;
   flex: none;
   padding-right: 2px;
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: 0.688rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
