@@ -1699,21 +1699,6 @@ html[data-shell="mobile"] .desktop-notification-stack {
     justify-content: flex-end;
   }
 
-  /* 项目详情：标题与编辑/归档/关闭分两行，393px 下按钮不再被挤压变形 */
-  .projects-detail header {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-
-  .projects-detail .projects-detail-actions {
-    flex-basis: 100%;
-    justify-content: flex-end;
-  }
-
-  .projects-detail .projects-detail-actions .item-action-btn {
-    flex: none;
-  }
-
   .project-tasks-toggle {
     flex: none;
     min-height: 0;
@@ -2512,11 +2497,6 @@ html[data-shell="mobile"] .memo-list-item {
 html[data-shell="mobile"] .habit-week-progress {
   flex-wrap: wrap;
   row-gap: 4px;
-}
-
-html[data-shell="mobile"] .habit-week-track {
-  flex: 1 1 100%;
-  order: 2;
 }
 
 /* 提醒计时卡片：单列（minmax(300px) 在手机上自然成一列），触控内距微调。 */

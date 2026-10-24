@@ -505,19 +505,6 @@ select {
   color: var(--text-muted);
 }
 
-.progress-bar {
-  height: 4px;
-  background: var(--border);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-  margin-top: 6px;
-}
-
-.progress-bar > span {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-}
 
 .board {
   display: grid;
@@ -1762,19 +1749,6 @@ select {
   color: var(--text-muted);
 }
 
-.tag-pill {
-  padding: 4px 8px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-strong);
-  font-size: var(--font-size-caption);
-}
-
-.tag-pill.on {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 /* ── 原 global-06-growth.css ────────────────────────────────────────── */
 /* Growth goals v1.4 */
 .growth-page {
@@ -2023,8 +1997,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .habit-card-main { min-width: 0; display: grid; gap: 6px; }
 /* 习惯卡片的每周目标进度：次数口径，与今日页进度条一致。 */
 .habit-week-progress { display: flex; align-items: center; gap: 8px; }
-.habit-week-track { flex: 1 1 auto; height: 5px; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-rail); }
-.habit-week-track i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--accent); transition: width calc(300ms * var(--motion-scale)) ease; }
 .habit-week-progress em { flex: 0 0 auto; color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
 .habit-week-progress.is-full em { color: var(--accent-strong); font-weight: 700; }
 /* 列表/卡片动作按钮组：习惯卡先落地，今日/待办行、标签、项目、回收站、
@@ -2786,43 +2758,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   margin-top: 12px;
 }
 
-/* 紧凑项目卡片：对齐标签卡片的观感（覆盖 polish-01 的大卡片内边距/圆角） */
-.tag-card.project-tile {
-  padding: 13px 15px;
-  border-radius: var(--radius-md);
-  box-shadow: none;
-}
-
-/* 已归档项目：整体降透明度，右侧提供「恢复」按钮 */
-.tag-card.project-tile.is-archived {
-  opacity: 0.62;
-}
-
-.tag-card.project-tile.is-archived .tag-card-main {
-  cursor: default;
-}
-
-/* 项目卡片行内允许名称收缩，避免「恢复」等尾部按钮被挤出卡片 */
-.tag-card.project-tile .tag-card-main {
-  min-width: 0;
-}
-
-.tag-card.project-tile .tag-card-main strong {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.tag-card.project-tile .tag-card-count,
-.tag-card.project-tile .item-action-btn {
-  flex: none;
-}
-
-.projects-hint {
-  margin: 16px 0 0;
-  color: var(--text-muted);
-  font-size: var(--font-size-label);
-}
-
 /* 项目详情区：统计行右侧的标签徽标 */
 .project-card-tag {
   display: inline-flex;
@@ -2842,29 +2777,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 /* 展开区里是 grid，标签芯片要按内容宽度，不要拉满一行 */
 .expand-row-body > .project-card-tag { justify-self: start; }
-
-/* 统计行：任务数靠左，标签徽标靠右 */
-.project-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.project-card-meta > p {
-  margin: 0;
-}
-
-.project-card-meta .project-card-tag {
-  margin-left: auto;
-}
-
-.projects-detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
-}
 
 /* 任务链接区：默认只展示前五条（倒序），可展开全部，不做高度截断 */
 .project-task-links {
@@ -2940,8 +2852,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   white-space: nowrap;
 }
 
-.tags-filtered-empty,
-.tags-hint {
+.tags-filtered-empty {
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: var(--font-size-label);
@@ -3166,20 +3077,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-push-list em { color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
 .goal-push-measure { flex: 0 0 auto; color: var(--accent); font-size: var(--font-size-caption); }
 .goal-empty { margin: 0; padding: 10px 2px; color: var(--text-muted); font-size: var(--font-size-caption); }
-/* 今日页的本周节拍器：把"今日"与"本周"两个坐标系对齐。 */
-.today-week-beat { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); }
-.today-week-beat-label { color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 650; letter-spacing: .04em; }
-.today-week-beat-stats { display: flex; gap: 16px; }
-.today-week-beat-stats span { display: inline-flex; align-items: baseline; gap: 4px; }
-.today-week-beat-stats strong { color: var(--text-primary); font-size: var(--font-size-h3); font-weight: 700; }
-.today-week-beat-stats em { color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
 /* 今日清单头部的目标筛选。 */
 .day-agenda-filters { display: flex; align-items: center; gap: 8px; }
-/* 目标列表的状态筛选：已放弃 / 已归档也要能翻出来，"撤回"才找得到。 */
-.goal-filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.goal-filter-row button { padding: 5px 12px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: transparent; color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 600; cursor: pointer; }
-.goal-filter-row button:hover { color: var(--text-primary); border-color: var(--text-muted); }
-.goal-filter-row button.is-active { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 
 /* ── 原 global-07-moments.css ────────────────────────────────────────── */
 /* 有秋:纪念日页头与工作区通用样式(页头已统一为 workspace-top) */
@@ -4778,22 +4677,6 @@ html[data-nav="railed"] .nav-edge-collapse {
   background: var(--surface-panel);
 }
 
-:root[data-theme="dark"] .today-eyebrow,
-:root[data-theme="dark"] .today-progress-ring,
-:root[data-theme="dark"] .today-progress-ring span {
-  color: var(--text-primary);
-}
-
-:root[data-theme="dark"] .today-progress-ring span {
-  color: var(--text-secondary);
-}
-
-:root[data-theme="dark"] .today-progress-ring {
-  background:
-    radial-gradient(circle, var(--surface-panel) 57%, transparent 58%),
-    conic-gradient(var(--accent) calc(var(--progress) * 1%), var(--azure-200-15) 0);
-}
-
 :root[data-theme="dark"] .field {
   color: var(--text-primary);
   border-color: var(--border-strong);
@@ -4819,21 +4702,6 @@ html[data-nav="railed"] .nav-edge-collapse {
     color: var(--text-primary);
     border-color: var(--border-strong);
     background: var(--surface-panel);
-  }
-
-  :root[data-theme="system"] .today-eyebrow,
-  :root[data-theme="system"] .today-progress-ring {
-    color: var(--text-primary);
-  }
-
-  :root[data-theme="system"] .today-progress-ring span {
-    color: var(--text-secondary);
-  }
-
-  :root[data-theme="system"] .today-progress-ring {
-    background:
-      radial-gradient(circle, var(--surface-panel) 57%, transparent 58%),
-      conic-gradient(var(--accent) calc(var(--progress) * 1%), var(--azure-200-15) 0);
   }
 }
 
@@ -5389,10 +5257,6 @@ html[data-nav="railed"] .nav-edge-collapse {
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
-}
-
-.weekly-stat-num.is-accent {
-  color: var(--accent);
 }
 
 .weekly-stat-note {
