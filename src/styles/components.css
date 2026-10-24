@@ -2911,6 +2911,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 /* 成长目标联动（v1.4）：今日行内目标徽标、今日目标条、贡献构成。 */
+/* 行内药丸原子（与 .expand-row-tag 同款）：目标色 12% 底 + --text-label 墨 + 500 字重。
+   13% 曾在深色下比邻枚淡一档；移动壳的同款徽标自持 --mt-pill-bg 变量，不受此处影响。 */
 .goal-chip {
   display: inline-flex;
   align-items: center;
@@ -2919,9 +2921,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   padding: 2px 8px;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--goal-color, var(--accent)) 13%, transparent);
-  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--goal-color, var(--accent)) 12%, transparent);
+  color: var(--text-label);
   font-size: var(--font-size-caption);
+  font-weight: 500;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -3375,12 +3378,14 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 .timer-badge {
+  /* 药丸原子同档：--text-label 墨 + 500 字重；空闲态保持中性面，不抢色。 */
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: var(--font-size-caption);
-  color: var(--text-muted);
+  font-weight: 500;
+  color: var(--text-label);
   background: var(--surface-rail);
   padding: 2px 8px;
   border-radius: var(--radius-pill);
