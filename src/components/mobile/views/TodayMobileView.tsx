@@ -2,20 +2,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { AppIcon } from "@/components/AppIcon";
 import {
+  MobileGoalChip,
   MobileTaskPillView,
   getMobileTaskPills,
 } from "@/components/mobile/MobileTaskPills";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
-import { fetchGoals } from "@/lib/db";
 import { calculateGoalProgress, resolveGoalTarget } from "@/lib/growth";
 import {
   ensureEndAfterStart,
   parseTimeToMinutes,
 } from "@/lib/dates";
 import { useTodayDate } from "@/lib/useTodayDate";
-import type { Goal, Task } from "@/types";
+import { useGoals } from "@/lib/useGoals";
+import type { Task } from "@/types";
 
 /** 一天的分钟数 —— 今日时段条按 0–24h 铺满。 */
 const DAY_MINUTES = 24 * 60;
@@ -56,8 +57,9 @@ function round1(value: number): number {
  * 移动端「今日」页 —— 单列卡片流，与桌面多栏工作台是两套视图层。
  *
  * 结构：顶栏 / 完成数主视觉卡 / 推进目标 / 今日时段 / 今日事项。
- * 事项行沿用桌面时间轴的界栏竖线，节点方点改用优先级色，
- * 右侧是完成按钮；元信息统一为「项目 + 标签」两枚彩色胶囊。
+ * 事项行沿用桌面时间轴的界栏竖线，节点方点改用优先级色，右侧是完成按钮；元信息按
+ * 「项目 → 标签 → 目标」排，与当周日历的 day 行同一套：前两枚是实底归属胶囊，目标
+ * 那枚借用今日时间轴的 .goal-chip，在移动壳里收到同一档尺寸、只留目标色底。
  */
 export function TodayMobileView() {
   const tasks = useAppStore((s) => s.tasks);
@@ -72,7 +74,7 @@ export function TodayMobileView() {
   const setNav = useAppStore((s) => s.setNav);
 
   const today = useTodayDate();
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const { goals, goalById } = useGoals();
   const [now, setNow] = useState(() => new Date());
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
 
@@ -80,18 +82,6 @@ export function TodayMobileView() {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
-  }, []);
-
-  // 目标进度在同步后才复算，跟随同一条事件重载，今日页才不落后于成长页。
-  useEffect(() => {
-    const reload = () => void fetchGoals().then(setGoals);
-    reload();
-    window.addEventListener("youqiu:data-changed", reload);
-    window.addEventListener("youqiu:sync-applied", reload);
-    return () => {
-      window.removeEventListener("youqiu:data-changed", reload);
-      window.removeEventListener("youqiu:sync-applied", reload);
-    };
   }, []);
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -289,6 +279,7 @@ export function TodayMobileView() {
               {todaysTasks.map((task) => {
                 const done = task.status === "completed";
                 const pills = getMobileTaskPills(task, projects, tags, tagMap);
+                const goal = task.goal_id ? goalById.get(task.goal_id) : undefined;
                 return (
                   <MobileTaskRow
                     key={task.id}
@@ -305,11 +296,12 @@ export function TodayMobileView() {
                     </span>
                     <span className="mtoday-body">
                       <span className="mtoday-title">{task.title}</span>
-                      {pills.length ? (
+                      {pills.length || goal ? (
                         <span className="mtoday-pills">
                           {pills.map((pill) => (
                             <MobileTaskPillView key={pill.key} pill={pill} />
                           ))}
+                          <MobileGoalChip goal={goal} />
                         </span>
                       ) : null}
                     </span>

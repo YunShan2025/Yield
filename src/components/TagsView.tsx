@@ -9,6 +9,7 @@ import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
+import { useGoals } from "@/lib/useGoals";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
@@ -73,6 +74,7 @@ export function TagsView() {
   const setNav = useAppStore((s) => s.setNav);
   const requestFocus = useAppStore((s) => s.requestFocus);
   const today = useTodayDate();
+  const { goalById } = useGoals();
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createColor, setCreateColor] = useState(COLOR_SWATCHES[0]);
@@ -322,6 +324,7 @@ export function TagsView() {
                                   projects={projects}
                                   tags={tags}
                                   tagMap={tagMap}
+                                  goalById={goalById}
                                   showTagPill={false}
                                   doneStamp
                                   onOpen={() => selectTask(task.id)}

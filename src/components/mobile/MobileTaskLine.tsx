@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 
 import {
+  MobileGoalChip,
   MobileTaskPillView,
   getMobileTaskPills,
 } from "@/components/mobile/MobileTaskPills";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { formatDueDateBadge } from "@/lib/dates";
-import type { Project, Tag, Task } from "@/types";
+import type { Goal, Project, Tag, Task } from "@/types";
 
 /** 完成时间小注：ISO 时间戳 → 「10/21」。行尾小字要的是短戳，不是「2026年10月21日」。 */
 export function mobileDoneStamp(iso: string | null): string | null {
@@ -24,8 +25,8 @@ export function mobileDoneStamp(iso: string | null): string | null {
  * `MobileTaskRow`：长按弹操作面板、触摸位移取消、Enter/Space、可见焦点。
  * 完成状态不再用 ○/✓ 文本字形（DESIGN.md：不用 Unicode 字形充当图标）。
  *
- * `day` 变体给「当周日历」用：那一列本身就是日期，语气药丸是噪声；分类色点顶掉
- * 优先级点，归属胶囊也省掉——一屏七天，密度优先。
+ * `day` 变体给「当周日历」用：那一列本身就是日期，语气药丸是噪声，行首色点是分类色
+ * （`dotColor`）而不是优先级点；归属胶囊照旧，一屏七天才有信息可读。
  */
 export function MobileTaskLine({
   task,
@@ -33,6 +34,7 @@ export function MobileTaskLine({
   projects,
   tags,
   tagMap,
+  goalById,
   variant = "list",
   dotColor,
   tail,
@@ -48,6 +50,8 @@ export function MobileTaskLine({
   projects: Project[];
   tags: Tag[];
   tagMap: Record<string, string[]>;
+  /** 目标表索引（`useGoals()` 在宿主页面取一次）；给了才显示目标徽标。 */
+  goalById?: Map<string, Goal>;
   variant?: "list" | "day";
   /** `day` 变体的行首分类色点（`categoryColor`）。 */
   dotColor?: string;
@@ -64,13 +68,15 @@ export function MobileTaskLine({
   const done = task.status === "completed";
   const isDay = variant === "day";
   const due = formatDueDateBadge(task.due_date, today);
+  const attribution = getMobileTaskPills(task, projects, tags, tagMap);
   const pills = isDay
-    ? []
-    : getMobileTaskPills(task, projects, tags, tagMap).filter((pill) =>
+    ? attribution
+    : attribution.filter((pill) =>
         pill.key.startsWith("project-") ? showProjectPill : showTagPill,
       );
+  const goal = task.goal_id ? goalById?.get(task.goal_id) : undefined;
   const stamp = doneStamp ? mobileDoneStamp(task.completed_at) : null;
-  const hasMeta = !isDay || pills.length > 0;
+  const hasMeta = !isDay || pills.length > 0 || !!goal;
 
   return (
     <MobileTaskRow
@@ -103,6 +109,7 @@ export function MobileTaskLine({
             {pills.map((pill) => (
               <MobileTaskPillView key={pill.key} pill={pill} />
             ))}
+            <MobileGoalChip goal={goal} />
           </span>
         ) : null}
       </span>

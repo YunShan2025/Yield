@@ -20,7 +20,7 @@ import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { AppIcon } from "@/components/AppIcon";
 import { SelectMenu } from "@/components/SelectMenu";import { formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
 import { confirmAction } from "@/components/AppConfirm";
-import { fetchGoals } from "@/lib/db";
+import { useGoals } from "@/lib/useGoals";
 import type { CSSProperties } from "react";
 import type { Goal, Habit, Task } from "@/types";
 import { isActiveTask } from "@/lib/tasks";
@@ -343,7 +343,7 @@ export function TodayAgenda({
 
 
   const habitChecks = useAppStore((s) => s.habitChecks);
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const { goals, goalById } = useGoals();
   const weekDates = mondayWeekDates(cursor);
   const weekStart = weekDates[0];
   const weekEnd = weekDates[6];
@@ -364,20 +364,6 @@ export function TodayAgenda({
     }
     return done;
   }, [habitChecks, weekStart, weekEnd]);
-
-  useEffect(() => {
-    // 行内目标徽标需要目标标题/颜色；含归档目标，避免历史关联行缺失标签。
-    // 对端新建的目标也要当场认得出，故跟随同步事件重载。
-    const reload = () => void fetchGoals(true).then(setGoals);
-    reload();
-    window.addEventListener("youqiu:sync-applied", reload);
-    return () => window.removeEventListener("youqiu:sync-applied", reload);
-  }, []);
-
-  const goalById = useMemo(
-    () => new Map(goals.map((goal) => [goal.id, goal])),
-    [goals],
-  );
 
   const title = isInbox
     ? "待办事项"

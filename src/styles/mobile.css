@@ -8,19 +8,16 @@
    ------------------------------------------------------------------ */
 
 html[data-shell="mobile"] {
-  --mt-pill-ink: var(--pill-ink);
   --mt-pill-bg: 13%;
 }
 
 html[data-theme="dark"][data-shell="mobile"],
 html[data-theme="glass"][data-shell="mobile"] {
-  --mt-pill-ink: var(--pill-ink-dark);
   --mt-pill-bg: 26%;
 }
 
 @media (prefers-color-scheme: dark) {
   html[data-theme="system"][data-shell="mobile"] {
-    --mt-pill-ink: var(--pill-ink-dark);
     --mt-pill-bg: 26%;
   }
 }
@@ -565,6 +562,8 @@ html[data-shell="mobile"] .mtoday-pills {
   flex-wrap: wrap;
 }
 
+/* 归属胶囊与目标徽标共用同一个墨色（`--text-label`，比次级文本更稳：压在 13% 色底上
+   也还有 7:1）：颜色交给各自那层底色去说，文字不再一枚一色。 */
 html[data-shell="mobile"] .mtoday-pill {
   font-size: 0.656rem;
   font-weight: 500;
@@ -573,7 +572,7 @@ html[data-shell="mobile"] .mtoday-pill {
   border-radius: 5px;
   letter-spacing: 0.01em;
   background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
-  color: var(--mt-pill-ink);
+  color: var(--text-label);
 }
 
 html[data-shell="mobile"] .mtoday-check {
@@ -4182,6 +4181,20 @@ html[data-shell="mobile"] .mrow-meta {
   margin-top: 5px;
 }
 
+/* 目标徽标借用今日时间轴那一枚，但在移动壳里去掉前导点、尺寸与墨色收到和归属胶囊同档：
+   三枚并排文字同色、一高一低才不会看出是两个时代的零件。
+   桌面今日时间轴里的 .goal-chip 不受影响（这里只挂在移动壳的三种行内元信息上）。 */
+html[data-shell="mobile"] .mrow .goal-chip,
+html[data-shell="mobile"] .mtoday-pills .goal-chip,
+html[data-shell="mobile"] .minbox-meta .goal-chip {
+  max-width: 13em;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 0.656rem;
+  line-height: 1.3;
+  color: var(--text-label);
+}
+
 html[data-shell="mobile"] .mrow-tail {
   align-self: center;
   flex: none;
@@ -4194,8 +4207,11 @@ html[data-shell="mobile"] .mrow-tail {
 
 /* 16.3 变体：day = 当周日历（密集档内边距同今日页 .mtoday-row 的 3px，一屏七天要省
    垂直空间）；plain = 标签页项目行（无完成钮，靠 min-height 兜到 44dp）。
-   行高主要由 48dp 的完成钮决定（它上下各 -3px 外边距），与待办 .minbox-row 同档。 */
+   行高主要由 48dp 的完成钮决定（它上下各 -3px 外边距），与待办 .minbox-row 同档。
+   行内有归属行时它几乎撑满 48dp；没有归属的只剩一行标题，交叉轴居中才不会让完成圆钮
+   比标题低半行。 */
 html[data-shell="mobile"] .mrow.is-dense {
+  align-items: center;
   padding: 3px 0;
 }
 
@@ -4207,7 +4223,6 @@ html[data-shell="mobile"] .mrow-cdot {
   width: 9px;
   height: 9px;
   flex: none;
-  margin-top: 4px;
   border-radius: 2px;
 }
 

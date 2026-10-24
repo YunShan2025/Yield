@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { mixHex } from "@/lib/color";
-import type { Project, Tag, Task } from "@/types";
+import type { Goal, Project, Tag, Task } from "@/types";
 
 type MobileTaskPill = {
   key: string;
@@ -9,12 +8,10 @@ type MobileTaskPill = {
   color: string;
 };
 
-const PILL_INK_LIGHT = "#0b1428";
-const PILL_INK_DARK = "#ffffff";
-
 /**
- * 移动端的任务归属胶囊：项目在前、标签在后，最多两枚。
- * 今日和待办箱共用，避免两个页面在颜色、数量上限与排序上悄悄分叉。
+ * 移动端的任务归属胶囊：项目在前、标签在后（目标徽标另算，排在它们后面）。
+ * 今日、待办箱、周清单、项目与标签五处共用，避免几个页面在颜色、数量上限与
+ * 排序上悄悄分叉。
  */
 export function getMobileTaskPills(
   task: Task,
@@ -45,18 +42,23 @@ export function getMobileTaskPills(
   return pills;
 }
 
+/**
+ * 任务关联目标的行内徽标：沿用今日时间轴那枚 `.goal-chip`，只留目标色底，
+ * 不带前导点——移动壳里它和归属胶囊同一档尺寸，点反而让它看起来是另一种零件。
+ * 目标解析不到（已彻底删除）就不显示，留空比挂错名字好。
+ */
+export function MobileGoalChip({ goal }: { goal?: Goal | null }) {
+  if (!goal) return null;
+  return (
+    <span className="goal-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
+      {goal.title}
+    </span>
+  );
+}
+
 export function MobileTaskPillView({ pill }: { pill: MobileTaskPill }) {
   return (
-    <span
-      className="mtoday-pill"
-      style={
-        {
-          "--pill-color": pill.color,
-          "--pill-ink": mixHex(pill.color, PILL_INK_LIGHT, 0.55),
-          "--pill-ink-dark": mixHex(pill.color, PILL_INK_DARK, 0.45),
-        } as CSSProperties
-      }
-    >
+    <span className="mtoday-pill" style={{ "--pill-color": pill.color } as CSSProperties}>
       {pill.name}
     </span>
   );

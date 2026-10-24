@@ -4,6 +4,7 @@ import { AppIcon } from "@/components/AppIcon";
 import { DatePicker } from "@/components/DatePicker";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import {
+  MobileGoalChip,
   MobileTaskPillView,
   getMobileTaskPills,
 } from "@/components/mobile/MobileTaskPills";
@@ -15,7 +16,8 @@ import { buildTaskDeferredUpdate } from "@/lib/planning";
 import { groupInboxTasks, isActiveTask, isInboxTask } from "@/lib/tasks";
 import type { InboxGroupId } from "@/lib/tasks";
 import { useTodayDate } from "@/lib/useTodayDate";
-import type { Project, Tag, Task } from "@/types";
+import { useGoals } from "@/lib/useGoals";
+import type { Goal, Project, Tag, Task } from "@/types";
 
 /** 完成后的退场时长；与 mobile.css 里 .is-leaving 的 transition 对齐。 */
 const EXIT_MS = 260;
@@ -84,6 +86,7 @@ function InboxTaskRow({
   projects,
   tags,
   tagMap,
+  goalById,
   selecting,
   selected,
   leaving,
@@ -97,6 +100,7 @@ function InboxTaskRow({
   projects: Project[];
   tags: Tag[];
   tagMap: Record<string, string[]>;
+  goalById: Map<string, Goal>;
   selecting: boolean;
   selected: boolean;
   leaving: boolean;
@@ -109,6 +113,7 @@ function InboxTaskRow({
   const selectable = isActiveTask(task);
   const due = formatDueDateBadge(task.due_date, today);
   const pills = getMobileTaskPills(task, projects, tags, tagMap);
+  const goal = task.goal_id ? goalById.get(task.goal_id) : undefined;
 
   return (
     <MobileTaskRow
@@ -163,6 +168,7 @@ function InboxTaskRow({
           {pills.map((pill) => (
             <MobileTaskPillView key={pill.key} pill={pill} />
           ))}
+          <MobileGoalChip goal={goal} />
         </span>
       </span>
       {!selecting ? (
@@ -201,8 +207,8 @@ function InboxTaskRow({
  * 移动端「待办」—— 待办事项卡片流。
  * 顶部摘要给出逾期 / 已排期 / 未安排的数量，列表按这三组整理；
  * 活跃任务才入列，完成项原地淡出后退场。
- * 行内保留优先级方点、日期徽标、项目/标签胶囊与完成圆钮，
- * 长按或点行尾更多按钮打开操作面板；「整理」进入批量选择。
+ * 行内保留优先级方点、日期徽标、项目/标签胶囊 + 目标徽标与完成圆钮（顺序与今日、
+ * 周清单同一套），长按或点行尾更多按钮打开操作面板；「整理」进入批量选择。
  */
 export function InboxMobileView() {
   const tasks = useAppStore((s) => s.tasks);
@@ -218,6 +224,7 @@ export function InboxMobileView() {
   const openCreateTask = useAppStore((s) => s.openCreateTask);
 
   const today = useTodayDate();
+  const { goalById } = useGoals();
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
   const [leavingIds, setLeavingIds] = useState<Set<string>>(() => new Set());
   const [selecting, setSelecting] = useState(false);
@@ -453,6 +460,7 @@ export function InboxMobileView() {
                           projects={projects}
                           tags={tags}
                           tagMap={tagMap}
+                          goalById={goalById}
                           selecting={selecting}
                           selected={selectedIds.has(task.id)}
                           leaving={

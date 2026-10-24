@@ -11,6 +11,7 @@ import {
   type WeeklyCategoryId,
 } from "@/lib/weeklyChecklist";
 import { useTodayDate } from "@/lib/useTodayDate";
+import { useGoals } from "@/lib/useGoals";
 import { ExpandRow } from "@/components/ExpandRow";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
@@ -40,6 +41,7 @@ export function WeeklyChecklistView() {
   const selectTask = useAppStore((s) => s.selectTask);
   const habitChecks = useAppStore((s) => s.habitChecks);
   const today = useTodayDate();
+  const { goalById } = useGoals();
 
   const weekDates = useMemo(
     () => mondayWeekDates(calendarCursor || today),
@@ -223,6 +225,7 @@ export function WeeklyChecklistView() {
                           projects={projects}
                           tags={tags}
                           tagMap={tagMap}
+                          goalById={goalById}
                           doneStamp
                           onOpen={() => selectTask(task.id)}
                           onComplete={() => void toggleComplete(task.id)}
@@ -299,8 +302,8 @@ export function WeeklyChecklistView() {
                 </div>
               </header>
               {isMobileShell() ? (
-                /* 移动壳：day 变体——那一列本身就是日期，不再挂日期药丸；
-                   行首分类色点保留（这一列里唯一的分组线索）。 */
+                /* 移动壳：day 变体——那一列本身就是日期，不再挂日期药丸；行首分类色点
+                   保留（这一列里唯一的分组线索），归属与目标照今日页的形式给全。 */
                 <ul className="mrow-list">
                   {day.tasks.length === 0 ? (
                     <li className="weekly-day-empty">空闲</li>
@@ -313,6 +316,7 @@ export function WeeklyChecklistView() {
                         projects={projects}
                         tags={tags}
                         tagMap={tagMap}
+                        goalById={goalById}
                         variant="day"
                         dotColor={categoryColor(
                           resolveCategoryId(task.id, tagMap, tags),

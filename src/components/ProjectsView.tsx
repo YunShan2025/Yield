@@ -9,10 +9,11 @@ import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { MobileTaskPillView } from "@/components/mobile/MobileTaskPills";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
+import { useGoals } from "@/lib/useGoals";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
-import type { Project, Task } from "@/types";
+import type { Goal, Project, Task } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
 import { formatDayStamp } from "@/lib/dates";
 import { softDeleteProject, updateProject } from "@/lib/db";
@@ -25,6 +26,7 @@ export function ProjectsView() {
   const archivedProjects = useAppStore((state) => state.archivedProjects);
   const tags = useAppStore((state) => state.tags);
   const tasks = useAppStore((state) => state.tasks);
+  const { goalById } = useGoals();
   const addProject = useAppStore((state) => state.addProject);
   const archiveProject = useAppStore((state) => state.archiveProject);
   const restoreProject = useAppStore((state) => state.restoreProject);
@@ -216,6 +218,7 @@ export function ProjectsView() {
                           project={project}
                           tasks={projectTasks}
                           tags={tags}
+                          goalById={goalById}
                           onEdit={() => beginEditProject(project)}
                           onArchive={() => void archiveProject(project.id)}
                           onDelete={() => void deleteActiveProject()}
@@ -294,6 +297,7 @@ export function ProjectsView() {
                       project={project}
                       tasks={projectTasks}
                       tags={tags}
+                      goalById={goalById}
                       archived
                       onRestore={() => void restoreProject(project.id)}
                       onDelete={() => void deleteActiveProject()}
@@ -409,6 +413,7 @@ function ProjectTaskPanel({
   project,
   tasks,
   tags,
+  goalById,
   archived,
   onEdit,
   onArchive,
@@ -418,6 +423,7 @@ function ProjectTaskPanel({
   project: Project;
   tasks: ReturnType<typeof useAppStore.getState>["tasks"];
   tags: ReturnType<typeof useAppStore.getState>["tags"];
+  goalById?: Map<string, Goal>;
   archived?: boolean;
   onEdit?: () => void;
   onArchive?: () => void;
@@ -477,6 +483,7 @@ function ProjectTaskPanel({
                 projects={[]}
                 tags={tags}
                 tagMap={tagMap}
+                goalById={goalById}
                 showProjectPill={false}
                 doneStamp
                 onOpen={() => selectTask(task.id)}
