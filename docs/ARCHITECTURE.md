@@ -11,7 +11,7 @@
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ WebView 前端（React 19 + TypeScript）                      │
-│  src/components/*  界面组件（29 个 + today/ 子模块五件）     │
+│  src/components/*  界面组件（29 个 + today/ 子模块五件 + mobile/ 移动壳 14 件）│
 │  src/app/MainApp.tsx  页面壳 + 全局副作用中枢                │
 │  src/store/app.ts   Zustand 全局状态（741 行，单 store）    │
 │  src/lib/*          领域纯函数 + 业务规则（可单测）           │
@@ -40,7 +40,7 @@
 | 状态 | Zustand | 5.0 | 单一全局 store（`src/store/app.ts`） |
 | 数据库 | SQLite（tauri-plugin-sql） | 2.4 | 本地持久化，前端直接发 SQL |
 | 构建 | Vite | 6.4 | 开发服务器 + 前端产物（Android 产物 target chrome83） |
-| 测试 | Vitest + happy-dom | 3.2 / 20 | 29 文件 / 187 用例 |
+| 测试 | Vitest + happy-dom | 3.2 / 20 | 33 文件 / 235 用例（2026-10-24 口径） |
 | 富文本 | react-markdown + remark-gfm | 10 | 备忘录 Markdown 渲染 |
 | 拖拽 | @dnd-kit | 6/10/3 | 任务排序 |
 | 农历 | lunar-typescript | 1.8 | 纪念日农历换算 |
@@ -54,8 +54,8 @@ src/
   main.tsx            入口；BootError 启动失败兜底屏
   app/MainApp.tsx     页面壳 + 全局副作用中枢（790 行）
   store/app.ts        Zustand store：全部状态与 action（741 行）
-  components/         29 个界面组件；today/ 为今日页子组件五件；mobile/ 移动壳组件（含 views/ 三个移动视图与 MobilePageTitle 共享页头标题）
-  lib/                领域纯函数（today/repeat/planning/growth/…）26 个模块
+  components/         29 个界面组件；today/ 为今日页子组件五件；mobile/ 移动壳组件 14 件（views/ 三个移动视图 + 共享行件 MobileTaskRow/MobileTaskLine/MobileTaskPills、底部弹层 TaskActionSheet/LedgerEntrySheet、引导卡、MobilePageTitle 共享页头标题、useLongPress 长按手势）
+  lib/                领域纯函数（today/repeat/planning/growth/…）27 个非测试模块
   lib/db/             SQLite 访问层，按域拆 10 个模块 + client.ts
   lib/sync/           同步引擎：HLC 时钟、飞书云盘传输、日志合并、outbox
   types/index.ts      全部 TS 类型（单一真源）
@@ -71,10 +71,10 @@ src-tauri/
 ## 5. 前端架构
 
 - **状态**：单 store 模式。所有视图从 `useAppStore` 取状态、调 action；action 内部调用 `lib/` 纯函数与 `lib/db/` 完成 IO。没有跨 store、没有 Context 分发。
-- **副作用中枢**：`MainApp.tsx` 集中持有全局 effect——专注计时（1s `tickFocus`）、系统提醒同步（串行队列 `enqueueReminderPass`，全量/补发双定时器，补发周期 6h）、托盘事件（`tray:today`、`main:hidden-to-tray`）、自动备份（6h 周期 + `autoBackupRunningRef` 并发守卫）、数据同步触发（启动/回前台/手动）、toast 自毁计时。
+- **副作用中枢**：`MainApp.tsx` 集中持有全局 effect——系统提醒同步（串行队列 `enqueueReminderPass`，全量/补发双定时器，补发周期 6h）、托盘事件（`tray:today`、`main:hidden-to-tray`）、自动备份（6h 周期 + `autoBackupRunningRef` 并发守卫）、数据同步触发（启动/回前台/手动）、toast 自毁计时。
 - **数据库访问**：`src/lib/db/client.ts` 统一连接；写操作经 `withDatabaseWrite` 用 `navigator.locks`（锁名 `youqiu:database-write`）串行化，嵌套调用在同一队列回合执行避免死锁。连接后设置 `PRAGMA foreign_keys=ON / journal_mode=WAL / synchronous=NORMAL / busy_timeout=5000`。
 - **移动壳**：同一组件树按 `lib/platform.ts` 的 shell 探测分支渲染——Android 为底部导航 + 竖屏布局（`data-shell="mobile"`），桌面为侧栏 + 命令面板 + 托盘；移动端专属交互（长按动作面板、侧滑关闭）在 `components/mobile/`。
-- **样式**：`src/styles/index.css` 为级联入口，顺序刻意勿重排：`tokens` → `primitives` → `components` → `views` → `mobile`。同特异性按加载顺序取胜；全局已清零 `!important`（`scripts/ui-css-audit.mjs` 把关），移动样式只进 `mobile.css`。
+- **样式**：`src/styles/index.css` 为级联入口，顺序刻意勿重排：`tokens` → `primitives` → `components` → `views` → `mobile`。同特异性按加载顺序取胜；桌面样式层 `!important` 保持 0，`mobile.css` 现存 2 处生效（:2401 / :3650 压 TSX 内联样式，阶段 4 收尾清零），由 `scripts/ui-css-audit.mjs` 把关；移动样式只进 `mobile.css`。
 - **类型**：`src/types/index.ts` 是唯一类型真源，前后端数据经 `lib/db/*` 的 `mapXxx` 行映射函数对齐（DB 蛇形命名 → TS 驼峰）。
 
 ## 6. 后端（Rust）
@@ -88,12 +88,13 @@ src-tauri/
 ## 7. 数据层
 
 - **存储位置**：桌面 `%APPDATA%\com.yunshan.yield\app.db`（SQLite 单库），WebView2 配置在 `%LOCALAPPDATA%\com.yunshan.yield`；Android 为应用私有数据目录。
-- **20 张表**，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 / v26 删除，不再列出）：
+- **24 张表**＝20 张业务表 + 4 张同步引擎表，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 / v26 删除，不再列出）：
   - 任务域：`tasks`、`tags`、`task_tags`、`task_events`、`projects`；
   - 目标与成长：`goals`、`goal_milestones`、`goal_entries`、`achievements`、`habit_checks`、`habits`；
   - 收支（观流账本）：`ledger_accounts`、`ledger_categories`、`ledger_budgets`、`ledger_transactions`；
   - 回望：`memos`、`anniversaries`；
-  - 提醒与通知：`app_notifications`；计时：`timers`；系统：`settings`（含 `schema_contract='1'` 契约种子）。
+  - 提醒与通知：`app_notifications`；计时：`timers`；系统：`settings`（含 `schema_contract='1'` 契约种子）；
+  - 同步引擎：`sync_state`、`sync_outbox`、`sync_merge_seen`、`sync_tag_alias`。
 - **迁移契约**：`lib.rs::migrations()` 为单一 `youqiu_baseline` v1（`_sqlx_migrations` 驱动）；**只向前升级**——已发布迁移不可删改重排，只能追加更高版本。
 - **迁移的校验和不可变**：sqlx 对每条**已应用**的 migration 记 SHA-384 校验和，启动时逐一比对；对不上就报 `migration N was previously applied but has been modified` 并**拒绝启动**。所以已发布的 migration 的 SQL **一个字都不能再改**——新语句一律追加成更高版本（v22 与 v23 拆开就是这个原因）。
 - **迁移演练**：`npm run release:migration-dry-run` 把待应用的 migration 跑在**真实数据库的副本**上（不碰原库），并复刻 sqlx 的校验和比对与行数/完整性校验。桌面端跑不起来、没法点着验收时，用它先证明"升级这一步"是安全的。
@@ -107,7 +108,7 @@ src-tauri/
 - **模型**：无服务器同步。两端各自写本地库，同时追加操作日志到用户自己的飞书云盘（JSONL，`src/lib/sync/log.ts`）；HLC（混合逻辑时钟）定序，`merge.ts` 按列级 LWW + 删除墓碑合并（`src/lib/sync/tables.ts` 维护 FK 顺序、`columns.ts` 维护列白名单，新增同步表/列三处一致：tables.ts + columns.ts + migration 触发器）。
 - **触发**：应用启动、回前台、手动触发；离线优先，无实时推送。
 - **凭据**：飞书 app_id/app_secret 只在应用设置页输入，存本地 settings（`sync_` 前缀键），不进代码、不进备份文件。
-- **纪律**：新增同步表/列必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。当前同步日志格式为 **schema v10**（v1.4.0：任务的重复相关列与目标的周口径列下线，习惯新增排期规则；旧端读到 v10 条目会被 header 闸门整体拒收并提示升级）。
+- **纪律**：新增同步表/列必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。当前同步日志格式为 **schema v10**（开发中的 v1.4.0：任务的重复相关列与目标的周口径列下线，习惯新增排期规则；旧端读到 v10 条目会被 header 闸门整体拒收并提示升级）。
 
 ## 8. 关键横切机制
 
@@ -116,17 +117,16 @@ src-tauri/
 | 系统提醒同步 | `MainApp.tsx` + `lib/nativeReminders.ts` + `os_reminders.rs` | 全量/补发双定时器，串行队列防并发；OS 队列上限 48 条/90 天，超出部分应用运行时补发 |
 | 数据同步 | `lib/sync/*` | 飞书云盘 JSONL + HLC 列级合并；凭据只存本地 settings |
 | 软删除 | `tasks.status='trashed'` 等 | 回收站保留 30 天，恢复回原位 |
-| 专注计时 | `lib/focusTimer.ts`（入口：任务详情「开始专注」/今日页） | 1s tick，基于绝对结束时间结算；异常退出经 `focusRecovery.ts` 恢复 |
-| 主题 | `lib/themes.ts` + `tokens.css` | system/light/dark 三态 |
+| 主题 | `lib/themes.ts` + `tokens.css` | 清昼 light / 晨曦玻璃 dawn / 璃幕 glass / 静夜 dark 四套 + system 跟随系统 |
 | 隐私模式 | `lib/privacy.ts` | 隐藏金额/敏感内容 |
-| 检查更新 | `lib/versionUpdate.ts` + `VersionUpdateNotice` | 启动 2.5s 后静默查一次 GitHub `releases/latest`，语义化比较；手动查失败有 toast |
-| 引导 | `OnboardingGuide` | 三步首启引导，`settings.onboarding_complete` 控制 |
+| 检查更新 | `lib/versionUpdate.ts` + `VersionUpdateNotice` | 启动 2.5s 后静默查一次 GitHub `releases/latest`，语义化比较；手动查失败有 toast。提示卡桌面与移动壳都挂载（移动浮在底部导航上方） |
+| 引导 | `OnboardingGuide` | 四步首启引导（第 4 步「目标/习惯/任务各司其职」，移动壳文案有分支），`settings.onboarding_complete` 控制 |
 | 托盘 | `lib.rs::setup_tray`（桌面） | 显示/今日/退出；关闭到托盘，事件回传前端 |
 
 ## 9. 测试与质量门禁
 
-- **单测**：`npx vitest run` — 29 文件 / 187 用例，覆盖全部 `lib/` 纯函数与关键契约（`migration.test.ts` 守护 v1 基线与「遗留不得回流」，`backup.test.ts` 守备份版本/表覆盖，`capabilities.test.ts` 守权限，`lib/sync/` 五个测试文件守 HLC/日志/合并/传输契约）。
-- **门禁链**：`npx tsc -b`（noUnusedLocals，查未用变量）→ `npx vitest run` → `npx vite build` → `cargo check` → `npm run release:check`（静态断言 README/Cargo/Tauri 版本一致 + 迁移/备份覆盖 + 上述全部）。
+- **单测**：`npm test` — 33 文件 / 235 用例（2026-10-24 口径），覆盖全部 `lib/` 纯函数与关键契约（`migration.test.ts` 守护 v1 基线与「遗留不得回流」，`backup.test.ts` 守备份版本/表覆盖，`capabilities.test.ts` 守权限，`lib/sync/` 五个测试文件守 HLC/日志/合并/传输契约）。
+- **门禁链**：`npm run build`（= `tsc -b` noUnusedLocals + `vite build`）→ `npm test` → `cargo check`（Rust 侧）→ `npm run release:check`（静态断言 README/Cargo/Tauri 版本一致 + 迁移/备份覆盖 + 上述全部）。UI 层另有 `node scripts/ui-css-audit.mjs` 审计（token 对齐 / !important / 硬编码色值），当前未接进发布链，属阶段 4 待办。
 - **实机验证**：桌面 `npm run tauri dev`；Android 用 debug APK + Chrome DevTools（`adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`，模拟器为 x86 架构时构建须 `--target i686`）。
 
 ## 10. 构建与发布
@@ -146,8 +146,8 @@ src-tauri/
 
 ## 12. 审查附注（复杂度热点，后续演进参考）
 
-- `src/components/MainWorkspace.tsx`（1051 行）与 `src/components/GrowthView.tsx`（809 行）是最大的两个模块，`src/app/MainApp.tsx`（790 行）、`src/store/app.ts`（741 行）次之，继续加功能时优先考虑按域拆分而非追加；
+- `src/components/MainWorkspace.tsx`（1054 行）与 `src/components/GrowthView.tsx`（826 行）是最大的两个模块，`src/app/MainApp.tsx`（790 行）、`src/store/app.ts`（741 行）次之（行数只作量级参考），继续加功能时优先考虑按域拆分而非追加；
 - `src-tauri/src/lib.rs`（1727 行）混合了入口、迁移、11 个 command、Android content:// 读取与托盘，若命令继续增多应拆出 `commands/` 模块；
-- 样式层五个文件（`tokens → primitives → components → views → mobile`）的级联顺序是隐性契约，不可重排；移动端新增覆盖一律追加进 `mobile.css`，且不得引入 `!important`（`scripts/ui-css-audit.mjs` 把关）；
+- 样式层五个层叠文件 + `index.css` 级联入口（`tokens → primitives → components → views → mobile`）的顺序是隐性契约，不可重排；移动端新增覆盖一律追加进 `mobile.css`，`!important` 只允许压 TSX 内联样式的场景且需注释说明（`scripts/ui-css-audit.mjs` 把关，目标清零）；
 - 备份/恢复与同步合并是数据安全关键路径，改动必须同时更新 `migration.test.ts`、`backup.test.ts` 与 `lib/sync/` 的契约断言；
 - 同步数据面变更纪律：新增同步表/列时必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。

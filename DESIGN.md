@@ -10,12 +10,12 @@ colors:
   surface-selected: "rgba(47, 111, 237, 0.11)"
   text-primary: "#17233b"
   text-secondary: "#5f6d83"
-  text-muted: "#69778d"
+  text-muted: "#667389"
   text-heading: "#101b31"
   text-label: "#41526b"
   text-on-accent: "#ffffff"
   text-on-solid: "#ffffff"
-  text-overdue: "#c3505a"
+  text-overdue: "#bd4a54"
   accent: "#2f6fed"
   accent-hover: "#245fd2"
   accent-soft: "rgba(47, 111, 237, 0.1)"
@@ -24,7 +24,7 @@ colors:
   brand-gold: "#f4b942"
   success: "#2c8561"
   warning: "#a96622"
-  danger: "#c3505a"
+  danger: "#bd4a54"
   danger-solid: "#c3505a"
   success-solid: "#2c8561"
   warning-solid: "#a96622"
@@ -34,47 +34,50 @@ colors:
   focus-ring: "rgba(47, 111, 237, 0.28)"
 typography:
   display:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "30px"
     fontWeight: 700
     lineHeight: 1.25
     letterSpacing: "-0.01em"
   h1:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "24px"
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: "-0.02em"
   heading:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "20px"
     fontWeight: 650
     lineHeight: 1.35
     letterSpacing: "normal"
   h3:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Display\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "16px"
     fontWeight: 650
     lineHeight: 1.35
     letterSpacing: "normal"
   body:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Text\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.6
     letterSpacing: "normal"
   label:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Text\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "13px"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "0.01em"
   caption:
-    fontFamily: "\"Microsoft YaHei UI\", \"PingFang SC\", \"Segoe UI Variable Text\", sans-serif"
+    fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "12px"
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: "0.01em"
+  num-display:
+    fontFamily: "\"Bodoni MT\", \"Bodoni 72\", \"Playfair Display\", Didot, \"Times New Roman\", Georgia, \"Songti SC\", serif"
+    fontFeature: "tabular-nums"
 rounded:
   sm: "8px"
   md: "12px"
@@ -142,8 +145,10 @@ components:
 
 # 有秋（Yield）设计系统
 
-> 本文件是**契约**，不是现状描述。`docs/UI-REDESIGN-ROADMAP.md` 阶段 2/3/4 按本文件施工。
-> 现状与本契约的差距见 §9 迁移映射表。
+> 本文件是**契约**，不是现状描述。阶段 2/3 已按本文件完工，当前施工面是
+> `docs/UI-REDESIGN-ROADMAP.md` 阶段 4（移动壳）。§9 迁移映射表为**历史记录（已全部实施）**，
+> 仅供考古，不再作为施工依据。
+> 数字类断言（行数 / token 数 / 色值计数）会随重构漂移，验收以 `node scripts/ui-css-audit.mjs` 现算结果为准。
 
 ## Overview
 
@@ -535,7 +540,10 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 
 > 检测器报的是线索不是结论。每条人工判定，误报写进本节，不要盲从。
 
-## 9. 迁移映射表（现状 → 契约，阶段 2 施工用）
+## 9. 历史 · 迁移映射表（阶段 2 已全部实施，仅供考古）
+
+> ⚑ 本节写于阶段 2 开工前。表中左列旧 token（`--bg-*`、`--vip`、`--shadow-soft` 等）
+> 与注里引用的 `polish-*.css` / `g0x` 文件均已不存在；现行 token 以 `src/styles/tokens.css` 为准。
 
 | 现状 token | 契约 token | 处理 |
 |---|---|---|

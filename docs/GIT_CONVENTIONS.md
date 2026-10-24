@@ -36,7 +36,7 @@
 | ci | 持续集成配置 |
 | chore | 杂项（版本发布用 `chore(release)`） |
 
-**scope 词汇（双端开发时代）**：按受影响端或领域取用——`desktop`（桌面端）、`android`（移动端）、`sync`（数据同步）；双端共用改动不写 scope，或写领域名（如 `db`、`schema`、`ui`）。
+**scope 词汇（双端开发时代）**：按受影响端或领域取用——`mobile`（移动壳：移动视图 / mobile.css / Android 交互）、`desktop`（桌面端）、`android`（Android 构建 / 原生层）、`sync`（数据同步）、`ui`（双端界面）、`css` / `weekly`（页面名）等样式与页面级改动、`review`（设计评审工具链）；双端共用改动不写 scope，或写领域名（如 `db`、`schema`）。
 
 1. **原子提交**：一次提交只做一件事，方便回退和定位。
 2. 描述用一行、现在时、不加句号；详细动机写在正文（空一行后）。
@@ -103,11 +103,12 @@ git push origin v1.0.1
 **双端判定（默认规则）**：先判断本次改动落在哪一端。
 
 - **只改了一端**（桌面或 Android 仅其一受影响）：**不升版本号**。重新构建该端产物，直接替换现有 Release 里的对应文件（`gh release upload vX.Y.Z "…/产物" --clobber`），产物文件名沿用当前版本号；标签与版本号不变，Release 正文可追加一行更新说明。
+- **例外（强制升版本）**：涉及 migration 或 `SYNC_SCHEMA_VERSION` 变化的改动**一律走新版本**，不得走替换通道——已装端的数据库/同步格式与新产物不一致会静默损坏数据。
 - **两端都改变了**：才走下面的完整流程发布新版本号。
 - 拿不准哪端受影响时按两端处理（升版本号），宁可多一个版本号也不要静默替换。
 
 1. **同步版本号三处**：`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`（`Cargo.lock` 用 `cargo update -p youqiu` 同步更新）。漏一处会导致前端、安装器与 Rust 元数据版本不一致。
-2. **版本记录**：在 `docs/CHANGES.md`「版本记录」区顶部按 `#### v{版本号} 标题` 追加条目（发布 Release 时按该标题撰写说明）。
+2. **版本记录**：在 `docs/CHANGES.md`「版本记录」区顶部按 `#### v{版本号} 标题` 追加条目（发布 Release 时按该标题撰写说明）。允许**预写**「（开发中，未发布）」条目随开发持续补充，但发布时必须去掉标注并补全遗漏。
 3. **验证**：`npm run release:check` 通过。
 4. **提交**：`chore(release): vX.Y.Z`。
 5. **构建双端**：

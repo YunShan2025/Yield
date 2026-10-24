@@ -2,7 +2,7 @@
 
 本文件是「有秋（Yield）」的**版本记录**（面向使用者的版本历史，发布 Release 时同步维护）。
 
-- **当前版本**：v1.3.0（`package.json` / `src-tauri/tauri.conf.json`）
+- **当前版本**：v1.3.0（`package.json` / `src-tauri/tauri.conf.json`）；**v1.4.0 开发中**（migration v22–v26 与同步 schema v10 已在 main 落库，发布前版本号文件尚未抬升）
 - **相关文档**：`README.md`（产品说明）、`docs/ARCHITECTURE.md`（架构与技术栈）、`docs/GIT_CONVENTIONS.md`（推送与发布惯例）
 
 ## 记录约定
@@ -10,12 +10,14 @@
 1. **倒序追加**：最新版本条目放在「版本记录」最上面，标题格式为 `#### v{版本号} 标题`。
 2. **数据库变更单独强调**：涉及 SQLite 表结构或 migration 时，在版本条目中注明 migration 编号。数据库结构只支持向前升级，不支持降级。
 3. **README 同步**：影响用户可感知行为的修改，需同步更新 `README.md` 的功能描述；发布新版本时版本号同步改 `package.json`、`src-tauri/tauri.conf.json` 与 `src-tauri/Cargo.toml`。
-4. **验证后才发布**：发布前至少跑 `npx tsc --noEmit` + `npx vitest run` + `npx vite build`；涉及 Rust 的改动加 `cargo check`；界面改动需在模拟器/实机验证。
+4. **验证后才发布**：发布前至少跑 `npm run release:check`（内含全量测试与 `tsc -b` + 生产构建）；涉及 Rust 的改动加 `cargo check`；界面改动需在模拟器/实机验证。
+5. **破坏性变更抬头写**：涉及 migration 或 `SYNC_SCHEMA_VERSION` 的条目，在条目抬头注明「是否需双端同批升级」；这类改动一律抬版本号，不得走 Release 产物 `--clobber` 替换通道。
 
 ## 版本记录
 
-#### v1.4.0 目标 · 习惯 · 事项打通
+#### v1.4.0 目标 · 习惯 · 事项打通（开发中，未发布）
 
+> **迁移元信息**：migration v22–v26 已落库；同步日志升 schema v10，**两端需同批升级**。
 > 目标定位：**目标是里程碑式的长期最终结果；重复性归习惯；任务是一次性行动**。完整评估与方案见 [docs/GOAL-HABIT-TODAY-LINKAGE.md](GOAL-HABIT-TODAY-LINKAGE.md)。
 
 - **目标重新定位为里程碑（migration v22）**：目标是长期的最终结果，不再承载任何周口径，界面上也不再让用户选「目标类型」。内部按三种判据推进——数值·次数（起点→目标值）、数值变化（最新一次测量）、阶段（可勾选的阶段清单）
@@ -40,6 +42,14 @@
 - **数据库结构变更（migration v22 – v26）**，只向前升级、不支持降级：新增 `habits.repeat_rule`、`goals.deleted_at`；删除 `tasks.repeat_rule`、`tasks.generated_from_id`、`goals.weekly_target`、`goals.project_id`、`attachments` 表；migration v25 把历史 `goals.status='archived'` 并入 `completed`
 - **迁移演练工具**：`npm run release:migration-dry-run` 把尚未落库的 migration 跑在**真实数据库的副本**上，并复刻 sqlx 的校验和比对——已应用的 migration 若与代码不一致会当场报出（sqlx 会在启动时直接失败，应用起不来）。发布前跑一次，比点着验收更早发现问题
 - **同步日志格式升版（schema v10）**：`tasks` 的重复相关列与 `goals` 的周口径列不再携带，`habits.repeat_rule` 入列。旧端读到 v10 条目会被 header 闸门整体拒收并提示升级，**两端需同时升级**
+- **界面与移动壳（UI 重构阶段 1–4，跨约 40 个提交）**：
+  - **桌面视觉阶段 1–3**：设计 token 三层收口（主题无关层 / 语义层 / 色阶层）、四主题色值对齐、卡片与浮层表面统一、旧 `global-*/polish-*` 样式文件合并为五层叠文件
+  - **移动壳重建（阶段 4）**：底部导航（今日 / 待办 / 记账 / 更多）+ 三页独立移动视图（`mobile/views/`），其余二级页复用桌面视图 + `mobile.css` 适配层；今日 / 待办 / 记账各自一个 FAB；任务长按出操作面板；任务详情等浮层归入底部弹层家族；edge-to-edge 与系统返回键语义接管；日/周/月字号全面 rem 化
+  - **统一行件与动作语言**：移动列表行统一 `.mrow` 家族；行内按钮统一 `item-action-btn` 系列（沉底 32px、危险操作红调）；弹层脚注、面板按钮同族
+  - **页面逐页打磨（2026-10 下旬）**：项目 / 标签页行式重设计（名称 + 彩色标签胶囊、项目行优先级点、40px 行距对齐）；习惯卡改七日打卡点条（今日描边高亮）；成长页热点图改方格、概览卡补间距；设置页卡片统一（主题画廊 2×2、iOS 式滑动开关行、卡内按钮全部收沉底小药丸）；习惯页空分区不再渲染
+  - **辅助文字全局统一**：节头计数、状态短句、日期戳、提示行等全部归入统一辅助档（0.719rem / 600 / 次级墨色 / tabular 数字），散落的内联样式一并收进语义类
+  - **修复与清理**：「跟随系统」在深色系统下 token 不生效的嵌套缺陷修复；设置页「检查更新」在移动端由浮层提示卡接管（此前是死按钮）；今日事项头部无跳转的「查看全部」移除；窄屏断点 `min-height: 92px` 裁掉主题名的缺陷修复
+
 #### v1.3.0 全局搜索与复盘体验升级
 
 - **延期功能下线**（migration v19）：复盘页移除「延期完成」指标、延期归因区块与任务详情的延期原因编辑，`tasks.delay_reason` 列删除；备份与同步链路同步收窄，数据库只向前升级

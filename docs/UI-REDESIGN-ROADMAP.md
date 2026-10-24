@@ -1,8 +1,9 @@
 # 有秋（Yield）UI 视觉优化路线图
 
 > **适用范围**：有秋（Yield）桌面端（Windows/macOS）+ Android 端前端视觉层
-> **编写时间**：2026-10-21
-> **基线代码**：`9b8bc6b`，分支 `main`（文中全部数字均在此提交上实测复核）
+> **编写时间**：2026-10-21（**2026-10-24 复核进度**：阶段 1–3 已完工；阶段 4 移动壳主体已落地，
+> 剩余项见附录 B 阶段 4 小节；附录中「阶段 2 清零」类断言有回归，已就地标注 ⚠）
+> **基线代码**：`9b8bc6b`（第 1 节诊断数字均为该提交快照，与现状的漂移以代码与 `node scripts/ui-css-audit.mjs` 现算为准）
 > **关联文档**：[PRODUCT.md](../PRODUCT.md)（产品事实）、[DESIGN.md](../DESIGN.md)（视觉契约）、[MOBILE-IA](MOBILE-IA.md)（移动端架构）、[README](../README.md)（产品说明）、[ARCHITECTURE](ARCHITECTURE.md)（架构）、[PRODUCT_REVIEW](PRODUCT_REVIEW.md)（功能评估）、[GIT_CONVENTIONS](GIT_CONVENTIONS.md)（提交规范）
 > **配套工具**：项目级 skill `impeccable` v4.7.0 / `emil-design-eng` / `mobile-native` / `animate`（均装于 `.agents/skills/`，不入库）
 
@@ -710,9 +711,9 @@ adb shell settings put system font_scale 1.0   # 还原
 
 ### 8.3 验收标准
 
-- [ ] 命令面板开合零动画或 ≤100ms 且无位移
-- [ ] 所有 `transition` 无 `all`
-- [ ] 全局有 `prefers-reduced-motion` 降级
+- [ ] 命令面板开合零动画或 ≤100ms 且无位移（待验：需真机/预览实测）
+- [x] 所有 `transition` 无 `all`（2026-10-24 实测 0 处）
+- [x] 全局有 `prefers-reduced-motion` 降级（`tokens.css` 的 `--motion-scale` 机制）
 - [ ] 动效只出现在「偶尔」和「稀有」档
 - [ ] 桌面 + 移动都验过
 
@@ -797,14 +798,17 @@ npm run release:check
   - [x] 三个决策点（§2.4）已拍板
   - [x] `docs/MOBILE-IA.md` 已写入
 - [x] 阶段 2 桌面 CSS 分层 ✅（2026-10-21）
-  - [x] 非 token 文件硬编码色值 = 0（531 处 → 0，迁成 296 枚色阶 token）
-  - [x] `!important` = 0（30 处 → 0，减弱动效改用 `--motion-scale` 变量）
-  - [x] 文件改为职责命名（`tokens` / `primitives` / `components` / `views` / `index`）
-  - [x] 四主题 token 集完全对齐（每套 40 枚，含 `system`）
+  - [!] 非 token 文件硬编码色值 = 0（531 处 → 0，迁成 296 枚色阶 token）
+        ⚠ 已回归：阶段 4 的 `mobile.css` 现含 85 处硬编码色值，收尾前清零（`ui-css-audit` 红）
+  - [!] `!important` = 0（30 处 → 0，减弱动效改用 `--motion-scale` 变量）
+        ⚠ 已回归：`mobile.css` 现存 2 处生效（:2401 / :3650 压 TSX 内联样式），收尾清零
+  - [x] 文件改为职责命名（`tokens` / `primitives` / `components` / `views` / `mobile` / `index`）
+  - [!] 四主题 token 集完全对齐（每套 40 枚，含 `system`）
+        ⚠ 现况：`:root`/`dawn` 38 枚、`dark`/`glass`/`system` 各 34（缺 `--prio-1..4`，补声明或改 audit 口径为「含继承」）
   - [x] 5 个失效的 token 引用已修（整条声明此前被丢弃）
   - [x] 状态色契约取值已落地（8 处对比度不达标已修）
   - [x] `index.css` 只剩 `@import`
-  - [x] 回归：`tsc` / `vitest`(224) / `vite build` 全绿；四主题 + 移动壳
+  - [x] 回归：`tsc` / `vitest`(224，当时口径) / `vite build` 全绿；四主题 + 移动壳
         32 视图的计算样式逐项比对差异 0，截图逐像素一致
 - [x] 阶段 3 桌面视图层（✅ 2026-10-22 收口，评审基线 1440×900）
   - [x] 今日
@@ -853,12 +857,18 @@ npm run release:check
         仍是人工逐条对照，这一项不算自动闭环。
   - [!] 备注 · 触控目标底线由 44px 改为 24px（WCAG 2.5.8 AA），理由写在
         DESIGN.md §Do's。此项是设计判断，尚未经用户确认。
-- [ ] 阶段 4 移动端重建
-  - [ ] 手感层（mobile-native 11 条）真机确认
-  - [ ] 信息架构重建
-  - [ ] Material 3 结构落地
-  - [ ] 共享叶子组件
+- [ ] 阶段 4 移动端重建（进行中，2026-10-24 刷新）
+  - [x] 信息架构重建：底部导航 4 项 + 「更多」按典故分组 + 二级页入口
+  - [x] Material 3 结构落地：三页独立移动视图（今日/待办/记账）+ 页头/FAB + 底部弹层家族 + 长按动作面板
+  - [x] 共享叶子组件：`.mrow` 行件、`item-action-btn` 动作族、MobileTaskRow/Line/Pills、TaskActionSheet、LedgerEntrySheet
+  - [x] 弹层语言统一 + 边缘手势（右缘右滑关闭）+ 系统返回键语义接管
+  - [x] 移动字号 rem 化、edge-to-edge / IME inset（SDK≥35）
+  - [!] 手感层（mobile-native 11 条）：代码侧基本完成，**真机确认**未做
   - [ ] 四主题真机截图 + font_scale 1.3 验证
+  - [ ] 48dp 触摸目标全量核对
+  - [ ] Android 13+ 预测性返回（现走 onBackPressed 兼容路径）
+  - [ ] `mobile.css` 硬编码色值 85 处 + `!important` 2 处清零；hover 隔离在共享层补齐
+  - [ ] viewport `user-scalable=no` 放开评估
 - [ ] 阶段 5 动效手感
 ```
 

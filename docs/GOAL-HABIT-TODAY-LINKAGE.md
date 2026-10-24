@@ -6,6 +6,12 @@
 > **方法**：代码与数据模型审阅 + 关键链路逐行核对 + 测试基线（`npx vitest run`：30 文件 / 208 用例全绿）
 > **相关文档**：[README](../README.md)、[ARCHITECTURE](ARCHITECTURE.md)、[PRODUCT_REVIEW](PRODUCT_REVIEW.md)、[CHANGES](CHANGES.md)
 >
+> ⚑ **实施状态（2026-10-24）**：方案主体已随 **v1.4.0** 落地（阶段模型、重复归习惯、显式计量、分母唯一真源、回收站、状态四态收敛），
+> 剩余未做：B4「今日按目标筛选」、C3「目标→今日建议」与 §8 缺口清单。对照实现时注意三处命名差异：
+> 内部判据为**三种**（`milestone` / `measure` / `staged`，`measure` 承接旧 `change`）；
+> 分母与进度函数实际叫 **`resolveGoalTarget` / `calculateGoalProgress`**（`lib/growth.ts`，非文中 `resolveGoalProgress`）；
+> 排期选择器实际是 **`WeekdayPicker.tsx`**（未改名 HabitSchedulePicker）。文中「文件:行号」引用已全部漂移，请按符号名定位。
+>
 > **方案修订记录**
 > - **v2（2026-10-20）**：依据产品定位补充重写方案。定位澄清为「**目标 = 里程碑式的长期最终结果；重复性归习惯；任务是一次性行动**」。
 >   - 目标不再承载任何周口径与"贡献计数"，改为**判据化**（数值/次数、阶段、项目）。

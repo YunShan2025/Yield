@@ -5,6 +5,11 @@
 > 需求来源：`docs/PRODUCT_REVIEW.md` 的 P0-1、P0-2、P1-1、P1-2，以及随后按验收反馈追加的 UI 收敛
 > 相关文档：`docs/CHANGES.md`（版本记录，已按主题记录这批改动）、`docs/ARCHITECTURE.md`（表结构现状）、`docs/local/android-sync-plan.md`（移动端计划，本地文档）
 > **2026-10-23 勘误**：`src/styles/` 已重构为 `tokens / primitives / components / views / mobile` 五个文件，本文提到的 `parts/global-*.css`、`polish-*` 均为历史位置（内容已并入对应新文件）。移动端覆写现在统一写 `src/styles/mobile.css`。各条改动记录本身按当时情况保留，不改写。
+>
+> ⚑ **状态（2026-10-24 复核）**：本手册的**待办多数已完成**——§4.3 命令面板已挂载移动壳（入口在页头右上搜索钮）；
+> `SYNC_SCHEMA_VERSION` 现为 **10**（schema v10，migration v22–v26 已落库）；习惯周进度条 `.habit-week-track`
+> 已被**七日点条 `.habit-week-dots`** 取代；今日事项排序已改**五段**（未达标习惯→未完成任务→本周已达标习惯→已打卡习惯→已完成任务，手动排序优先）且习惯参与拖拽；
+> 成长目标 `goal_type` 已收敛为 `milestone/measure/staged`。各条记录按当时情况保留，动手前先对代码复核。
 
 ## 0. 这份文档怎么用
 

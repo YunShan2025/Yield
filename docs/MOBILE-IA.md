@@ -4,6 +4,11 @@
 > **编写时间**：2026-10-21
 > **基线代码**：`9b8bc6b`
 > **适用端**：Android（APK 侧载）。不做 iOS 版本。
+>
+> ⚑ **状态（2026-10-24）**：本文是移动壳的**设计依据**，实现已大面积落地并偏离部分计划——
+> 读的时候注意：**§5.1 文件名**（实际为 `MobileMoreSheet` / `TaskActionSheet` / `views/TodayMobileView|InboxMobileView|LedgerMobileView` + `MobileTaskRow/Line/Pills` 等）、
+> **§5.2「独立 MobileShell」方案**（实际是 `isMobileShell()` 在 `MainWorkspace` 分支下沉，桌面浮层组件照旧复用，命令面板与通知卡移动壳也挂载）、
+> **§4.5 任务详情**（底部弹层而非全屏页）均以代码为准，勿按本文重建。§3 的信息架构与「更多」分组语义、字号体系仍然有效。
 
 ---
 
