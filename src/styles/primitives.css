@@ -1028,6 +1028,11 @@ body {
   border-color: var(--accent);
 }
 
+/* 占位态：值为空时像输入框 placeholder 一样呈灰，提示「还没选」。 */
+.select-btn.is-placeholder {
+  color: var(--text-muted);
+}
+
 /* 悬停态要重写整条 background：.item-action-btn:hover 用 background 简写做底色，
    优先级高于本文件的 .select-btn，会把箭头图一并抹掉，看起来像「箭头悬停就消失」。
    这里用更高的优先级把带箭头的底色抢回来，悬停只让边框变色。 */

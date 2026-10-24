@@ -1852,6 +1852,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .growth-panel > .goal-card + .goal-card,
 .growth-panel > .achievement-card + .achievement-card { margin-top: 14px; }
 .goal-card-head { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-caption); }
+.goal-card-chip { display: inline-flex; align-items: center; gap: 6px; }
 .goal-card-head i { width: 10px; height: 10px; border-radius: 50%; }
 .goal-card h3 { margin: 14px 0 6px; font-size: var(--font-size-h3); }
 .goal-card p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); }

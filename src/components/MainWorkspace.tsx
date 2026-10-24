@@ -619,6 +619,9 @@ function TrashView() {
         >
           清空回收站
         </button>
+        {/* 麦穗水印只挂移动壳（样式在 mobile.css）；桌面是 flex 行，
+            空 span 会多占一格 gap，故桌面不渲染。 */}
+        {isMobileShell() ? <span className="mtoday-wheat" aria-hidden="true" /> : null}
       </section>
       {!total ? (
         <div className="empty-state">{getEmptyMessage("trash")}</div>

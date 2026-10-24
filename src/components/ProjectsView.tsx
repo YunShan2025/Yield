@@ -47,6 +47,9 @@ export function ProjectsView() {
   const projectColor = (project: Project) =>
     tags.find((tag) => tag.id === project.tag_id)?.color ?? project.color;
 
+  /** 引导卡分段条口径：在册项目按有无任务分「进行中 / 未启动」，归档独立一段。 */
+  const ongoingProjects = projects.filter((project) => selectProjectTasks(tasks, project.id).length).length;
+
   /** 项目名后挂标签胶囊：浅色底 + 标签名，底色就是标签的颜色。 */
   const projectTagChip = (project: Project) => {
     const tag = tags.find((item) => item.id === project.tag_id);
@@ -167,13 +170,26 @@ export function ProjectsView() {
       </div>
 
       <div className="projects-scroll">
-        {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡。 */}
+        {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡：三段实数据
+            色条（进行中 / 未启动 / 已归档），原 hint 的信息全部升格进 legend。 */}
         {isMobileShell() ? (
           <MobileGuideCard
             value={projects.length}
             unit="个"
             label="项目在册"
-            hint={`${projects.filter((project) => selectProjectTasks(tasks, project.id).length).length} 个进行中 · 已归档 ${archivedProjects.length} 个`}
+            segments={[
+              { label: "进行中", value: ongoingProjects, color: "var(--accent-strong)" },
+              {
+                label: "未启动",
+                value: projects.length - ongoingProjects,
+                color: "color-mix(in srgb, var(--accent-strong) 45%, transparent)",
+              },
+              {
+                label: "已归档",
+                value: archivedProjects.length,
+                color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+              },
+            ]}
           />
         ) : (
           <section className="today-hero guide-hero">

@@ -103,6 +103,9 @@ export function GrowthView() {
   const [startValue, setStartValue] = useState("0");
   const [color, setColor] = useState(COLORS[0]);
   const [achievementTitle, setAchievementTitle] = useState("");
+  // 成就表单的关联目标必须独立于 selectedGoalId：后者是目标详情页的选中态，
+  // 共用会让表单默认落在「刚看过的那个目标」上，默认值和保存关联都会不对。
+  const [achievementGoalId, setAchievementGoalId] = useState("");
   const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
 
   const today = todayDateString();
@@ -704,7 +707,7 @@ export function GrowthView() {
 
       {tab === "achievements" ? (
         <section>
-          <div className="achievement-compose growth-panel"><input value={achievementTitle} placeholder="记录一个值得纪念的成就" onChange={(event) => setAchievementTitle(event.target.value)} /><SelectMenu ariaLabel="关联目标" value={selectedGoalId ?? ""} onChange={(value) => setSelectedGoalId(value || null)} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} /><button className="btn-primary" onClick={() => { const title = achievementTitle.trim(); if (!title) return; void createAchievement({ title, description: "", achieved_at: todayDateString(), goal_id: selectedGoalId, source_type: "manual" }).then(() => { setAchievementTitle(""); return refresh(); }); }}>保存成就</button></div>
+          <div className="achievement-compose growth-panel"><input value={achievementTitle} placeholder="记录一个值得纪念的成就" onChange={(event) => setAchievementTitle(event.target.value)} /><SelectMenu ariaLabel="关联目标" value={achievementGoalId} onChange={setAchievementGoalId} className={achievementGoalId ? undefined : "is-placeholder"} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} /><button className="btn-primary" onClick={() => { const title = achievementTitle.trim(); if (!title) return; void createAchievement({ title, description: "", achieved_at: todayDateString(), goal_id: achievementGoalId || null, source_type: "manual" }).then(() => { setAchievementTitle(""); setAchievementGoalId(""); return refresh(); }); }}>保存成就</button></div>
           <div className="achievement-grid">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(() => refresh())} />)}</div>
           {!achievements.length ? <div className="empty-state">还没有成就记录。把今天值得纪念的一步留在这里。</div> : null}
         </section>
@@ -801,15 +804,20 @@ function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
   const finished = goal.status === "completed" || goal.status === "abandoned";
   return (
     <button className={`goal-card${finished ? " is-finished" : ""}`} onClick={onOpen}>
-      <div className="goal-card-head"><i style={{ background: goal.color }} /><span>{GOAL_STATUS_LABEL[goal.status]}</span></div>
+      <div className="goal-card-head">
+        <span className="goal-card-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
+          <i style={{ background: goal.color }} />
+          {GOAL_STATUS_LABEL[goal.status]}
+        </span>
+      </div>
       <h3>{goal.title}</h3>
       <p>
-        {fmtContribution(goal.current_value)}{target.unit} / {fmtContribution(target.value)}{target.unit}
+        <b>{fmtContribution(goal.current_value)}{target.unit}</b> / {fmtContribution(target.value)}{target.unit}
       </p>
       <div className="goal-progress-track"><i style={{ width: `${progress}%`, background: goal.color }} /></div>
       <footer>
         <span>{Math.round(progress)}%</span>
-        <span>
+        <span className={deadline?.behind ? "is-behind" : undefined}>
           {deadline
             ? `${deadline.behind ? "进度落后 · " : ""}${deadline.daysLeft > 0 ? `剩 ${deadline.daysLeft} 天` : "已到目标日"}`
             : goal.goal_type === "staged"

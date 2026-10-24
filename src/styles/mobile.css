@@ -1561,17 +1561,21 @@ html[data-shell="mobile"] .mledger-sheet-foot .mledger-save {
   margin-top: 0;
 }
 
-/* ---------- 表头月份切换：紧凑左右箭头 + 居中月份 ---------- */
-html[data-shell="mobile"] .mledger-month-switch {
+/* ---------- 表头日期/月份切换（记账「月」与今日「日」共用）：紧凑左右箭头 + 居中标签。
+   strong 只留够「10月 / 10月22日」不跳宽的底宽，箭头与文字之间的空隙由 40px 圆钮
+   自身内边距提供，不再额外垫 min-width。 ---------- */
+html[data-shell="mobile"] .mledger-month-switch,
+html[data-shell="mobile"] .mtoday-day-switch {
   display: flex;
   flex: none;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   margin-right: -8px;
 }
 
-html[data-shell="mobile"] .mledger-month-switch strong {
-  min-width: 68px;
+html[data-shell="mobile"] .mledger-month-switch strong,
+html[data-shell="mobile"] .mtoday-day-switch strong {
+  min-width: 32px;
   text-align: center;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -1580,19 +1584,33 @@ html[data-shell="mobile"] .mledger-month-switch strong {
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-html[data-shell="mobile"] .mledger-month-switch .mtoday-icon-btn span {
+/* 箭头圆钮内缘再探 4px 贴近标签：视觉缝更窄，40px 热区只重叠不缩水。 */
+html[data-shell="mobile"] .mledger-month-switch button:first-child,
+html[data-shell="mobile"] .mtoday-day-switch button:first-child {
+  margin-right: -4px;
+}
+
+html[data-shell="mobile"] .mledger-month-switch button:last-child,
+html[data-shell="mobile"] .mtoday-day-switch button:last-child {
+  margin-left: -4px;
+}
+
+html[data-shell="mobile"] .mledger-month-switch .mtoday-icon-btn span,
+html[data-shell="mobile"] .mtoday-day-switch .mtoday-icon-btn span {
   margin-top: -3px;
   font-size: 1.5rem;
   line-height: 1;
   color: var(--text-secondary);
 }
 
-html[data-shell="mobile"] .mledger-month-switch .mtoday-icon-btn:disabled {
+html[data-shell="mobile"] .mledger-month-switch .mtoday-icon-btn:disabled,
+html[data-shell="mobile"] .mtoday-day-switch .mtoday-icon-btn:disabled {
   opacity: 0.35;
   cursor: default;
 }
 
-html[data-shell="mobile"] .mledger-month-switch .mtoday-icon-btn:focus-visible {
+html[data-shell="mobile"] .mledger-month-switch .mtoday-icon-btn:focus-visible,
+html[data-shell="mobile"] .mtoday-day-switch .mtoday-icon-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
@@ -2960,10 +2978,10 @@ html[data-shell="mobile"] .reminders-empty {
   border-radius: var(--radius-md);
 }
 
-/* ---------- 4) 指标条：growth / review 的大数字带 → 一格一读数卡 ----------
+/* ---------- 4) 指标条：growth / review 的大数字带 → 一行读数卡 ----------
    桌面的「一排大数字 + 发丝线」是三列以上表格压进 390px 的头号受害者，
    也撞上「大数字当页面结构」的桌面红线；移动壳折进一张卡：
-   成长 2×2、复盘 1×3，数字降到与三页顶卡读数同档。 */
+   成长 1×4、复盘 1×3，数字降到与三页顶卡读数同档。 */
 html[data-shell="mobile"] .growth-metrics,
 html[data-shell="mobile"] .review-metrics {
   gap: 1px;
@@ -2990,47 +3008,36 @@ html[data-theme="glass"][data-shell="mobile"] .review-metrics {
 }
 
 html[data-shell="mobile"] .growth-metrics {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 html[data-shell="mobile"] .review-metrics {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-html[data-shell="mobile"] .growth-metrics article,
+html[data-shell="mobile"] .growth-metrics article {
+  padding: 12px 10px;
+  border-left: 0;
+}
+
 html[data-shell="mobile"] .review-metrics article {
   padding: 12px 14px;
   border-left: 0;
 }
 
-/* 发丝线当格线：成长 2×2（列分隔 + 行分隔），复盘一行三格（仅列分隔）。 */
-html[data-shell="mobile"] .growth-metrics article {
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--border) 62%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, var(--border) 62%, transparent);
-}
-
-html[data-shell="mobile"] .growth-metrics article:nth-child(2n) {
-  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--border) 62%, transparent);
-}
-
-html[data-shell="mobile"] .growth-metrics article:nth-last-child(-n + 2) {
-  box-shadow: none;
-}
-
-html[data-shell="mobile"] .growth-metrics article:nth-last-child(-n + 2):nth-child(odd) {
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--border) 62%, transparent);
-}
-
+/* 发丝线当格线：成长 1×4、复盘 1×3 都是一行，只留列分隔。 */
+html[data-shell="mobile"] .growth-metrics article,
 html[data-shell="mobile"] .review-metrics article {
   box-shadow: inset -1px 0 0 color-mix(in srgb, var(--border) 62%, transparent);
 }
 
+html[data-shell="mobile"] .growth-metrics article:last-child,
 html[data-shell="mobile"] .review-metrics article:last-child {
   box-shadow: none;
 }
 
 html[data-shell="mobile"] .growth-metrics strong {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 html[data-shell="mobile"] .review-metrics strong {
@@ -3150,6 +3157,49 @@ html[data-shell="mobile"] .goal-card {
   padding: 14px 15px;
 }
 
+/* 卡头：色点与状态本来是一组，别被 space-between 拆到两头 —— 收在左侧成对出现。
+   读数把「当前值」加重，比现状的「X / Y」平铺更好读。 */
+html[data-shell="mobile"] .goal-card-head {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+html[data-shell="mobile"] .goal-card-chip {
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--goal-color) 12%, transparent);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+html[data-shell="mobile"] .goal-card-chip i {
+  width: 7px;
+  height: 7px;
+}
+
+html[data-shell="mobile"] .goal-card p {
+  font-size: 0.8125rem;
+}
+
+html[data-shell="mobile"] .goal-card p b {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+html[data-shell="mobile"] .goal-progress-track {
+  background: color-mix(in srgb, var(--border-strong) 42%, transparent);
+}
+
+html[data-shell="mobile"] .goal-card footer span:first-child {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+html[data-shell="mobile"] .goal-card footer span.is-behind {
+  color: var(--warning);
+}
+
 /* 总览面板里直排的目标/成就卡片：间距与移动壳 goal-grid 同为 10px。 */
 html[data-shell="mobile"] .growth-panel > .goal-card + .goal-card,
 html[data-shell="mobile"] .growth-panel > .achievement-card + .achievement-card {
@@ -3161,16 +3211,133 @@ html[data-shell="mobile"] .goal-card h3 {
 }
 
 html[data-shell="mobile"] .goal-detail-hero {
-  padding: 16px;
+  /* 窄屏媒体查询把 hero 折成了竖排，读数掉到卡底、卡虚高 —— 移动壳改回横排：
+     文本居左自然换行，百分比贴右侧垂直居中，卡高压到内容本身的高度。 */
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
   border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+html[data-shell="mobile"] .goal-detail-hero > div {
+  min-width: 0;
+}
+
+html[data-theme="dark"][data-shell="mobile"] .goal-detail-hero,
+html[data-theme="glass"][data-shell="mobile"] .goal-detail-hero {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .goal-detail-hero {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+  }
 }
 
 html[data-shell="mobile"] .goal-detail-hero h2 {
-  font-size: 1.25rem;
+  margin: 4px 0 2px;
+  font-size: 1.2rem;
 }
 
+/* 大读数用顶卡字族（衬线、目标色），贴右不被长标题挤压。 */
 html[data-shell="mobile"] .goal-detail-hero > strong {
-  font-size: 1.5rem;
+  flex: none;
+  font-family: var(--font-num-display);
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* 阶段 / 正在推进：裸列表折进移动壳同款卡，与目标卡流同一节奏。 */
+html[data-shell="mobile"] .goal-stages,
+html[data-shell="mobile"] .goal-pushing {
+  margin-top: 10px;
+  padding: 14px 15px 15px;
+  border-radius: 16px;
+  background: var(--surface-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+html[data-theme="dark"][data-shell="mobile"] .goal-stages,
+html[data-theme="dark"][data-shell="mobile"] .goal-pushing,
+html[data-theme="glass"][data-shell="mobile"] .goal-stages,
+html[data-theme="glass"][data-shell="mobile"] .goal-pushing {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .goal-stages,
+  html[data-theme="system"][data-shell="mobile"] .goal-pushing {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+  }
+}
+
+html[data-shell="mobile"] .goal-section-head {
+  margin-bottom: 6px;
+}
+
+/* 卡内列表节奏：行距交给 padding + 分隔线（线上下等距才居中），
+   grid gap 与行内 padding 双份叠加会撑出 21px 的乱缝，归零。 */
+html[data-shell="mobile"] .goal-stage-list,
+html[data-shell="mobile"] .goal-push-list {
+  gap: 0;
+}
+
+html[data-shell="mobile"] .goal-stage-list li,
+html[data-shell="mobile"] .goal-push-list li {
+  padding: 9px 2px;
+}
+
+/* 首行离节头近一档、离下一行不粘连。 */
+html[data-shell="mobile"] .goal-stage-list li:first-child,
+html[data-shell="mobile"] .goal-push-list li:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+html[data-shell="mobile"] .goal-stage-add input,
+html[data-shell="mobile"] .goal-stage-add .item-action-btn {
+  min-height: 40px;
+  border-radius: var(--radius-md);
+}
+
+html[data-shell="mobile"] .goal-stage-add .item-action-btn {
+  background: var(--surface-sunken);
+  border-color: transparent;
+}
+
+/* 返回键：text-btn 在移动壳没有皮（裸原生按钮），收成一枚 sunken 胶囊。 */
+html[data-shell="mobile"] .goal-detail > .text-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 0 0 10px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+html[data-shell="mobile"] .goal-detail > .text-btn:active {
+  transform: scale(0.97);
+}
+
+/* 操作组：整组靠右，换行后各行右缘也对齐。 */
+html[data-shell="mobile"] .goal-manage-group {
+  justify-content: flex-end;
+}
+
+/* 「删除目标」组内最后一个按钮，用危险色示警。 */
+html[data-shell="mobile"] .goal-manage-group > button:last-of-type {
+  color: var(--danger);
 }
 
 html[data-shell="mobile"] .goal-stage-check input,
@@ -3191,17 +3358,115 @@ html[data-shell="mobile"] .achievement-grid {
   gap: 10px;
 }
 
+/* 成就卡进同款卡族：去描边、16 圆角、统一卡影；金牌勋章保留做识别。 */
 html[data-shell="mobile"] .achievement-card {
   padding: 14px 15px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
+html[data-theme="dark"][data-shell="mobile"] .achievement-card,
+html[data-theme="glass"][data-shell="mobile"] .achievement-card {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .achievement-card {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+  }
+}
+
+/* 置顶卡改用琥珀底色示异（描边已被卡族化去掉，amber 投影沿用桌面语义）。 */
+html[data-shell="mobile"] .achievement-card.pinned {
+  background: color-mix(in srgb, var(--amber-550) 6%, var(--surface-panel));
+  box-shadow: 0 8px 20px var(--amber-550-14);
+}
+
+html[data-shell="mobile"] .achievement-card > button {
+  min-height: 40px;
+  padding: 0 12px;
+  color: var(--text-secondary);
+}
+
+/* 已置顶：与卡底琥珀底色同族发声（桌面 accent 蓝在移动壳偏跳）。 */
+html[data-shell="mobile"] .achievement-card > button.active {
+  color: var(--amber-550);
+}
+
+/* 记录卡：输入框占一行，「关联目标」与「保存成就」共行二号，
+   控件面统一 sunken 平底，窄屏不再三条全宽控件叠罗汉。 */
 html[data-shell="mobile"] .achievement-compose {
   gap: 8px;
 }
 
-html[data-shell="mobile"] .achievement-compose input {
+html[data-shell="mobile"] .achievement-compose input,
+html[data-shell="mobile"] .achievement-compose .select-btn {
   min-height: 44px;
+  border: 0;
   border-radius: var(--radius-md);
+  background-color: var(--surface-sunken); /* 只换底色，保住 base 的 --select-arrow 箭头 */
+}
+
+/* 行一号输入框必占整行；行二号「关联目标 + 保存成就」。选择器超宽省略，
+   否则长目标名撑爆 basis，把保存按钮挤到第三行。 */
+html[data-shell="mobile"] .achievement-compose input {
+  flex: 1 0 100%;
+}
+
+html[data-shell="mobile"] .achievement-compose .select-btn {
+  display: block;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  padding: 0 30px 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 44px;
+}
+
+html[data-shell="mobile"] .achievement-compose .btn-primary {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+/* 成就墙空态：0 条时 grid 无子节点，:empty 命中把空态升成
+   「点亮勋章」占位卡，替掉裸灰字。 */
+html[data-shell="mobile"] .achievement-grid:empty + .empty-state {
+  padding: 30px 20px 32px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface-panel);
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+html[data-shell="mobile"] .achievement-grid:empty + .empty-state::before {
+  content: "✦";
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 12px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--gold-200), var(--amber-550));
+  color: var(--amber-950-c);
+  font-size: 1.1rem;
+}
+
+html[data-theme="dark"][data-shell="mobile"] .achievement-grid:empty + .empty-state,
+html[data-theme="glass"][data-shell="mobile"] .achievement-grid:empty + .empty-state {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .achievement-grid:empty + .empty-state {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
+  }
 }
 
 /* ---------- 7) 习惯 / 项目 / 标签：卡片流与可展开行 ---------- */
@@ -3573,13 +3838,23 @@ html[data-shell="mobile"] .anni-detail-count strong {
 
 /* ---------- 11) 回收站：概况顶卡 + 行卡 ---------- */
 
-/* 概况并入淡蓝顶卡族（与三页顶卡同色），「清空」收成危险小药丸。 */
+/* 概况并入淡蓝顶卡族（与三页顶卡同色同水印），「清空」收成危险小药丸。 */
 html[data-shell="mobile"] .trash-summary {
+  position: relative;
+  overflow: hidden;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
   background: var(--accent-faint);
+}
+
+html[data-shell="mobile"] .trash-summary .mtoday-wheat {
+  width: 104px;
+  height: 104px;
+  right: -32px;
+  bottom: -38px;
+  opacity: 0.1;
 }
 
 html[data-shell="mobile"] .trash-summary-copy strong {
@@ -3990,16 +4265,42 @@ html[data-shell="mobile"] .project-edit-actions .item-action-btn {
 
 /* ---------- 14) 三轮反馈（2026-10-24）：数据型引导卡 / 周清单页头等分导航 ---------- */
 
-/* 14.1 guide-stat 引导卡族（MobileGuideCard）：与今日 mtoday-hero、待办
-   minbox-summary 同一白卡语言——大读数 + 速览，可选周条概览/分段色条。
+/* 14.1 guide-stat 引导卡族（MobileGuideCard）：并入「淡蓝顶卡」族——与今日
+   mtoday-hero、待办 minbox-summary、记账顶卡同底同阴影，衬线大读数 + 速览 +
+   麦穗水印，可选周条概览/分段色条。读数比三页主卡降一档（3.75rem → 2.75rem）：
+   二级页的信息密度更高，字号差保留「主页 / 二级页」的层级，底色与字族说「同一应用」。
    横向 18px 边距默认自给；容器已带 18px 留白的页面再归零，避免双份。 */
 html[data-shell="mobile"] .guide-stat {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 11px;
   /* 页头→引导卡统一 9px（与 mtoday-scroll 及各 body 容器的顶部节奏同值） */
   margin: 9px 18px 12px;
   padding: 14px 16px 13px;
+  /* 无概览条的页（习惯/备忘/项目…）只有一行读数，min-height 托住顶卡的带感，
+     免得当着下方 mtoday-card 流时缩成一条、看不出是「顶卡」。 */
+  min-height: 6.25rem;
+  background: var(--accent-faint);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+/* 紧凑态（MobileGuideCard 无 bars/segments 时自加）：没有第二行概览就不再
+   硬撑顶卡高度，收成一条小而实的摘要——宁可窄，不装空。 */
+html[data-shell="mobile"] .guide-stat.is-compact {
+  min-height: 0;
+}
+
+html[data-theme="dark"][data-shell="mobile"] .guide-stat,
+html[data-theme="glass"][data-shell="mobile"] .guide-stat {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"][data-shell="mobile"] .guide-stat {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+  }
 }
 
 html[data-shell="mobile"] .weekly-checklist .guide-stat,
@@ -4030,23 +4331,26 @@ html[data-shell="mobile"] .guide-stat-total {
   color: var(--text-primary);
 }
 
+/* 大读数与三页顶卡同字族同墨（衬线数字体 + accent-strong），只降字号。 */
 html[data-shell="mobile"] .guide-stat-total b {
-  font-family: var(--font-display);
-  font-size: 1.875rem;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-num-display);
+  font-size: 2.75rem;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.005em;
+  color: var(--accent-strong);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 html[data-shell="mobile"] .guide-stat-total span {
   margin-left: 3px;
-  color: var(--text-muted);
-  font-size: 0.812rem;
+  color: var(--text-secondary);
+  font-size: 0.781rem;
 }
 
 html[data-shell="mobile"] .guide-stat-label {
   color: var(--text-secondary);
-  font-size: 0.812rem;
+  font-size: 0.781rem;
 }
 
 html[data-shell="mobile"] .guide-stat-hint {
@@ -4058,7 +4362,18 @@ html[data-shell="mobile"] .guide-stat-hint {
   text-align: right;
 }
 
-/* 周条概览：七日小柱，今天描环加实色，空日用淡轨道垫底。 */
+/* 概览条水印：与待办摘要卡同图同手法，随更矮的卡身再收一档。 */
+html[data-shell="mobile"] .guide-stat .mtoday-wheat {
+  width: 104px;
+  height: 104px;
+  right: -32px;
+  bottom: -38px;
+  opacity: 0.1;
+}
+
+/* 周条概览：七日小柱，今天描环加实色，空日用淡轨道垫底。
+   轨道与今日顶卡的进度轨道同族中性灰（accent-faint 底上 sunken 几乎同色，
+   会看不出轨道；16% accent 又会误读成满条）。 */
 html[data-shell="mobile"] .guide-stat-bars {
   display: flex;
   gap: 6px;
@@ -4079,7 +4394,7 @@ html[data-shell="mobile"] .guide-stat-track {
   height: 34px;
   overflow: hidden;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface-sunken));
+  background: color-mix(in srgb, var(--border-strong) 42%, transparent);
 }
 
 html[data-shell="mobile"] .guide-stat-track > i {
@@ -4108,7 +4423,7 @@ html[data-shell="mobile"] .guide-stat-col.is-today em {
   font-weight: 600;
 }
 
-/* 分段色条 + legend（与待办 minbox-summary 同构，色由数据自带）。 */
+/* 分段色条 + legend（与待办 minbox-summary 同构同墨色，色由数据自带）。 */
 html[data-shell="mobile"] .guide-stat-seg {
   display: flex;
   gap: 3px;
@@ -4130,20 +4445,20 @@ html[data-shell="mobile"] .guide-stat-legend span {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.719rem;
-  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 html[data-shell="mobile"] .guide-stat-legend i {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
 }
 
 html[data-shell="mobile"] .guide-stat-legend b {
-  color: var(--text-primary);
-  font-weight: 650;
+  color: var(--text-secondary);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 

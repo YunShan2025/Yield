@@ -77,6 +77,10 @@ export function RemindersView() {
   // 第二格统计：倒计时页数「已结束」，循环页数「已保存」。为 0 时整格不出现 ——
   // 状态条要么有数据，要么只剩一句话（与周清单引导块同一原则）。
   const settledCount = tab === "countdown" ? finishedCount : visibleTimers.length;
+  // 引导卡分段色条口径：全部排程（两页合计）的运行 / 休息，与大读数一致，
+  // 不随 tab 变 —— tab 内的运行数下方状态条自己会说。
+  const scheduledTotal = countdowns.length + intervals.length;
+  const runningTotal = timers.filter((timer) => timer.running).length;
 
   const countdownSeconds = () => {
     if (timeMode === "duration") return Math.max(1, Math.floor(countdownMinutes)) * 60;
@@ -161,13 +165,21 @@ export function RemindersView() {
         </div>
       </div>
 
-      {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡。 */}
+      {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡：运行 / 休息
+          分段色条（legend 自带计数），原「N 个运行中」hint 与 legend 重复，撤掉。 */}
       {isMobileShell() ? (
         <MobileGuideCard
-          value={countdowns.length + intervals.length}
+          value={scheduledTotal}
           unit="个"
           label="排程提醒"
-          hint={runningCount ? `${runningCount} 个运行中` : "当前都在休息"}
+          segments={[
+            { label: "运行中", value: runningTotal, color: "var(--accent-strong)" },
+            {
+              label: "休息中",
+              value: scheduledTotal - runningTotal,
+              color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+            },
+          ]}
         />
       ) : (
         <section className="today-hero guide-hero">

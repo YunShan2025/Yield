@@ -101,6 +101,11 @@ export function MemosView() {
   const selected = memos.find((memo) => memo.id === selectedId) ?? null;
   const activeCount = memos.filter((memo) => memo.archived !== 1).length;
   const archivedCount = memos.length - activeCount;
+  // 引导卡：在册条目的格式分布分段条（与大读数同口径，不含归档），
+  // hint 再补一句最近更新 —— 都是页面已加载的真实数据。
+  const richtextCount = memos.filter((memo) => memo.archived !== 1 && memo.format === "richtext").length;
+  const markdownCount = memos.filter((memo) => memo.archived !== 1 && memo.format === "markdown").length;
+  const latestUpdated = memos.reduce((max, memo) => (memo.updated_at > max ? memo.updated_at : max), "");
 
   const persistCurrent = async () => {
     if (!selected) return;
@@ -234,13 +239,26 @@ export function MemosView() {
       </div>
     </div>
 
-    {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡。 */}
+    {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡：富文本 / Markdown
+        格式分布 + 最近更新一句。 */}
     {isMobileShell() ? (
       <MobileGuideCard
         value={activeCount}
         unit="条"
         label="备忘在册"
-        hint={`已归档 ${archivedCount} 条`}
+        hint={
+          latestUpdated
+            ? `已归档 ${archivedCount} 条 · 最近更新 ${formatMemoTime(latestUpdated)}`
+            : `已归档 ${archivedCount} 条`
+        }
+        segments={[
+          { label: "富文本", value: richtextCount, color: "var(--accent-strong)" },
+          {
+            label: "Markdown",
+            value: markdownCount,
+            color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+          },
+        ]}
       />
     ) : (
       <section className="today-hero guide-hero">

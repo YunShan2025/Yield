@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
-import { AppIcon } from "@/components/AppIcon";
 import {
   MobileGoalChip,
   MobileTaskPillView,
@@ -11,6 +10,7 @@ import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { calculateGoalProgress, resolveGoalTarget } from "@/lib/growth";
 import {
+  addDays,
   ensureEndAfterStart,
   parseTimeToMinutes,
 } from "@/lib/dates";
@@ -69,7 +69,6 @@ export function TodayMobileView() {
   const toggleComplete = useAppStore((s) => s.toggleComplete);
   const selectTask = useAppStore((s) => s.selectTask);
   const openCreateTask = useAppStore((s) => s.openCreateTask);
-  const openCommandPalette = useAppStore((s) => s.openCommandPalette);
   const requestFocus = useAppStore((s) => s.requestFocus);
   const setNav = useAppStore((s) => s.setNav);
 
@@ -78,6 +77,13 @@ export function TodayMobileView() {
   const [now, setNow] = useState(() => new Date());
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
 
+  // 页内查看日期（与记账页切月同手法）：默认今天，可往前翻看，未来不出；
+  // 跨天时 useTodayDate 翻日，视角自动回到今天。
+  const [viewDate, setViewDate] = useState(today);
+  useEffect(() => {
+    setViewDate(today);
+  }, [today]);
+
   // 「现在」每分钟走一格，时段条上的当前位置也跟着走。
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
@@ -85,14 +91,27 @@ export function TodayMobileView() {
   }, []);
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日 · 星期${"日一二三四五六"[now.getDay()]}`;
+  const isViewToday = viewDate === today;
+  const viewDay = new Date(`${viewDate}T00:00:00`);
+  // 副标题始终是完整日期锚点（跨年补年份），切换器标签负责说「今天 / 昨天」。
+  const viewDateLabel =
+    `${viewDay.getFullYear() === now.getFullYear() ? "" : `${viewDay.getFullYear()}年`}` +
+    `${viewDay.getMonth() + 1}月${viewDay.getDate()}日 · 星期${"日一二三四五六"[viewDay.getDay()]}`;
+  // 切换器标签：今天 / 昨天优先说人话，跨年补年份（与记账切月的「N月 / N年N月」同规）。
+  const switchLabel = isViewToday
+    ? "今天"
+    : viewDate === addDays(today, -1)
+      ? "昨天"
+      : viewDay.getFullYear() === now.getFullYear()
+        ? `${viewDay.getMonth() + 1}月${viewDay.getDate()}日`
+        : `${viewDay.getFullYear()}年${viewDay.getMonth() + 1}月${viewDay.getDate()}日`;
 
-  // 今日事项：根任务、截止在今天，按时刻排（无时刻的排在后面）。
+  // 当日事项：根任务、截止在看的那一天，按时刻排（无时刻的排在后面）。
   const todaysTasks = useMemo(() => {
     return tasks
       .filter(
         (task) =>
-          !task.parent_id && !task.deleted_at && task.due_date === today,
+          !task.parent_id && !task.deleted_at && task.due_date === viewDate,
       )
       .sort((a, b) => {
         const ta = parseTimeToMinutes(a.due_time);
@@ -103,7 +122,7 @@ export function TodayMobileView() {
         if (a.priority !== b.priority) return a.priority - b.priority;
         return a.sort_order - b.sort_order;
       });
-  }, [tasks, today]);
+  }, [tasks, viewDate]);
 
   const doneCount = todaysTasks.filter(
     (task) => task.status === "completed",
@@ -140,20 +159,33 @@ export function TodayMobileView() {
       <header className="mtoday-top">
         <div className="mtoday-top-text">
           <MobilePageTitle text="今日" />
-          <p>{dateLabel}</p>
+          <p>{viewDateLabel}</p>
         </div>
-        <button
-          type="button"
-          className="mtoday-icon-btn"
-          aria-label="搜索"
-          onClick={openCommandPalette}
-        >
-          <AppIcon name="search" size={19} />
-        </button>
+        {/* 日期切换：与记账页切月同构（搜索移去「更多」页头的同位圆钮）。 */}
+        <div className="mtoday-day-switch" role="group" aria-label="切换日期">
+          <button
+            type="button"
+            className="mtoday-icon-btn"
+            aria-label="前一天"
+            onClick={() => setViewDate(addDays(viewDate, -1))}
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+          <strong>{switchLabel}</strong>
+          <button
+            type="button"
+            className="mtoday-icon-btn"
+            aria-label="后一天"
+            disabled={isViewToday}
+            onClick={() => setViewDate(addDays(viewDate, 1))}
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+        </div>
       </header>
 
       <div className="mtoday-scroll">
-        <section className="mtoday-hero" aria-label="今日完成进度">
+        <section className="mtoday-hero" aria-label={isViewToday ? "今日完成进度" : "当日完成进度"}>
           <div className="mtoday-hero-num">
             <b>{doneCount}</b>
             <u>/{totalCount}</u>
@@ -219,9 +251,9 @@ export function TodayMobileView() {
           </section>
         ) : null}
 
-        <section className="mtoday-card" aria-label="今日时段">
+        <section className="mtoday-card" aria-label={isViewToday ? "今日时段" : "当日时段"}>
           <div className="mtoday-shead">
-            <h3>今日时段</h3>
+            <h3>{isViewToday ? "今日" : "当日"}时段</h3>
             <span className="mtoday-hint">
               {formatDuration(scheduledMinutes)}
             </span>
@@ -246,7 +278,7 @@ export function TodayMobileView() {
                   />
                 );
               })}
-              {bands.length ? (
+              {isViewToday && bands.length ? (
                 <span
                   className="mtoday-cursor"
                   style={{
@@ -267,11 +299,11 @@ export function TodayMobileView() {
           </div>
         </section>
 
-        <section className="mtoday-card" aria-label="今日事项">
-          {/* 节头不设「查看全部」：这里本就完整列出截止今天的任务，
+        <section className="mtoday-card" aria-label={isViewToday ? "今日事项" : "当日事项"}>
+          {/* 节头不设「查看全部」：这里本就完整列出当天截止的任务，
               旧按钮跳 setNav("today") 落在当前页、点了无响应，已移除。 */}
           <div className="mtoday-shead">
-            <h3>今日事项</h3>
+            <h3>{isViewToday ? "今日" : "当日"}事项</h3>
           </div>
           {todaysTasks.length ? (
             <ul className="mtoday-list">
@@ -320,7 +352,9 @@ export function TodayMobileView() {
             </ul>
           ) : (
             <p className="mtoday-empty">
-              今天还没有截止的任务。新建任务并把截止日期设为今天即可。
+              {isViewToday
+                ? "今天还没有截止的任务。新建任务并把截止日期设为今天即可。"
+                : "这一天没有截止的任务。"}
             </p>
           )}
         </section>
