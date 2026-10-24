@@ -533,9 +533,6 @@ html[data-shell="mobile"] .mtoday-body {
 
 html[data-shell="mobile"] .mtoday-title {
   display: block;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  color: var(--text-primary);
 }
 
 html[data-shell="mobile"] .mtoday-row:focus-visible,
@@ -556,6 +553,20 @@ html[data-shell="mobile"] .mtoday-pills {
   gap: 4px;
   margin-top: 6px;
   flex-wrap: wrap;
+}
+
+/* 任务行的事件名沿用「记账 · 明细」那一行（.mledger-tx-main b）的字样：0.875rem、字重
+   500、墨色 --text-heading。事件名是行里唯一要被读走的东西，--text-primary 在白卡上是
+   15.7:1，--text-heading 是 17.1:1，再加一档字重，扫一眼就知道一行的主体在哪。移动壳里
+   页头、更多入口行、账单金额本来就是 --text-heading，任务行是唯一的例外。
+   今日 / 待办箱 / 统一行件（本周任务、当周日历、项目、标签）三种外壳写在一处，谁都不能单独改。 */
+html[data-shell="mobile"] .mtoday-title,
+html[data-shell="mobile"] .minbox-title,
+html[data-shell="mobile"] .mrow-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-heading);
 }
 
 /* 行内徽标（项目 / 标签 / 目标）是同一档零件：字色、字号、字重、行高、内距、圆角
@@ -719,9 +730,6 @@ html[data-shell="mobile"] .minbox-main {
 
 html[data-shell="mobile"] .minbox-title {
   display: block;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  color: var(--text-primary);
 }
 
 html[data-shell="mobile"] .minbox-meta {
@@ -4163,15 +4171,13 @@ html[data-shell="mobile"] .mrow-main {
   min-width: 0;
 }
 
-/* 标题最多两行：单行硬省略会把「阶段1：服务治理…」这类长标题截成半句话。 */
+/* 标题最多两行：单行硬省略会把「阶段1：服务治理…」这类长标题截成半句话。
+   字号墨色见上面「事件名沿用记账明细行」那条共用规则。 */
 html[data-shell="mobile"] .mrow-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  line-height: 1.4;
 }
 
 html[data-shell="mobile"] .mrow-meta {
@@ -4213,9 +4219,8 @@ html[data-shell="mobile"] .mrow.is-dense {
   padding: 3px 0;
 }
 
-html[data-shell="mobile"] .mrow.is-dense .mrow-title {
-  font-size: 0.844rem;
-}
+/* 密集档只收内边距，字号不再单独下调：当周日历的事件名要和今日、待办同一档
+   （行高本来由 48dp 的完成钮决定，标题从 13.5px 抬到 14px 不会把一屏七天挤散）。 */
 
 html[data-shell="mobile"] .mrow-cdot {
   width: 9px;
