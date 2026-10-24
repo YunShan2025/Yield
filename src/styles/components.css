@@ -74,12 +74,14 @@ select {
   border-color: var(--steel-100);
 }
 
+/* 空态＝「此刻恰好没有」，不是「未填写的框」：dashed 描边像待办占位，
+   统一换成安静的内凹面（--surface-sunken 随四主题取色）+ 实线细边。 */
 .empty-state,
 .scope-empty {
-  border: 1px dashed var(--slate-150-22);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-muted);
-  background: var(--slate-150-4);
+  background: var(--surface-sunken);
 }
 
 @media (max-width: 960px) {
@@ -1170,8 +1172,8 @@ select {
   padding: 28px 12px;
   text-align: center;
   color: var(--text-label);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .day-agenda {
@@ -3318,10 +3320,11 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .reminders-empty {
   padding: 18px 14px;
   border-radius: var(--radius-sm);
-  border: 1px dashed var(--border-strong);
+  border: 1px solid var(--border);
   color: var(--text-label);
   font-size: var(--font-size-label);
   text-align: center;
+  background: var(--surface-sunken);
 }
 
 .reminders-stack {
