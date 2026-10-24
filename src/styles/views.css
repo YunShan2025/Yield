@@ -724,7 +724,6 @@ html:not([data-desktop-widget]) #root {
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
-.theme-system-toggle input { width: 24px; height: 24px; accent-color: var(--accent); }
 .theme-system-toggle span { display: grid; gap: 2px; }
 .theme-system-toggle strong { color: var(--text-heading); }
 .theme-system-toggle small { color: var(--text-secondary); }
