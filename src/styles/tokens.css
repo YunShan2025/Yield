@@ -586,10 +586,6 @@
 @media (prefers-color-scheme: dark) {
   :root[data-theme="system"] {
     color-scheme: dark;
-
-
-  :root[data-theme="system"] {
-    color-scheme: dark;
     --surface-base: #101722;
     --surface-panel: #172131;
     --surface-rail: #0c121c;
@@ -626,12 +622,6 @@
 
     --brand-gold: #f4b942;
   }
-  }
 }
-
-/* ============================================================
-   旧名别名 —— 阶段 2 第 4 步的过渡层
-   引用侧全量切到新名后，整段删除。
-   ============================================================ */
 
 

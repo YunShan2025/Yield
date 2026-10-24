@@ -744,6 +744,7 @@ export function MainApp() {
         <AppConfirmHost />
         <OnboardingGuide />
         <DesktopNotificationCards />
+        <VersionUpdateNotice />
         {toastLayer}
         <span style={{ display: "none" }}>{todayDateString()}</span>
       </div>
