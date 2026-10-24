@@ -1,14 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
-import { designReview } from "./scripts/design-review/vite-plugin.mjs";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    // 设计评审：浏览器预览接真实数据副本，生产构建不经过这条路径
-    ...(process.env.YOUQIU_DESIGN_REVIEW === "1" ? [designReview()] : []),
-  ],
+// 设计评审：浏览器预览接真实数据副本，生产构建不经过这条路径。
+// 必须条件动态 import：插件链顶格加载 node:sqlite（Node ≥22.5），
+// 若静态 import，未设环境变量的机器在「读配置」阶段就会炸掉构建。
+async function designReviewPlugins() {
+  if (process.env.YOUQIU_DESIGN_REVIEW !== "1") return [];
+  const { designReview } = await import("./scripts/design-review/vite-plugin.mjs");
+  return [designReview()];
+}
+
+export default defineConfig(async () => ({
+  plugins: [react(), ...(await designReviewPlugins())],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
@@ -58,6 +62,6 @@ export default defineConfig({
       },
     },
   },
-});
+}));
 
 

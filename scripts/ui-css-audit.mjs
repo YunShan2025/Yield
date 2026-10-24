@@ -136,9 +136,6 @@ function region(startMark, endMark) {
 // 主题无关层：字体 / 间距 / 字号 / 圆角 / 动效 / 布局，四套主题共用
 const independentRaw = region("/* @theme-independent:start */", "/* @theme-independent:end */");
 const independent = new Set([...independentRaw.matchAll(DEF)].map((m) => m[1]));
-// 别名层：过渡期旧名，不参与对齐判定
-const aliasRaw = region("/* @legacy-alias:start */", "/* @legacy-alias:end */");
-const alias = new Set([...aliasRaw.matchAll(DEF)].map((m) => m[1]));
 
 function blockOf(sel) {
   const i = tokenRaw.indexOf(sel);
@@ -185,7 +182,7 @@ for (const t of [":root", "dark", "dawn", "glass", "system"]) {
   P(`  ${t.padEnd(9)} count=${String(set.size).padStart(3)}  missing=${missing.length}${missing.length ? " [" + missing.join(", ") + "]" : ""}${extra.length ? "  extra=[" + extra.join(", ") + "]" : ""}`);
 }
 P(`  → 四主题 token 集${alignOk ? "完全对齐 ✅" : "未对齐 ❌"}`);
-P(`  主题无关层 ${independent.size} 个（字体/间距/字号/圆角/动效/布局），别名层 ${alias.size} 个（过渡期）`);
+P(`  主题无关层 ${independent.size} 个（字体/间距/字号/圆角/动效/布局）`);
 
 P("\n## 6. 已定义但从未被引用");
 const unused = [...defined.keys()].filter((t) => !used.has(t));
