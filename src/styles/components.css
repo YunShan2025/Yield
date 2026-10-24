@@ -5441,6 +5441,10 @@ html[data-nav="railed"] .nav-edge-collapse {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 占比数字等宽:53%/6%/1% 在右端成一条干净的数字列。 */
+.ledger-legend div strong {
+  font-variant-numeric: tabular-nums;
+}
 .ledger-legend i {
   width: 8px;
   height: 8px;
@@ -5701,6 +5705,9 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   font-size: var(--font-size-h1);
   font-weight: 760;
   letter-spacing: -0.03em;
+  /* 记账金额靠右落字、等宽数字：与明细金额列同一种「钱」的读法。 */
+  font-variant-numeric: tabular-nums;
+  text-align: right;
   margin: 0;
   padding: 10px 4px;
   outline: none;
