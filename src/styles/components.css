@@ -3487,9 +3487,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .moments-page {
   --moment-warm: var(--warm-600);
-  --moment-warm-soft: var(--amber-200);
   --moment-blue: var(--azure-950);
-  --moment-blue-soft: var(--paper-600);
   min-width: 0;
   overflow: auto;
   background:
@@ -3673,9 +3671,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 :root[data-theme="dark"] .moments-page {
   --moment-warm: var(--amber-500);
-  --moment-warm-soft: var(--warm-750);
   --moment-blue: var(--azure-300);
-  --moment-blue-soft: var(--ink-450);
 }
 
 @media (max-width: 680px) {
