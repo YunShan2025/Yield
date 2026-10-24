@@ -2953,12 +2953,14 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px; /* 与 .scope-section-head 的标题→内容间隙同档 */
 }
 
+/* 卡片标题档：与其它卡片标题（今日时间轴/今日事项）同级，
+   不再用灰色小字 kicker——DESIGN 禁做清单不收 kicker，标题层级靠字号与墨色。 */
 .today-goal-strip-head span {
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
+  color: var(--text-heading);
+  font-size: var(--font-size-h3);
   font-weight: 700;
 }
 
@@ -4310,9 +4312,6 @@ html[data-nav="railed"] .nav-edge-collapse {
 .section-title-row {
   display: flex;
   align-items: center;
-}
-
-.section-title-row {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
