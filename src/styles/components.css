@@ -474,9 +474,12 @@ select {
   color: var(--white);
 }
 
+/* 可点击「事项名」字样族:字重 560 + 收紧 -0.012em 字距 + heading 墨色。
+   今日/待办箱/标签/回收站/备忘/记账明细/周清单共用,密度只差字号。 */
 .task-title {
   margin: 0;
   font-weight: 560;
+  letter-spacing: -0.012em;
 }
 
 .task-meta {
@@ -2582,9 +2585,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   overflow: hidden;
   flex: none;
   max-width: 46%;
-  color: var(--text-primary);
+  color: var(--text-heading);
   font-size: var(--font-size-body);
-  font-weight: 650;
+  font-weight: 560;
+  letter-spacing: -0.012em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4938,6 +4942,9 @@ html[data-nav="railed"] .nav-edge-collapse {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-heading);
+  font-weight: 560;
+  letter-spacing: -0.012em;
 }
 
 .weekly-goal-task-due {
@@ -5158,6 +5165,9 @@ html[data-nav="railed"] .nav-edge-collapse {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-heading);
+  font-weight: 560;
+  letter-spacing: -0.012em;
 }
 
 .weekly-day-check {
@@ -5550,7 +5560,12 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-weight: 800;
 }
 .ledger-row-main { display: flex; flex-direction: column; gap: 3px; }
-.ledger-row-main strong { font-size: var(--font-size-label); color: var(--text-primary); }
+.ledger-row-main strong {
+  font-size: var(--font-size-label);
+  color: var(--text-heading);
+  font-weight: 560;
+  letter-spacing: -0.012em;
+}
 .ledger-row-main small,
 .ledger-account { font-size: var(--font-size-caption); color: var(--text-muted); }
 .ledger-row > strong {

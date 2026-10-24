@@ -142,9 +142,10 @@ select:focus {
 .memo-list-title-copy {
   min-width: 0;
   max-width: 100%;
-  color: var(--text-primary);
+  color: var(--text-heading);
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: 560;
+  letter-spacing: -0.012em;
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -611,11 +612,6 @@ button:active:not(:disabled) {
   color: var(--text-on-accent);
   border-color: var(--accent);
   background: var(--accent);
-}
-
-.task-title {
-  font-weight: 610;
-  letter-spacing: -0.012em;
 }
 
 .task-meta {
