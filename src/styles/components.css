@@ -3415,10 +3415,12 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 .timer-countdown {
-  font-family: var(--font-display);
+  /* 唯一的大读数 → 衬线显示体，与今日顶卡同一「换字」原子。 */
+  font-family: var(--font-num-display);
   font-size: var(--font-size-h1);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.005em;
   line-height: 1;
   color: var(--text-primary);
 }
@@ -3986,17 +3988,24 @@ html[data-nav="railed"] .nav-edge-collapse {
   gap: 1px;
 }
 
+/* 今日顶卡读数：衬线显示体（--font-num-display，随主题无关层），移植移动端
+   顶卡大数字同款——原生字重 400 免合成假粗、紧字距、accent-strong 强调。
+   DESIGN：--font-num-display 一屏最多一处，故只此处与计时倒计时用衬线。 */
 .today-hero-meter-count strong {
+  font-family: var(--font-num-display);
   font-size: var(--font-size-h2);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+  letter-spacing: -0.005em;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .today-hero-meter-count span {
+  font-family: var(--font-num-display);
   color: var(--text-label);
   font-size: var(--font-size-label);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .today-hero-meter-label {
