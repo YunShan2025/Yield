@@ -1766,13 +1766,14 @@ select {
 .growth-tabs button { padding: 9px 15px; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-secondary); cursor: pointer; }
 .growth-tabs button.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; }
 
-/* 四个大数字做成一排指标（标签 / 数字 / 辅助说明，发丝线分隔），不再做四张
-   同尺寸卡 —— 「大数字 + 小标签 + 辅助统计」当页面结构是 craft-floor 禁项。 */
-.growth-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 14px; border-bottom: 1px solid var(--border); }
-.growth-metrics article { display: grid; gap: 4px; align-content: start; padding: 16px 24px 16px 2px; }
-.growth-metrics article + article { padding-left: 24px; border-left: 1px solid var(--border); }
-.growth-metrics span { color: var(--text-secondary); font-size: var(--font-size-caption); }
-.growth-metrics strong { color: var(--text-primary); font: 700 28px/1.1 var(--font-display); letter-spacing: -.025em; }
+/* KPI 读数卡：四个读数收进一张分组面（单卡 + 列间发丝线），数字用收支统计卡
+   同档读数（h1 24px 等宽数字），不再浮在页面底色上。仍不做四张同尺寸卡 ——
+   「大数字 + 小标签 + 辅助统计」当页面结构是 craft-floor 禁项。 */
+.growth-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 14px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
+.growth-metrics article { display: grid; gap: 4px; align-content: start; padding: 18px 24px; }
+.growth-metrics article + article { border-left: 1px solid var(--border); }
+.growth-metrics span { color: var(--text-muted); font-size: var(--font-size-caption); }
+.growth-metrics strong { color: var(--text-primary); font: 700 var(--font-size-h1)/1.15 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .growth-metrics small { font-size: var(--font-size-caption); font-weight: 500; color: var(--text-muted); }
 
 .growth-panel { min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
@@ -1909,6 +1910,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 @media (max-width: 900px) {
   .growth-metrics { grid-template-columns: repeat(2, 1fr); }
+  .growth-metrics article:nth-child(odd) { border-left: 0; }
+  .growth-metrics article:nth-child(n+3) { border-top: 1px solid var(--border); }
   .growth-columns { grid-template-columns: 1fr; }
   .goal-detail-actions, .achievement-compose { flex-wrap: wrap; }
   .growth-panel-head { align-items: flex-start; flex-direction: column; gap: 10px; }
@@ -1919,7 +1922,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 @media (max-width: 560px) {
   .growth-page { padding-inline: 12px; }
-  .growth-metrics { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .growth-metrics { grid-template-columns: 1fr 1fr; }
   .growth-metrics article, .growth-panel { padding: 14px; }
   .growth-metrics strong { font-size: var(--font-size-h2); }
   .growth-tabs { overflow-x: auto; }
