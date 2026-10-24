@@ -67,7 +67,9 @@ export function MobileTaskLine({
 }) {
   const done = task.status === "completed";
   const isDay = variant === "day";
-  const due = formatDueDateBadge(task.due_date, today);
+  /** 已完成不标截止语气（与详情栏同一口径）：「逾期 32 天」压在划掉的事上只是噪声，
+   *  它哪天做完的由行尾小注（`doneStamp`）说。 */
+  const due = done ? null : formatDueDateBadge(task.due_date, today);
   const attribution = getMobileTaskPills(task, projects, tags, tagMap);
   const pills = isDay
     ? attribution
@@ -95,15 +97,17 @@ export function MobileTaskLine({
             {isDay ? null : (
               <>
                 <i className={`minbox-pdot pr${task.priority}`} aria-hidden="true" />
-                <span
-                  className={`minbox-due is-${due.tone}`}
-                  title={due.title}
-                  aria-label={
-                    due.tone === "none" ? "未安排日期" : `${due.label}，${due.title}`
-                  }
-                >
-                  {due.label}
-                </span>
+                {due ? (
+                  <span
+                    className={`minbox-due is-${due.tone}`}
+                    title={due.title}
+                    aria-label={
+                      due.tone === "none" ? "未安排日期" : `${due.label}，${due.title}`
+                    }
+                  >
+                    {due.label}
+                  </span>
+                ) : null}
               </>
             )}
             {pills.map((pill) => (
