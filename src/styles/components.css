@@ -1205,14 +1205,17 @@ select {
   align-items: center;
   padding: 12px 10px;
   cursor: pointer;
+  transition: background-color var(--motion-fast) ease;
 }
 /* 今日事项行用右侧「完成/打卡」按钮，左侧不再留完成圆钮。 */
 .expand-task-row.no-check {
   grid-template-columns: 1fr auto auto auto auto;
 }
 
+/* 行悬停与备忘列表、周任务行共用同一 hover 原子（--surface-hover）。
+   --surface-selected 只留给真正的选中态，悬停不再伪装成「已选中」的蓝。 */
 .expand-task-row:hover {
-  background: var(--surface-selected);
+  background: var(--surface-hover);
 }
 
 .expand-task-main {
