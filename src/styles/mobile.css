@@ -538,10 +538,6 @@ html[data-shell="mobile"] .mtoday-title {
   color: var(--text-primary);
 }
 
-html[data-shell="mobile"] .mtoday-row.is-done .mtoday-title {
-  color: var(--text-muted);
-}
-
 html[data-shell="mobile"] .mtoday-row:focus-visible,
 html[data-shell="mobile"] .minbox-row:focus-visible {
   outline: 2px solid var(--accent);
@@ -563,8 +559,8 @@ html[data-shell="mobile"] .mtoday-pills {
 }
 
 /* 行内徽标（项目 / 标签 / 目标）是同一档零件：字色、字号、字重、行高、内距、圆角
-   写在一处，谁都不能单独改。墨色统一 `--text-label`（比次级文本稳，压在 13% 色底上
-   仍有 7:1），颜色身份交给各自那层底色去说。
+   写在一处，谁都不能单独改。墨色统一 `--text-label`（比次级文本稳：压在 13% 色底上
+   还有 6.3:1，压在 sunken 子面板上还有 7:1），颜色身份交给各自那层底色去说。
    桌面今日时间轴里的 .goal-chip 不在此列（只挂移动壳的三种行内元信息）。 */
 html[data-shell="mobile"] .mtoday-pill,
 html[data-shell="mobile"] .mrow .goal-chip,
@@ -581,6 +577,20 @@ html[data-shell="mobile"] .minbox-meta .goal-chip {
 
 html[data-shell="mobile"] .mtoday-pill {
   background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
+}
+
+/* 完成态写在标题上，不写在徽标上：标题淡一档并划线（划线是桌面同类行的一贯做法，也让
+   「淡」读得出是完成而非渲染坏了）。淡一档停在 --text-secondary：app 惯用的
+   --text-muted 压在 sunken 子面板（#f0f4fa）上只有 4.35:1、压在 13% 色底上 3.8:1，
+   正是「有的名字浅得看不清」的来源。
+   徽标不参与淡出：三枚的字色在每一行都保持同一个值（上面那条共用规则），完成与否由
+   标题的划线与行尾的勾选圈说——一行里只有状态在变，颜色信息不会跟着抖。 */
+html[data-shell="mobile"] .mtoday-row.is-done .mtoday-title,
+html[data-shell="mobile"] .minbox-row.is-done .minbox-title,
+html[data-shell="mobile"] .mrow.is-done .mrow-title {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--text-secondary) 55%, transparent);
 }
 
 html[data-shell="mobile"] .mtoday-check {
@@ -721,10 +731,6 @@ html[data-shell="mobile"] .minbox-title {
   font-size: 0.875rem;
   line-height: 1.4;
   color: var(--text-primary);
-}
-
-html[data-shell="mobile"] .minbox-row.is-done .minbox-title {
-  color: var(--text-muted);
 }
 
 html[data-shell="mobile"] .minbox-meta {
@@ -4177,10 +4183,6 @@ html[data-shell="mobile"] .mrow-title {
   line-height: 1.4;
 }
 
-html[data-shell="mobile"] .mrow.is-done .mrow-title {
-  color: var(--text-muted);
-}
-
 html[data-shell="mobile"] .mrow-meta {
   display: flex;
   align-items: center;
@@ -4189,12 +4191,15 @@ html[data-shell="mobile"] .mrow-meta {
   margin-top: 5px;
 }
 
-/* 目标徽标借用今日时间轴那一枚，移动壳里只再收两件事：前导点去掉（见 MobileGoalChip）、
-   截断宽度按行宽来（桌面的 200px 在手机上偏宽）。字色字号字重见 .mtoday-pill 那组共用规则。 */
+/* 目标徽标借用今日时间轴那一枚，移动壳里只再收三件事：前导点去掉（见 MobileGoalChip）、
+   截断宽度按行宽来（桌面的 200px 在手机上偏宽）、底色浓度跟归属胶囊同一个变量
+   （桌面写死 13%，深色下会比旁边两枚淡一档）。
+   字色字号字重见 .mtoday-pill 那组共用规则。 */
 html[data-shell="mobile"] .mrow .goal-chip,
 html[data-shell="mobile"] .mtoday-pills .goal-chip,
 html[data-shell="mobile"] .minbox-meta .goal-chip {
   max-width: 13em;
+  background: color-mix(in srgb, var(--goal-color, var(--accent)) var(--mt-pill-bg), transparent);
 }
 
 html[data-shell="mobile"] .mrow-tail {
