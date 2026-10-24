@@ -592,7 +592,6 @@ button:active:not(:disabled) {
 }
 
 .expand-task {
-  margin-bottom: 9px;
   border-color: transparent;
   border-radius: var(--radius-md);
   background: var(--surface-panel);
@@ -600,11 +599,6 @@ button:active:not(:disabled) {
 
 .expand-task:hover {
   border-color: var(--slate-150-17);
-}
-
-.expand-task-row {
-  min-height: 61px;
-  padding: 12px 14px;
 }
 
 .task-check {
@@ -627,11 +621,6 @@ button:active:not(:disabled) {
 .task-meta {
   margin-top: 5px;
   font-size: var(--font-size-caption);
-}
-
-.board {
-  gap: 15px;
-  padding: 0 28px 28px;
 }
 
 .board-col {

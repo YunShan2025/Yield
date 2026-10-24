@@ -1093,6 +1093,13 @@ html[data-shell="mobile"] .expand-task-row {
   user-select: none;
 }
 
+/* 桌面行级精修(14px 横向留白/61px 行高)不外溢到移动壳:
+   移动密度仍按旧值,由移动层规则单独演进。 */
+html[data-shell="mobile"] :is(.expand-task-row, .task-row) {
+  min-height: 0;
+  padding: 12px 10px;
+}
+
 /* 长按操作面板（底部动作面板,替代悬停菜单/右键菜单）。 */
 .action-sheet-backdrop {
   position: fixed;
