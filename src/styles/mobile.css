@@ -559,7 +559,9 @@ html[data-shell="mobile"] .mtoday-pills {
    500、墨色 --text-heading。事件名是行里唯一要被读走的东西，--text-primary 在白卡上是
    15.7:1，--text-heading 是 17.1:1，再加一档字重，扫一眼就知道一行的主体在哪。移动壳里
    页头、更多入口行、账单金额本来就是 --text-heading，任务行是唯一的例外。
-   今日 / 待办箱 / 统一行件（本周任务、当周日历、项目、标签）三种外壳写在一处，谁都不能单独改。 */
+   约定见 DESIGN.md「事件名（任务 / 账目行的主体文字）」：今日 / 待办箱 / 统一行件（本周
+   任务、当周日历、项目、标签）三种外壳写在这里，谁都不能单独改；回收站（.trash-item-main
+   .task-title）同档，唯一例外是分组折叠头的摘要行 .expand-row-meta，它按元信息走。 */
 html[data-shell="mobile"] .mtoday-title,
 html[data-shell="mobile"] .minbox-title,
 html[data-shell="mobile"] .mrow-title {
@@ -3551,8 +3553,12 @@ html[data-shell="mobile"] .trash-item {
   padding: 12px 14px;
 }
 
+/* 回收站里的任务名也是事件名：与今日 / 待办 / 周清单一档（0.875rem / 500 / --text-heading），
+   桌面回收站沿用 components.css 那套次级墨色，不跟着动。 */
 html[data-shell="mobile"] .trash-item-main .task-title {
-  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-heading);
 }
 
 html[data-shell="mobile"] .trash-item-actions {
@@ -4233,9 +4239,10 @@ html[data-shell="mobile"] .mrow-plain {
   min-height: 44px;
 }
 
+/* 项目小节下的任务行：只保留单行截断，字号墨色与今日、待办、当周日历同一档
+   （见上面「事件名沿用记账明细行」那条共用规则）。 */
 html[data-shell="mobile"] .mrow-plain .mrow-title {
   -webkit-line-clamp: 1;
-  font-size: 0.812rem;
 }
 
 html[data-shell="mobile"] .mrow-plain .tag-card-dot {
