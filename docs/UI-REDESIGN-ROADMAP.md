@@ -1,8 +1,8 @@
 # 有秋（Yield）UI 视觉优化路线图
 
 > **适用范围**：有秋（Yield）桌面端（Windows/macOS）+ Android 端前端视觉层
-> **编写时间**：2026-10-21（**2026-10-24 复核进度**：阶段 1–3 已完工；阶段 4 移动壳主体已落地，
-> 剩余项见附录 B 阶段 4 小节；附录中「阶段 2 清零」类断言有回归，已就地标注 ⚠）
+> **编写时间**：2026-10-21（**2026-10-24 二次复核**：阶段 1–3 已完工；阶段 4 移动壳主体与逐页打磨完成，
+> 末轮改动已真机验收通过；清零 / 真机全量核对等剩余项见附录 B 阶段 4 小节，均未达标勿当已完；附录中「阶段 2 清零」类断言有回归，已就地标注 ⚠）
 > **基线代码**：`9b8bc6b`（第 1 节诊断数字均为该提交快照，与现状的漂移以代码与 `node scripts/ui-css-audit.mjs` 现算为准）
 > **关联文档**：[PRODUCT.md](../PRODUCT.md)（产品事实）、[DESIGN.md](../DESIGN.md)（视觉契约）、[MOBILE-IA](MOBILE-IA.md)（移动端架构）、[README](../README.md)（产品说明）、[ARCHITECTURE](ARCHITECTURE.md)（架构）、[PRODUCT_REVIEW](PRODUCT_REVIEW.md)（功能评估）、[GIT_CONVENTIONS](GIT_CONVENTIONS.md)（提交规范）
 > **配套工具**：项目级 skill `impeccable` v4.7.0 / `emil-design-eng` / `mobile-native` / `animate`（均装于 `.agents/skills/`，不入库）
