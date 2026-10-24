@@ -2271,11 +2271,13 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .top-controls .review-hero-total { flex: 0 0 auto; display: grid; min-width: 0; margin-right: 6px; text-align: right; }
 .top-controls .review-hero-total strong { color: var(--accent-strong); font: 700 20px/1 var(--font-display); letter-spacing: -.02em; }
 .top-controls .review-hero-total span { margin-top: 2px; color: var(--text-label); font-size: var(--font-size-caption); }
-.review-metrics { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
-.review-metrics article { display: grid; gap: 4px; padding: 22px 24px 20px 2px; }
-.review-metrics article + article { padding-left: 24px; border-left: 1px solid var(--border); }
-.review-metrics span { color: var(--text-secondary); font-size: var(--font-size-caption); }
-.review-metrics strong { font: 700 31px/1.1 var(--font-display); letter-spacing: -.025em; }
+/* 本周摘要 KPI：与成长页同款分组读数卡（单面 + 列间发丝线），数字同收支统计卡
+   读数档（h1 24px 等宽数字）；辅助说明行留在卡内，不做四张 hero 数字卡。 */
+.review-metrics { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
+.review-metrics article { display: grid; gap: 5px; align-content: start; padding: 20px 24px; }
+.review-metrics article + article { border-left: 1px solid var(--border); }
+.review-metrics span { color: var(--text-muted); font-size: var(--font-size-caption); }
+.review-metrics strong { color: var(--text-primary); font: 700 var(--font-size-h1)/1.15 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .review-metrics small { color: var(--text-muted); }
 .review-main-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(240px, .8fr); gap: 16px; margin-top: 18px; }
 .review-story-card { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
@@ -2328,8 +2330,9 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   .review-main-grid { grid-template-columns: 1fr; }
   .review-hero-total { display: none; }
   .review-metrics { grid-template-columns: repeat(2, 1fr); }
-  .review-metrics article { padding: 16px 10px 14px; }
-  .review-metrics article:nth-child(odd) { border-left: 0; padding-left: 2px; }
+  .review-metrics article { padding: 16px 24px; }
+  .review-metrics article:nth-child(odd) { border-left: 0; }
+  .review-metrics article:nth-child(n+3) { border-top: 1px solid var(--border); }
   .review-breakdown .review-section-head { flex-direction: column; }
   .review-dimension-tabs { width: 100%; }
   .review-dimension-tabs button { flex: 1; }
