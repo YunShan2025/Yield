@@ -3,29 +3,14 @@
 
 /* ── 原 global-05-airy-light.css ────────────────────────────────────────── */
 /* Airy light theme — intentionally minimal and low saturation. */
-.brand-mark {
-  color: var(--steel-650);
-  border-radius: 50%;
-  background: var(--paper-750);
-  box-shadow: none;
-}
+/* 本段原 airy-light 的 .brand-mark / .nav-side 为级联死代码（被后段 final-theme 与
+   views 各主题逐属性覆盖），已删除。 */
 
-.nav-side {
-  background: var(--white-88);
-}
 
-.nav-side-scroll::-webkit-scrollbar,
-.task-scroll::-webkit-scrollbar,
-.scope-board::-webkit-scrollbar {
-  width: 5px;
-}
+/* 容器级 ::-webkit-scrollbar(width/thumb)为矛盾死代码：滚动条已在 primitives
+   「global-12-scrollbars」中全局隐藏（`*::-webkit-scrollbar{display:none}`），
+   此处置 width/thumb 无任何效果，且与「已删除容器级设置」的意图相悖，已删除。 */
 
-.nav-side-scroll::-webkit-scrollbar-thumb,
-.task-scroll::-webkit-scrollbar-thumb,
-.scope-board::-webkit-scrollbar-thumb {
-  border-radius: var(--radius-pill);
-  background: var(--steel-500-22);
-}
 
 input,
 textarea,
@@ -45,15 +30,9 @@ select {
   box-shadow: 0 8px 18px var(--steel-350-20);
 }
 
-.nav-item.active {
-  color: var(--steel-650);
-  background: var(--paper-500);
-  box-shadow: none;
-}
+/* 本段原 airy-light 的 .nav-item.active 及其 ::before 为级联死代码，已删除。
+   最终生效在下方「桌面工作台 · 侧栏/品牌」final-theme 段与 views 各主题。 */
 
-.nav-item.active::before {
-  background: var(--steel-250);
-}
 
 .workspace-top {
   padding-bottom: 10px;
@@ -339,7 +318,7 @@ select {
   margin: 8px 4px 4px;
   font-size: var(--font-size-caption);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  /* 分组标题是中文（积微/观澜…），uppercase 无对象，去掉。字距已给出标签感。 */
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -3688,7 +3667,7 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 /* ── 原 global-10-final-theme.css ────────────────────────────────────────── */
 /* Final theme layer: kept last intentionally so legacy module styles inherit it. */
 .nav-side {
-  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
+  background: color-mix(in srgb, var(--surface-rail) 92%, transparent);
   backdrop-filter: blur(18px);
 }
 
@@ -3793,13 +3772,14 @@ body.nav-resizing {
 
 .nav-item {
   min-height: 34px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 
+/* 选中态：语义药丸 surface-selected + 强调色文字(components 363) + 唯一一条彩色左条(::before)。
+   原「渐变洗底 + inset 描边环」两件旧色板装饰已移除，对齐 DESIGN nav-item-active 契约。 */
 .nav-item.active {
   position: relative;
-  background: linear-gradient(90deg, var(--accent-soft), var(--slate-150-4));
-  box-shadow: inset 0 0 0 1px var(--slate-150-7);
+  background: var(--surface-selected);
 }
 
 .nav-item.active::before {

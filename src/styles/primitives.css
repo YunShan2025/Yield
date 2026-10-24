@@ -504,75 +504,10 @@ button:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-.nav-side {
-  border-right-color: var(--border);
-  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
-  backdrop-filter: blur(18px);
-}
-
-.nav-side-scroll {
-  padding: 22px 16px;
-  gap: 11px;
-}
-
-.brand-row {
-  align-items: center;
-  margin-bottom: 7px;
-  padding: 0 2px;
-}
-
-.brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.brand-mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: var(--white);
-  background: linear-gradient(145deg, var(--azure-650), var(--azure-950-a));
-  box-shadow: 0 6px 16px var(--navy-200-22);
-  font-size: var(--font-size-h2);
-  font-weight: 700;
-}
-
-.brand-row h1 {
-  font-size: var(--font-size-h3);
-  font-weight: 730;
-  letter-spacing: -0.025em;
-}
-
-/* 箴言两行：Yield 一行，典故一行。侧栏可拖到 200px，一行放不下就顶出面板右缘。 */
-/* 箴言独占一行：与「有秋 Yield」一起排就挤不下了。 */
-.brand-caption {
-  display: block;
-  margin-top: 1px;
-  overflow: hidden;
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.brand-name {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  min-width: 0;
-}
-
-.brand-latin {
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  letter-spacing: 0.04em;
-}
+/* 侧栏与品牌的基础样式已收口到 components.css「桌面工作台 · 侧栏/品牌」一处。
+   旧此处的整段重复定义（.nav-side / .nav-side-scroll / .brand-* / .nav-section-label /
+   .nav-item / .nav-item.active）逐属性都被 components 后段或 views 各主题重设，
+   属级联死代码，已删除。仅保留仍在级联中生效的按钮与计数： */
 
 .btn-primary {
   border-radius: var(--radius-md);
@@ -585,41 +520,15 @@ button:active:not(:disabled) {
   box-shadow: 0 10px 24px var(--slate-150-26);
 }
 
-.nav-section-label {
-  margin-top: 13px;
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  letter-spacing: 0.14em;
-}
-
-.nav-item {
-  min-height: 39px;
-  padding: 9px 11px;
-  border-radius: var(--radius-md);
-}
-
-.nav-item.active {
-  position: relative;
-  background: linear-gradient(90deg, var(--accent-soft), var(--slate-150-5));
-  box-shadow: inset 0 0 0 1px var(--slate-150-8);
-}
-
-.nav-item.active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  width: 3px;
-  height: 17px;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background: var(--accent);
-}
-
+/* 导航计数徽章：中性表面色（原 --green-300-5 固定绿不随四主题变，且给导航项添了装饰色）。
+   字号/字色在 components「桌面工作台 · 侧栏/品牌」一处定义。 */
 .nav-count {
   min-width: 22px;
   padding: 2px 6px;
   border-radius: var(--radius-pill);
   text-align: center;
-  background: var(--green-300-5);
+  background: var(--surface-sunken);
+  font-variant-numeric: tabular-nums;
 }
 
 .main-workspace {
@@ -778,10 +687,7 @@ body {
   background: transparent;
 }
 
-.brand-mark {
-  background: linear-gradient(145deg, var(--indigo-100), var(--indigo-150));
-  box-shadow: 0 7px 18px var(--azure-800-22);
-}
+/* .brand-mark 圆形/渐变版为级联死代码（最终由 views「polish-09」统一裸图标轮廓），已删除。 */
 
 .btn-primary {
   color: var(--text-on-accent);
@@ -794,10 +700,7 @@ body {
   box-shadow: 0 10px 24px var(--azure-800-25);
 }
 
-.nav-item.active {
-  background: linear-gradient(90deg, var(--accent-soft), var(--azure-800-3));
-  box-shadow: inset 0 0 0 1px var(--azure-800-6);
-}
+/* .nav-item.active 渐变/inset 版为级联死代码（最终生效在 components final-theme 段 + views 各主题），已删除。 */
 
 .main-workspace {
   background: var(--surface-base);

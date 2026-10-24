@@ -119,7 +119,7 @@ export function NavSidebar({
                 <span className="nav-item-icon"><AppIcon name={icon} size={railed ? 19 : 17} /></span>
                 <span className="nav-item-text">{label}</span>
               </span>
-              {count != null ? <span className="nav-count">{count}</span> : null}
+              {count != null && count > 0 ? <span className="nav-count">{count}</span> : null}
             </button>
           ))}
         </div>

@@ -76,7 +76,7 @@ html:not([data-desktop-widget]) #root {
 :root[data-theme="dark"] .nav-side {
   border-right: 1px solid var(--border);
   border-radius: 0;
-  background: color-mix(in srgb, var(--surface-panel) 92%, transparent);
+  background: color-mix(in srgb, var(--surface-rail) 92%, transparent);
 }
 
 :root[data-theme="light"] .main-workspace,
