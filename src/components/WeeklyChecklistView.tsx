@@ -176,6 +176,39 @@ export function WeeklyChecklistView() {
       </section>
       )}
 
+      {/* 当周概览放在列表之前：这三项是这一周的节奏（打卡、连续、峰值日），先给一眼
+          再进任务列表。它与引导块不重复 —— 引导块是本周完成进度，这里是习惯侧与峰值；
+          本周事项 / 已完成 / 剩余与完成率条早就随引导块去重掉了，没留下来。 */}
+      <section className="weekly-stat-strip" aria-label="当周概览">
+        <div className="weekly-stat-track">
+          <div className="weekly-stat-item">
+            <span className="weekly-stat-label">习惯打卡</span>
+            <div className="weekly-stat-value">
+              <strong className="weekly-stat-num">{weekChecks.length}</strong>
+              <span className="weekly-stat-note">次</span>
+            </div>
+          </div>
+          <div className="weekly-stat-item">
+            <span className="weekly-stat-label">当前连续</span>
+            <div className="weekly-stat-value">
+              <strong className="weekly-stat-num">{streak}</strong>
+              <span className="weekly-stat-note">天</span>
+            </div>
+          </div>
+          <div className="weekly-stat-item">
+            <span className="weekly-stat-label">峰值日</span>
+            <div className="weekly-stat-value">
+              <strong className="weekly-stat-num">
+                {stats.peakDay ? `周${weekdayShort(stats.peakDay)}` : "—"}
+              </strong>
+              <span className="weekly-stat-note">
+                {stats.peakDay ? `${stats.peakDone}/${stats.peakTotal} 项` : "本周暂无安排"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 本周任务：按分类聚合，一行一条。点行就地展开这一类的任务 —— 分类是「按标签
           分组」的口径，当周日历是「按天」的口径，两个视角不重复。 */}
       <section className="weekly-goals" aria-label="本周任务">
@@ -367,38 +400,6 @@ export function WeeklyChecklistView() {
               )}
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* 当周概览降级为一行元信息：本周事项 / 已完成 / 剩余与引导块的进度重复，
-          完成率条也重复，统统去掉。留下的三项都与「本周」口径不同。 */}
-      <section className="weekly-stat-strip" aria-label="当周概览">
-        <div className="weekly-stat-track">
-          <div className="weekly-stat-item">
-            <span className="weekly-stat-label">习惯打卡</span>
-            <div className="weekly-stat-value">
-              <strong className="weekly-stat-num">{weekChecks.length}</strong>
-              <span className="weekly-stat-note">次</span>
-            </div>
-          </div>
-          <div className="weekly-stat-item">
-            <span className="weekly-stat-label">当前连续</span>
-            <div className="weekly-stat-value">
-              <strong className="weekly-stat-num">{streak}</strong>
-              <span className="weekly-stat-note">天</span>
-            </div>
-          </div>
-          <div className="weekly-stat-item">
-            <span className="weekly-stat-label">峰值日</span>
-            <div className="weekly-stat-value">
-              <strong className="weekly-stat-num">
-                {stats.peakDay ? `周${weekdayShort(stats.peakDay)}` : "—"}
-              </strong>
-              <span className="weekly-stat-note">
-                {stats.peakDay ? `${stats.peakDone}/${stats.peakTotal} 项` : "本周暂无安排"}
-              </span>
-            </div>
-          </div>
         </div>
       </section>
 
