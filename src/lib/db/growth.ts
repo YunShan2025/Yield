@@ -343,20 +343,6 @@ export async function addGoalEntry(
   return result.rowsAffected > 0;
 }
 
-export async function reconcileGoalEntries(goalId: string): Promise<number> {
-  const db = await getDb();
-  const goals = await db.select<Goal[]>("SELECT * FROM goals WHERE id=$1 LIMIT 1", [goalId]);
-  const goal = goals[0];
-  if (!goal) return 0;
-  const entries = await db.select<GoalEntry[]>("SELECT * FROM goal_entries WHERE goal_id=$1", [goalId]);
-  const invalid = entries.filter((entry) => !goalAcceptsSource({ ...goal, status: "active" }, entry.source_type));
-  for (const entry of invalid) {
-    await db.execute("DELETE FROM goal_entries WHERE id=$1", [entry.id]);
-  }
-  await refreshGoalProgress(goalId);
-  return invalid.length;
-}
-
 export async function removeGoalEntryBySource(
   goalId: string,
   sourceType: GoalEntry["source_type"],
@@ -431,38 +417,6 @@ export async function createGoalMilestone(
     [createId(), goalId, title.trim(), targetValue, targetDate, Date.now(), nowIso(), nowIso()],
   );
   await refreshGoalProgress(goalId);
-}
-
-export async function updateGoalMilestone(
-  milestoneId: string,
-  updates: Partial<Pick<GoalMilestone, "title" | "target_value" | "target_date">>,
-): Promise<void> {
-  const db = await getDb();
-  const rows = await db.select<GoalMilestone[]>(
-    "SELECT * FROM goal_milestones WHERE id=$1",
-    [milestoneId],
-  );
-  const milestone = rows[0];
-  if (!milestone) return;
-  const next = {
-    title: updates.title?.trim() || milestone.title,
-    target_value: Number(updates.target_value ?? milestone.target_value),
-    target_date: updates.target_date !== undefined
-      ? updates.target_date
-      : milestone.target_date,
-  };
-  await db.execute(
-    `UPDATE goal_milestones
-     SET title=$1, target_value=$2, target_date=$3, completed_at=NULL, updated_at=$4
-     WHERE id=$5`,
-    [next.title, next.target_value, next.target_date, nowIso(), milestone.id],
-  );
-  // 目标值变了，旧的达成时间与成就不再可信，交由进度刷新重新推导。
-  await db.execute(
-    "DELETE FROM achievements WHERE source_type='milestone' AND source_id=$1",
-    [milestone.id],
-  );
-  await refreshGoalProgress(milestone.goal_id);
 }
 
 /**
