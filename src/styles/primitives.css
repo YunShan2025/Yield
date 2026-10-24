@@ -532,8 +532,9 @@ button:active:not(:disabled) {
 }
 
 .main-workspace {
+  /* 页角洗色归队 azure 家族（growth/ledger/外壳同款）；暖色只留给数据语义。 */
   background:
-    radial-gradient(circle at 94% 0%, var(--warm-450-10), transparent 24%),
+    radial-gradient(circle at 94% 0%, var(--azure-950-9), transparent 24%),
     var(--surface-base);
 }
 

@@ -3892,11 +3892,7 @@ html[data-nav="railed"] .nav-edge-collapse {
   box-shadow: 0 8px 20px var(--slate-150-19);
 }
 
-.main-workspace {
-  background:
-    radial-gradient(circle at 92% 0%, var(--warm-400-9), transparent 25%),
-    var(--surface-base);
-}
+/* .main-workspace 页角洗色已并入 primitives 基础规则（azure 家族），此处暖色重复覆盖删除。 */
 
 .workspace-top {
   padding: 25px 28px 13px;
