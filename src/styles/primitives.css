@@ -770,25 +770,13 @@ body {
   color: var(--text-primary);
   border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 88% 10%, var(--azure-950-14), transparent 28%),
-    radial-gradient(circle at 96% 92%, var(--warm-350-11), transparent 24%),
-    linear-gradient(120deg, var(--paper-600) 0%, var(--paper-250) 70%, var(--white) 100%);
+  /* 平铺淡蓝顶卡：--accent-faint 随四主题取值，不再用暖色渐变洗底。 */
+  background: var(--accent-faint);
 }
 
+/* 装饰性同心环已移除（craft-floor：拿装饰冒充内容；移动端同款已废弃）。 */
 .today-hero::after {
-  content: "";
-  position: absolute;
-  right: -42px;
-  bottom: -84px;
-  width: 210px;
-  height: 210px;
-  pointer-events: none;
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 22px color-mix(in srgb, var(--accent) 3%, transparent),
-    0 0 0 48px color-mix(in srgb, var(--accent) 2%, transparent);
+  content: none;
 }
 
 /* 引导块排成一行：箴言标题 + 说明 + 状态标签依次排开，右侧是本页的一个数字。
@@ -842,10 +830,6 @@ body {
 :root[data-theme="dark"] .today-hero {
   color: var(--text-primary);
   border-color: var(--border-strong);
-  background:
-    radial-gradient(circle at 88% 10%, var(--azure-400-19), transparent 29%),
-    radial-gradient(circle at 96% 92%, var(--warm-500-8), transparent 24%),
-    linear-gradient(120deg, var(--ink-700) 0%, var(--ink-950-e) 72%, var(--ink-950-f) 100%);
 }
 
 :root[data-theme="dark"] .today-hero h3 {
@@ -860,10 +844,6 @@ body {
   :root[data-theme="system"] .today-hero {
     color: var(--text-primary);
     border-color: var(--border-strong);
-    background:
-      radial-gradient(circle at 88% 10%, var(--azure-400-19), transparent 29%),
-      radial-gradient(circle at 96% 92%, var(--warm-500-8), transparent 24%),
-      linear-gradient(120deg, var(--ink-700) 0%, var(--ink-950-e) 72%, var(--ink-950-f) 100%);
   }
 
   :root[data-theme="system"] .today-hero h3 {

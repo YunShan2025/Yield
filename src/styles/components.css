@@ -3962,40 +3962,9 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-weight: 500;
 }
 
-/* 「今日」与「成长/习惯/提醒/项目」共用同一套暖色引导框(is-deadline / guide-hero)。 */
-.today-hero.is-deadline,
-.today-hero.guide-hero {
-  border-color: color-mix(in srgb, var(--warm-550) 24%, var(--border));
-  background:
-    radial-gradient(circle at 12% 18%, var(--warm-350-20), transparent 34%),
-    radial-gradient(circle at 94% 88%, var(--clay-100-8), transparent 28%),
-    linear-gradient(120deg, var(--warm-150) 0%, var(--warm-100) 68%, var(--white) 100%);
-}
-
-.today-hero.is-deadline::after,
-.today-hero.guide-hero::after {
-  border-color: color-mix(in srgb, var(--warm-550) 18%, transparent);
-  box-shadow:
-    0 0 0 22px color-mix(in srgb, var(--warm-550) 5%, transparent),
-    0 0 0 48px color-mix(in srgb, var(--warm-550) 3%, transparent);
-}
-
-:root[data-theme="dark"] .today-hero.is-deadline,
-:root[data-theme="dark"] .today-hero.guide-hero,
-:root[data-theme="glass"] .today-hero.is-deadline,
-:root[data-theme="glass"] .today-hero.guide-hero {
-  background:
-    radial-gradient(circle at 12% 18%, var(--warm-350-16), transparent 34%),
-    radial-gradient(circle at 94% 88%, var(--clay-100-10), transparent 28%),
-    linear-gradient(120deg, var(--warm-800) 0%, var(--ink-950-j) 72%, var(--ink-950-f) 100%);
-}
-
-:root[data-theme="dawn"] .today-hero.is-deadline,
-:root[data-theme="dawn"] .today-hero.guide-hero {
-  background:
-    radial-gradient(circle at 12% 18%, var(--warm-350-22), transparent 34%),
-    linear-gradient(120deg, var(--warm-250) 0%, var(--warm-200) 70%, var(--amber-100) 100%);
-}
+/* 「今日」与「成长/习惯/提醒/项目」共用的引导框已统一为平铺淡蓝顶卡
+   （底色 --accent-faint 随四主题取值），不再用暖色渐变洗底与同心环装饰。
+   截止/提醒的紧迫感交给 .plan-warning 胶囊与文案承担，符合「颜色服务数据」。 */
 
 /* 今日引导块右侧的完成度：数字 + 细进度条。
    不用圆环——圆环是「拿装饰冒充内容」的高发位，数字加细条更准也更省地方。 */
