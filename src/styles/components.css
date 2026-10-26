@@ -1175,6 +1175,8 @@ select {
 .scope-section-title {
   margin: 0 0 10px;
   font-size: var(--font-size-h3);
+  /* 基类的 0.11em 字距是英文 caption 时代的遗留；标题已是中文 h3，取消拉宽。 */
+  letter-spacing: normal;
 }
 
 .scope-empty {
@@ -3009,7 +3011,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
   max-width: 200px;
   padding: 2px 8px;
   overflow: hidden;
@@ -3022,12 +3023,36 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   text-overflow: ellipsis;
 }
 
-.goal-chip i {
+/* 今日行与详情抽屉通用的徽标原子：时间、优先级、周次数、达成提示都收进这里，
+   与 .goal-chip 同族同规（2px 8px / pill / caption / --text-label），身份交给
+   中性次级墨底。文字内容双端一致，样式按桌面自己的密度。 */
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
   flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--goal-color, var(--accent));
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  color: var(--text-label);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 归属胶囊（项目/标签）：与目标徽标同规，身份色走 --pill-color（与移动壳
+   归属胶囊同一数据源同色）。 */
+.task-pill {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  max-width: 12em;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--pill-color, var(--accent)) 12%, transparent);
+  color: var(--text-label);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .habit-day-dot {
@@ -3154,6 +3179,11 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .goal-push-measure { flex: 0 0 auto; color: var(--accent); font-size: var(--font-size-caption); }
 .goal-empty { margin: 0; padding: 10px 2px; color: var(--text-muted); font-size: var(--font-size-caption); }
 /* 今日清单头部的目标筛选。 */
+/* 习惯分区与事项分区之间留一节间距。 */
+.day-agenda-habits {
+  margin-bottom: 20px;
+}
+
 .day-agenda-filters { display: flex; align-items: center; gap: 8px; }
 
 /* ── 原 global-07-moments.css ────────────────────────────────────────── */

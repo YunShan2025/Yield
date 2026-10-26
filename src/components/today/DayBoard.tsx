@@ -19,6 +19,7 @@ import { TodayTimeline } from "../TodayTimeline";
 export function DayBoard() {
   const allTasks = useAppStore((s) => s.tasks);
   const habits = useAppStore((s) => s.habits);
+  const habitChecks = useAppStore((s) => s.habitChecks);
   const nav = useAppStore((s) => s.nav);
   const cursor = useAppStore((s) => s.calendarCursor);
   const today = todayDateString();
@@ -69,8 +70,13 @@ export function DayBoard() {
   );
 
   const pending = dayTasks.filter(isActiveTask).length;
-  const done = dayTasks.filter((task) => task.status === "completed").length;
-  const total = pending + done;
+  const doneTasks = dayTasks.filter((task) => task.status === "completed").length;
+  // 顶卡读数按「任务 + 习惯」合计（用户定的口径）：习惯当日已打卡记为完成。
+  const habitsCheckedToday = todayHabits.filter((habit) =>
+    habitChecks.some((item) => item.habit_id === habit.id && item.check_date === cursor),
+  ).length;
+  const done = doneTasks + habitsCheckedToday;
+  const total = pending + doneTasks + todayHabits.length;
 
   const handleReorder = (ids: string[]) => {
     saveTodayOrder(cursor, ids);
