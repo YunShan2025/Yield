@@ -102,11 +102,12 @@ export function WeeklyChecklistView() {
             {isMobileShell() ? <MobileTitleChars text="周清单" /> : "周清单"}
 
           </h2>
-          <p className="workspace-subtitle">
-            {weekStart} ～ {weekEnd} · 给这一周定下目标，完成一件划掉一件。
-          </p>
+          <p className="workspace-subtitle">把一周摊开来看。</p>
         </div>
-        <div className="top-controls weekly-checklist-nav">
+        <div className="top-controls weekly-checklist-nav scope-nav">
+          <strong>
+            {formatMd(weekStart)} ～ {formatMd(weekEnd)}
+          </strong>
           <button
             type="button"
             className="btn-ghost"
@@ -160,8 +161,7 @@ export function WeeklyChecklistView() {
       ) : (
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <h3>把一周摊开来看。</h3>
-          <p className="today-hero-note">本周目标按标签聚合，周日历逐天盘点；点任务直达详情。</p>
+          <p className="today-hero-note">给这一周定下目标，完成一件划掉一件。</p>
         </div>
         <div className="today-hero-meter">
           <span className="today-hero-meter-count">

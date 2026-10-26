@@ -167,9 +167,7 @@ export function TagsView() {
             {isMobileShell() ? <MobileTitleChars text="标签" /> : "标签"}
 
           </h2>
-          <p className="workspace-subtitle">
-            给项目与任务分类打标，项目自带标签，周清单的目标分栏也按同名标签自动汇总。
-          </p>
+          <p className="workspace-subtitle">把散落的事，按线归拢。</p>
         </div>
         <div className="top-controls">
           <button
@@ -200,7 +198,7 @@ export function TagsView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <h3>把散落的事，按线归拢。</h3>
+            <p className="today-hero-note">给项目与任务分类打标，周清单也按同名标签自动汇总。</p>
           </div>
           <div className="today-hero-meter">
             <span className="today-hero-meter-count">

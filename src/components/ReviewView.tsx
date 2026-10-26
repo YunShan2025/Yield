@@ -90,10 +90,14 @@ export function ReviewView() {
   const weekCompleted = stats.completed.reduce((sum, value) => sum + value, 0);
   const activeGoals = goals.filter((goal) => goal.status === "active");
   const weekday = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("zh-CN", { weekday: "short" });
+  const formatMd = (date: string) => {
+    const [, m, d] = date.split("-");
+    return `${Number(m)}/${Number(d)}`;
+  };
 
   return (
     <main className="main-workspace review-workspace">
-      {/* 与「今日」同构的标题区:h2 标题 + 副标题(含当周区间),右侧为周切换与完成数。 */}
+      {/* 与「今日」同构的标题区:h2 标题 + 格言副标题,右侧为当周区间、周切换与完成数。 */}
       <div className="workspace-top">
         <div>
           <h2 aria-label={isMobileShell() ? "复盘" : undefined}>
@@ -101,10 +105,14 @@ export function ReviewView() {
             {isMobileShell() ? <MobileTitleChars text="复盘" /> : "复盘"}
 
           </h2>
-          <p className="workspace-subtitle">{weekStart} ～ {weekEnd} · 不只看完成了多少，也看看精力落在哪里。</p>
+          <p className="workspace-subtitle">回头看，是为了走得更稳。</p>
         </div>
-        <div className="top-controls">
-          <div className="review-hero-total"><strong>{weekCompleted}</strong><span>件事情完成</span></div>
+        <div className="top-controls scope-nav">
+          <strong>{formatMd(weekStart)} ～ {formatMd(weekEnd)}</strong>
+          {/* 桌面读数进引导框 meter；移动壳无引导框，读数留在页头。 */}
+          {isMobileShell() ? (
+            <div className="review-hero-total"><strong>{weekCompleted}</strong><span>件事情完成</span></div>
+          ) : null}
           <button
             type="button"
             className="btn-ghost"
@@ -129,13 +137,18 @@ export function ReviewView() {
         </div>
       </div>
 
-      {/* 与「今日」同款的暖色引导框。 */}
-      {/* 与「今日」同款的暖色引导框。移动壳不出现：页头已有「N 件事情完成」
-          读数与摘要指标，格言卡属于桌面内容。 */}
+      {/* 与「今日」同款的引导框：一句功能说明 + 本周完成读数。移动壳不出现：
+          页头已有「N 件事情完成」读数与摘要指标，引导卡属于桌面内容。 */}
       {isMobileShell() ? null : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <h3>回头看，是为了走得更稳。</h3>
+            <p className="today-hero-note">不只看完成了多少，也看看精力落在哪里。</p>
+          </div>
+          <div className="today-hero-meter">
+            <span className="today-hero-meter-count">
+              <strong>{weekCompleted}</strong>
+            </span>
+            <span className="today-hero-meter-label">件事情完成</span>
           </div>
         </section>
       )}

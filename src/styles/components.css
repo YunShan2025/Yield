@@ -1780,6 +1780,10 @@ select {
 .growth-page .guide-hero { margin-bottom: 14px; }
 /* 复盘/标签页引导框:统一对齐 28px 内容边距。 */
 .review-workspace .guide-hero { margin: 0 28px 18px; }
+/* 设置页页头与其余页同构：桌面引导框与卡片流同用 22px 横留白。 */
+.settings-page .guide-hero {
+  margin: 0 22px;
+}
 .tags-view .guide-hero { margin: 0 28px 6px; }
 
 .growth-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
@@ -2894,16 +2898,48 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 }
 
 /* 回收站 */
+/* 概况卡并入淡蓝顶卡族（移动壳同款基准）：无边框、16px 圆角、三组柔和投影、
+   accent-faint 底、右下麦穗水印；桌面用 ::after 承担图案，内容零改动。 */
 .trash-summary {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 14px;
   padding: 14px 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: linear-gradient(100deg, var(--surface-panel), color-mix(in srgb, var(--accent-soft) 32%, var(--surface-panel)));
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: var(--accent-faint);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+.trash-summary::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  bottom: -20px;
+  width: 64px;
+  height: 64px;
+  background: var(--accent);
+  -webkit-mask: var(--wheat-mask) no-repeat center / contain;
+  mask: var(--wheat-mask) no-repeat center / contain;
+  opacity: 0.12;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+
+/* 深色档投影（移动壳同规：dark/glass/系统深用深档，晨曦浅色用基准浅档）。 */
+:root[data-theme="dark"] .trash-summary,
+:root[data-theme="glass"] .trash-summary {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .trash-summary {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+  }
 }
 
 .trash-summary-copy strong {

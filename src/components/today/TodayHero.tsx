@@ -19,13 +19,7 @@ export function TodayHero({
   return (
     <section className={`today-hero ${isTodayView ? "is-deadline" : "is-plan"}`}>
       <div className="today-hero-copy">
-        <h3>
-          {isInbox
-            ? "不着急的事，先收进待办箱。"
-            : doneCount
-              ? "做得很好，继续保持节奏。"
-              : "从一件小事开始今天。"}
-        </h3>
+        {/* 引导框只留一句功能性说明；格言在页头副标题层。 */}
         <p className="today-hero-note">
           {isInbox
             ? "截止日期不在今天的任务集中在这里，慢慢完成。"

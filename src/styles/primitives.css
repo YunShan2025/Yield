@@ -754,15 +754,29 @@ body {
   padding: 12px 22px;
   overflow: hidden;
   color: var(--text-primary);
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
-  border-radius: var(--radius-lg);
-  /* 平铺淡蓝顶卡：--accent-faint 随四主题取值，不再用暖色渐变洗底。 */
+  /* 视觉基准 = 移动壳淡蓝顶卡族（mtoday-hero / guide-stat）：无边框、16px 圆角、
+     顶部白内高光 + 2px 近影 + 30px 扩散投影；底色 --accent-faint 随四主题取值。 */
+  border: 0;
+  border-radius: 16px;
   background: var(--accent-faint);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
-/* 装饰性同心环已移除（craft-floor：拿装饰冒充内容；移动端同款已废弃）。 */
+/* 麦穗水印：与移动壳顶卡 .mtoday-wheat 同一张 SVG 角标（::after 承担，不动内容）。
+   桌面卡更矮，图样按比例收小、外移量减半。 */
 .today-hero::after {
-  content: none;
+  content: "";
+  position: absolute;
+  right: -16px;
+  bottom: -20px;
+  width: 64px;
+  height: 64px;
+  background: var(--accent);
+  -webkit-mask: var(--wheat-mask) no-repeat center / contain;
+  mask: var(--wheat-mask) no-repeat center / contain;
+  opacity: 0.14;
+  transform: rotate(-10deg);
+  pointer-events: none;
 }
 
 /* 引导块排成一行：箴言标题 + 说明 + 状态标签依次排开，右侧是本页的一个数字。
@@ -815,7 +829,8 @@ body {
 
 :root[data-theme="dark"] .today-hero {
   color: var(--text-primary);
-  border-color: var(--border-strong);
+  /* 移动壳同款深色顶卡投影档（dark/glass 同值）。 */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
 }
 
 :root[data-theme="dark"] .today-hero h3 {
@@ -829,7 +844,7 @@ body {
 @media (prefers-color-scheme: dark) {
   :root[data-theme="system"] .today-hero {
     color: var(--text-primary);
-    border-color: var(--border-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
   }
 
   :root[data-theme="system"] .today-hero h3 {

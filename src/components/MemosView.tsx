@@ -229,7 +229,7 @@ export function MemosView() {
           {isMobileShell() ? <MobileTitleChars text="备忘录" /> : "备忘录"}
 
         </h2>
-        <p className="workspace-subtitle">随手记下的想法与灵感，都收在这里。</p>
+        <p className="workspace-subtitle">好记性不如烂笔头。</p>
       </div>
       <div className="top-controls">
         <div className="memo-new-wrap">
@@ -263,7 +263,7 @@ export function MemosView() {
     ) : (
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <h3>好记性不如烂笔头。</h3>
+          <p className="today-hero-note">随手记下的想法与灵感，都收在这里。</p>
         </div>
       </section>
     )}

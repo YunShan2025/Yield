@@ -150,7 +150,7 @@ export function AnniversariesView() {
             {isMobileShell() ? <MobileTitleChars text="纪念日" /> : "纪念日"}
 
           </h2>
-          <p className="workspace-subtitle">重要的日子都在这里，离现在最近的会先被看见。</p>
+          <p className="workspace-subtitle">把值得记住的日子，好好收藏。</p>
         </div>
         <div className="top-controls">
           <button type="button" className="btn-primary" onClick={() => setComposerOpen(true)}>新建纪念日</button>
@@ -178,7 +178,7 @@ export function AnniversariesView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <h3>把值得记住的日子，好好收藏。</h3>
+            <p className="today-hero-note">重要的日子都在这里，离现在最近的先被看见。</p>
           </div>
         </section>
       )}

@@ -412,7 +412,7 @@ export function InboxMobileView() {
       <header className="mtoday-top">
         <div className="mtoday-top-text">
           <MobilePageTitle text="待办" />
-          <p>{pending ? "逾期优先，按日期整理" : "暂无待办"}</p>
+          <p>有计划的人很多，但去做的人很少。</p>
         </div>
       </header>
 

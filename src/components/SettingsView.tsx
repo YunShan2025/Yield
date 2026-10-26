@@ -204,15 +204,35 @@ export function SettingsView() {
   };
 
   return (
-    <main
-      className="main-workspace"
-      style={{ padding: 22, paddingTop: isMobileShell() ? 0 : undefined, overflow: "auto" }}
-    >
-      {/* 移动端 main 顶部内边距归零（sticky 页头不能上方留缝），顶距改由页头提供。 */}
-      <h2 className="workspace-top" style={{ padding: 0, paddingTop: isMobileShell() ? 16 : 0 }} aria-label={isMobileShell() ? "设置" : undefined}>
-        {isMobileShell() ? <MobileTitleChars text="设置" /> : "设置"}
-      </h2>
+    <main className="main-workspace settings-page">
+      {/* 页头与其他二级页同构：h2 标题 + 格言副标题（移动壳的 sticky 页头由 .workspace-top 统一提供）。 */}
+      <div className="workspace-top">
+        <div>
+          <h2 aria-label={isMobileShell() ? "设置" : undefined}>
+            {isMobileShell() ? <MobileTitleChars text="设置" /> : "设置"}
+          </h2>
+          <p className="workspace-subtitle">君子务本，本立而道生。</p>
+        </div>
+      </div>
 
+      {/* 与「今日」同款的引导框，仅桌面出：移动壳卡片流直接以「命名缘起」开场。 */}
+      {!isMobileShell() ? (
+        <section className="today-hero guide-hero">
+          <div className="today-hero-copy">
+            <p className="today-hero-note">界面外观、数据同步与备份、提醒与隐私，都在这里调整。</p>
+          </div>
+        </section>
+      ) : null}
+
+      {/* 原挂在 main 上的 22px 内边距移到卡片流容器；移动壳与其余页统一 18px。 */}
+      <div
+        className="settings-body"
+        style={{
+          padding: isMobileShell()
+            ? "9px 18px calc(18px + env(safe-area-inset-bottom, 0px))"
+            : 22,
+        }}
+      >
       <section className="settings-card brand-origin-card" style={{ marginTop: 16 }}>
         <div className="brand-origin-title">
           <AppIcon name="brand" size={20} />
@@ -449,6 +469,7 @@ export function SettingsView() {
       </section>
 
       <SyncSettingsCard />
+      </div>
     </main>
   );
 }

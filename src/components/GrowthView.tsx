@@ -436,8 +436,7 @@ export function GrowthView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <h3>看见每一天累积的成长。</h3>
-            <p className="today-hero-note">日复一日，功在不舍。</p>
+            <p className="today-hero-note">看见每一天累积的成长。</p>
           </div>
         </section>
       )}

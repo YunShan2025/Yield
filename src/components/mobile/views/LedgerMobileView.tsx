@@ -129,7 +129,7 @@ export function LedgerMobileView() {
       <header className="mtoday-top">
         <div className="mtoday-top-text">
           <MobilePageTitle text="记账" />
-          <p>收支如水，观其波澜</p>
+          <p>观水有术，必观其澜</p>
         </div>
         <div className="mledger-month-switch" role="group" aria-label="切换月份">
           <button

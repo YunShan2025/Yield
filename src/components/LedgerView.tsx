@@ -265,7 +265,7 @@ export function LedgerView() {
       <div className="workspace-top">
         <div>
           <h2>收支总览</h2>
-          <p className="workspace-subtitle">观水有术，必观其澜。看见钱的去向，不评判每一笔生活。</p>
+          <p className="workspace-subtitle">观水有术，必观其澜。</p>
         </div>
         <div className="top-controls">
           <div className="ledger-month-switcher" aria-label="选择月份"><button onClick={() => setMonth(moveMonth(month, -1))} aria-label="上个月">‹</button><strong>{monthLabel(month)}</strong><button onClick={() => setMonth(moveMonth(month, 1))} aria-label="下个月">›</button></div>
@@ -277,8 +277,7 @@ export function LedgerView() {
       {/* 与「今日」同款的暖色引导框。 */}
       <section className="today-hero guide-hero">
         <div className="today-hero-copy">
-          <h3>看清流向，再谈安排。</h3>
-          <p className="today-hero-note">月度摘要、分类占比与趋势都在一页；截图分享前可用「隐藏金额」。</p>
+          <p className="today-hero-note">看见钱的去向，不评判每一笔生活。</p>
         </div>
       </section>
 

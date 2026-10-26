@@ -214,7 +214,7 @@ export function HabitsView() {
             {isMobileShell() ? <MobileTitleChars text="习惯" /> : "习惯"}
 
           </h2>
-          <p className="workspace-subtitle">每天打一次卡，连续天数会替你记得。</p>
+          <p className="workspace-subtitle">小步不断，胜过心血来潮。</p>
         </div>
         <div className="top-controls">
           <button type="button" className="btn-primary" onClick={openCreate}>
@@ -234,8 +234,7 @@ export function HabitsView() {
         ) : (
           <section className="today-hero guide-hero">
             <div className="today-hero-copy">
-              <h3>让坚持成为默认选项。</h3>
-              <p className="today-hero-note">小步不断，胜过心血来潮。</p>
+              <p className="today-hero-note">每天打一次卡，连续天数会替你记得。</p>
             </div>
           </section>
         )}

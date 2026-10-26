@@ -3849,6 +3849,11 @@ html[data-shell="mobile"] .trash-summary {
   background: var(--accent-faint);
 }
 
+/* 桌面基准现为 ::after 麦穗；移动壳已有 .mtoday-wheat span，伪元素让位防双水印。 */
+html[data-shell="mobile"] .trash-summary::after {
+  display: none;
+}
+
 html[data-shell="mobile"] .trash-summary .mtoday-wheat {
   width: 104px;
   height: 104px;
@@ -3921,7 +3926,7 @@ html[data-shell="mobile"] .settings-card {
 }
 
 /* 首卡与页头的间距统一 9px（TSX 内联 marginTop:16，仅在移动壳压回）。 */
-html[data-shell="mobile"] .main-workspace > .settings-card:first-of-type {
+html[data-shell="mobile"] .settings-body > .settings-card:first-of-type {
   margin-top: 9px !important;
 }
 

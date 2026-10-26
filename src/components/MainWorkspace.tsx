@@ -575,10 +575,8 @@ function TrashView() {
     <div className="task-scroll">
       <section className="trash-summary" aria-label="回收站概况">
         <div className="trash-summary-copy">
-          <strong>
-            已删除 {total} 项{total ? "，保留 30 天内可随时恢复" : ""}
-          </strong>
-          <p>清空或永久删除后无法恢复；恢复的任务会回到原来的位置。</p>
+          <strong>已删除 {total} 项</strong>
+          <p>删除保留 30 天，可随时恢复；清空或永久删除后无法恢复。</p>
         </div>
         <button
           type="button"
@@ -989,9 +987,12 @@ export function MainWorkspace() {
     return (
       <main className="main-workspace">
         <div className="workspace-top">
-          <h2 aria-label={isMobileShell() ? getViewTitle("trash") : undefined}>
-            {isMobileShell() ? <MobileTitleChars text={getViewTitle("trash")} /> : getViewTitle("trash")}
-          </h2>
+          <div>
+            <h2 aria-label={isMobileShell() ? getViewTitle("trash") : undefined}>
+              {isMobileShell() ? <MobileTitleChars text={getViewTitle("trash")} /> : getViewTitle("trash")}
+            </h2>
+            <p className="workspace-subtitle">能回来的，就不算失去。</p>
+          </div>
         </div>
         <TrashView />
       </main>

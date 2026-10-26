@@ -156,7 +156,7 @@ export function ProjectsView() {
             {isMobileShell() ? <MobileTitleChars text="项目" /> : "项目"}
 
           </h2>
-          <p className="workspace-subtitle">组织长期事项，聚合相关任务</p>
+          <p className="workspace-subtitle">百工居肆以成其事。</p>
         </div>
         <div className="top-controls">
           <button
@@ -194,7 +194,7 @@ export function ProjectsView() {
         ) : (
           <section className="today-hero guide-hero">
             <div className="today-hero-copy">
-              <h3>百工居肆以成其事。</h3>
+              <p className="today-hero-note">组织长期事项，聚合相关任务。</p>
             </div>
             <div className="today-hero-meter">
               <span className="today-hero-meter-count">

@@ -136,7 +136,7 @@ export function RemindersView() {
             {isMobileShell() ? <MobileTitleChars text="提醒" /> : "提醒"}
 
           </h2>
-          <p className="workspace-subtitle">临时事项用倒计时，喝水、护眼等固定节奏用循环提醒。</p>
+          <p className="workspace-subtitle">关掉窗口，提醒也不会丢。</p>
         </div>
         <div className="top-controls">
           <div className="timer-tabs" role="tablist" aria-label="计时类型">
@@ -184,8 +184,7 @@ export function RemindersView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <h3>关掉窗口，提醒也不会丢。</h3>
-            <p className="today-hero-note">到期提醒由系统送达；彻底退出请用托盘菜单的「退出应用」。</p>
+            <p className="today-hero-note">临时事项用倒计时，喝水、护眼等固定节奏用循环提醒；到期提醒由系统送达。</p>
           </div>
         </section>
       )}
