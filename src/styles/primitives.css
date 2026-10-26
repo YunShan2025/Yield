@@ -761,16 +761,18 @@ body {
   pointer-events: none;
 }
 
-/* 引导块排成一行：箴言标题 + 说明 + 状态标签依次排开，右侧是本页的一个数字。
+/* 引导块排成一行：说明 + 状态胶囊依次排开，右侧是本页的一个数字。
    竖排两行会让 126px 的色块压住首屏 —— 今日页的「今日事项」就是因此被
-   推到折线以下的。 */
+   推到折线以下的。
+   垂直对齐取 center 而非 baseline：胶囊盒比说明文字高（padding+边框），
+   基线对齐会把胶囊光学中心推离文字中心，连带破坏说明在卡片里的居中感。 */
 .today-hero-copy {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: 4px 12px;
 }
@@ -788,10 +790,11 @@ body {
   color: var(--text-label);
 }
 
+/* 与说明同一行：不再另起一行,去掉竖排遗留的 margin-top,靠 align-self:center
+   （基础 .plan-warning）在文字行里垂直居中,读作「说明 + 冲突提示」一句。 */
 .today-hero .plan-warning {
   display: table;
   width: fit-content;
-  margin-top: 10px;
   padding: 3px 8px;
   color: var(--warm-700);
   font-size: var(--font-size-caption);
