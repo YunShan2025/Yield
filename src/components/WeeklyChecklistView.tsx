@@ -12,13 +12,17 @@ import {
 } from "@/lib/weeklyChecklist";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
+import { AppIcon } from "@/components/AppIcon";
 import { ExpandRow } from "@/components/ExpandRow";
+import { formatDueDateBadge, priorityLabel } from "@/lib/dates";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { getMobileTaskPills } from "@/components/mobile/MobileTaskPills";
+import { mobileDoneStamp } from "@/components/mobile/MobileTaskLine";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
-import type { Task } from "@/types";
+import type { Goal, Project, Tag, Task } from "@/types";
 
 /** 移动壳里一个分类默认只露这么多条：sunken 子面板被拉成十几条会吃满一屏。 */
 const MOBILE_TASK_PREVIEW = 5;
@@ -26,6 +30,85 @@ const MOBILE_TASK_PREVIEW = 5;
 function formatMd(date: string) {
   const [, m, d] = date.split("-");
   return `${Number(m)}/${Number(d)}`;
+}
+
+/**
+ * 「本周任务」的桌面行：移动 MobileTaskLine 的桌面对应物——标题在上，第二行
+ * 是优先级点·截止徽标·归属胶囊·目标徽标，右端完成圆钮。徽标全部复用今日/
+ * 待办的桌面原子（.due-chip/.task-pill/.goal-chip），完成态走同页当周日历
+ * 那套「成就金」认可（不划线、不置灰）。
+ */
+function WeeklyTaskRow({
+  task,
+  today,
+  projects,
+  tags,
+  tagMap,
+  goal,
+  onOpen,
+  onComplete,
+}: {
+  task: Task;
+  today: string;
+  projects: Project[];
+  tags: Tag[];
+  tagMap: Record<string, string[]>;
+  goal: Goal | null;
+  onOpen: () => void;
+  onComplete: () => void;
+}) {
+  const done = task.status === "completed";
+  // 与移动行同一口径：完成的事不再标截止语气，哪天做完的由行尾小注说。
+  const due = done ? null : formatDueDateBadge(task.due_date, today);
+  const pills = getMobileTaskPills(task, projects, tags, tagMap);
+  const stamp = done ? mobileDoneStamp(task.completed_at) : null;
+  return (
+    <div className={`weekly-goal-task${done ? " is-done" : ""}`}>
+      <button type="button" className="weekly-goal-task-open" onClick={onOpen}>
+        <span className="weekly-goal-task-title">{task.title}</span>
+        <span className="weekly-goal-task-meta">
+          <i
+            className={`weekly-goal-task-pdot pr${task.priority}`}
+            title={priorityLabel(task.priority)}
+            aria-hidden
+          />
+          {due ? (
+            <span
+              className={`due-chip is-${due.tone}`}
+              title={due.title}
+              aria-label={due.tone === "none" ? "未安排日期" : `${due.label}，${due.title}`}
+            >
+              {due.label}
+            </span>
+          ) : null}
+          {pills.map((pill) => (
+            <span
+              key={pill.key}
+              className="task-pill"
+              style={{ "--pill-color": pill.color } as CSSProperties}
+            >
+              {pill.name}
+            </span>
+          ))}
+          {goal ? (
+            <span className="goal-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
+              {goal.title}
+            </span>
+          ) : null}
+          {stamp ? <span className="weekly-goal-task-stamp">{stamp} 完成</span> : null}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="weekly-goal-task-check"
+        aria-label={done ? `取消完成 ${task.title}` : `完成 ${task.title}`}
+        aria-pressed={done}
+        onClick={onComplete}
+      >
+        {done ? <AppIcon name="check" size={13} /> : null}
+      </button>
+    </div>
+  );
 }
 
 export function WeeklyChecklistView() {
@@ -268,20 +351,17 @@ export function WeeklyChecklistView() {
                   ) : (
                     <div className="weekly-goal-tasks">
                       {bucket.tasks.map((task) => (
-                        <button
+                        <WeeklyTaskRow
                           key={task.id}
-                          type="button"
-                          className={`weekly-goal-task${task.status === "completed" ? " is-done" : ""}`}
-                          onClick={() => selectTask(task.id)}
-                        >
-                          <span className="weekly-goal-task-state" aria-hidden>
-                            {task.status === "completed" ? "✓" : "○"}
-                          </span>
-                          <span className="weekly-goal-task-title">{task.title}</span>
-                          {task.due_date ? (
-                            <span className="weekly-goal-task-due">{task.due_date.slice(5)}</span>
-                          ) : null}
-                        </button>
+                          task={task}
+                          today={today}
+                          projects={projects}
+                          tags={tags}
+                          tagMap={tagMap}
+                          goal={task.goal_id ? goalById.get(task.goal_id) ?? null : null}
+                          onOpen={() => selectTask(task.id)}
+                          onComplete={() => void toggleComplete(task.id)}
+                        />
                       ))}
                     </div>
                   )

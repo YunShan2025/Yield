@@ -4869,56 +4869,122 @@ html[data-nav="railed"] .nav-edge-collapse {
 
 .weekly-goal-tasks {
   display: grid;
-  gap: 2px;
+  gap: 6px;
 }
 
+/* 「本周任务」桌面行：sunken 卡片与同页当周日历行同底同径——标题在上、
+   徽标行在下（优先级点·截止·归属·目标），右端完成圆钮。旧「○ 标题 日期」
+   素行退场：那排 ○/✓ 文本字形也一并换成 CSS 圆钮（DESIGN 禁字形图标）。 */
 .weekly-goal-task {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 4px 6px;
-  border: 0;
+  gap: 10px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
+  background: var(--surface-sunken, var(--surface-panel));
+}
+
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  .weekly-goal-task {
+    background: color-mix(in srgb, var(--surface-base) 70%, transparent);
+  }
+}
+
+.weekly-goal-task:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* 打开任务的主体（标题+徽标两行）；完成钮是它的兄弟,不嵌套按钮。 */
+.weekly-goal-task-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
   background: none;
-  color: var(--text-secondary);
-  font-size: var(--font-size-caption);
   text-align: left;
   cursor: pointer;
 }
 
-.weekly-goal-task:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.weekly-goal-task.is-done .weekly-goal-task-title {
-  color: var(--text-muted);
-  text-decoration: line-through;
-}
-
-.weekly-goal-task-state {
-  flex: none;
-  width: 12px;
-  color: var(--text-muted);
-  text-align: center;
-}
-
 .weekly-goal-task-title {
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-heading);
+  font-size: var(--font-size-body);
   font-weight: 560;
   letter-spacing: -0.012em;
 }
 
-.weekly-goal-task-due {
+.weekly-goal-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-caption);
+}
+
+/* 优先级圆点：色板同 tokens 的 --prio-N，与移动壳优先级方点同数据不同形——
+   这页的圆点族（分类点/完成钮）都是圆的。 */
+.weekly-goal-task-pdot {
+  width: 7px;
+  height: 7px;
   flex: none;
-  margin-left: auto;
+  border-radius: var(--radius-pill);
+  background: var(--prio-3);
+}
+
+.weekly-goal-task-pdot.pr1 { background: var(--prio-1); }
+.weekly-goal-task-pdot.pr2 { background: var(--prio-2); }
+.weekly-goal-task-pdot.pr3 { background: var(--prio-3); }
+.weekly-goal-task-pdot.pr4 { background: var(--prio-4); }
+
+.weekly-goal-task-stamp {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.weekly-goal-task-check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.weekly-goal-task-check:hover {
+  border-color: var(--accent);
+}
+
+/* 完成态：与当周日历列同一套「成就金」认可——金底金钮、不划线不置灰。 */
+.weekly-goal-task.is-done {
+  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
+  box-shadow: inset 0 0 0 1px var(--amber-900-28);
+}
+
+.weekly-goal-task.is-done .weekly-goal-task-title {
+  color: var(--text-primary);
+}
+
+.weekly-goal-task.is-done .weekly-goal-task-check {
+  border-color: transparent;
+  color: var(--ink-950-g);
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+}
+
+:root[data-theme="dark"] .weekly-goal-task.is-done,
+:root[data-theme="glass"] .weekly-goal-task.is-done {
+  background: var(--amber-750-14);
+  box-shadow: inset 0 0 0 1px var(--amber-750-40);
 }
 
 .weekly-day-col header {
