@@ -867,11 +867,6 @@ html[data-shell="mobile"] .minbox-due.is-soon {
   background: var(--accent-soft);
 }
 
-html[data-shell="mobile"] .minbox-due.is-scheduled {
-  color: var(--text-secondary);
-  background: var(--surface-sunken);
-}
-
 html[data-shell="mobile"] .minbox-due.is-none {
   color: var(--text-muted);
   border: 1px dashed var(--border-strong);

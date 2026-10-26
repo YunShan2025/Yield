@@ -80,14 +80,16 @@ describe("formatDueDateBadge", () => {
     });
   });
 
-  it("uses month/day beyond the week and adds the year across years", () => {
+  it("keeps concrete dates beyond the week but folds them into the soon style", () => {
+    // 用户定稿：统一的是样式不是文案——跨周仍显示具体日期,但并入当周蓝档。
     expect(formatDueDateBadge("2026-10-30", today)).toMatchObject({
       label: "10月30日",
-      tone: "scheduled",
+      tone: "soon",
+      title: "截止 2026年10月30日",
     });
     expect(formatDueDateBadge("2027-01-03", today)).toMatchObject({
       label: "2027年1月3日",
-      tone: "scheduled",
+      tone: "soon",
     });
   });
 });

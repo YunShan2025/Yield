@@ -2928,11 +2928,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   background: var(--accent-soft);
 }
 
-.due-chip.is-scheduled {
-  color: var(--text-secondary);
-  background: var(--surface-sunken);
-}
-
 .due-chip.is-none {
   color: var(--text-muted);
   background: transparent;

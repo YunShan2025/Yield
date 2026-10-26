@@ -115,7 +115,7 @@ export function formatDueDate(date: string | null): string {
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
 
-type DueDateTone = "overdue" | "today" | "soon" | "scheduled" | "none";
+type DueDateTone = "overdue" | "today" | "soon" | "none";
 
 interface DueDateBadge {
   label: string;
@@ -147,6 +147,7 @@ function parseCalendarDate(
 
 /**
  * 待办箱的截止日期徽标：逾期天数 / 今天 / 明天 / 后天 / 周X / 月日。
+ * 未来的日期无论当周还是跨周,配色统一走 soon 蓝档；
  * 只负责展示，不改变任务日期；today 参数便于测试。
  */
 export function formatDueDateBadge(
@@ -174,12 +175,13 @@ export function formatDueDateBadge(
     ];
     return { label: `周${weekday}`, tone: "soon", title };
   }
-
+  // 用户定稿：已排期统一的是样式不是文案——跨周仍给具体日期,
+  // 但配色并入当周的 soon 蓝档,不再另设灰色档。
   const label =
     target.year === base.year
       ? `${target.month}月${target.day}日`
       : `${target.year}年${target.month}月${target.day}日`;
-  return { label, tone: "scheduled", title };
+  return { label, tone: "soon", title };
 }
 
 export function parseDate(date: string): Date {
