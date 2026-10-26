@@ -167,11 +167,12 @@ export function WeeklyChecklistView() {
     return currentDateStreak([...days], today);
   }, [habitChecks, tasks, today]);
 
-  const goalLine = (id: WeeklyCategoryId) => {
+  // 分类行旁的备注：有任务就报数（本周有x项任务），不再拿首个任务名当副标题——
+  // 任务名长短不一、还会和右侧「已完成/总数」抢读；空类保留「本周暂无任务」。
+  const summaryLine = (id: WeeklyCategoryId) => {
     const bucket = categories.find((item) => item.category.id === id);
     if (!bucket || bucket.total === 0) return "本周暂无任务";
-    const active = bucket.tasks.find((task) => task.status !== "completed");
-    return active?.title ?? "本周目标已完成";
+    return `本周有${bucket.total}项任务`;
   };
 
   return (
@@ -310,7 +311,7 @@ export function WeeklyChecklistView() {
                   />
                 }
                 title={bucket.category.label}
-                meta={goalLine(bucket.category.id)}
+                meta={summaryLine(bucket.category.id)}
                 trailing={`${bucket.done}/${bucket.total}`}
                 toggleTitle={on ? "收起这一类" : "查看这一类的任务"}
               >
