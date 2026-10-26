@@ -306,6 +306,77 @@ html[data-shell="mobile"] .mtoday-hint {
   font-variant-numeric: tabular-nums;
 }
 
+/* 今日习惯：长条行式，与今日事项行同族同几何（界栏竖线 + 方点 + 事件名 + 行尾
+   .mtoday-check 打卡圈，48dp 命中区同款）。方点无优先级可表，取强调色；第二行
+   「本周 N/M 次」是行内徽标档（同 .mtoday-pill 组）；已打卡沉行尾、不淡出，
+   状态只由勾圈表示。 */
+html[data-shell="mobile"] .mtoday-habit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+html[data-shell="mobile"] .mtoday-habit-row {
+  display: flex;
+  /* 与事项行同几何：顶端对齐 + 内距 3px。行居中时方点落在 50% 处，
+     掐线头的固定偏移对不上点的位置，末行线就断在点上方。顶端对齐后
+     方点沿用基础档 top:8.4px，掐线值与事项行同用 12.9px（=点竖心）。
+     列距也不设：事件名直接贴界栏右缘，与事项行的标题距方点同密度。 */
+  align-items: flex-start;
+  padding: 3px 0;
+}
+
+html[data-shell="mobile"] .mtoday-habit-rail {
+  position: relative;
+  width: 16px;
+  align-self: stretch;
+  margin: -3px 0;
+  flex: none;
+}
+
+html[data-shell="mobile"] .mtoday-habit-rail::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+html[data-shell="mobile"] .mtoday-habit-row:first-child .mtoday-habit-rail::before {
+  top: 12.9px;
+}
+
+html[data-shell="mobile"] .mtoday-habit-row:last-child .mtoday-habit-rail::before {
+  bottom: auto;
+  height: 12.9px;
+}
+
+html[data-shell="mobile"] .mtoday-habit-rail .mtoday-dot {
+  background: var(--accent);
+}
+
+html[data-shell="mobile"] .mtoday-habit-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 第二行「本周 N/M 次」是行内徽标，不是散文字：规格并进 .mtoday-pill 那组共用规则；
+   身份色取次级墨（中性灰底），不与项目/标签/目标的彩色底抢身份。事件名→徽标行的
+   3px 上边距由 .mtoday-pills 基础档统一给，与事项行同一个值。 */
+html[data-shell="mobile"] .mtoday-pills .mtoday-habit-meta {
+  background: color-mix(in srgb, var(--text-secondary) var(--mt-pill-bg), transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 历史日期视角：打卡圈换成静态 span 后不再是操作件，指针与按压反馈撤掉。 */
+html[data-shell="mobile"] span.mtoday-check {
+  cursor: default;
+}
+
 html[data-shell="mobile"] .mtoday-empty {
   margin: 2px 0 4px;
   font-size: 0.812rem;
@@ -554,7 +625,8 @@ html[data-shell="mobile"] .mtoday-pills {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 6px;
+  /* 事件名→徽标行 3px：事项行与习惯行共用这一档，两种卡并排时纵向密度一致。 */
+  margin-top: 3px;
   flex-wrap: wrap;
 }
 
@@ -567,7 +639,8 @@ html[data-shell="mobile"] .mtoday-pills {
    .task-title）同档，唯一例外是分组折叠头的摘要行 .expand-row-meta，它按元信息走。 */
 html[data-shell="mobile"] .mtoday-title,
 html[data-shell="mobile"] .minbox-title,
-html[data-shell="mobile"] .mrow-title {
+html[data-shell="mobile"] .mrow-title,
+html[data-shell="mobile"] .mtoday-habit-name {
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.4;
@@ -581,6 +654,7 @@ html[data-shell="mobile"] .mrow-title {
 html[data-shell="mobile"] .mtoday-pill,
 html[data-shell="mobile"] .mrow .goal-chip,
 html[data-shell="mobile"] .mtoday-pills .goal-chip,
+html[data-shell="mobile"] .mtoday-pills .mtoday-habit-meta,
 html[data-shell="mobile"] .minbox-meta .goal-chip {
   padding: 2px 6px;
   border-radius: 5px;

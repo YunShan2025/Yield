@@ -16,7 +16,9 @@ import {
 } from "@/lib/dates";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
-import type { Task } from "@/types";
+import { matchesRepeatRule, parseRepeatRule, weeklyTargetFromRule } from "@/lib/repeat";
+import { mondayWeekDates } from "@/lib/weeklyChecklist";
+import type { Habit, Task } from "@/types";
 
 /** 一天的分钟数 —— 今日时段条按 0–24h 铺满。 */
 const DAY_MINUTES = 24 * 60;
@@ -71,6 +73,9 @@ export function TodayMobileView() {
   const openCreateTask = useAppStore((s) => s.openCreateTask);
   const requestFocus = useAppStore((s) => s.requestFocus);
   const setNav = useAppStore((s) => s.setNav);
+  const habits = useAppStore((s) => s.habits);
+  const habitChecks = useAppStore((s) => s.habitChecks);
+  const toggleHabitDay = useAppStore((s) => s.toggleHabitDay);
 
   const today = useTodayDate();
   const { goals, goalById } = useGoals();
@@ -93,18 +98,16 @@ export function TodayMobileView() {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const isViewToday = viewDate === today;
   const viewDay = new Date(`${viewDate}T00:00:00`);
-  // 副标题始终是完整日期锚点（跨年补年份），切换器标签负责说「今天 / 昨天」。
-  const viewDateLabel =
-    `${viewDay.getFullYear() === now.getFullYear() ? "" : `${viewDay.getFullYear()}年`}` +
-    `${viewDay.getMonth() + 1}月${viewDay.getDate()}日 · 星期${"日一二三四五六"[viewDay.getDay()]}`;
-  // 切换器标签：今天 / 昨天优先说人话，跨年补年份（与记账切月的「N月 / N年N月」同规）。
+  // 副标题回归一句格言，完整日期锚点搬进切换器标签：今天 / 昨天优先说人话，
+  // 跨年补年份（与记账切月的「N月 / N年N月」同规）。
+  const dateLabel =
+    (viewDay.getFullYear() === now.getFullYear() ? "" : `${viewDay.getFullYear()}年`) +
+    `${viewDay.getMonth() + 1}月${viewDay.getDate()}日`;
   const switchLabel = isViewToday
-    ? "今天"
+    ? `今天 · ${dateLabel}`
     : viewDate === addDays(today, -1)
-      ? "昨天"
-      : viewDay.getFullYear() === now.getFullYear()
-        ? `${viewDay.getMonth() + 1}月${viewDay.getDate()}日`
-        : `${viewDay.getFullYear()}年${viewDay.getMonth() + 1}月${viewDay.getDate()}日`;
+      ? `昨天 · ${dateLabel}`
+      : dateLabel;
 
   // 当日事项：根任务、截止在看的那一天，按时刻排（无时刻的排在后面）。
   const todaysTasks = useMemo(() => {
@@ -124,10 +127,52 @@ export function TodayMobileView() {
       });
   }, [tasks, viewDate]);
 
-  const doneCount = todaysTasks.filter(
-    (task) => task.status === "completed",
-  ).length;
-  const totalCount = todaysTasks.length;
+  // 今日习惯：按重复规则筛出该在看的那天打卡的习惯；顶卡读数按「任务 + 习惯」
+  // 合计（与桌面同口径），已打卡记为完成。
+  const dayHabits = useMemo(
+    () =>
+      habits.filter((habit) =>
+        matchesRepeatRule(viewDate, parseRepeatRule(habit.repeat_rule ?? null)),
+      ),
+    [habits, viewDate],
+  );
+  const checkedHabitIds = useMemo(
+    () =>
+      new Set(
+        habitChecks
+          .filter((item) => item.check_date === viewDate)
+          .map((item) => item.habit_id),
+      ),
+    [habitChecks, viewDate],
+  );
+  // 已打卡沉到行尾；完成态只由圈上勾表示，不淡出（移动壳统一规）。
+  const habitRows = useMemo(
+    () => [
+      ...dayHabits.filter((habit) => !checkedHabitIds.has(habit.id)),
+      ...dayHabits.filter((habit) => checkedHabitIds.has(habit.id)),
+    ],
+    [dayHabits, checkedHabitIds],
+  );
+  const habitsDoneCount = dayHabits.reduce(
+    (sum, habit) => sum + (checkedHabitIds.has(habit.id) ? 1 : 0),
+    0,
+  );
+  // 本周打卡进度（周一起算），长条第二行元信息用，与桌面习惯行同口径。
+  const habitWeekDone = useMemo(() => {
+    const weekDates = mondayWeekDates(viewDate);
+    const done = new Map<string, number>();
+    for (const check of habitChecks) {
+      if (check.check_date < weekDates[0] || check.check_date > weekDates[6]) continue;
+      done.set(check.habit_id, (done.get(check.habit_id) ?? 0) + 1);
+    }
+    return done;
+  }, [habitChecks, viewDate]);
+  const habitTargetOf = (habit: Habit) =>
+    Math.max(1, weeklyTargetFromRule(parseRepeatRule(habit.repeat_rule ?? null)) ?? habit.target_per_week);
+
+  const doneCount =
+    todaysTasks.filter((task) => task.status === "completed").length + habitsDoneCount;
+  const totalCount = todaysTasks.length + dayHabits.length;
   const remaining = totalCount - doneCount;
 
   // 今日时段：把所有带时刻的任务折成区间，再合并成连续的几段。
@@ -159,7 +204,7 @@ export function TodayMobileView() {
       <header className="mtoday-top">
         <div className="mtoday-top-text">
           <MobilePageTitle text="今日" />
-          <p>{viewDateLabel}</p>
+          <p>今日事，今日毕。</p>
         </div>
         {/* 日期切换：与记账页切月同构（搜索移去「更多」页头的同位圆钮）。 */}
         <div className="mtoday-day-switch" role="group" aria-label="切换日期">
@@ -298,6 +343,56 @@ export function TodayMobileView() {
             </div>
           </div>
         </section>
+
+        {habitRows.length ? (
+          <section className="mtoday-card" aria-label={isViewToday ? "今日习惯" : "当日习惯"}>
+            <div className="mtoday-shead">
+              <h3>{isViewToday ? "今日习惯" : "当日习惯"}</h3>
+              <span className="mtoday-hint">
+                {habitsDoneCount}/{dayHabits.length}
+              </span>
+            </div>
+            <ul className="mtoday-habit-list">
+              {habitRows.map((habit) => {
+                const checked = checkedHabitIds.has(habit.id);
+                // 翻看历史日期只展示当日打卡态，不提供补打卡。
+                return (
+                  <li key={habit.id} className={`mtoday-habit-row${checked ? " is-done" : ""}`}>
+                    <span className="mtoday-habit-rail" aria-hidden="true">
+                      <i className="mtoday-dot" />
+                    </span>
+                    <span className="mtoday-habit-body">
+                      <span className="mtoday-habit-name">{habit.title}</span>
+                      <span className="mtoday-pills">
+                        <span className="mtoday-habit-meta">
+                          本周 {habitWeekDone.get(habit.id) ?? 0}/{habitTargetOf(habit)} 次
+                        </span>
+                        <MobileGoalChip
+                          goal={habit.goal_id ? goalById.get(habit.goal_id) : undefined}
+                        />
+                      </span>
+                    </span>
+                    {isViewToday ? (
+                      <button
+                        type="button"
+                        className={`mtoday-check${checked ? " is-done" : ""}`}
+                        aria-pressed={checked}
+                        aria-label={checked ? `取消打卡 ${habit.title}` : `打卡 ${habit.title}`}
+                        onClick={() => void toggleHabitDay(habit.id, viewDate)}
+                      />
+                    ) : (
+                      <span
+                        className={`mtoday-check${checked ? " is-done" : ""}`}
+                        role="img"
+                        aria-label={checked ? "已打卡" : "未打卡"}
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
 
         <section className="mtoday-card" aria-label={isViewToday ? "今日事项" : "当日事项"}>
           {/* 节头不设「查看全部」：这里本就完整列出当天截止的任务，
