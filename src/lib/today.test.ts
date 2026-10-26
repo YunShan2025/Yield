@@ -66,6 +66,26 @@ describe("orderTodayTasks", () => {
     ]);
   });
 
+  it("sorts by due date before time for multi-day lists (待办箱)", () => {
+    // 回归：待办箱曾只按时间段排,「逾期 1 天 12:00」被排到「明天 09:00」之后。
+    const overdue = makeTask({ id: "overdue", due_date: "2026-10-20", due_time: "12:00" });
+    const tomorrowEarly = makeTask({ id: "tomorrow-early", due_date: "2026-10-22", due_time: "09:00" });
+    const tomorrowLate = makeTask({ id: "tomorrow-late", due_date: "2026-10-22", due_time: "14:00" });
+    const nextWeek = makeTask({ id: "next-week", due_date: "2026-10-27", due_time: "01:00" });
+    const unscheduled = makeTask({ id: "unscheduled", due_time: "08:00" });
+    expect(
+      orderTodayTasks([tomorrowLate, nextWeek, unscheduled, overdue, tomorrowEarly]).map(
+        (t) => t.id,
+      ),
+    ).toEqual([
+      "overdue",
+      "tomorrow-early",
+      "tomorrow-late",
+      "next-week",
+      "unscheduled",
+    ]);
+  });
+
   it("honors a saved manual order before the default rules", () => {
     const a = makeTask({ id: "a", due_time: "09:00" });
     const b = makeTask({ id: "b", due_time: "10:00" });

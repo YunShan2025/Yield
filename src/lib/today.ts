@@ -37,8 +37,10 @@ export function saveTodayOrder(cursor: string, ids: string[]): void {
 
 /**
  * Today board shows one flat "what to do today" list. A saved manual order
- * wins, then timed tasks before untimed ones (by start time), then priority,
- * then sort_order. Completed tasks always sink below the active run.
+ * wins, then earliest due date first (待办箱跨多天：逾期 < 未来 < 未安排；
+ * 今日/日视图同一天,该层恒等不落刀), then timed tasks before untimed ones
+ * (by start time), then priority, then sort_order. Completed tasks always
+ * sink below the active run.
  */
 export function orderTodayTasks(
   tasks: Task[],
@@ -50,6 +52,14 @@ export function orderTodayTasks(
     const ra = rank.get(a.id) ?? UNRANKED;
     const rb = rank.get(b.id) ?? UNRANKED;
     if (ra !== rb) return ra - rb;
+    // 日期先于时间：待办箱是跨天的平铺列表,只按时间段排会把「逾期 1 天」
+    // 排进下周任务之后。未安排（无日期）沉到已排期之后,与移动待办箱的
+    // 逾期/已排期/未安排分区同序。
+    if (a.due_date !== b.due_date) {
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return a.due_date < b.due_date ? -1 : 1;
+    }
     const ta = parseTimeToMinutes(a.due_time);
     const tb = parseTimeToMinutes(b.due_time);
     if (ta !== null && tb !== null && ta !== tb) return ta - tb;
