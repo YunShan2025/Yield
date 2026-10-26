@@ -14,7 +14,6 @@ import type {
   Timer,
   TimerDraft,
   ViewMode,
-  DateScope,
   FocusRequest,
 } from "@/types";
 import * as db from "@/lib/db";
@@ -57,7 +56,6 @@ interface AppStore {
   settings: AppSettings;
   nav: NavId;
   viewMode: ViewMode;
-  dateScope: DateScope;
   calendarCursor: string;
   selectedTaskId: string | null;
   detailPreferEdit: boolean;
@@ -78,7 +76,6 @@ interface AppStore {
   refreshAll: () => Promise<void>;
   setNav: (nav: NavId) => void;
   setViewMode: (mode: ViewMode) => void;
-  setDateScope: (scope: DateScope) => void;
   setCalendarCursor: (date: string) => void;
   selectTask: (id: string | null, opts?: { edit?: boolean }) => void;
   openCreateTask: (opts?: { inbox?: boolean; goalId?: string }) => void;
@@ -186,7 +183,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
   nav: "today",
   viewMode: "board",
-  dateScope: "day",
   calendarCursor: todayDateString(),
   selectedTaskId: null,
   detailPreferEdit: false,
@@ -282,12 +278,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({
       nav,
       selectedTaskId: null,
-      dateScope:
-        nav === "today" || nav === "inbox"
-          ? "day"
-          : nav === "calendar"
-            ? "month"
-            : get().dateScope,
       calendarCursor:
         nav === "today" || nav === "week" || nav === "inbox"
           ? todayDateString()
@@ -301,7 +291,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
   },
   setViewMode: (viewMode) => set({ viewMode }),
-  setDateScope: (dateScope) => set({ dateScope }),
   setCalendarCursor: (calendarCursor) => set({ calendarCursor }),
   selectTask: (selectedTaskId, opts) =>
     set({

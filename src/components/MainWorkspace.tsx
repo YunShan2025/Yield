@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -19,9 +19,8 @@ import {
   filterTasksByView,
   getEmptyMessage,
   getViewTitle,
-  isActiveTask,
 } from "@/lib/tasks";
-import { formatDueDate, formatTimeRange, todayDateString, addDays, formatLongDate, formatStamp, weekDates, parseDate, startOfWeek, parseTimeToMinutes } from "@/lib/dates";
+import { formatDueDate, formatStamp } from "@/lib/dates";
 import type { Goal, Habit, Project, Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { AppIcon } from "@/components/AppIcon";
@@ -160,350 +159,9 @@ function BoardView({ tasks }: { tasks: Task[] }) {
 }
 
 
-function WeekBoard() {
-  const allTasks = useAppStore((s) => s.tasks);
-  const cursor = useAppStore((s) => s.calendarCursor);
-  const setCalendarCursor = useAppStore((s) => s.setCalendarCursor);
-  const selectTask = useAppStore((s) => s.selectTask);
-  const saveTask = useAppStore((s) => s.saveTask);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const today = todayDateString();
-  const weekStart = startOfWeek(cursor);
-  const days = weekDates(cursor);
-  const weekLabel = `${formatLongDate(days[0])} – ${parseDate(days[6]).getMonth() + 1}月${parseDate(days[6]).getDate()}日`;
 
-  const weekTasks = useMemo(() => {
-    const end = addDays(weekStart, 6);
-    return allTasks.filter(
-      (t) =>
-        !t.parent_id &&
-        !t.deleted_at &&
-        t.due_date !== null &&
-        t.due_date >= weekStart &&
-        t.due_date <= end,
-    );
-  }, [allTasks, weekStart]);
 
-  const pending = weekTasks.filter(isActiveTask).length;
-  const done = weekTasks.filter((t) => t.status === "completed").length;
 
-  const hourStart = 8;
-  const hours = Array.from({ length: 15 }, (_, i) => i + hourStart); // 08–22
-  const slotH = 48;
-  const now = new Date();
-  const nowDay = today;
-  const nowTop =
-    ((now.getHours() - hourStart) * 60 + now.getMinutes()) / 60 * slotH;
-
-  const weekday = ["日", "一", "二", "三", "四", "五", "六"];
-
-  // 自动滚到当前时间，避免晚上的任务看起来像“没显示”
-  useEffect(() => {
-    const el = bodyRef.current;
-    if (!el) return;
-    const target = Math.max(0, nowTop - 80);
-    el.scrollTop = target;
-  }, [weekStart, nowTop]);
-
-  return (
-    <div className="scope-board">
-      <div className="scope-nav">
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => setCalendarCursor(addDays(cursor, -7))}
-        >
-          ‹
-        </button>
-        <div className="week-board-title">
-          <span className="week-board-kicker">周历 · 按时间查看</span>
-          <strong>{weekLabel}</strong>
-        </div>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => setCalendarCursor(addDays(cursor, 7))}
-        >
-          ›
-        </button>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => setCalendarCursor(today)}
-        >
-          今日
-        </button>
-      </div>
-
-      <div className="scope-summary">
-        <div className="scope-card">
-          <span>本周待办</span>
-          <strong>{pending}</strong>
-        </div>
-        <div className="scope-card">
-          <span>本周完成</span>
-          <strong>{done}</strong>
-        </div>
-      </div>
-
-      {weekTasks.length ? (
-        <div className="week-task-strip">
-          {weekTasks.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`week-chip ${t.status === "completed" ? "is-done" : ""}`}
-              onClick={() => selectTask(t.id)}
-              title={`${t.due_date} ${formatTimeRange(t.due_time, t.end_time)}`}
-            >
-              <span className="week-chip-date">
-                {t.due_date?.slice(5)} {formatTimeRange(t.due_time, t.end_time)}
-              </span>
-              {t.title}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="scope-empty">
-          本周暂无带日期的任务。若要按工作/生活等分类查看，请打开侧栏「周清单」。
-        </div>
-      )}
-
-      <div className="week-board" ref={bodyRef}>
-        <div className="week-head">
-          <div className="week-gutter" />
-          {days.map((date) => {
-            const d = parseDate(date);
-            return (
-              <div
-                key={date}
-                className={`week-day-head ${date === today ? "is-today" : ""}`}
-              >
-                <span>{weekday[d.getDay()]}</span>
-                <strong>{d.getDate()}</strong>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="week-allday">
-          <div className="week-gutter">
-            <span className="week-allday-label">全天</span>
-          </div>
-          {days.map((date) => (
-            <div key={date} className="week-allday-cell">
-              {weekTasks
-                .filter((t) => t.due_date === date && !t.due_time)
-                .map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`week-allday-event ${t.status === "completed" ? "is-done" : ""}`}
-                    onClick={() => selectTask(t.id)}
-                  >
-                    {t.title}
-                  </button>
-                ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="week-body">
-          <div className="week-gutter">
-            {hours.map((h) => (
-              <div key={h} className="week-hour" style={{ height: slotH }}>
-                {String(h).padStart(2, "0")}:00
-              </div>
-            ))}
-          </div>
-          {days.map((date) => (
-            <div
-              key={date}
-              className="week-col"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const id = e.dataTransfer.getData("text/task");
-                if (id) void saveTask(id, { due_date: date });
-              }}
-            >
-              {hours.map((h) => (
-                <div key={h} className="week-slot" style={{ height: slotH }} />
-              ))}
-              {date === nowDay &&
-              now.getHours() >= hourStart &&
-              now.getHours() <= hourStart + hours.length - 1 ? (
-                <div className="now-line week-now" style={{ top: nowTop }} />
-              ) : null}
-              {weekTasks
-                .filter((t) => t.due_date === date && t.due_time)
-                .map((t) => {
-                  const startMin = parseTimeToMinutes(t.due_time)!;
-                  const endMin =
-                    parseTimeToMinutes(t.end_time) ?? startMin + 60;
-                  const duration = Math.max(30, endMin - startMin);
-                  const top =
-                    ((startMin - hourStart * 60) / 60) * slotH;
-                  const height = Math.max(28, (duration / 60) * slotH);
-                  const timeLabel = formatTimeRange(t.due_time, t.end_time);
-                  const compact = height < 44;
-                  return (
-                    <div
-                      key={t.id}
-                      className={`week-event p${t.priority ?? 3} ${compact ? "is-compact" : ""} ${t.status === "completed" ? "is-done" : ""}`}
-                      style={{
-                        top: Math.max(0, top),
-                        height,
-                      }}
-                      title={`${timeLabel} ${t.title}`}
-                      draggable
-                      onDragStart={(e) =>
-                        e.dataTransfer.setData("text/task", t.id)
-                      }
-                      onClick={() => selectTask(t.id)}
-                    >
-                      {compact ? null : (
-                        <span className="week-event-time">{timeLabel}</span>
-                      )}
-                      <span className="week-event-title">{t.title}</span>
-                    </div>
-                  );
-                })}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MonthBoard() {
-  const allTasks = useAppStore((s) => s.tasks);
-  const cursor = useAppStore((s) => s.calendarCursor);
-  const setCalendarCursor = useAppStore((s) => s.setCalendarCursor);
-  const setDateScope = useAppStore((s) => s.setDateScope);
-  const selectTask = useAppStore((s) => s.selectTask);
-  const saveTask = useAppStore((s) => s.saveTask);
-  const today = todayDateString();
-
-  const year = Number(cursor.slice(0, 4));
-  const month = Number(cursor.slice(5, 7)) - 1;
-  const first = new Date(year, month, 1);
-  const startPad = first.getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells: { date: string | null; day: number | null }[] = [];
-  for (let i = 0; i < startPad; i++) cells.push({ date: null, day: null });
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    cells.push({ date, day: d });
-  }
-
-  const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-  const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
-  const monthTasks = allTasks.filter(
-    (t) =>
-      !t.parent_id &&
-      !t.deleted_at &&
-      t.due_date !== null &&
-      t.due_date >= monthStart &&
-      t.due_date <= monthEnd,
-  );
-  const pending = monthTasks.filter(isActiveTask).length;
-  const done = monthTasks.filter((t) => t.status === "completed").length;
-
-  const shiftMonth = (delta: number) => {
-    const d = new Date(year, month + delta, 1);
-    setCalendarCursor(
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`,
-    );
-  };
-
-  return (
-    <div className="scope-board">
-      <div className="scope-nav">
-        <button type="button" className="btn-ghost" onClick={() => shiftMonth(-1)}>
-          ‹
-        </button>
-        <strong>
-          {year}年{month + 1}月
-        </strong>
-        <button type="button" className="btn-ghost" onClick={() => shiftMonth(1)}>
-          ›
-        </button>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => setCalendarCursor(today)}
-        >
-          今日
-        </button>
-      </div>
-
-      <div className="scope-summary">
-        <div className="scope-card">
-          <span>本月待办</span>
-          <strong>{pending || "本月无待办"}</strong>
-        </div>
-        <div className="scope-card">
-          <span>本月完成</span>
-          <strong>{done}</strong>
-        </div>
-      </div>
-
-      <div className="calendar-grid month-grid">
-        {["日", "一", "二", "三", "四", "五", "六"].map((w) => (
-          <div key={w} className="cal-weekday">
-            {w}
-          </div>
-        ))}
-        {cells.map((cell, idx) => (
-          <div
-            key={idx}
-            className={`cal-cell ${cell.date ? "" : "muted"} ${cell.date === today ? "is-today" : ""}`}
-            onClick={() => {
-              if (cell.date) {
-                setCalendarCursor(cell.date);
-                setDateScope("day");
-              }
-            }}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              const id = e.dataTransfer.getData("text/task");
-              if (id && cell.date) void saveTask(id, { due_date: cell.date });
-            }}
-          >
-            {cell.day ? <div className="cal-day">{cell.day}</div> : null}
-            {cell.date
-              ? allTasks
-                  .filter(
-                    (t) =>
-                      !t.parent_id &&
-                      !t.deleted_at &&
-                      t.due_date === cell.date,
-                  )
-                  .slice(0, 3)
-                  .map((t) => (
-                    <div
-                      key={t.id}
-                      className={`cal-task ${t.status === "completed" ? "is-done" : ""}`}
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData("text/task", t.id)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        selectTask(t.id);
-                      }}
-                    >
-                      {t.title}
-                    </div>
-                  ))
-              : null}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function TrashView() {
   const trashTasks = useAppStore((s) => s.trashTasks);
@@ -880,8 +538,6 @@ function TrashView() {
 export function MainWorkspace() {
   const nav = useAppStore((s) => s.nav);
   const setViewMode = useAppStore((s) => s.setViewMode);
-  const dateScope = useAppStore((s) => s.dateScope);
-  const setDateScope = useAppStore((s) => s.setDateScope);
   const tasks = useAppStore((s) => s.tasks);
   const tagMap = useAppStore((s) => s.tagMap);
   const activeTagId = useAppStore((s) => s.activeTagId);
@@ -894,11 +550,8 @@ export function MainWorkspace() {
 
   useEffect(() => {
     if (nav === "board") setViewMode("board");
-    if (nav === "calendar") {
-      setViewMode("calendar");
-      setDateScope("month");
-    }
-  }, [nav, setViewMode, setDateScope]);
+    if (nav === "calendar") setViewMode("calendar");
+  }, [nav, setViewMode]);
 
   // 移动端壳：今日页走单列卡片流（src/components/mobile/views/），
   // 与桌面多栏工作台是两套视图层；共享语义 token，不共享结构。
@@ -1000,7 +653,6 @@ export function MainWorkspace() {
   }
 
   const useScopeBoard = nav !== "board";
-  const showDateScope = nav !== "inbox" && useScopeBoard;
 
   return (
     <main className="main-workspace">
@@ -1015,28 +667,14 @@ export function MainWorkspace() {
           ) : null}
         </div>
         <div className="top-controls">
-          {showDateScope ? (
-            <>
-              <div className="seg">
-                {(["day", "week", "month"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className={dateScope === s ? "active" : ""}
-                    onClick={() => setDateScope(s)}
-                  >
-                    {s === "day" ? "日" : s === "week" ? "周" : "月"}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => openCreateTask()}
-              >
-                新建任务
-              </button>
-            </>
+          {nav === "today" ? (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => openCreateTask()}
+            >
+              新建任务
+            </button>
           ) : nav === "inbox" ? (
             <button
               type="button"
@@ -1049,9 +687,7 @@ export function MainWorkspace() {
         </div>
       </div>
 
-      {useScopeBoard && (nav === "inbox" || dateScope === "day") ? <DayBoard /> : null}
-      {showDateScope && dateScope === "week" ? <WeekBoard /> : null}
-      {showDateScope && dateScope === "month" ? <MonthBoard /> : null}
+      {useScopeBoard ? <DayBoard /> : null}
       {!useScopeBoard ? <BoardView tasks={visible} /> : null}
     </main>
   );

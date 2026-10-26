@@ -35,8 +35,6 @@ export function WeeklyChecklistView() {
   const projects = useAppStore((s) => s.projects);
   const calendarCursor = useAppStore((s) => s.calendarCursor);
   const setCalendarCursor = useAppStore((s) => s.setCalendarCursor);
-  const setNav = useAppStore((s) => s.setNav);
-  const setDateScope = useAppStore((s) => s.setDateScope);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
   const selectTask = useAppStore((s) => s.selectTask);
   const habitChecks = useAppStore((s) => s.habitChecks);
@@ -129,18 +127,6 @@ export function WeeklyChecklistView() {
           >
             下周 ›
           </button>
-          {!isMobileShell() ? (
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => {
-                setNav("today");
-                setDateScope("week");
-              }}
-            >
-              打开周历
-            </button>
-          ) : null}
         </div>
       </div>
 
