@@ -4575,6 +4575,20 @@ html[data-shell="mobile"] .mrow-tail {
   white-space: nowrap;
 }
 
+/* 完成戳徽标移动规格：随 .minbox-due 同档（18px 高 / 5px 径 / 0.656rem 600），
+   桌面 pill 形在移动收成小圆角矩形，与日期药丸同一枚族形。 */
+html[data-shell="mobile"] .done-chip {
+  align-self: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 0.656rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
 /* 16.3 变体：day = 当周日历（密集档内边距同今日页 .mtoday-row 的 3px，一屏七天要省
    垂直空间）；plain = 标签页项目行（无完成钮，靠 min-height 兜到 44dp）。
    行高主要由 48dp 的完成钮决定（它上下各 -3px 外边距），与待办 .minbox-row 同档。

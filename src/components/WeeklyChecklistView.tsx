@@ -12,7 +12,6 @@ import {
 } from "@/lib/weeklyChecklist";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
-import { AppIcon } from "@/components/AppIcon";
 import { ExpandRow } from "@/components/ExpandRow";
 import { formatDueDateBadge, priorityLabel } from "@/lib/dates";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
@@ -95,7 +94,7 @@ function WeeklyTaskRow({
               {goal.title}
             </span>
           ) : null}
-          {stamp ? <span className="weekly-goal-task-stamp">{stamp} 完成</span> : null}
+          {stamp ? <span className="done-chip">{stamp} 完成</span> : null}
         </span>
       </button>
       <button
@@ -104,9 +103,7 @@ function WeeklyTaskRow({
         aria-label={done ? `取消完成 ${task.title}` : `完成 ${task.title}`}
         aria-pressed={done}
         onClick={onComplete}
-      >
-        {done ? <AppIcon name="check" size={13} /> : null}
-      </button>
+      />
     </div>
   );
 }

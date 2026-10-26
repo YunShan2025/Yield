@@ -2937,6 +2937,22 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
+/* 完成戳徽标：已完成行不标截止徽标，完成日是行上唯一的日期信息，同样收进
+   徽标而非素文本「M/D 完成」。形随 due-chip、中性墨色——完成的金色留给行底
+   与勾选钮表达，徽标本身不参与状态。双端同源同文案（移动规格见 mobile.css）。 */
+.done-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  color: var(--text-label);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* 归属胶囊（项目/标签）：与目标徽标同规，身份色走 --pill-color（与移动壳
    归属胶囊同一数据源同色）。 */
 .task-pill {
@@ -4969,10 +4985,7 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
 .weekly-goal-task-pdot.pr3 { background: var(--prio-3); }
 .weekly-goal-task-pdot.pr4 { background: var(--prio-4); }
 
-.weekly-goal-task-stamp {
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
+/* 完成戳不再用行内素文本：改挂双端共用的 .done-chip 徽标（见 due-chip 旁）。 */
 
 .weekly-goal-task-check {
   flex: none;
@@ -4981,7 +4994,7 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1.5px solid var(--border-strong);
+  border: 1.6px solid var(--border-strong);
   border-radius: 50%;
   background: transparent;
   color: var(--text-primary);
@@ -5005,8 +5018,16 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
 
 .weekly-goal-task.is-done .weekly-goal-task-check {
   border-color: transparent;
-  color: var(--ink-950-g);
   background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+}
+
+/* 完成勾与移动壳 .mtoday-check.is-done 同一形制：实心圆上一枚白色粗勾
+   （AppIcon 的圈中勾退场——钮本身就是圈，再套一环成了双圈）。底色仍是成就金。 */
+.weekly-goal-task.is-done .weekly-goal-task-check::after {
+  content: "";
+  width: 13px;
+  height: 13px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9 17.5l-5-5'/%3E%3C/svg%3E") no-repeat center / 13px 13px;
 }
 
 :root[data-theme="dark"] .weekly-goal-task.is-done,

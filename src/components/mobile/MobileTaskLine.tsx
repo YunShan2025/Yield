@@ -129,7 +129,11 @@ export function MobileTaskLine({
           </span>
         ) : null}
       </span>
-      {stamp || tail ? <span className="mrow-tail">{stamp ?? tail}</span> : null}
+      {stamp ? (
+        <span className="done-chip">{stamp} 完成</span>
+      ) : tail ? (
+        <span className="mrow-tail">{tail}</span>
+      ) : null}
       <button
         type="button"
         className={`mtoday-check${done ? " is-done" : ""}`}
