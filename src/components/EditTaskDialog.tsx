@@ -4,6 +4,7 @@ import type { Goal, TaskPriority } from "@/types";
 import { TimeRangeFields } from "@/components/TimePicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
+import { AutoGrowTextarea } from "@/components/AutoGrowTextarea";
 import { sortProjectsByName } from "@/lib/projects";
 import { fetchGoals } from "@/lib/db";
 import { ensureEndAfterStart } from "@/lib/dates";
@@ -176,7 +177,7 @@ export function EditTaskDialog() {
           <button type="button" aria-label="关闭" onClick={close}>×</button>
         </div>
         <label>任务名称<input ref={titleRef} value={title} placeholder="现在要完成什么？" onChange={(event) => setTitle(event.target.value)} /></label>
-        <label>任务说明<textarea value={description} placeholder="可选：补充背景或完成标准" onChange={(event) => setDescription(event.target.value)} /></label>
+        <label>任务说明<AutoGrowTextarea value={description} placeholder="可选：补充背景或完成标准" onChange={(event) => setDescription(event.target.value)} /></label>
         <div className="create-task-grid">
           <label>优先级<SelectMenu ariaLabel="优先级" value={String(priority)} onChange={(value) => setPriority(Number(value) as TaskPriority)} options={[{ value: "1", label: "P1 紧急" }, { value: "2", label: "P2 高" }, { value: "3", label: "P3 普通" }, { value: "4", label: "P4 低" }]} /></label>
 

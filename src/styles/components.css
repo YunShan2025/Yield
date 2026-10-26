@@ -2349,7 +2349,10 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 
 .create-task-modal label { display: grid; gap: 7px; color: var(--text-secondary); font-size: var(--font-size-label); font-weight: 700; }
 .create-task-modal input, .create-task-modal select, .create-task-modal textarea { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); background: var(--surface-panel); font: inherit; }
-.create-task-modal textarea { min-height: 76px; resize: vertical; }
+/* 任务说明：默认一行,随内容逐行自动长高（AutoGrowTextarea 计算高度）,到
+   max-height 封顶后内部滚动。旧「固定 76px 起步 + resize: vertical」退场——
+   手动拖拽与自动长高会互相抢高度,一并交给组件。 */
+.create-task-modal textarea { max-height: 200px; overflow-y: auto; resize: none; }
 /* 控件等高：input 与 select 原生高度不同（42/36），同行混排时底边不齐。
    移动端另有 min-height:48，min-height 优先于 height，触控尺寸不受影响。 */
 .create-task-modal input, .create-task-modal .select-btn, .create-task-modal .date-picker-trigger { height: 40px; box-sizing: border-box; }
