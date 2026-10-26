@@ -1772,12 +1772,6 @@ html[data-shell="mobile"] .version-update-notice {
     display: none;
   }
 
-  /* 详情抽屉与记账面板占满屏宽。 */
-  .app-body.detail-open .detail-panel {
-    width: 100vw;
-    max-width: 100vw;
-  }
-
   .ledger-drawer {
     width: 100vw;
   }

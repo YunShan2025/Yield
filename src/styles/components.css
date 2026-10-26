@@ -113,15 +113,7 @@ select {
   position: relative;
 }
 
-/* 抽屉为覆盖层:固定在窗口右侧浮于内容之上,主区列宽不因打开抽屉而变化。 */
-.app-body.detail-open .detail-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(420px, 36vw);
-  z-index: 30;
-}
+/* 备忘录阅读抽屉(.memo-detail-panel)自带定位;.detail-panel 只提供面板骨架。 */
 
 .app-body.nav-collapsed {
   grid-template-columns: 1fr;
@@ -1566,16 +1558,6 @@ select {
   font-weight: 700;
 }
 
-.detail-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 8px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .detail-footer {
   flex-shrink: 0;
   display: flex;
@@ -1624,124 +1606,6 @@ select {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.panel-head-task {
-  align-items: flex-start;
-  padding: 18px 20px 10px;
-}
-
-.panel-head-task .detail-view-title {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--font-size-h2);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.35;
-}
-
-.detail-close {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  min-height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  background: none;
-  cursor: pointer;
-}
-
-.detail-close:hover {
-  color: var(--text-primary);
-  background: var(--surface-hover);
-}
-
-/* 主信息：日期与时间。打开抽屉第一眼要看的就是「什么时候」。 */
-.detail-lead {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  margin: 0;
-  color: var(--text-primary);
-  font: 700 var(--font-size-h2)/1.3 var(--font-display);
-  letter-spacing: -0.015em;
-  font-variant-numeric: tabular-nums;
-}
-
-.detail-lead-time {
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-/* 到期语气统一：is-overdue 由 formatDueDateBadge 一直挂在桌面抽屉日期上，
-   此前只有移动壳有样式、桌面是死类——接通契约墨色，与标签行标题同一种红。 */
-.detail-lead-date.is-overdue {
-  color: var(--text-overdue);
-}
-
-.detail-view-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  line-height: 1.35;
-  flex: 1;
-}
-
-.detail-view-desc {
-  margin: 0;
-  font-size: var(--font-size-body);
-  line-height: 1.6;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-}
-
-.detail-form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 13px;
-}
-
-@media (max-width: 620px) {
-  .detail-form-row { grid-template-columns: 1fr; }
-}
-
-/* 元信息：一列字段表，标签在左、值在右，发丝线分隔。
-   原来六张带边框的灰底小卡，是「同尺寸小卡当内容结构」—— 卡片是懒容器，
-   嵌套卡片更糟。 */
-.detail-meta-grid {
-  border-top: 1px solid var(--border);
-}
-
-.detail-meta {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  align-items: baseline;
-  gap: 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.detail-meta > .field-label {
-  flex: 0 0 auto;
-}
-
-.detail-meta strong {
-  min-width: 0;
-  font-size: var(--font-size-body);
-  font-weight: 600;
-}
-
-.detail-meta .prio.p1 {
-  color: var(--rose-550);
-}
-
-.detail-meta .prio.p2 {
-  color: var(--amber-800);
 }
 
 .field-label {
@@ -3220,18 +3084,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   }
 }
 
-@media (max-width: 900px) {
-  /* 窄屏下抽屉覆盖层收窄到 min(400px, 100%),其余布局沿用全局规则。 */
-  .app-body.detail-open .detail-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(400px, 100%);
-    z-index: 30;
-  }
-}
-
 /* ── 原 global-08-reminders.css ────────────────────────────────────────── */
 /* Reminders / timers */
 /* 滚动宿主:主区列高度有界,内容不足时也铺满,滚动条始终可达底部。 */
@@ -4056,14 +3908,6 @@ html[data-nav="railed"] .nav-edge-collapse {
   box-shadow: -14px 0 42px var(--slate-200-11);
 }
 
-/* 字段行不再做小卡：1px 边框 + 灰底 + 圆角 = 一堆灰盒子。 */
-.detail-meta {
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: none;
-}
-
 /* ── 原 polish-01-overrides.css ────────────────────────────────────────── */
 /* Final UI polish. Loaded after global.css to isolate legacy cascade. */
 
@@ -4256,26 +4100,6 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .scope-board::-webkit-scrollbar-thumb:hover {
-  background: var(--steel-500-60);
-}
-
-/* 任务抽屉内容区:子项禁止被 flex 压缩,超高时由容器整体滚动,
-   避免「计划信息」等区块在内容溢出时被挤到只剩边框(2px 不可见)。 */
-.detail-body > * {
-  flex: none;
-}
-
-/* 任务抽屉滚动区:显式滚动条,保证长内容可拖动查看(仅 webkit,理由同上)。 */
-.detail-body::-webkit-scrollbar {
-  width: 10px;
-}
-
-.detail-body::-webkit-scrollbar-thumb {
-  border-radius: var(--radius-pill);
-  background: var(--steel-500-42);
-}
-
-.detail-body::-webkit-scrollbar-thumb:hover {
   background: var(--steel-500-60);
 }
 
@@ -6000,7 +5824,6 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 .app-root[data-privacy="on"] :is(
   .task-title,
   .weekly-day-title,
-  .detail-view-title,
   .memo-list-title-copy,
   .memo-reading-surface,
   .ledger-stat-grid strong,

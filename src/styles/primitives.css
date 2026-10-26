@@ -649,24 +649,6 @@ button:active:not(:disabled) {
   letter-spacing: -0.02em;
 }
 
-.detail-body {
-  padding: 15px 20px 24px;
-}
-
-.detail-view-title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-}
-
-/* 字段行不再做小卡：1px 边框 + 灰底 + 圆角 = 一堆灰盒子。 */
-.detail-meta {
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: none;
-}
-
 /* ── 原 global-04-structural-v2.css ────────────────────────────────────────── */
 /* Structural refresh v2 */
 body {

@@ -2174,31 +2174,15 @@ html[data-shell="mobile"] .mmore-foot {
 }
 
 /* ==================================================================
-   ---------- 任务详情抽屉：底部弹层家族（2026-10-23） ----------
-   桌面是右侧抽屉，移动壳转成与「新建任务/记一笔」同族的底部面板：
-   92dvh 上限、顶部圆角 + 握把、sheetUp 入场；信息区改 sunken 日期行 +
-   设置式信息行；动作条 48dp，「删除任务」按 action-sheet-danger 同族
-   降为整行危险按钮。本文件最后加载，html[data-shell] 前缀稳压
+   ---------- 底部弹层家族 · 共享抽屉骨架（2026-10-23） ----------
+   任务详情抽屉已移除（点行改开「编辑任务」弹层），本层保留仍被备忘录
+   阅读抽屉（.detail-panel.memo-detail-panel）命中的共享件：顶部握把、
+   sheet 页头、48dp 动作条；弹层定位/入场由 .memo-detail-panel 自己声明
+   （见下方备忘录层）。本文件最后加载，html[data-shell] 前缀稳压
    components.css/views.css 的共享抽屉规则，桌面版不受影响。
    ================================================================== */
 
-html[data-shell="mobile"] .app-body.detail-open .detail-panel {
-  top: auto;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  margin: 0 auto;
-  width: min(100vw, 560px);
-  max-height: 92vh;
-  max-height: 92dvh;
-  border: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  background: var(--mobile-overlay-surface);
-  box-shadow: 0 -18px 48px var(--ink-950-m-24);
-  animation: sheetUp calc(180ms * var(--motion-scale)) ease-out;
-}
-
-/* 握把：抽屉本体不滚动（detail-body 负责滚动），作为首个 flex 项固定顶部。 */
+/* 握把：面板本体不滚动（memo-drawer-body 负责滚动），作为首个 flex 项固定顶部。 */
 html[data-shell="mobile"] .detail-panel::before {
   content: "";
   flex: none;
@@ -2219,124 +2203,6 @@ html[data-shell="mobile"] .detail-panel .panel-head h3 {
   font-size: var(--font-size-body);
   font-weight: 650;
   letter-spacing: normal;
-}
-
-html[data-shell="mobile"] .panel-head-task .detail-view-title {
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: 650;
-  letter-spacing: normal;
-}
-
-/* 关闭钮 28px → 44dp（action-sheet-close 同款）。 */
-html[data-shell="mobile"] .detail-panel .detail-close {
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
-  margin: -8px -10px 0 0;
-  border-radius: var(--radius-md);
-}
-
-html[data-shell="mobile"] .detail-body {
-  padding: 6px 20px 20px;
-  overscroll-behavior: contain;
-}
-
-/* 查看态 · 首要信息行：衬线大数字 → sunken 日期行
-   （「…」面板 action-sheet-date 同容器，时间靠右成对读）。 */
-html[data-shell="mobile"] .detail-lead {
-  align-items: center;
-  gap: 2px 8px;
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  font: 500 var(--font-size-body)/1.4 var(--font-body);
-  letter-spacing: normal;
-}
-
-html[data-shell="mobile"] .detail-lead .detail-lead-time {
-  margin-left: auto;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-/* 逾期/今天/明天徽标：文案由 data-badge 属性注入，仅移动壳生效。 */
-html[data-shell="mobile"] .detail-lead-date::after {
-  content: attr(data-badge);
-  margin-left: 8px;
-  font-size: var(--font-size-label);
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-html[data-shell="mobile"] .detail-lead-date:not([data-badge])::after {
-  content: none;
-}
-
-html[data-shell="mobile"] .detail-lead-date.is-overdue::after {
-  color: var(--text-overdue);
-}
-
-html[data-shell="mobile"] .detail-lead-date.is-today::after,
-html[data-shell="mobile"] .detail-lead-date.is-soon::after {
-  color: var(--accent-strong);
-}
-
-/* 描述是查看态正文，从辅助灰提到主文本色。 */
-html[data-shell="mobile"] .detail-view-desc {
-  color: var(--text-primary);
-}
-
-/* 查看态 · 元信息：「标签在上值在下」→ 设置式行（标签左、值右、发丝线）。 */
-html[data-shell="mobile"] .detail-meta-grid {
-  border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-}
-
-html[data-shell="mobile"] .detail-meta {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 16px;
-  padding: 13px 0;
-  border-bottom-color: color-mix(in srgb, var(--border) 55%, transparent);
-}
-
-html[data-shell="mobile"] .detail-meta > .field-label {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-label);
-  font-weight: 500;
-  letter-spacing: normal;
-  text-transform: none;
-}
-
-html[data-shell="mobile"] .detail-meta strong {
-  justify-self: end;
-  text-align: right;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-/* 优先级点 = 「…」面板优先级按钮同款圆点（p3 为默认灰）。 */
-html[data-shell="mobile"] .detail-meta .prio::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 7px;
-  border-radius: 50%;
-  background: var(--prio-3);
-}
-
-html[data-shell="mobile"] .detail-meta .prio.p1::before {
-  background: var(--prio-1);
-}
-
-html[data-shell="mobile"] .detail-meta .prio.p2::before {
-  background: var(--prio-2);
-}
-
-html[data-shell="mobile"] .detail-meta .prio.p4::before {
-  background: var(--prio-4);
 }
 
 /* 动作条：48dp 双等宽列 + 删除整行危险钮（action-sheet-danger 同族配色）。
@@ -2375,53 +2241,6 @@ html[data-shell="mobile"] .detail-footer .btn-ghost.danger {
   background: color-mix(in srgb, var(--text-overdue) 9%, transparent);
   color: var(--text-overdue);
   font-weight: 600;
-}
-
-/* 编辑态：字段语言整体沿用「新建任务」——13px/600 section-title 标签 +
-   sunken 无边框控件（focus 浮回白底描边），48dp 触控目标。
-   用 :not(.detail-view) 把规则限定在编辑态 body，不窜扰查看态信息行标签。 */
-html[data-shell="mobile"] .detail-body:not(.detail-view) .field-label {
-  margin-bottom: 8px;
-  color: var(--text-muted);
-  font-size: var(--font-size-label);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-html[data-shell="mobile"] .detail-body:not(.detail-view) input:not([type="checkbox"]),
-html[data-shell="mobile"] .detail-body:not(.detail-view) textarea,
-html[data-shell="mobile"] .detail-body:not(.detail-view) .select-btn,
-html[data-shell="mobile"] .detail-body:not(.detail-view) .date-picker-trigger {
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  color: var(--text-primary);
-  font-weight: 500;
-  min-height: 48px;
-}
-
-html[data-shell="mobile"] .detail-body:not(.detail-view) input:focus-visible,
-html[data-shell="mobile"] .detail-body:not(.detail-view) textarea:focus-visible,
-html[data-shell="mobile"] .detail-body:not(.detail-view) .select-btn:active,
-html[data-shell="mobile"] .detail-body:not(.detail-view) .select-btn[aria-expanded="true"],
-html[data-shell="mobile"] .detail-body:not(.detail-view) .date-picker-trigger:active,
-html[data-shell="mobile"] .detail-body:not(.detail-view) .date-picker-trigger[aria-expanded="true"] {
-  border-color: var(--accent);
-  background: var(--surface-panel);
-}
-
-/* 字段顺序与「新建任务」弹层一致：标题、说明 → 优先级/项目/标签/目标 →
-   日期、开始/截止时间殿后（新建弹层的「时间安排」就在面板底部）。
-   用 flex order 只改移动壳的视觉顺序，DOM 与桌面版不动——第 1/2/3 子元素
-   （标题/说明/日期）在 DetailDrawer.tsx 中固定，time-range 紧随日期。 */
-html[data-shell="mobile"] .detail-body:not(.detail-view) > .detail-form-row {
-  order: 2;
-}
-
-html[data-shell="mobile"] .detail-body:not(.detail-view) > div:nth-child(3),
-html[data-shell="mobile"] .detail-body:not(.detail-view) > .time-range {
-  order: 3;
 }
 
 /* ==================================================================
@@ -2483,25 +2302,8 @@ html[data-shell="mobile"] .workspace-subtitle {
   font-style: italic;
 }
 
-/* 设置页特殊结构：h2 自身挂 workspace-top，内联 padding 需 !important
-   归位到标准页头（左右留白由根上的 22px 内联 padding 提供）。 */
-html[data-shell="mobile"] h2.workspace-top,
-html[data-shell="mobile"][data-theme] h2.workspace-top {
-  /* 根的内联 padding:22 让页头缩进 22px——负 margin 拉回通栏，
-     文字落位与其他页统一的 18px，发丝线通栏。 */
-  margin: 0 -22px;
-  padding: 17px 18px 9px !important;
-  /* h2 自身即 flex 页头：拆字 span 后不能再当 flex 容器，
-     否则两个字母被 space-between 拉到两端。 */
-  display: block;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  line-height: 1.1;
-  /* 字身颜色交给上方渐变规则；旧 WebView 不支持 clip 时由
-     views.css 的 :root .workspace-top 纯色兜底。 */
-}
+/* 设置页页头已改挂标准 div.workspace-top（标题+格言副题），移动壳的
+   sticky/留白/渐变标题随共享骨架规则统一生效，无需特例。 */
 
 /* 页面左右留白统一 18px（与 mtoday-scroll 同值）：挂在真正的滚动根上。
    习惯/复盘/备忘/标签/提醒的根无横留白，由其内层 body 提供（见下）；
