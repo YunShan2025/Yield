@@ -3915,8 +3915,9 @@ html[data-nav="railed"] .nav-item-text {
 }
 
 /* 计数收成图标右上角标,数字比圆点更有用(5 / 9 分得清)。
-   底色用面板色而非实心强调色——实心蓝在 64px 窄栏里比图标还重,喧宾夺主。 */
-html[data-nav="railed"] .nav-count {
+   底色用面板色而非实心强调色——实心蓝在 64px 窄栏里比图标还重,喧宾夺主。
+   限定在 .nav-item 内:角标绝对定位只属于侧栏条目,防止页面内容复用类名时被甩出。 */
+html[data-nav="railed"] .nav-item .nav-count {
   position: absolute;
   top: 2px;
   right: 7px;

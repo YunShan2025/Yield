@@ -188,7 +188,6 @@ export function TodayTimeline() {
         <div className="timeline-dock-head">
           <div className="timeline-dock-title">
             <h3>{isToday ? "今日时间轴" : "当日时间轴"}</h3>
-            <span className="nav-count">{dayTasks.length}</span>
           </div>
         </div>
 
