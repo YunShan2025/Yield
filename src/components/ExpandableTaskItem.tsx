@@ -188,18 +188,6 @@ export function ExpandableTaskItem({
             <span>修改完成时间</span>
           </button>
         ) : null}
-        <button
-          type="button"
-          className="item-action-btn"
-          title="打开详情"
-          onClick={(e) => {
-            e.stopPropagation();
-            selectTask(task.id);
-          }}
-        >
-          <AppIcon name="panel" size={14} />
-          <span>详情</span>
-        </button>
         {rowAction}
         {actions ? (
           <div className="task-quick-actions" onClick={(event) => event.stopPropagation()}>

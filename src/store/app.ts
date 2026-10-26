@@ -58,7 +58,6 @@ interface AppStore {
   viewMode: ViewMode;
   calendarCursor: string;
   selectedTaskId: string | null;
-  detailPreferEdit: boolean;
   createTaskOpen: boolean;
   /** 新建任务是否从待办箱发起:截止日期默认不填,不自动排时间。 */
   createTaskInbox: boolean;
@@ -77,7 +76,7 @@ interface AppStore {
   setNav: (nav: NavId) => void;
   setViewMode: (mode: ViewMode) => void;
   setCalendarCursor: (date: string) => void;
-  selectTask: (id: string | null, opts?: { edit?: boolean }) => void;
+  selectTask: (id: string | null) => void;
   openCreateTask: (opts?: { inbox?: boolean; goalId?: string }) => void;
   closeCreateTask: () => void;
   openCommandPalette: () => void;
@@ -185,7 +184,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   viewMode: "board",
   calendarCursor: todayDateString(),
   selectedTaskId: null,
-  detailPreferEdit: false,
   createTaskOpen: false,
   createTaskInbox: false,
   createTaskGoalId: null,
@@ -292,11 +290,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
   setViewMode: (viewMode) => set({ viewMode }),
   setCalendarCursor: (calendarCursor) => set({ calendarCursor }),
-  selectTask: (selectedTaskId, opts) =>
-    set({
-      selectedTaskId,
-      detailPreferEdit: Boolean(opts?.edit),
-    }),
+  selectTask: (selectedTaskId) => set({ selectedTaskId }),
   openCreateTask: (opts) =>
     set({
       createTaskOpen: true,

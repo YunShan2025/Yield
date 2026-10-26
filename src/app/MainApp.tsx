@@ -11,7 +11,7 @@ import {
 import { DesktopNotificationCards } from "@/components/DesktopNotificationCards";
 import { NavSidebar } from "@/components/NavSidebar";
 import { MainWorkspace } from "@/components/MainWorkspace";
-import { DetailDrawer } from "@/components/DetailDrawer";
+import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { AppConfirmHost } from "@/components/AppConfirm";
@@ -730,13 +730,13 @@ export function MainApp() {
   if (isMobileShell()) {
     return (
       <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
-        <div className={`app-body ${detailOpen ? "detail-open" : ""}`}>
+        <div className="app-body">
           <MainWorkspace />
           {/* 「更多」面板渲染在 app-body 内（absolute 铺满主区）：与底部导航
               是 flex 兄弟，天然止于导航上方——导航卡高度随系统字号变化也不会
               遮挡（原 fixed + bottom:56px 硬编码在浮起导航卡下盖住导航条）。 */}
           {moreOpen ? <MobileMoreSheet onNavigate={navigateFromMore} /> : null}
-          {detailOpen ? <DetailDrawer /> : null}
+          {detailOpen ? <EditTaskDialog /> : null}
         </div>
         <MobileNav moreActive={moreOpen} onMore={toggleMore} onNavigate={navigateMobile} />
         <CommandPalette />
@@ -755,7 +755,7 @@ export function MainApp() {
     <div className="app-root" data-privacy={settings.privacyMode ? "on" : "off"}>
       <GlassTitlebar />
       <div
-        className={`app-body ${detailOpen ? "detail-open" : ""} ${navCollapsed ? "nav-collapsed" : ""}`}
+        className={`app-body ${navCollapsed ? "nav-collapsed" : ""}`}
       >
         <NavSidebar
           railed={navRailed}
@@ -765,7 +765,7 @@ export function MainApp() {
           onResetWidth={() => setNavWidth(NAV_WIDTH_DEFAULT)}
         />
         <MainWorkspace />
-        {detailOpen ? <DetailDrawer /> : null}
+        {detailOpen ? <EditTaskDialog /> : null}
         {navCollapsed ? (
           <button
             type="button"

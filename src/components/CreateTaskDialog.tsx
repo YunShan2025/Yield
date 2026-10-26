@@ -31,7 +31,6 @@ export function CreateTaskDialog() {
   const setTaskTags = useAppStore((s) => s.setTaskTags);
   const setToast = useAppStore((s) => s.setToast);
   const close = useAppStore((s) => s.closeCreateTask);
-  const selectTask = useAppStore((s) => s.selectTask);
   const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(calendarCursor)
     ? calendarCursor
     : todayDateString();
@@ -146,9 +145,7 @@ export function CreateTaskDialog() {
     setSaving(false);
     if (!task) return;
     close();
-    // 移动壳建完即回列表（真机反馈：新建后不该再被详情弹层打断一次）；
-    // 桌面保留「建完即补内容」的抽屉流。
-    if (!isMobileShell()) selectTask(task.id);
+    // 建完即回列表：详情抽屉已移除，新建弹窗本身含说明字段，不再二次弹编辑打断。
   };
 
   return (
