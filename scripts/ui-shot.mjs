@@ -3,7 +3,9 @@
 // 这里是日常改完一眼看细节（DPR2、可选视图/主题/元素裁剪）。
 //
 // 用法: node scripts/ui-shot.mjs [outDir] [baseUrl] [--views=today,weekly] [--themes=light,dark,glass,dawn]
-//        [--scale=2] [--vp=1440x900] [--selector=<css>] [--full]
+//        [--scale=2] [--vp=1440x900] [--selector=<css>] [--click=<css>] [--full]
+// --click：切到视图后先点中该选择器的首个元素再截（开详情抽屉、展开折叠区等）。
+// --steps：多步点击（用 | 分隔，先于 --click 执行），用于「更多→二级页→条目」这类导航链。
 // 示例（dev server 在 1420 时）:
 //   node scripts/ui-shot.mjs                                        # 今日×四主题, 2×
 //   node scripts/ui-shot.mjs .openchamber/shots http://localhost:1420 --views=today,growth --themes=light,dark
@@ -94,6 +96,26 @@ for (const theme of themes) {
       return true;
     }, { label });
     await page.waitForTimeout(700);
+    if (typeof flags.steps === "string") {
+      for (const sel of flags.steps.split("|").map((s) => s.trim()).filter(Boolean)) {
+        const hit = page.locator(sel).first();
+        if (await hit.count().catch(() => 0)) {
+          await hit.click({ timeout: 3000 }).catch(() => {});
+          await page.waitForTimeout(600);
+        } else {
+          console.log(`WARN ${view}/${theme}: steps 未命中 ${sel}`);
+        }
+      }
+    }
+    if (typeof flags.click === "string") {
+      const hit = page.locator(flags.click).first();
+      if (await hit.count().catch(() => 0)) {
+        await hit.click({ timeout: 3000 }).catch(() => {});
+        await page.waitForTimeout(900); // 抽屉/弹层入场动画（桌面抽屉滑入较长）
+      } else {
+        console.log(`WARN ${view}/${theme}: --click 未命中 ${flags.click}`);
+      }
+    }
 
     const tag = typeof flags.selector === "string" ? `-${flags.selector.replace(/[^a-z0-9\u4e00-\u9fff]+/gi, "").slice(0, 24)}` : "";
     const file = join(OUT, `shot-${SCALE}x-${view}-${theme}${tag}.png`);
