@@ -2902,6 +2902,43 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
   white-space: nowrap;
 }
 
+/* 待办箱行的截止徽标：待办箱收的就是「截止日不在今天」的任务，日期是行内
+   第一信息。取色与移动壳 .minbox-due 同源同文案（formatDueDateBadge 的 tone）；
+   is-none 用描边内阴影替代边框，避免桌面徽标高度自适应时行高抖动 2px。 */
+.due-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  color: var(--text-label);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.due-chip.is-overdue {
+  color: var(--text-overdue);
+  background: color-mix(in srgb, var(--text-overdue) 12%, transparent);
+}
+
+.due-chip.is-today,
+.due-chip.is-soon {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.due-chip.is-scheduled {
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+}
+
+.due-chip.is-none {
+  color: var(--text-muted);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
 /* 归属胶囊（项目/标签）：与目标徽标同规，身份色走 --pill-color（与移动壳
    归属胶囊同一数据源同色）。 */
 .task-pill {

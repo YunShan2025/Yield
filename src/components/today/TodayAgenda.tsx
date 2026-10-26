@@ -19,7 +19,7 @@ import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { getMobileTaskPills } from "@/components/mobile/MobileTaskPills";
 import { AppIcon } from "@/components/AppIcon";
-import { formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
+import { formatDueDateBadge, formatIsoTime, formatTimeRange, priorityLabel } from "@/lib/dates";
 import { confirmAction } from "@/components/AppConfirm";
 import { useGoals } from "@/lib/useGoals";
 import type { CSSProperties } from "react";
@@ -54,6 +54,8 @@ function DayTaskRow({
   conflict,
   selecting,
   selected,
+  isInbox,
+  today,
   onToggleSelect,
 }: {
   task: Task;
@@ -62,6 +64,8 @@ function DayTaskRow({
   conflict: boolean;
   selecting: boolean;
   selected: boolean;
+  isInbox: boolean;
+  today: string;
   onToggleSelect: () => void;
 }) {
   const deleteTask = useAppStore((s) => s.deleteTask);
@@ -148,6 +152,9 @@ function DayTaskRow({
 
   // 归属胶囊与移动端同一支解析：项目在前、首个标签在后，文字与颜色双端一致。
   const pills = getMobileTaskPills(task, projects, tags, tagMap);
+  // 待办箱收的就是「截止日不在今天」的任务，日期是行内最关键信息；与移动待办箱
+  // 同一支 formatDueDateBadge，label/tone/title 双端同源。今日页日期即当天，不显示。
+  const due = isInbox ? formatDueDateBadge(task.due_date, today) : null;
 
   return (
     <div
@@ -176,8 +183,13 @@ function DayTaskRow({
         meta={
           <>
             {/* 行内信息一律徽标化，文字内容与移动端行对齐；桌面独有件（时间/优先级）
-                同族保留。顺序：状态在前（时间→优先级/完成→冲突），归属在后
+                同族保留。顺序：状态在前（日期→时间→优先级/完成→冲突），归属在后
                 （项目/标签→目标），与读一行时的「什么时候・什么状态・算谁的」一致。 */}
+            {due ? (
+              <span className={`due-chip is-${due.tone}`} title={due.title}>
+                {due.label}
+              </span>
+            ) : null}
             <span className="meta-chip">{formatTimeRange(task.due_time, task.end_time)}</span>
             {task.status === "completed" ? (
               // 完成是成就感而非退场:用完成时刻做认可标识,替代已无意义的优先级。
@@ -478,6 +490,8 @@ export function TodayAgenda({
                 conflict={conflictIds.has(task.id)}
                 selecting={selecting}
                 selected={selectedIds.includes(task.id)}
+                isInbox={isInbox}
+                today={today}
                 onToggleSelect={() => onToggleSelect(task.id)}
               />
             ))}
