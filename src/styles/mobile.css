@@ -4550,7 +4550,8 @@ html[data-shell="mobile"] .mrow-meta {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 5px;
+  /* 与标题两行的间距收 5→3：徽标行贴着事件名读，行高不变。 */
+  margin-top: 3px;
 }
 
 /* 目标徽标借用今日时间轴那一枚，移动壳里只再收三件事：前导点去掉（见 MobileGoalChip）、

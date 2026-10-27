@@ -26,9 +26,28 @@ import type { Goal, Project, Tag, Task } from "@/types";
 /** 移动壳里一个分类默认只露这么多条：sunken 子面板被拉成十几条会吃满一屏。 */
 const MOBILE_TASK_PREVIEW = 5;
 
+/** 桌面脉搏图详情：一天最多露这么多条，溢出折叠成「还有 N 项」。 */
+const PULSE_TASK_PREVIEW = 10;
+
+/* 脉搏图几何（viewBox 单位）：高 152 与 .wp-lines 的固定高度 1:1，dot 才能用
+   py() 的像素值直接落位；x 是 0-100 随容器拉伸，描边吃 non-scaling-stroke。
+   顶部留 34 单位：峰值标签要悬在峰点上方而不被卡片裁掉。 */
+const PULSE_PLOT_TOP = 34;
+const PULSE_PLOT_BASE = 118;
+const PULSE_PLOT_H = PULSE_PLOT_BASE + PULSE_PLOT_TOP;
+
 function formatMd(date: string) {
   const [, m, d] = date.split("-");
   return `${Number(m)}/${Number(d)}`;
+}
+
+/** 完成时刻小注：ISO 时间戳 → 本地「HH:mm」。入库值可能带时区，不能直接 slice。 */
+function formatCompletedAt(iso: string | null): string | null {
+  if (!iso) return null;
+  const stamp = Date.parse(iso);
+  if (Number.isNaN(stamp)) return null;
+  const d = new Date(stamp);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 /**
@@ -139,6 +158,31 @@ export function WeeklyChecklistView() {
   // 移动壳：展开的分类里默认只露前 MOBILE_TASK_PREVIEW 条，切分类回到预览。
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
+  // 当周日历（桌面脉搏图）点选的日期。null = 回退默认：今天 → 峰值日 → 周一；
+  // 切周后 pulseDate 不在这一周里，自动落回默认，不用 effect 重置。
+  const [pulseDate, setPulseDate] = useState<string | null>(null);
+
+  const selectedPulseDate = weekDates.includes(pulseDate ?? "")
+    ? (pulseDate as string)
+    : weekDates.includes(today)
+      ? today
+      : (stats.peakDay ?? weekDates[0]);
+  const selectedPulseDay = days[weekDates.indexOf(selectedPulseDate)];
+
+  // 折线坐标：x 七天均分（与 .wp-days 的 7 个 flex 列同一套中心线），
+  // y 下限 max(4, 峰值) 防空周折线贴地。
+  const pulseMax = Math.max(4, ...days.map((day) => day.total));
+  const pulseX = (index: number) => ((index + 0.5) / 7) * 100;
+  const pulseY = (value: number) =>
+    PULSE_PLOT_BASE - (value / pulseMax) * (PULSE_PLOT_BASE - PULSE_PLOT_TOP);
+  const pulsePoints = (values: number[]) =>
+    values.map((value, index) => `${pulseX(index).toFixed(2)},${pulseY(value).toFixed(1)}`);
+  const pulseArea = (values: number[]) =>
+    `M ${pulseX(0).toFixed(2)},${PULSE_PLOT_BASE} L ${pulsePoints(values).join(
+      " L ",
+    )} L ${pulseX(6).toFixed(2)},${PULSE_PLOT_BASE} Z`;
+  const pulseTotals = days.map((day) => day.total);
+  const pulseDones = days.map((day) => day.done);
 
   // 周节奏放在周清单：今日页只留今天要做的事，周统计归这里。
   const weekChecks = useMemo(
@@ -374,33 +418,33 @@ export function WeeklyChecklistView() {
 
       <section className="weekly-days" aria-label="当周日历">
         <h3>当周日历</h3>
-        <div className="weekly-day-grid">
-          {days.map((day) => (
-            <div
-              key={day.date}
-              className={`weekly-day-col ${day.date === today ? "is-today" : ""}${
-                day.total && day.done === day.total ? " is-clear" : ""
-              }`}
-            >
-              <header>
-                <strong>周{weekdayShort(day.date)}</strong>
-                <span>
-                  {day.done}/{day.total}
-                </span>
-                <div className="weekly-day-meta">
-                  <em>{formatMd(day.date)}</em>
-                  <div className="weekly-day-bar">
-                    <i
-                      style={{
-                        width: `${day.total ? Math.round((day.done / day.total) * 100) : 0}%`,
-                      }}
-                    />
+        {isMobileShell() ? (
+          <div className="weekly-day-grid">
+            {days.map((day) => (
+              <div
+                key={day.date}
+                className={`weekly-day-col ${day.date === today ? "is-today" : ""}${
+                  day.total && day.done === day.total ? " is-clear" : ""
+                }`}
+              >
+                <header>
+                  <strong>周{weekdayShort(day.date)}</strong>
+                  <span>
+                    {day.done}/{day.total}
+                  </span>
+                  <div className="weekly-day-meta">
+                    <em>{formatMd(day.date)}</em>
+                    <div className="weekly-day-bar">
+                      <i
+                        style={{
+                          width: `${day.total ? Math.round((day.done / day.total) * 100) : 0}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              </header>
-              {isMobileShell() ? (
-                /* 移动壳：day 变体——那一列本身就是日期，不再挂日期药丸；行首分类色点
-                   保留（这一列里唯一的分组线索），归属与目标照今日页的形式给全。 */
+                </header>
+                {/* 移动壳：day 变体——那一列本身就是日期，不再挂日期药丸；行首分类色点
+                    保留（这一列里唯一的分组线索），归属与目标照今日页的形式给全。 */}
                 <ul className="mrow-list">
                   {day.tasks.length === 0 ? (
                     <li className="weekly-day-empty">空闲</li>
@@ -425,46 +469,207 @@ export function WeeklyChecklistView() {
                     ))
                   )}
                 </ul>
-              ) : (
-                <ul>
-                  {day.tasks.length === 0 ? (
-                    <li className="weekly-day-empty">空闲</li>
-                  ) : (
-                    day.tasks.slice(0, 8).map((task) => {
-                      const cat = resolveCategoryId(task.id, tagMap, tags);
-                      return (
-                        <li key={task.id}>
-                          <button
-                            type="button"
-                            className={`weekly-day-task ${task.status === "completed" ? "is-done" : ""}`}
-                            onClick={() => selectTask(task.id)}
-                          >
-                            <span
-                              className="weekly-dot"
-                              style={{ background: categoryColor(cat) }}
-                            />
-                            <span className="weekly-day-title">{task.title}</span>
-                            <span
-                              className="weekly-day-check"
-                              role="checkbox"
-                              aria-checked={task.status === "completed"}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void toggleComplete(task.id);
-                              }}
-                            >
-                              {task.status === "completed" ? "✓" : "○"}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })
-                  )}
-                </ul>
-              )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* 桌面：周脉搏——七天从「七列清单」折成一条形状。蓝线=任务量、金线=已完成，
+             金面积咬住蓝面积的那天就是整天清空；七天是真实的整列按钮，点一天在下方
+             展开当天任务（行件与完成金底沿用本轮桌面口径）。 */
+          <div className="weekly-pulse">
+            <div className="wp-plot">
+              <svg
+                className="wp-lines"
+                viewBox={`0 0 100 ${PULSE_PLOT_H}`}
+                preserveAspectRatio="none"
+                aria-hidden
+              >
+                <line
+                  x1="0"
+                  y1={PULSE_PLOT_BASE}
+                  x2="100"
+                  y2={PULSE_PLOT_BASE}
+                  className="wp-baseline"
+                  vectorEffect="non-scaling-stroke"
+                />
+                {stats.total ? (
+                  <>
+                    <path d={pulseArea(pulseTotals)} className="wp-area wp-area-total" />
+                    {stats.done ? (
+                      <path d={pulseArea(pulseDones)} className="wp-area wp-area-done" />
+                    ) : null}
+                    <polyline
+                      points={pulsePoints(pulseTotals).join(" ")}
+                      className="wp-line wp-line-total"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    {stats.done ? (
+                      <polyline
+                        points={pulsePoints(pulseDones).join(" ")}
+                        className="wp-line wp-line-done"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    ) : null}
+                  </>
+                ) : null}
+              </svg>
+              {stats.peakDay && stats.peakTotal >= 2 ? (
+                <span
+                  className="wp-peak"
+                  style={{
+                    left: `${pulseX(weekDates.indexOf(stats.peakDay))}%`,
+                    top: pulseY(stats.peakTotal) - 26,
+                  }}
+                >
+                  {stats.peakTotal} 项 · 峰值
+                </span>
+              ) : null}
+              <div className="wp-days">
+                {days.map((day) => {
+                  const clear = day.total > 0 && day.done === day.total;
+                  const isToday = day.date === today;
+                  const sel = day.date === selectedPulseDate;
+                  return (
+                    <button
+                      key={day.date}
+                      type="button"
+                      className={`wp-day${sel ? " is-sel" : ""}`}
+                      aria-pressed={sel}
+                      aria-label={`周${weekdayShort(day.date)} ${formatMd(day.date)}：${
+                        day.total ? `${day.done}/${day.total} 项已完成` : "空闲"
+                      }`}
+                      onClick={() => setPulseDate(day.date)}
+                    >
+                      <span
+                        className={`wp-dot${day.total ? "" : " is-zero"}${
+                          clear ? " is-clear" : ""
+                        }`}
+                        style={{ top: pulseY(day.total) }}
+                      />
+                      <span className="wp-x">
+                        <b className={isToday ? "is-today" : undefined}>
+                          {isToday ? "今天" : `周${weekdayShort(day.date)}`}
+                        </b>
+                        <span className="wp-xdate">{formatMd(day.date)}</span>
+                        <span
+                          className={`wp-xcount${clear ? " is-clear" : ""}${
+                            day.total ? "" : " is-none"
+                          }`}
+                        >
+                          {day.total ? `${day.done}/${day.total}` : "—"}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ))}
-        </div>
+            <p className="wp-legend">
+              <span className="wp-key">
+                <i className="wp-key-line wp-key-total" aria-hidden />
+                任务量
+              </span>
+              <span className="wp-key">
+                <i className="wp-key-line wp-key-done" aria-hidden />
+                已完成
+              </span>
+              <span className="wp-legend-hint">计数描金＝整天清空 · 点一天看当天任务</span>
+            </p>
+            <div className="weekly-pulse-detail">
+              <header>
+                <strong>
+                  周{weekdayShort(selectedPulseDate)} · {formatMd(selectedPulseDate)}
+                </strong>
+                {selectedPulseDate === today ? <span className="wp-chip">今天</span> : null}
+                {stats.peakDay === selectedPulseDate && selectedPulseDay.total > 0 ? (
+                  <span className="wp-chip wp-chip-gold">峰值日</span>
+                ) : null}
+                <span
+                  className={`wp-d-count${
+                    selectedPulseDay.total &&
+                    selectedPulseDay.done === selectedPulseDay.total
+                      ? " is-clear"
+                      : ""
+                  }`}
+                >
+                  {selectedPulseDay.total
+                    ? `${selectedPulseDay.done}/${selectedPulseDay.total} 项已完成`
+                    : "这一天还空着"}
+                </span>
+              </header>
+              <ul className="weekly-pulse-list">
+                {selectedPulseDay.tasks.length === 0 ? (
+                  <li className="weekly-day-empty">空闲</li>
+                ) : (
+                  selectedPulseDay.tasks.slice(0, PULSE_TASK_PREVIEW).map((task) => {
+                    const cat = resolveCategoryId(task.id, tagMap, tags);
+                    const done = task.status === "completed";
+                    const stamp = done ? formatCompletedAt(task.completed_at) : null;
+                    // 徽标行照移动 day 变体与同页本周任务同一口径：归属胶囊 + 目标徽标，
+                    // 完成时刻走 done-chip（HH:mm 完成）；选中日就是日期上下文,不发日期语气。
+                    const pills = getMobileTaskPills(task, projects, tags, tagMap);
+                    const goal = task.goal_id ? goalById.get(task.goal_id) ?? null : null;
+                    return (
+                      <li
+                        key={task.id}
+                        className={`weekly-day-task${done ? " is-done" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="weekly-day-open"
+                          onClick={() => selectTask(task.id)}
+                        >
+                          <i
+                            className="weekly-dot"
+                            style={{ background: categoryColor(cat) }}
+                            aria-hidden
+                          />
+                          <span className="weekly-day-main">
+                            <span className="weekly-day-title">{task.title}</span>
+                            {pills.length || goal || stamp ? (
+                              <span className="weekly-goal-task-meta">
+                                {pills.map((pill) => (
+                                  <span
+                                    key={pill.key}
+                                    className="task-pill"
+                                    style={{ "--pill-color": pill.color } as CSSProperties}
+                                  >
+                                    {pill.name}
+                                  </span>
+                                ))}
+                                {goal ? (
+                                  <span
+                                    className="goal-chip"
+                                    style={{ "--goal-color": goal.color } as CSSProperties}
+                                  >
+                                    {goal.title}
+                                  </span>
+                                ) : null}
+                                {stamp ? <span className="done-chip">{stamp} 完成</span> : null}
+                              </span>
+                            ) : null}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="weekly-day-check"
+                          aria-label={done ? `取消完成 ${task.title}` : `完成 ${task.title}`}
+                          aria-pressed={done}
+                          onClick={() => void toggleComplete(task.id)}
+                        />
+                      </li>
+                    );
+                  })
+                )}
+                {selectedPulseDay.tasks.length > PULSE_TASK_PREVIEW ? (
+                  <li className="weekly-day-more">
+                    还有 {selectedPulseDay.tasks.length - PULSE_TASK_PREVIEW} 项
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+          </div>
+        )}
       </section>
 
       {sheetTask ? (
