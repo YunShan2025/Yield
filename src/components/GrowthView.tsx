@@ -603,22 +603,30 @@ export function GrowthView() {
           {selectedGoal ? (
           <section className="goal-detail">
             <button className="text-btn" onClick={() => setSelectedGoalId(null)}>← 返回目标列表</button>
-            <div className="goal-detail-hero" style={{ "--goal-color": selectedGoal.color } as CSSProperties}>
-              <div><span>{GOAL_STATUS_LABEL[selectedGoal.status]}</span><h2>{selectedGoal.title}</h2><p>{selectedGoal.motivation || goalHeroSummary(selectedGoal)}</p></div>
-              <strong>{Math.round(calculateGoalProgress(selectedGoal))}%</strong>
-            </div>
-            <div className="goal-progress-track"><i style={{ width: `${calculateGoalProgress(selectedGoal)}%`, background: selectedGoal.color }} /></div>
+            {/* 详情顶卡两端取向不同（同总览顶卡 MobileGuideCard / today-hero 的分法）：
+                移动壳保持既有版式逐像素不动；桌面重排为「状态点 + 截止 → 标题 + 当前/目标
+                大字 → 进度条带 %」，进度只讲一遍，截止日不再缺席。 */}
+            {isMobileShell() ? (
+              <>
+                <div className="goal-detail-hero" style={{ "--goal-color": selectedGoal.color } as CSSProperties}>
+                  <div><span>{GOAL_STATUS_LABEL[selectedGoal.status]}</span><h2>{selectedGoal.title}</h2><p>{selectedGoal.motivation || goalHeroSummary(selectedGoal)}</p></div>
+                  <strong>{Math.round(calculateGoalProgress(selectedGoal))}%</strong>
+                </div>
+                <div className="goal-progress-track"><i style={{ width: `${calculateGoalProgress(selectedGoal)}%`, background: selectedGoal.color }} /></div>
+              </>
+            ) : (
+              <GoalDetailHero goal={selectedGoal} />
+            )}
             {/* 阶段清单：目标即里程碑，勾一个进一个。 */}
             <section className="goal-stages">
               <div className="goal-section-head">
                 <span>阶段</span>
-                <b>
+                <b className={milestones.length ? undefined : "is-empty"}>
                   {milestones.filter((item) => item.completed_at).length}/{milestones.length}
                 </b>
               </div>
               {milestones.length ? (
-                <ul className="goal-stage-list">
-                  {milestones.map((milestone) => (
+                <ul className="goal-stage-list">                  {milestones.map((milestone) => (
                     <li
                       key={milestone.id}
                       className={milestone.completed_at ? "is-done" : ""}
@@ -985,6 +993,48 @@ function GoalCard({
         </span>
       </footer>
     </button>
+  );
+}
+
+/* 桌面工作台的详情顶卡：状态点 + 截止 → 标题 + 当前/目标大字 → 进度条带 %。
+   移动壳走旧结构（同文件上面的 isMobileShell 分支），这里只在桌面渲染。
+   大字用 --font-display 与读数条同族——衬线 --font-num-display 一屏最多一处，留给顶卡。 */
+function GoalDetailHero({ goal }: { goal: Goal }) {
+  const target = resolveGoalTarget(goal);
+  const progress = calculateGoalProgress(goal);
+  const deadline = goalDeadlineInfo(goal, todayDateString());
+  return (
+    <div className="goal-detail-hero is-workbench" style={{ "--goal-color": goal.color } as CSSProperties}>
+      <div className="goal-hero-top">
+        <span className="goal-hero-status">
+          <i style={{ background: goal.color }} />
+          {GOAL_STATUS_LABEL[goal.status]}
+        </span>
+        <span className={`goal-hero-deadline${deadline?.behind ? " is-behind" : ""}`}>
+          {deadline
+            ? `${deadline.behind ? "进度落后 · " : ""}${deadline.daysLeft > 0 ? `剩 ${deadline.daysLeft} 天` : "已到目标日"}`
+            : goal.goal_type === "staged"
+              ? "阶段目标"
+              : "长期目标"}
+        </span>
+      </div>
+      <div className="goal-hero-main">
+        <h2>{goal.title}</h2>
+        <div className="goal-hero-count">
+          <strong>{fmtContribution(goal.current_value)}</strong>
+          <span>
+            / {fmtContribution(target.value)} {target.unit}
+          </span>
+        </div>
+      </div>
+      {goal.motivation ? <p className="goal-hero-motivation">{goal.motivation}</p> : null}
+      <div className="goal-hero-progress">
+        <div className="goal-progress-track">
+          <i style={{ width: `${progress}%`, background: goal.color }} />
+        </div>
+        <b>{Math.round(progress)}%</b>
+      </div>
+    </div>
   );
 }
 

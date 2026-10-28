@@ -1451,6 +1451,34 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 .goal-detail-hero h2 { margin: 6px 0; font-size: var(--font-size-display); }
 .goal-detail-hero p { margin: 0; color: var(--text-secondary); }
 .goal-detail-hero > strong { color: var(--goal-color); font-size: var(--font-size-display); }
+
+/* ── 工作台详情顶卡（桌面）：状态点 + 截止 → 标题 + 当前/目标大字 → 进度条带 % ──
+   .is-workbench 只在桌面分支渲染，选择器用 (0,2,0) 压过基规则，无需壳门控。
+   进度只讲一遍：大字报「当前/目标」，% 退到进度条尾端；截止日从列表卡补进来。 */
+.goal-detail-hero.is-workbench { flex-direction: column; align-items: stretch; gap: 14px; padding: 20px 24px 18px; }
+.goal-detail-hero.is-workbench h2 { margin: 0; }
+.goal-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.goal-hero-status { display: inline-flex; align-items: center; gap: 7px; }
+.goal-hero-status i { width: 8px; height: 8px; border-radius: 50%; }
+.goal-detail-hero .goal-hero-deadline { color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 500; }
+.goal-detail-hero .goal-hero-deadline.is-behind { color: var(--warning); font-weight: 600; }
+.goal-hero-main { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.goal-hero-count { display: flex; align-items: baseline; gap: 6px; flex: 0 0 auto; }
+.goal-hero-count strong { color: var(--goal-color); font: 700 var(--font-size-h1)/1.05 var(--font-display); letter-spacing: 0.01em; }
+.goal-hero-count span { color: var(--text-muted); font-size: var(--font-size-label); font-weight: 500; }
+.goal-hero-motivation { font-size: var(--font-size-label); }
+.goal-hero-progress { display: flex; align-items: center; gap: 10px; }
+.goal-hero-progress .goal-progress-track { flex: 1; margin: 0; }
+.goal-hero-progress b { min-width: 34px; color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+
+/* 栏头上到面板 h3 一档（与总览 .growth-panel-head 同族）；计数改列表同款胶囊，
+   空阶段不摆 0/0；添加行不随宽栏通铺。 */
+html:not([data-shell="mobile"]) .goal-section-head { margin-bottom: 10px; }
+html:not([data-shell="mobile"]) .goal-section-head span { color: var(--text-heading); font-size: var(--font-size-h3); font-weight: 700; }
+html:not([data-shell="mobile"]) .goal-section-head b { min-width: 22px; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); text-align: center; }
+html:not([data-shell="mobile"]) .goal-section-head b.is-empty { display: none; }
+html:not([data-shell="mobile"]) .goal-stage-add { max-width: 420px; }
+
 /* 详情页只留目标自身的状态管理（暂停 / 编辑 / 更多操作），统一靠右成组。 */
 .goal-detail-actions { display: flex; gap: 8px; margin-top: 14px; }
 .goal-detail-actions { align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
