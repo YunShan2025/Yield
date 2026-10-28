@@ -1732,6 +1732,34 @@ html:not([data-shell="mobile"]) .heatmap-legend .heat-cell { width: 12px; height
 /* 月份刻度：与 .growth-heatmap 同 26 列、同 gap、同左右内边距，才压得准格子。
    基础不出（移动壳窄屏放不下，也已经有横向滚动），只桌面亮。 */
 .heat-months { display: none; }
+/* 周柱：与月份刻度、日格子共用同一套 26 列（等分 + 同 gap + 同内边距），上下严格
+   对位——上面看「哪几周重」，下面看「哪几天动」。柱高按峰值定标，最高那周就是尺。
+   一根发丝基线把「量」与「迹」分开。移动壳仍是横向滚的格子，不出柱。 */
+.growth-trend,
+.growth-trend-hint { display: none; }
+html:not([data-shell="mobile"]) .growth-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(2px, .3vw, 4px);
+  height: 74px;
+  margin-bottom: 5px;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--border);
+}
+html:not([data-shell="mobile"]) .growth-trend-bar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--azure-700);
+}
+html:not([data-shell="mobile"]) .growth-trend-bar.is-zero { background: var(--surface-sunken); }
+/* 本周与今日环同一语气：只标位置，不加亮度。 */
+html:not([data-shell="mobile"]) .growth-trend-bar.is-current { box-shadow: 0 0 0 1.5px var(--text-secondary); border-radius: 3px; }
+html:not([data-shell="mobile"]) .growth-trend-hint { display: block; }
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  html:not([data-shell="mobile"]) .growth-trend-bar { background: color-mix(in srgb, var(--accent) 62%, var(--surface-panel)); }
+  html:not([data-shell="mobile"]) .growth-trend-bar.is-zero { background: var(--surface-sunken); }
+}
 html:not([data-shell="mobile"]) .heat-months {
   display: grid;
   grid-template-columns: repeat(26, minmax(8px, 1fr));

@@ -283,6 +283,42 @@ export function GrowthView() {
     }
     return marks;
   }, [days]);
+  // 一天投了多少：任务完成 + 习惯打卡 + 手动记录（与顶卡、热力图同一口径）。
+  const valueByDate = useMemo(() => {
+    const result = new Map<string, number>();
+    const keys = new Set([
+      ...completedTasksByDate.keys(),
+      ...habitChecksByDate.keys(),
+      ...manualValueByDate.keys(),
+    ]);
+    for (const key of keys) {
+      result.set(
+        key,
+        (completedTasksByDate.get(key) ?? []).length +
+          (habitChecksByDate.get(key) ?? 0) +
+          (manualValueByDate.get(key) ?? 0),
+      );
+    }
+    return result;
+  }, [completedTasksByDate, habitChecksByDate, manualValueByDate]);
+  // 周柱：跟热力图共用 26 列与同一窗口，一柱一周。按峰值定标（不是均值），
+  // 柱高比就是投入比；峰值给 1 兜底，一条记录都没有时也不会除出 NaN。
+  const weeklyTotals = useMemo(() => {
+    const weeks: { key: string; value: number; activeDays: number }[] = [];
+    for (let col = 0; col * 7 < days.length; col += 1) {
+      let value = 0;
+      let activeDays = 0;
+      for (const date of days.slice(col * 7, col * 7 + 7)) {
+        const dayValue = valueByDate.get(toDateKey(date)) ?? 0;
+        value += dayValue;
+        if (dayValue) activeDays += 1;
+      }
+      weeks.push({ key: toDateKey(days[col * 7]), value, activeDays });
+    }
+    return weeks;
+  }, [days, valueByDate]);
+  const weeklyPeak = Math.max(1, ...weeklyTotals.map((week) => week.value));
+  const currentWeekKey = weeklyTotals[weeklyTotals.length - 1]?.key ?? "";
   const submitGoal = async () => {
     const title = goalTitle.trim();
     if (!title) return;
@@ -489,13 +525,29 @@ export function GrowthView() {
           </section>
           <section className="growth-panel heatmap-panel">
             <div className="growth-panel-head">
-              <div><h3>最近半年的投入</h3></div>
+              <div>
+                <h3>最近半年的投入</h3>
+                <p className="growth-trend-hint">一柱是一周投了多少，一格是这天动没动。</p>
+              </div>
               <SelectMenu
                 ariaLabel="筛选目标"
                 value={filterGoalId}
                 onChange={setFilterGoalId}
                 options={[{ value: "", label: "全部目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]}
               />
+            </div>
+            {/* 周柱与下面的月份刻度、日格子共用同一套 26 列：上下对齐就读成一张图——
+                上面看量（哪几周重），下面看迹（哪几天动）。零投入的周用内凹灰，
+                和空档格子同一语气。 */}
+            <div className="growth-trend" role="img" aria-label="每周投入走势">
+              {weeklyTotals.map((week) => (
+                <i
+                  key={week.key}
+                  className={`growth-trend-bar${week.value ? "" : " is-zero"}${week.key === currentWeekKey ? " is-current" : ""}`}
+                  style={{ height: `${Math.max(4, (week.value / weeklyPeak) * 100)}%` }}
+                  title={`${week.key.slice(5).replace("-", "/")} 起一周 · ${week.value || "无"}投入${week.activeDays ? ` · ${week.activeDays} 天` : ""}`}
+                />
+              ))}
             </div>
             {/* 月份刻度与格子同一套 26 列栅格，桌面用来回答「这片是哪几个月」。 */}
             <div className="heat-months" aria-hidden>
@@ -506,10 +558,7 @@ export function GrowthView() {
             <div className="growth-heatmap" aria-label="成长热点图">
               {days.map((date) => {
                 const key = toDateKey(date);
-                const doneCount = (completedTasksByDate.get(key) ?? []).length;
-                const habitCount = habitChecksByDate.get(key) ?? 0;
-                const entryValue = manualValueByDate.get(key) ?? 0;
-                const value = entryValue + doneCount + habitCount;
+                const value = valueByDate.get(key) ?? 0;
                 const level = activityLevelFromValue(value);
                 return <button key={key} className={`heat-cell level-${level}${key === today ? " is-today" : ""}`} title={`${key} · ${value || "无"}投入`} onClick={() => setSelectedDate(key)} />;
               })}
