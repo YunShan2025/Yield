@@ -165,13 +165,16 @@ npm test                # 全量测试（33 个测试文件 / 235 个用例，20
 
 ### UI 改动的浏览器预览（设计评审模式）
 
-不启动 Tauri，直接在浏览器里看真实数据的界面（`.tmp-design-review/app.db` 为 VACUUM INTO 只读快照副本，原库不动）：
+不启动 Tauri，直接在浏览器里看真实数据的界面（`.tmp-design-review/app.db` 为 VACUUM INTO 快照副本；**原库只读不动**，副本本身可写——预览会往里写 settings，重跑下面两步即可归零）：
 
 ```bash
-node scripts/design-review/prepare-db.mjs   # 从 %APPDATA%\com.yunshan.yield 拷库副本
+node scripts/design-review/prepare-db.mjs        # ① 从 %APPDATA%\com.yunshan.yield 拷库副本
+node scripts/design-review/seed-review-data.mjs  # ② 补验收专用数据（id 前缀 review-，可重复执行）
 cmd /c "set YOUQIU_DESIGN_REVIEW=1&& npm run dev"   # Windows PowerShell 下用 cmd 转发变量
 # 打开 http://localhost:1420/?shell=mobile （移动壳预览；去掉 ?shell=mobile 即桌面壳）
 ```
+
+②**不可省**：真实数据里绝大多数任务已完成、当天往往只有一两条，直接预览会让「今日 / 周清单 / 时间轴」看着像空的，误判成布局或取数问题。补进来的日期以**运行当天为锚点**推导（今天 7 条、本周每天都有排期、习惯覆盖近 7 天），所以隔段时间重跑 ①② 即可，不要手改副本日期。
 
 仅 dev server 生效：`@tauri-apps/plugin-sql` 被 alias 到 HTTP shim 打真实 SQL；构建生产包不经过这条路径，浏览器里 `invoke` 类报错属预期。
 
