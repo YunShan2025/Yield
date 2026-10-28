@@ -571,20 +571,6 @@ button:active:not(:disabled) {
   padding: 2px 4px;
 }
 
-.scope-summary {
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
-}
-
-.scope-card {
-  border-color: var(--border);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-panel) 94%, transparent);
-}
-
-.scope-card strong {
-  color: var(--accent);
-}
-
 .scope-section-title {
   margin-top: 7px;
   font-size: var(--font-size-caption);

@@ -293,7 +293,6 @@ html:not([data-desktop-widget]) #root {
   box-shadow: inset 0 1px var(--white-95);
 }
 
-:root[data-theme="dawn"] .scope-card,
 :root[data-theme="dawn"] .expand-task,
 :root[data-theme="dawn"] .settings-card,
 :root[data-theme="dawn"] .timeline-task-popover {
@@ -526,7 +525,6 @@ html:not([data-desktop-widget]) #root {
   background: var(--accent);
 }
 
-:root[data-theme="glass"] .scope-card,
 :root[data-theme="glass"] .expand-task,
 :root[data-theme="glass"] .settings-card,
 :root[data-theme="glass"] .timeline-task-popover {
@@ -729,11 +727,10 @@ html:not([data-desktop-widget]) #root {
 :root body { color: var(--text-primary); }
 :root h1, :root h2, :root h3, :root h4,
 :root .workspace-top, :root .task-title,
-:root .expand-task strong, :root .scope-card strong { color: var(--text-heading); }
+:root .expand-task strong { color: var(--text-heading); }
 :root .field-label, :root label > span, :root .nav-section-label { color: var(--text-label); }
 
 :root[data-theme="dark"] .settings-card,
-:root[data-theme="dark"] .scope-card,
 :root[data-theme="dark"] .expand-task,
 :root[data-theme="dark"] .timeline-task-popover {
   border-color: var(--mist-250-14);
@@ -1740,28 +1737,6 @@ html[data-shell="mobile"] .version-update-notice {
     min-height: 0;
   }
 
-  /* 月历 7 列保留，压缩格子高度。 */
-  .cal-cell {
-    min-height: 64px;
-    padding: 4px;
-  }
-
-  .cal-task {
-    font-size: var(--font-size-caption);
-  }
-
-  /* 周历横向滚动容器保持可滑；竖屏收窄列与时间轴，减少横滑距离。 */
-  .week-board {
-    min-height: 320px;
-    max-height: 70vh;
-  }
-
-  .week-head,
-  .week-body,
-  .week-allday {
-    grid-template-columns: 44px repeat(7, minmax(76px, 1fr));
-  }
-
   /* 任务行：窄屏收紧行距。行级删除只在桌面窄窗隐藏（移动壳要常显，
    * 用 :not 排除，避免与移动壳的显示规则打 specificity 战）。 */
   .expand-task-row {
@@ -1784,10 +1759,6 @@ html[data-shell="mobile"] .version-update-notice {
     border-left: 1px solid var(--border);
     border-radius: 0;
     box-shadow: -14px 0 42px var(--slate-200-11);
-  }
-
-  .scope-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* 周清单当周日历：@container 查询在 Chrome 83 不生效（7 列×38px 不可读），

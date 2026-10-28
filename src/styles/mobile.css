@@ -3218,11 +3218,6 @@ html[data-shell="mobile"] .goal-detail-actions button.item-action-btn {
   border-color: transparent;
 }
 
-html[data-shell="mobile"] .achievement-grid {
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
 /* 成就卡进同款卡族：去描边、16 圆角、统一卡影；金牌勋章保留做识别。 */
 html[data-shell="mobile"] .achievement-card {
   padding: 14px 15px;
@@ -3258,80 +3253,6 @@ html[data-shell="mobile"] .achievement-card > button {
 /* 已置顶：与卡底琥珀底色同族发声（桌面 accent 蓝在移动壳偏跳）。 */
 html[data-shell="mobile"] .achievement-card > button.active {
   color: var(--amber-550);
-}
-
-/* 记录卡：输入框占一行，「关联目标」与「保存成就」共行二号，
-   控件面统一 sunken 平底，窄屏不再三条全宽控件叠罗汉。 */
-html[data-shell="mobile"] .achievement-compose {
-  gap: 8px;
-}
-
-html[data-shell="mobile"] .achievement-compose input,
-html[data-shell="mobile"] .achievement-compose .select-btn {
-  min-height: 44px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background-color: var(--surface-sunken); /* 只换底色，保住 base 的 --select-arrow 箭头 */
-}
-
-/* 行一号输入框必占整行；行二号「关联目标 + 保存成就」。选择器超宽省略，
-   否则长目标名撑爆 basis，把保存按钮挤到第三行。 */
-html[data-shell="mobile"] .achievement-compose input {
-  flex: 1 0 100%;
-}
-
-html[data-shell="mobile"] .achievement-compose .select-btn {
-  display: block;
-  flex: 1 1 auto;
-  width: auto;
-  min-width: 0;
-  padding: 0 30px 0 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 44px;
-}
-
-html[data-shell="mobile"] .achievement-compose .btn-primary {
-  flex: 0 0 auto;
-  width: auto;
-  min-height: 44px;
-  padding: 0 18px;
-}
-
-/* 成就墙空态：0 条时 grid 无子节点，:empty 命中把空态升成
-   「点亮勋章」占位卡，替掉裸灰字。 */
-html[data-shell="mobile"] .achievement-grid:empty + .empty-state {
-  padding: 30px 20px 32px;
-  border: 0;
-  border-radius: 16px;
-  background: var(--surface-panel);
-  text-align: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
-}
-
-html[data-shell="mobile"] .achievement-grid:empty + .empty-state::before {
-  content: "✦";
-  display: grid;
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 12px;
-  place-items: center;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--gold-200), var(--amber-550));
-  color: var(--amber-950-c);
-  font-size: 1.1rem;
-}
-
-html[data-theme="dark"][data-shell="mobile"] .achievement-grid:empty + .empty-state,
-html[data-theme="glass"][data-shell="mobile"] .achievement-grid:empty + .empty-state {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
-}
-
-@media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .achievement-grid:empty + .empty-state {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
-  }
 }
 
 /* ---------- 7) 习惯 / 项目 / 标签：卡片流与可展开行 ---------- */
