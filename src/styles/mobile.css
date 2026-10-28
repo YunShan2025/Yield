@@ -3175,16 +3175,39 @@ html[data-shell="mobile"] .goal-detail > .text-btn:active {
   transform: scale(0.97);
 }
 
-/* 「删除目标」离开了动作组、钉在行尾，仍用危险色示警。 */
-html[data-shell="mobile"] .goal-action-remove {
-  color: var(--danger);
+/* 移动壳动作行与面板底部动作条同源（expand-row-foot / timer-actions 语言）：
+   按钮等分通栏一排走完，删除 inline 红底示警。≤560 的整行堆叠是给桌面窄窗的，
+   移动壳里解除；「删除目标」在壳内收进等分格，文案减为「删除」（见 GrowthView）。 */
+html[data-shell="mobile"] .goal-detail-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+html[data-shell="mobile"] .goal-detail-actions > * {
+  width: auto;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* 组拆掉盒子，四枚状态按钮与删除成为同排兄弟，等分才不是一宽四窄。 */
+html[data-shell="mobile"] .goal-detail-actions .goal-manage-group {
+  display: contents;
 }
 
 html[data-shell="mobile"] .goal-detail-actions button.item-action-btn {
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 40px;
+  padding: 9px 2px;
+  border: 0;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
-  border-color: transparent;
+  white-space: nowrap;
+}
+
+html[data-shell="mobile"] .goal-detail-actions .goal-action-remove {
+  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
+  color: var(--text-overdue);
 }
 
 /* ---------- 7) 习惯 / 项目 / 标签：卡片流与可展开行 ---------- */

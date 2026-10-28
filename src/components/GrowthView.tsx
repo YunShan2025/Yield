@@ -604,8 +604,8 @@ export function GrowthView() {
               )}
             </section>
 
-            {/* 动作分级：状态管理靠左成组（编辑 → 暂停 → 完成 → 放弃），
-                删除是破坏性动作，孤零零钉最右、danger ghost 警示。
+            {/* 动作分级：状态管理靠左成组（编辑 → 暂停 → 完成 → 放弃），删除钉在行尾
+                警示——桌面 danger ghost，移动壳与面板底部动作条同源等分通栏（见 mobile.css）。
                 已放弃可反悔改主意；已达成是终点，不给「重新打开」。 */}
             <div className="goal-detail-actions">
               <div className="goal-manage-group">
@@ -615,7 +615,9 @@ export function GrowthView() {
                 {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: "abandoned" }).then(() => refresh())}>放弃</button> : null}
                 {selectedGoal.status === "abandoned" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
               </div>
-              <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
+              <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>
+                {isMobileShell() ? "删除" : "删除目标"}
+              </button>
             </div>
           </section>
           ) : (
