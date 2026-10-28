@@ -9,10 +9,12 @@ import {
   fetchLedgerCategorySummary,
   fetchLedgerTransactions,
   fetchLedgerTrend,
+  fetchLedgerTrendMonths,
   formatLedgerMoney,
   getLedgerBudget,
   getSetting,
   parseAmountToCents,
+  pickTrendWindow,
   restoreLedgerTransaction,
   setLedgerBudget,
   setSetting,
@@ -27,8 +29,10 @@ import {
 } from "@/lib/db";
 import { SelectMenu } from "@/components/SelectMenu";
 import { DatePicker } from "@/components/DatePicker";
+import { LedgerTrendPulse } from "@/components/LedgerTrendPulse";
 import { confirmAction } from "@/components/AppConfirm";
 import { useAppStore } from "@/store/app";
+import { weekdayShort } from "@/lib/weeklyChecklist";
 
 const ICONS: Record<string, AppIconName> = {
   food: "food", car: "car", bag: "bag", home: "home", play: "music", medical: "medical",
@@ -89,11 +93,14 @@ export function LedgerView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [tx, cats, accts, parts, months, limit, hide] = await Promise.all([
+      const [tx, cats, accts, parts, active, limit, hide] = await Promise.all([
         fetchLedgerTransactions(month), fetchLedgerCategories(undefined, true), fetchLedgerAccounts(true),
-        fetchLedgerCategorySummary(month), fetchLedgerTrend(month), getLedgerBudget(month), getSetting("ledger_hide_amount"),
+        fetchLedgerCategorySummary(month), fetchLedgerTrendMonths(), getLedgerBudget(month), getSetting("ledger_hide_amount"),
       ]);
-      setTransactions(tx); setCategories(cats); setAccounts(accts); setSummary(parts); setTrend(months); setBudget(limit); setHidden(hide === "true");
+      // 半年走向的 6 月窗取「含浏览月且有账月最多」的摆法:点/切到窗口中段的月份时窗不动,
+      // 月份数不缩水;切到窗外才整体平移(pickTrendWindow)。
+      const trendRows = await fetchLedgerTrend(pickTrendWindow(active, month));
+      setTransactions(tx); setCategories(cats); setAccounts(accts); setSummary(parts); setTrend(trendRows); setBudget(limit); setHidden(hide === "true");
     } catch (reason) {
       setNotice({ text: reason instanceof Error ? reason.message : "账本加载失败" });
     } finally { setLoading(false); }
@@ -161,7 +168,15 @@ export function LedgerView() {
   const expense = transactions.filter((item) => item.type === "expense").reduce((sum, item) => sum + item.amount_cents, 0);
   const income = transactions.filter((item) => item.type === "income").reduce((sum, item) => sum + item.amount_cents, 0);
   const budgetRatio = budget ? expense / budget : 0;
-  const chartMax = Math.max(1, ...trend.map((item) => Math.max(item.expense_cents, item.income_cents)));
+  // 抽屉「预算影响预览」:按草拟金额与原记录估算保存后的本月支出与预算进度变化。
+  const draftCents = parseAmountToCents(draft.amount) ?? 0;
+  const impactDeltaCents = (draft.kind === "expense" ? draftCents : 0) - (editing?.type === "expense" ? editing.amount_cents : 0);
+  const impactAfterExpense = expense + impactDeltaCents;
+  const impactPctBefore = budget ? Math.min(100, (expense / budget) * 100) : null;
+  const impactPctAfter = budget ? Math.min(100, (impactAfterExpense / budget) * 100) : null;
+  const impactBasePct = impactPctBefore === null || impactPctAfter === null ? 0 : Math.min(impactPctBefore, impactPctAfter);
+  const impactDeltaPct = impactPctBefore === null || impactPctAfter === null ? 0 : Math.abs(impactPctAfter - impactPctBefore);
+  const saveLabel = draftCents > 0 && !hidden ? `保存 ${formatLedgerMoney(draftCents)}` : "保存记录";
   const composition = useMemo(() => {
     let cursor = 0;
     if (!expense) return "conic-gradient(var(--ledger-line) 0 100%)";
@@ -210,6 +225,8 @@ export function LedgerView() {
     });
     if (!ok) return;
     if (!await softDeleteLedgerTransaction(item.id, item.version)) { setNotice({ text: "记录已经变化，请刷新后重试" }); return; }
+    // 从抽屉里删除：记录已消失，抽屉随之收起（行上删除时本就关着，幂等无害）。
+    setDrawer(false);
     setNotice({ text: "已移入回收站", undoId: item.id }); await load();
   }
 
@@ -295,7 +312,7 @@ export function LedgerView() {
             <>
               <strong>{budget ? `${Math.round(budgetRatio * 100)}%` : "未设置"}</strong>
               <div className="ledger-progress"><i style={{ width: `${Math.min(100, budgetRatio * 100)}%` }} /></div>
-              <small>{budget === 0 ? "点「设置」定一个月度边界" : budgetRatio > 1 ? `已超支 ${formatLedgerMoney(expense - budget, hidden)}` : budgetRatio === 1 ? "本月预算已用完" : `还可用 ${formatLedgerMoney(budget - expense, hidden)}`}</small>
+              <small>{budget === 0 ? "先定一个月度边界" : budgetRatio > 1 ? `已超支 ${formatLedgerMoney(expense - budget, hidden)}` : budgetRatio === 1 ? "本月预算已用完" : `还可用 ${formatLedgerMoney(budget - expense, hidden)}`}</small>
             </>
             {budgetEditing ? (
               <div className="ledger-budget-editor">
@@ -314,7 +331,7 @@ export function LedgerView() {
 
           <section className="ledger-insight-grid">
             <article className="ledger-card"><div className="ledger-card-title"><div><h3>支出去向</h3><p>本月分类构成</p></div></div><div className="ledger-donut-wrap"><div className="ledger-donut" style={{ background: composition }}><span>{hidden ? "••••" : `${summary.length} 类`}</span></div><div className="ledger-legend">{summary.slice(0, 6).map((item) => <div key={item.category_id}><i style={{ background: item.color }} /><span>{item.name}</span><strong>{expense ? Math.round(item.amount_cents / expense * 100) : 0}%</strong></div>)}{!summary.length && <p>记下第一笔支出后，这里会出现清晰的构成。</p>}</div></div></article>
-            <article className="ledger-card"><div className="ledger-card-title"><div><h3>六个月流向</h3><p>收入与支出的变化</p></div><div className="ledger-chart-key"><span>收入</span><span>支出</span></div></div><div className="ledger-bars">{trend.map((item) => <div className="ledger-bar-group" key={item.month}><div><i className="income" style={{ height: `${Math.max(3, item.income_cents / chartMax * 100)}%` }} /><i className="expense" style={{ height: `${Math.max(3, item.expense_cents / chartMax * 100)}%` }} /></div><small>{Number(item.month.slice(5))}月</small></div>)}{!trend.length && <p>还没有趋势数据。</p>}</div></article>
+            <article className="ledger-card"><div className="ledger-card-title"><div><h3>半年走向</h3><p>收入与支出的走势 · 点月份查看</p></div><div className="ledger-chart-key"><span>收入</span><span>支出</span></div></div>{trend.length ? <LedgerTrendPulse trend={trend} month={month} hidden={hidden} onPick={setMonth} /> : <p className="lt-empty">还没有趋势数据。</p>}</article>
           </section>
 
           <section className="ledger-card ledger-list-card"><div className="ledger-card-title"><div><h3>明细</h3><p>{monthLabel(month)} · {transactions.length} 笔</p></div></div>
@@ -325,27 +342,27 @@ export function LedgerView() {
               return (
                 <div className="ledger-day" key={date}>
                   <button type="button" className="ledger-day-head" aria-expanded={!collapsed} onClick={() => toggleDay(date)}>
-                    <h4>{date}</h4>
+                    <h4>{date} 周{weekdayShort(date)}</h4>
                     <span className={`ledger-day-total ${dayExpense ? "expense" : dayIncome ? "income" : ""}`}>
                       {hidden ? formatLedgerMoney(0, true) : dayExpense ? `−${formatLedgerMoney(dayExpense)}` : `+${formatLedgerMoney(dayIncome)}`}
                     </span>
                     <span className={`ledger-day-caret${collapsed ? " collapsed" : ""}`} aria-hidden>▾</span>
                   </button>
                   {!collapsed && items.map((item) => <div className="ledger-row" key={item.id}><span className="ledger-row-icon" style={{
-                    background: `color-mix(in srgb, ${item.category_color} 14%, var(--surface-panel))`,
+                    background: `color-mix(in srgb, ${item.category_color} 18%, var(--surface-panel))`,
                     color: `color-mix(in srgb, ${item.category_color} 55%, var(--text-primary))`,
-                  }}><AppIcon name={ICONS[item.category_icon] ?? "dots"} size={16} /></span><div className="ledger-row-main"><strong>{item.category_name}</strong><small>{item.note || item.account_name}</small></div><span className="ledger-account">{item.account_name}</span><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions item-action-cluster"><button type="button" className="item-action-btn item-action-edit" onClick={() => openDrawer(item)}><AppIcon name="edit" size={14} /><span>编辑</span></button><button type="button" className="item-action-btn item-action-danger" onClick={() => void remove(item)}><AppIcon name="trash" size={14} /><span>删除</span></button></div></div>)}
+                  }}><AppIcon name={ICONS[item.category_icon] ?? "dots"} size={15} /></span><div className="ledger-row-main"><strong>{item.note || item.category_name}</strong><small>{item.account_name}</small></div><strong className={item.type}>{item.type === "expense" ? "−" : "+"}{formatLedgerMoney(item.amount_cents, hidden)}</strong><div className="ledger-row-actions item-action-cluster"><button type="button" className="item-action-btn item-action-edit" aria-label="编辑" title="编辑" onClick={() => openDrawer(item)}><AppIcon name="edit" size={14} /><span>编辑</span></button><button type="button" className="item-action-btn item-action-danger" aria-label="删除" title="删除" onClick={() => void remove(item)}><AppIcon name="trash" size={14} /><span>删除</span></button></div></div>)}
                 </div>
               );
             })}</section>
       </>
       </div>
 
-      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3></div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}>✕</button></header><div className="ledger-drawer-body"><div className="ledger-kind-tabs"><button className={draft.kind === "expense" ? "active" : ""} onClick={() => setKind("expense")}>支出</button><button className={draft.kind === "income" ? "active" : ""} onClick={() => setKind("income")}>收入</button></div><label className="ledger-amount"><span>金额</span><div><b>¥</b><input ref={amountRef} value={draft.amount} inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></div></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>分类</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><span className="ledger-choice-icon" style={{ color: item.color }}><AppIcon name={ICONS[item.icon] ?? "dots"} size={17} /></span>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({
+      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3>{editing && <p className="ledger-drawer-sub">{editing.category_name} · {editing.account_name} · {editing.date} · 原 {formatLedgerMoney(editing.amount_cents, hidden)}</p>}</div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}><AppIcon name="close" size={16} /></button></header><div className="ledger-drawer-body"><label className="ledger-amount"><b aria-hidden>¥</b><input ref={amountRef} value={draft.amount} aria-label="金额" inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>类型</legend><div className="ledger-kind-tabs"><button type="button" className={draft.kind === "expense" ? "active is-expense" : ""} onClick={() => setKind("expense")}>支出</button><button type="button" className={draft.kind === "income" ? "active is-income" : ""} onClick={() => setKind("income")}>收入</button></div></fieldset><fieldset><legend>{draft.kind === "expense" ? "支出分类" : "收入分类"}</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><span className="ledger-choice-icon" style={{ color: item.color }}><AppIcon name={ICONS[item.icon] ?? "dots"} size={17} /></span>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({
                     value: String(item.id),
                     label: item.name,
                     icon: <AppIcon name={ACCOUNT_ICONS[item.kind] ?? "wallet"} size={15} />,
-                  }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer"><button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存记录</button></footer></aside>}
+                  }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer">{!hidden && <div className={`ledger-impact${impactPctAfter !== null && impactPctAfter < (impactPctBefore ?? 0) ? " is-decrease" : ""}${budget && impactAfterExpense > budget ? " is-over" : ""}`}><span>保存后本月支出 <b>{formatLedgerMoney(impactAfterExpense)}</b></span>{impactPctBefore !== null && <span className="ledger-impact-pct">{impactPctAfter !== null && Math.round(impactPctBefore) !== Math.round(impactPctAfter) ? `预算 ${Math.round(impactPctBefore)}% → ${Math.round(impactPctAfter)}%` : `预算 ${Math.round(impactPctBefore)}%`}</span>}{impactPctBefore !== null && <span className="ledger-impact-track" aria-hidden><i style={{ width: `${impactBasePct}%` }} />{impactDeltaPct > 0 && <em style={{ left: `${impactBasePct}%`, width: `${impactDeltaPct}%` }} />}</span>}</div>}<div className="ledger-drawer-actions">{editing && <button type="button" className="btn-ghost item-action-btn item-action-danger ledger-drawer-delete" onClick={() => void remove(editing)}>删除</button>}<button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>{saveLabel}</button></div></footer></aside>}
       {notice && <div className="ledger-toast" role="status"><span>{notice.text}</span>{notice.undoId && <button onClick={() => void undoDelete(notice.undoId!)}>撤销</button>}</div>}
     </main>
   );

@@ -5347,7 +5347,7 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   left: 0;
   top: 0;
   width: 100%;
-  height: 152px;
+  height: 136px;
   z-index: 0;
 }
 
@@ -5411,8 +5411,8 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   flex: 1 1 0;
   min-width: 0;
   position: relative;
-  /* 上段 152px 是折线区:dot 的 top 按 pulseY() 像素值直接落位。 */
-  padding: 152px 2px 10px;
+  /* 上段 136px 是折线区:dot 的 top 按 pulseY() 像素值直接落位。 */
+  padding: 136px 2px 10px;
   text-align: center;
   border-radius: var(--radius-sm);
   transition: background calc(140ms * var(--motion-scale)) ease;
@@ -5468,21 +5468,12 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
       0 0 0 4px color-mix(in srgb, var(--warning) 38%, transparent);
   }
 
+  /* 选中日的表态(2026-10-27 定):不铺竖带底色,只靠圆点描环——
+     蓝底读数带在折线图上喧宾夺主,选中日详情就在下方脉搏详情行里。 */
   .wp-day.is-sel .wp-dot {
     box-shadow:
       0 0 0 2px var(--surface-panel),
       0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
-  }
-}
-
-/* 选中列压在折线区下方成一条竖带;放在 hover 之后 —— 选中列 hover 不掉色。 */
-.wp-day.is-sel {
-  background: var(--accent-faint);
-}
-
-@supports (background: color-mix(in srgb, red 10%, blue)) {
-  .wp-day.is-sel {
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
 }
 
@@ -5723,9 +5714,7 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
 
 /* ── 原 global-11-ledger.css ────────────────────────────────────────── */
 .ledger-view {
-  --ledger-income: var(--success);
-  --ledger-expense: var(--danger);
-  --ledger-line: color-mix(in srgb, var(--border) 78%, var(--surface-panel));
+  /* --ledger-income/-expense/-line 已上移 :root(tokens.css,双端共用脉搏所需)。 */
   isolation: isolate;
   min-height: 100%;
   overflow: auto;
@@ -5761,20 +5750,54 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   background: var(--surface-raised);
   overflow: hidden;
 }
+/* 箭头是手画几何角标(与完成勾同一个画法):「‹」字形的 optical center 随字体漂移,
+   与月份文字永远差半字。原字形 font-size:0 退役,读屏走 aria-label。
+   定位不用 grid place-items——实测那会让 6px 角标整块上浮 ~8px(auto 行没被撑开,
+   居中只在 6px 行内起作用);改绝对定位 + 负半宽高硬定几何中心,DPR4 像素扫描
+   确认角标墨迹中心与月份文字墨迹重合。列宽 34→28、文字列 112→84:总宽 -40px。 */
 .ledger-month-switcher button {
+  position: relative;
   border: 0;
   background: transparent;
   color: var(--text-primary);
-  font-size: var(--font-size-h1);
+  font-size: 0;
+  width: 28px;
   height: 100%;
-  width: 34px;
+  padding: 0; /* 吃掉 UA 默认 1px 6px */
   cursor: pointer;
+  transition: background calc(140ms * var(--motion-scale)) ease;
+}
+.ledger-month-switcher button::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px; /* 负半宽高=几何居中;像素扫描实测此处墨迹中心与月份文字重合 */
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  border-top-right-radius: 1.5px;
+}
+.ledger-month-switcher button:first-child::before {
+  transform: rotate(-135deg);
+}
+.ledger-month-switcher button:last-child::before {
+  transform: rotate(45deg);
+}
+@media (hover: hover) {
+  .ledger-month-switcher button:hover {
+    background: var(--surface-hover);
+  }
 }
 .ledger-month-switcher strong {
-  min-width: 112px;
+  min-width: 84px;
+  padding: 0 4px;
   text-align: center;
+  white-space: nowrap;
   font-size: var(--font-size-label);
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .ledger-stat-grid {
@@ -5800,6 +5823,9 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
 .ledger-stat-grid small { color: var(--text-muted); font-size: var(--font-size-caption); }
 .ledger-stat-grid strong {
   font-size: var(--font-size-h1);
+  /* 固定行高:line-height:normal 下 CJK 回退字体的行盒比拉丁高 ~3px,
+     预算卡「未设置」↔「80%」一切换整行统计卡就抖(2026-10-27 实测 138↔141)。 */
+  line-height: 32px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   color: var(--text-primary);
@@ -5924,69 +5950,202 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   border-radius: 50%;
   display: block;
 }
-.ledger-chart-key { display: flex; gap: 14px; font-size: var(--font-size-caption); color: var(--text-muted); }
+.ledger-chart-key { display: flex; gap: 12px; font-size: var(--font-size-caption); color: var(--text-muted); }
 .ledger-chart-key span:before {
   content: "";
   display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-sm);
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
   background: var(--ledger-income);
   margin-right: 5px;
+  vertical-align: middle;
 }
 .ledger-chart-key span + span:before { background: var(--ledger-expense); }
-.ledger-bars {
-  height: 175px;
+
+/* ── 半年走向 · 账本脉搏(双端共用,2026-10-27)────────────────────────
+   取代旧收入/支出并排双柱:绿=收入、红=支出两条面积折线,走势直接成形。
+   样式与周历页周脉搏同规格(带框小面板、11px 点、整列按钮、hover 显形、描环、
+   几何 136/118),颜色各说各话(收支绿红 vs 总量蓝/清空金)。不同处:圆点 top 用
+   百分比——svg 随 --lt-h 纵向拉伸,移动壳压矮绘图区也不用改 JS 坐标。整列按钮
+   点了跳看该月,但展示窗由数据侧 pickTrendWindow 挑「有账月最多」的摆法,
+   不随点选缩水。 */
+.lt-chart {
+  position: relative;
+  /* 与 .wp-plot 同款带框小面板(嵌在账本卡内)。 */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  overflow: hidden;
+  /* 图区不给文本 I 梁、不可选字(列自身另有 pointer)。 */
+  user-select: none;
+  cursor: default;
+  --lt-h: 136px;
+}
+.lt-lines {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  /* svg 是被替换元素:absolute 的 left/right 不会把它拉开,必须显式 100%
+     (与 .wp-lines 同口径),否则折线按 300px 固有宽缩在头一列。 */
+  width: 100%;
+  height: var(--lt-h);
+  z-index: 0;
+}
+.lt-baseline {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.lt-area {
+  stroke: none;
+}
+.lt-area.inc {
+  fill: var(--ledger-income);
+  fill-opacity: 0.1;
+}
+.lt-area.exp {
+  fill: var(--ledger-expense);
+  fill-opacity: 0.16;
+}
+.lt-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.lt-line.inc {
+  stroke: var(--ledger-income);
+}
+.lt-line.exp {
+  stroke: var(--ledger-expense);
+}
+.lt-cols {
   display: flex;
-  align-items: flex-end;
-  gap: 14px;
-  padding-top: 10px;
+  position: relative;
 }
-.ledger-bars > p { margin: auto; }
-.ledger-bar-group {
-  height: 100%;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 7px;
-  flex: 1;
-  text-align: center;
-  color: var(--text-muted);
-}
-.ledger-bar-group > div {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 4px;
-  height: 100%;
-  border-bottom: 1px solid var(--ledger-line);
-}
-.ledger-bar-group i {
-  width: min(16px, 34%);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--ledger-income);
+.lt-col {
+  flex: 1 1 0;
+  min-width: 0;
   display: block;
+  padding: 0;
+  text-align: center;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background calc(140ms * var(--motion-scale)) ease;
 }
-.ledger-bar-group i.expense { background: var(--ledger-expense); }
+.lt-zone {
+  display: block;
+  position: relative;
+  height: var(--lt-h);
+}
+.lt-dot {
+  position: absolute;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  margin-left: -5.5px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--surface-panel);
+  transition:
+    box-shadow calc(140ms * var(--motion-scale)) ease,
+    transform calc(140ms * var(--motion-scale)) ease;
+}
+.lt-dot.inc {
+  background: var(--ledger-income);
+}
+.lt-dot.exp {
+  background: var(--ledger-expense);
+}
+/* 只有单边账的月份:另一边画灰点落在基线上,诚实说「这月没有收入/支出」(与 .wp-dot.is-zero 同口径)。 */
+.lt-dot.is-zero {
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  background: var(--border-strong);
+}
+/* 点列 hover 显形(与 .wp-day:hover 同口径):淡带 + 圆点放大。 */
+@media (hover: hover) {
+  .lt-col:hover {
+    background: var(--accent-soft);
+  }
+
+  .lt-col:hover .lt-dot {
+    transform: translateY(-50%) scale(1.2);
+  }
+}
+.lt-m {
+  display: block;
+  padding: 0 0 10px;
+  color: var(--text-heading);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* 当月只以「变色 + 圆点同色描环」表态,不给整列铺底色(与周脉搏 .wp-x b.is-today 同口径)。 */
+.lt-col.is-sel .lt-m {
+  color: var(--accent);
+}
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  @media (hover: hover) {
+    .lt-col:hover {
+      background: color-mix(in srgb, var(--accent) 5%, transparent);
+    }
+  }
+
+  .lt-col.is-sel .lt-dot.inc {
+    box-shadow:
+      0 0 0 2px var(--surface-panel),
+      0 0 0 5px color-mix(in srgb, var(--ledger-income) 26%, transparent);
+  }
+  .lt-col.is-sel .lt-dot.exp {
+    box-shadow:
+      0 0 0 2px var(--surface-panel),
+      0 0 0 5px color-mix(in srgb, var(--ledger-expense) 26%, transparent);
+  }
+}
+.lt-empty {
+  display: grid;
+  place-items: center;
+  min-height: 136px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+}
 
 .ledger-list-card { padding-bottom: 10px; }
-/* 日期行：日期居左，当日合计靠右，整行是折叠手柄。 */
+/* 等节奏表格：每组 = 日期行(40px) + 明细行(52px)，每一格都夹在上下两条发际线
+   正中间——内容居中在格内，行到上/下线的距离恒等。组界不另加空隙，日期行自身
+   就是分隔。 */
+.ledger-day + .ledger-day {
+  border-top: 1px solid var(--ledger-line);
+}
+/* 日期行：日期居左（带周X，同移动壳口径），当日合计靠右，整行是折叠手柄。 */
 .ledger-day-head {
   width: 100%;
-  min-height: 28px;
+  min-height: 40px;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   border: 0;
   background: none;
-  padding: 0;
-  margin: 16px 0 5px;
+  padding: 0 8px;
+  margin: 0;
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
   font: inherit;
+  transition: background calc(140ms * var(--motion-scale)) ease;
 }
 .ledger-day-head h4 {
   font-size: var(--font-size-caption);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 650;
   margin: 0;
 }
@@ -6006,73 +6165,94 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   transition: transform calc(150ms * var(--motion-scale));
 }
 .ledger-day-caret.collapsed { transform: rotate(-90deg); }
+/* 明细行 52px / 图标 31px：对齐移动壳已验收的 .mledger-tx 规格。账户不再独占一列
+   （副行即账户，「微信」连排两遍的重复就此消失），网格收成 图标/主列/金额/动作 4 列。 */
 .ledger-row {
-  min-height: 62px;
+  min-height: 52px;
   display: grid;
-  grid-template-columns: 38px minmax(120px, 1fr) 90px 130px 82px;
+  grid-template-columns: 38px minmax(0, 1fr) 130px 82px;
   gap: 12px;
   align-items: center;
+  padding: 0 8px;
+  border-radius: 10px;
   border-top: 1px solid var(--ledger-line);
+  transition: background calc(140ms * var(--motion-scale)) ease;
 }
 .ledger-row-icon {
-  width: 34px;
-  height: 34px;
+  width: 31px;
+  height: 31px;
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   font-weight: 800;
 }
-.ledger-row-main { display: flex; flex-direction: column; gap: 3px; }
+.ledger-row-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .ledger-row-main strong {
   font-size: var(--font-size-label);
   color: var(--text-heading);
   font-weight: 560;
   letter-spacing: -0.012em;
 }
-.ledger-row-main small,
-.ledger-account { font-size: var(--font-size-caption); color: var(--text-muted); }
+.ledger-row-main small { font-size: var(--font-size-caption); color: var(--text-muted); }
 .ledger-row > strong {
   font-size: var(--font-size-body);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 .ledger-row > strong.income { color: var(--ledger-income); }
-.ledger-row > strong.expense { color: var(--ledger-expense); }
+/* 支出中性墨、收入才绿：移动壳 .out/.in 的定稿口径。整月几十行红字是一堵「红墙」，
+   彩色占比也冲出 3% 契约；红绿语义收敛到统计卡与日头（一天只说一次）。 */
+.ledger-row > strong.expense { color: var(--text-heading); }
+/* 整行 hover 淡带（--surface-hover 是全 app 行件同款），hover:hover 隔掉触摸。 */
+@media (hover: hover) {
+  .ledger-day-head:hover,
+  .ledger-row:hover {
+    background: var(--surface-hover);
+  }
+}
 .ledger-row-actions { opacity: 0; transition: opacity calc(150ms * var(--motion-scale)); }
 .ledger-row:hover .ledger-row-actions,
 .ledger-row:focus-within .ledger-row-actions { opacity: 1; }
 .ledger-row-actions button { padding: 5px 9px; font-size: var(--font-size-caption); }
-/* 明细行的编辑/删除比通用按钮再收一档，在 62px 行高里留出明显上下余量。 */
+/* 明细行的编辑/删除：桌面 hover 才显形,收成 26px 纯图标一枚一个(≥24px 契约),
+   在 52px 行里正好一排两个不带换行;名字靠 aria-label,文字标签移动壳才保留
+   (触摸屏常显按钮要自明,见 views.css 覆盖)。 */
 html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn {
-  min-width: 54px;
+  width: 26px;
+  min-width: 26px;
   min-height: 26px;
-  padding: 4px 8px;
+  padding: 4px;
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-caption);
-  line-height: 1.1;
+}
+html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn span {
+  display: none;
 }
 html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
 }
 .ledger-empty { text-align: center; padding: 52px 15px; }
 .ledger-empty span { font-size: var(--font-size-h2); font-weight: 800; color: var(--text-heading); }
 .ledger-empty p { margin: 8px 0 18px; color: var(--text-muted); }
 
-/* 记账面板:与任务详情抽屉同一形态——固定右侧、无遮罩、点外部或 Esc 收起。 */
+/* 记账面板：悬浮卡形态——上下留边、高度随内容（超高才内滚），把死白还给内容；
+   radius-lg 通体圆角与浮层阴影按 DESIGN Shapes/Elevation。点外部或 Esc 收起不变，
+   窄窗/移动壳在 views.css 700px 媒体里复位成贴边全屏。 */
 .ledger-drawer {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  top: 14px;
+  right: 14px;
   z-index: 30;
-  width: min(470px, 100vw);
+  width: min(470px, calc(100vw - 28px));
+  max-height: calc(100vh - 28px);
+  height: fit-content;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--surface-panel);
-  border-left: 1px solid var(--border);
-  box-shadow: -14px 0 42px var(--slate-200-11);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: -10px 16px 44px var(--slate-200-11);
   color: var(--text-primary);
   animation: ledger-in calc(220ms * var(--motion-scale)) ease-out;
 }
@@ -6081,7 +6261,8 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 20px 20px 14px;
+  gap: 12px;
+  padding: 18px 20px 0;
 }
 .ledger-drawer-head h3 {
   margin: 0;
@@ -6089,53 +6270,107 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   letter-spacing: -0.02em;
   color: var(--text-heading);
 }
+/* 编辑态副标：类别·账户·日期·原金额，一行定位「在改哪一笔」。 */
+.ledger-drawer-sub {
+  margin: 5px 0 0;
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
 .ledger-drawer-body {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 2px 20px 16px;
+  padding: 14px 20px 6px;
 }
 .ledger-drawer-footer {
   flex: none;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 12px 20px 18px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 20px 16px;
   border-top: 1px solid var(--border);
   background: var(--surface-panel);
 }
-.ledger-drawer-footer .btn-primary,
-.ledger-drawer-footer .btn-ghost { width: auto; min-height: 36px; }
+.ledger-drawer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ledger-drawer-actions .btn-primary,
+.ledger-drawer-actions .btn-ghost { width: auto; min-height: 36px; }
+/* 编辑态「删除」靠左，与右侧取消/保存分intent两区。 */
+.ledger-drawer-delete { margin-right: auto; }
+/* 预算影响预览：保存前预演本月支出与预算进度；金额隐藏模式整条不出。 */
+.ledger-impact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.ledger-impact b { color: var(--text-heading); }
+.ledger-impact-pct { flex: none; }
+.ledger-impact-track {
+  flex: none;
+  margin-left: auto;
+  position: relative;
+  width: 92px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+.ledger-impact-track i,
+.ledger-impact-track em { position: absolute; top: 0; bottom: 0; }
+.ledger-impact-track i { left: 0; border-radius: 3px 0 0 3px; background: color-mix(in srgb, var(--accent) 42%, transparent); }
+.ledger-impact-track em { background: var(--ledger-expense); }
+.ledger-impact.is-decrease .ledger-impact-track em { background: var(--ledger-income); }
+.ledger-impact.is-over .ledger-impact-pct { color: var(--ledger-expense); }
 .ledger-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
   border: 0;
   background: none;
   color: var(--text-secondary);
-  font-size: var(--font-size-h3);
   cursor: pointer;
-  padding: 6px 8px;
   border-radius: var(--radius-sm);
+  transition: background calc(140ms * var(--motion-scale)) ease, color calc(140ms * var(--motion-scale)) ease;
 }
 .ledger-close:hover { background: var(--surface-hover); color: var(--text-primary); }
+/* 类型双钮：紧凑等分，active 吃收支语义色（支出红/收入绿），不再用通栏沉底大色块。 */
 .ledger-kind-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: var(--surface-sunken);
-  padding: 4px;
-  border-radius: var(--radius-md);
-  margin-bottom: 20px;
+  gap: 8px;
 }
 .ledger-kind-tabs button {
-  border: 0;
-  background: transparent;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  background: var(--surface-input);
   border-radius: var(--radius-md);
-  padding: 9px;
   color: var(--text-muted);
   cursor: pointer;
+  transition: border-color calc(140ms * var(--motion-scale)) ease, background calc(140ms * var(--motion-scale)) ease, color calc(140ms * var(--motion-scale)) ease;
 }
-.ledger-kind-tabs button.active {
-  background: var(--surface-raised);
-  color: var(--text-primary);
-  font-weight: 750;
+.ledger-kind-tabs button.active { font-weight: 750; }
+.ledger-kind-tabs button.active.is-expense {
+  color: var(--ledger-expense);
+  border-color: color-mix(in srgb, var(--danger) 38%, var(--border));
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface-input));
+}
+.ledger-kind-tabs button.active.is-income {
+  color: var(--ledger-income);
+  border-color: color-mix(in srgb, var(--success) 38%, var(--border));
+  background: color-mix(in srgb, var(--success) 6%, var(--surface-input));
 }
 .ledger-drawer label,
 .ledger-drawer fieldset {
@@ -6151,67 +6386,74 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 .ledger-drawer input {
   width: 100%;
   box-sizing: border-box;
+  min-height: 38px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-input);
   color: var(--text-primary);
-  padding: 10px 11px;
+  font-size: var(--font-size-body);
+  padding: 8px 11px;
   margin-top: 7px;
 }
-.ledger-amount > div {
+/* 金额 hero：无框 display 大字（移动壳 .mledger-amount 定稿同款）——¥ 用品牌深蓝、
+   数字紧跟靠左整组落左；input 仍占满整行（点哪都能打字）。选择器要压过 .ledger-drawer label 的 block。 */
+.ledger-drawer .ledger-amount {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
-  margin-top: 7px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-input);
-  padding: 0 10px;
+  margin-bottom: 0;
 }
-.ledger-amount b { flex: none; font-size: var(--font-size-h2); color: var(--text-muted); }
-/* 聚焦环画在带完整边框的容器上,内部输入不重复出环。 */
-.ledger-amount:focus-within > div {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.ledger-amount input {
+.ledger-amount > b { flex: none; font-size: var(--font-size-h2); color: var(--accent-strong); }
+.ledger-drawer .ledger-amount > input {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   border: 0;
   background: transparent;
-  color: var(--text-primary);
-  font-size: var(--font-size-h1);
+  color: var(--text-heading);
+  font-size: var(--font-size-display);
   font-weight: 760;
   letter-spacing: -0.03em;
-  /* 记账金额靠右落字、等宽数字：与明细金额列同一种「钱」的读法。 */
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: left;
   margin: 0;
-  padding: 10px 4px;
+  padding: 0 0 2px;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
+  caret-color: var(--accent);
 }
-.ledger-amount input:focus { box-shadow: none; }
-.ledger-quick-amounts { display: flex; gap: 7px; margin: -8px 0 17px; }
+.ledger-amount > input::placeholder { color: var(--text-muted); opacity: 0.55; }
+.ledger-amount > input:focus { box-shadow: none; }
+/* 快捷金额：无描边 sunken chip（移动壳 .mledger-quick 同口径），点击即替换当前金额。 */
+.ledger-quick-amounts { display: flex; gap: 8px; margin: 12px 0 18px; }
 .ledger-quick-amounts button {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  border-radius: var(--radius-pill);
-  padding: 5px 10px;
+  min-height: 30px;
+  border: 0;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 6px 13px;
+  font-size: var(--font-size-label);
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
+  transition: background calc(140ms * var(--motion-scale)) ease, color calc(140ms * var(--motion-scale)) ease;
+}
+.ledger-quick-amounts button:active { background: var(--accent-soft); color: var(--text-primary); }
+@media (hover: hover) {
+  .ledger-quick-amounts button:hover { background: var(--accent-soft); color: var(--text-primary); }
 }
 .ledger-choice-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 7px;
 }
+/* 分类瓷砖：去描边（选中才出现 accent 环），整卡少一半边框；hover 淡底隔掉触摸。 */
 .ledger-choice-grid button {
-  min-height: 76px;
-  padding: 10px 4px 8px;
-  border: 1px solid var(--border);
-  background: var(--surface-input);
+  min-height: 60px;
+  padding: 8px 4px;
+  border: 1.5px solid transparent;
+  background: transparent;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   display: flex;
@@ -6222,6 +6464,10 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   font-size: var(--font-size-caption);
   line-height: 1.2;
   cursor: pointer;
+  transition: background calc(140ms * var(--motion-scale)) ease, border-color calc(140ms * var(--motion-scale)) ease;
+}
+@media (hover: hover) {
+  .ledger-choice-grid button:hover { background: var(--surface-sunken); }
 }
 .select-option-icon {
   display: grid;
@@ -6235,18 +6481,14 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 .ledger-choice-icon {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
-  margin-bottom: 3px;
   line-height: 1;
-  width: auto;
-  height: auto;
   color: inherit;
 }
 .ledger-choice-grid button.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 9%, var(--surface-input));
-  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+  color: var(--text-heading);
+  font-weight: 750;
 }
 .ledger-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ledger-error { color: var(--ledger-expense); margin: -5px 0 12px; }
@@ -6344,7 +6586,6 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   .ledger-row { grid-template-columns: 38px 1fr auto; }
   /* 行内编辑/删除只在桌面窄窗隐藏（移动壳要常显，见 global-14-mobile）。 */
   html:not([data-shell="mobile"]) .ledger-row-actions { display: none; }
-  .ledger-account { display: none; }
   .ledger-choice-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {

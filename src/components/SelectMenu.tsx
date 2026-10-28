@@ -175,7 +175,7 @@ export function SelectMenu({
                   }}
                 >
                   {item.icon ? <span className="select-option-icon" aria-hidden>{item.icon}</span> : null}
-                  <span>{item.label}</span>
+                  <span className="select-option-label">{item.label}</span>
                   {item.value === value ? (
                     <span className="select-check" aria-hidden>
                       ✓

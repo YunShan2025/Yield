@@ -945,10 +945,13 @@ body {
   to { opacity: 1; transform: none; }
 }
 
+/* 选项布局不猜位置：icon 与 ✓ 固定宽、label 独占中段（flex:1）。
+   选项 DOM 本就随「有无 icon / 是否选中」在 2~3 个子元素间浮动，
+   space-between 会让 label 跟着漂移（选中居中、未选中顶右），
+   显式分配中段才是根解——全 app 带 icon 的下拉一并受益。 */
 .select-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   width: 100%;
   padding: 7px 10px;
@@ -961,7 +964,6 @@ body {
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   cursor: pointer;
 }
 
@@ -975,7 +977,9 @@ body {
   font-weight: 700;
 }
 
-.select-option > span:first-child {
+.select-option-label {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -992,24 +996,31 @@ body {
   margin-top: 7px;
 }
 
+/* 上下 8px 与日期触发钮同垫：纵向留白一旦比 min-height 算出的内容高更大，
+   min-height 就成了摆设（此前 10px 让账户比日期高 4px，并排错位）。 */
 .ledger-form-row .select-btn {
-  padding: 10px 30px 10px 11px;
+  padding: 8px 30px 8px 11px;
 }
 
-/* 记一笔抽屉「日期/账户」两列对齐:日期触发钮与账户下拉同高、同边框、
-   同上边距（.ledger-drawer .select-btn 有 margin-top:7px，日期侧此前缺失，
-   导致两行控件上下错位）。 */
+/* 记一笔抽屉「日期/账户」两列对齐:同高、同边框、同圆角、同底色、同上边距——
+   两个并排控件是一个视觉族的两个成员,不允许一边白一边灰、一边 8 一边 12。 */
 .ledger-form-row .date-picker {
   margin-top: 7px;
 }
-
+.ledger-form-row .select-btn {
+  min-height: 38px;
+  border-color: var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+}
 .ledger-form-row .date-picker-trigger {
-  min-height: 36px;
+  min-height: 38px;
   box-sizing: border-box;
   padding: 8px 11px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   background: var(--surface-input);
+  font-size: var(--font-size-body);
 }
 
 /* ---- DatePicker:替代原生 input[type=date] 的自绘日历(样式对齐 TimePicker) ---- */
