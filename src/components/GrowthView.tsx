@@ -265,6 +265,24 @@ export function GrowthView() {
       [...manualValueByDate.values()].reduce((sum, value) => sum + value, 0),
     [habitChecksByDate, completedTasksByDate, manualValueByDate],
   );
+  // 桌面顶卡讲「现在」：今天有没有动。口径与热力图同一处（完成任务 + 习惯打卡 + 手动记录）。
+  const todayInvestment =
+    (completedTasksByDate.get(today) ?? []).length +
+    (habitChecksByDate.get(today) ?? 0) +
+    (manualValueByDate.get(today) ?? 0);
+  // 热力图月份刻度：一格一列（一列一周），标在含 1 号的那一列，首列也标一次；
+  // 相邻两个刻度至少隔 3 列，窄窗下才不会挤成一团。桌面才显示（CSS 门控）。
+  const monthMarks = useMemo(() => {
+    const marks: { col: number; label: string }[] = [];
+    for (let col = 0; col * 7 < days.length; col += 1) {
+      const monthStart = days.slice(col * 7, col * 7 + 7).find((date) => date.getDate() === 1);
+      if (col !== 0 && !monthStart) continue;
+      const prev = marks[marks.length - 1];
+      if (prev && col - prev.col < 3) continue;
+      marks.push({ col, label: `${(monthStart ?? days[col * 7]).getMonth() + 1}月` });
+    }
+    return marks;
+  }, [days]);
   const submitGoal = async () => {
     const title = goalTitle.trim();
     if (!title) return;
@@ -427,8 +445,7 @@ export function GrowthView() {
           </button>
         </div>
       </div>
-      {/* 与「今日」同款的引导框:eyebrow + 标语 + 一句注释。 */}
-      {/* 与「今日」同款的引导框（eyebrow + 标语 + 一句注释）。移动壳换数据型顶卡。 */}
+      {/* 顶卡两端同一套读数：移动壳是数据型引导卡，桌面走「今日」同款 .today-hero-meter。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={currentStreak}
@@ -439,7 +456,17 @@ export function GrowthView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <p className="today-hero-note">看见每一天累积的成长。</p>
+            {/* 顶卡说「现在」：一句今天的话，读数交给右侧 .today-hero-meter（与项目/标签/复盘同族）。 */}
+            <p className="today-hero-note">
+              {todayInvestment ? `今天已投入 ${todayInvestment} 项。` : "今天还没有投入——记一笔或打卡一件小事都算。"}
+            </p>
+          </div>
+          <div className="today-hero-meter">
+            <span className="today-hero-meter-count">
+              <strong>{currentStreak}</strong>
+              <span>天</span>
+            </span>
+            <span className="today-hero-meter-label">连续成长</span>
           </div>
         </section>
       )}
@@ -456,9 +483,9 @@ export function GrowthView() {
         <>
           <section className="growth-metrics">
             <article><span>活跃天数</span><strong>{activeDateKeys.length}</strong></article>
-            <article><span>当前连续</span><strong>{currentStreak}<small> 天</small></strong></article>
+            <article className="growth-metric-streak"><span>当前连续</span><strong>{currentStreak}<small> 天</small></strong></article>
             <article><span>最长连续</span><strong>{longestStreak}<small> 天</small></strong></article>
-            <article><span>累计投入</span><strong>{Math.round(totalValue * 10) / 10}</strong></article>
+            <article><span>累计投入</span><strong>{Math.round(totalValue * 10) / 10}<small> 次</small></strong></article>
           </section>
           <section className="growth-panel heatmap-panel">
             <div className="growth-panel-head">
@@ -470,6 +497,12 @@ export function GrowthView() {
                 options={[{ value: "", label: "全部目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]}
               />
             </div>
+            {/* 月份刻度与格子同一套 26 列栅格，桌面用来回答「这片是哪几个月」。 */}
+            <div className="heat-months" aria-hidden>
+              {monthMarks.map((mark) => (
+                <span key={mark.col} style={{ gridColumnStart: mark.col + 1 }}>{mark.label}</span>
+              ))}
+            </div>
             <div className="growth-heatmap" aria-label="成长热点图">
               {days.map((date) => {
                 const key = toDateKey(date);
@@ -478,7 +511,7 @@ export function GrowthView() {
                 const entryValue = manualValueByDate.get(key) ?? 0;
                 const value = entryValue + doneCount + habitCount;
                 const level = activityLevelFromValue(value);
-                return <button key={key} className={`heat-cell level-${level}`} title={`${key} · ${value || "无"}投入`} onClick={() => setSelectedDate(key)} />;
+                return <button key={key} className={`heat-cell level-${level}${key === today ? " is-today" : ""}`} title={`${key} · ${value || "无"}投入`} onClick={() => setSelectedDate(key)} />;
               })}
             </div>
             <div className="heatmap-legend"><span>少</span>{[0,1,2,3,4].map((level) => <i key={level} className={`heat-cell level-${level}`} />)}<span>多</span></div>

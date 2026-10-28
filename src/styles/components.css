@@ -1710,6 +1710,76 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .heatmap-legend { display: flex; align-items: center; justify-content: flex-end; gap: 5px; color: var(--text-muted); font-size: var(--font-size-caption); }
 .heatmap-legend .heat-cell { flex: 0 0 12px; width: 12px; height: 12px; aspect-ratio: auto; }
 
+/* ── 桌面成长页收口（2026-10-28）────────────────────────────────────────
+   移动壳的成长页是另一套（mobile.css），下面整体用 html:not([data-shell="mobile"])
+   门控：桌面改的是「怎么读这张图」，移动壳逐像素不动。 */
+
+/* 读数条：顶卡已用衬线大字报了「连续 N 天」，这一格不再重复报一遍——收掉后三格
+   各说一件事（活跃 / 最长 / 累计），也免得四格里三格都是「天」。 */
+html:not([data-shell="mobile"]) .growth-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+html:not([data-shell="mobile"]) .growth-metric-streak { display: none; }
+
+/* 格子去描边：26 周里四分之三是空档，1px 描边把空档画成一格格待填的表格线，整块
+   读作「没填完的表」。空档改用内凹底、亮格保留档色渐进——同一张图从「表格」读成
+   「日历」：底色退到后面，投入自己跳出来。 */
+html:not([data-shell="mobile"]) .heat-cell { border-color: transparent; }
+html:not([data-shell="mobile"]) .heat-cell.level-0 { background: var(--surface-sunken); }
+/* 格子形状：桌面 26 列摊满一千一百像素后，「正方形」被撑到四十像素见方，七行三百
+   多像素——首屏六成都是一片灰砖。改成扁砖（宽随列、高定死一档）：半年压成一条节奏
+   带，月份刻度与今日环都还在原位。移动壳是定宽 14px 方格横向滚，不受影响。 */
+html:not([data-shell="mobile"]) .heat-cell { aspect-ratio: auto; height: clamp(11px, 1.5vw, 15px); }
+html:not([data-shell="mobile"]) .heatmap-legend .heat-cell { width: 12px; height: 12px; }
+/* 月份刻度：与 .growth-heatmap 同 26 列、同 gap、同左右内边距，才压得准格子。
+   基础不出（移动壳窄屏放不下，也已经有横向滚动），只桌面亮。 */
+.heat-months { display: none; }
+html:not([data-shell="mobile"]) .heat-months {
+  display: grid;
+  grid-template-columns: repeat(26, minmax(8px, 1fr));
+  gap: clamp(2px, .3vw, 4px);
+  padding: 0 2px 3px;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+html:not([data-shell="mobile"]) .heat-months span { min-width: 0; overflow: hidden; white-space: nowrap; }
+/* 今天只标位置不给亮度——今天未必有投入，环比颜色诚实。 */
+html:not([data-shell="mobile"]) .heat-cell.is-today { box-shadow: 0 0 0 1.5px var(--text-secondary); }
+
+/* 总览两栏里再放一张完整的卡 = 双层边框「卡中卡」。桌面撤掉内层卡的边框、圆角与
+   底色，改成面板里的行：发丝线分隔、hover 提整行，面板仍是这里唯一的一张卡。
+   目标 tab 的 .goal-grid 里它们照旧是一张张卡（那里没有 .growth-panel 包着）。 */
+html:not([data-shell="mobile"]) .growth-panel > .goal-card,
+html:not([data-shell="mobile"]) .growth-panel > .achievement-card {
+  margin: 0 -10px;
+  padding: 14px 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  transition: background calc(140ms * var(--motion-scale)) ease;
+}
+html:not([data-shell="mobile"]) .growth-panel > .goal-card:hover,
+html:not([data-shell="mobile"]) .growth-panel > .achievement-card:hover { background: var(--surface-sunken); }
+html:not([data-shell="mobile"]) .growth-panel > .goal-card + .goal-card,
+html:not([data-shell="mobile"]) .growth-panel > .achievement-card + .achievement-card {
+  margin-top: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+/* 置顶成就原来靠琥珀描边说话，行式没有边框，换成一道左沿琥珀。 */
+html:not([data-shell="mobile"]) .growth-panel > .achievement-card.pinned { box-shadow: inset 2px 0 0 var(--amber-550); }
+/* 行式里的内容与卡片同尺寸会各自撑一段留白，读起来还是「卡叠卡」。把标题与进度条
+   的上下留白收到行距一档，一行就是：色点状态 / 标题 / 进度 / 读数。 */
+html:not([data-shell="mobile"]) .growth-panel > .goal-card h3 { margin: 9px 0 5px; }
+html:not([data-shell="mobile"]) .growth-panel > .goal-card .goal-progress-track { margin: 10px 0 7px; }
+
+/* 目标详情与成就 tab 都是「读一条 / 写一条」的内容：全宽拉伸会把进度条、阶段输入框
+   与空态框拉到一千一百多像素，一行两端拉断。桌面收成一条读数栏宽度的列，靠左不居中
+   ——页面其余内容也都靠左，居中的孤岛反而更怪。 */
+html:not([data-shell="mobile"]) .goal-detail,
+html:not([data-shell="mobile"]) .achievement-compose,
+html:not([data-shell="mobile"]) .achievement-grid,
+html:not([data-shell="mobile"]) .growth-page > section > .empty-state { max-width: 940px; }
+
 .growth-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-width: 0; margin-top: 14px; }
 .goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 /* 目标为空时,空状态占满整行(此前只占一个 260px 网格列,框显得很窄)。 */
