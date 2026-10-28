@@ -2488,6 +2488,18 @@ html[data-shell="mobile"] .anni-detail-dialog > :nth-last-child(2) {
   margin-bottom: 12px;
 }
 
+/* 「新建/编辑任务」包裹层 .create-task-body：移动壳保持「弹窗本体滚 + 头尾 sticky」不变，
+   body 只作纵向容器并复刻原来的 12px 字段节奏（原来的 `> * + *` 现改由 body 内部提供），
+   底部弹层逐像素与改版前一致。 */
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-task-body > * + * {
+  margin-top: 12px;
+}
+
 /* 完成用时/纪念日详情的动作条同留全屏时代 -20px 通栏，比现 16px 内衬
    多出 4px（按钮左右比字段宽出一截）——改 -16 通栏 + 16px 底距。 */
 html[data-shell="mobile"] .completed-time-modal .completed-time-actions,

@@ -6,6 +6,7 @@ import { priorityLabel } from "@/lib/dates";
 import { DatePicker } from "@/components/DatePicker";
 import { TimeDropdown } from "@/components/TimePicker";
 import { AppIcon } from "@/components/AppIcon";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import type { Task } from "@/types";
 
 /** 把完成时刻（ISO）拆成本地日期 + 时间供表单编辑。 */
@@ -37,11 +38,14 @@ function CompletedTimeEditor({
     void setTaskCompletedAt(task.id, next.toISOString()).then(onClose);
   };
 
+  // 桌面悬浮卡：收进右上角，点外/Esc 收起（同「新建任务」）。
+  useFloatingDismiss(true, onClose);
+
   // Portal 到 body：任务行 hover 时带 transform，会把 fixed 弹窗错位到行内。
   return createPortal(
-    <div className="modal-backdrop" onMouseDown={onClose}>
+    <div className="modal-backdrop floating-backdrop" onMouseDown={onClose}>
       <form
-        className="completed-time-modal"
+        className="completed-time-modal floating-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="completed-time-title"

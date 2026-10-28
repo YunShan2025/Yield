@@ -9,6 +9,7 @@ import { sortProjectsByName } from "@/lib/projects";
 import { fetchGoals } from "@/lib/db";
 import { ensureEndAfterStart } from "@/lib/dates";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { pushBackHandler } from "@/lib/mobileBack";
 import { goalAcceptsSource } from "@/lib/growth";
 
@@ -109,6 +110,9 @@ export function EditTaskDialog() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 桌面悬浮卡：无遮罩、背景全亮可交互，点卡片以外任意处收起（同「新建任务」/「记一笔」）。
+  useFloatingDismiss(Boolean(task), close);
+
   if (!task) return null;
 
   const selectedGoal = goals.find((goal) => goal.id === goalId) ?? null;
@@ -160,9 +164,9 @@ export function EditTaskDialog() {
   };
 
   return (
-    <div className="modal-backdrop" onMouseDown={close}>
+    <div className="modal-backdrop floating-backdrop" onMouseDown={close}>
       <form
-        className="create-task-modal"
+        className="create-task-modal floating-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-task-title"
@@ -176,6 +180,7 @@ export function EditTaskDialog() {
           <h3 id="edit-task-title">编辑任务</h3>
           <button type="button" aria-label="关闭" onClick={close}>×</button>
         </div>
+        <div className="create-task-body">
         <label>任务名称<input ref={titleRef} value={title} placeholder="现在要完成什么？" onChange={(event) => setTitle(event.target.value)} /></label>
         <label>任务说明<AutoGrowTextarea value={description} placeholder="可选：补充背景或完成标准" onChange={(event) => setDescription(event.target.value)} /></label>
         <div className="create-task-grid">
@@ -256,6 +261,7 @@ export function EditTaskDialog() {
               onEndChange={setEndTime}
             />
           </div>
+        </div>
         </div>
         <div className="create-task-actions">
           <button type="button" className="btn-ghost item-action-btn" onClick={close}>取消</button>

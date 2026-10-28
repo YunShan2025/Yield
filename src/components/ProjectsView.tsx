@@ -10,6 +10,7 @@ import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
 import type { Project, Task } from "@/types";
@@ -146,6 +147,10 @@ export function ProjectsView() {
     await useAppStore.getState().refreshAll();
     useAppStore.getState().setToast("项目已移入回收站");
   };
+
+  // 桌面悬浮卡：新建/编辑项目收进右上角，点外/Esc 收起（同「新建任务」）。
+  useFloatingDismiss(creating, () => setCreating(false));
+  useFloatingDismiss(Boolean(editingProject), () => setEditingProject(null));
 
   return (
     <main className="main-workspace projects-view">
@@ -342,9 +347,9 @@ export function ProjectsView() {
       </div>
 
       {creating ? (
-        <div className="modal-backdrop" onMouseDown={() => setCreating(false)}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setCreating(false)}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}
@@ -393,9 +398,9 @@ export function ProjectsView() {
       ) : null}
 
       {editingProject ? (
-        <div className="modal-backdrop" onMouseDown={() => setEditingProject(null)}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setEditingProject(null)}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             onMouseDown={(event) => event.stopPropagation()}
             onSubmit={(event) => {
               event.preventDefault();

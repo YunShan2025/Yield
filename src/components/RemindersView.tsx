@@ -3,6 +3,7 @@ import { useAppStore } from "@/store/app";
 import type { Timer } from "@/types";
 import { formatCountdown, intervalLabel, liveRemaining } from "@/lib/timers";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import { TimeDropdown } from "@/components/TimePicker";
@@ -126,6 +127,9 @@ export function RemindersView() {
   const finishHint =
     timeMode === "finish" && !finishAt ? "" : `预计 ${finishClockIn(countdownSeconds())} 提醒`;
 
+  // 桌面悬浮卡：新建倒计时 / 新建循环提醒收进右上角，点外/Esc 收起（同「新建任务」）。
+  useFloatingDismiss(creating, closeCreate);
+
   return (
     <div className="reminders-view">
       {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧为计时类型切换与新建按钮。 */}
@@ -239,9 +243,9 @@ export function RemindersView() {
 
       {/* 新建倒计时弹窗：与项目/标签页同构；时长只保留自定义。 */}
       {creating && tab === "countdown" ? (
-        <div className="modal-backdrop" onMouseDown={closeCreate}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={closeCreate}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}
@@ -343,9 +347,9 @@ export function RemindersView() {
 
       {/* 新建循环提醒弹窗：无预设模板，只自定义名称与间隔。 */}
       {creating && tab === "interval" ? (
-        <div className="modal-backdrop" onMouseDown={closeCreate}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={closeCreate}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}

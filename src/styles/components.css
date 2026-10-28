@@ -2391,6 +2391,92 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .create-task-actions .btn-primary, .create-task-actions .btn-ghost { width: auto; min-width: 112px; }
 @media (max-width: 620px) { .create-task-grid { grid-template-columns: 1fr; } .create-task-schedule { grid-template-columns: 1fr; } .create-task-time-head { flex-wrap: wrap; } }
 
+/* 桌面「悬浮卡」二级弹窗形态（同「记一笔」抽屉定稿，2026-10-28）。
+   右上角固定、高度随内容：通体 1px 边 + radius-lg + 浮层阴影（阴影只留给浮层）。
+   无遮罩——backdrop 置 display:contents，背景全亮可交互，点外/Esc 收起由 useFloatingDismiss 接管。
+   录入类二级弹窗（任务 / 目标 / 项目 / 标签 / 习惯 / 提醒 / 完成时间 / 纪念日）一律挂
+   .floating-backdrop + .floating-card；只读查看（成长回看）与 AppConfirm 居中确认卡保持居中，
+   不挂这两个类。仅桌面壳生效：移动壳在 mobile.css 复位底部弹层；窄窗下方 700px 复位贴边全屏。 */
+html:not([data-shell="mobile"]) .floating-backdrop {
+  display: contents;
+}
+html:not([data-shell="mobile"]) .floating-card {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 45;
+  width: min(440px, calc(100vw - 28px));
+  height: fit-content;
+  max-height: calc(100vh - 28px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-panel);
+  box-shadow: -10px 16px 44px var(--slate-200-11);
+  overscroll-behavior: contain;
+  animation: ledger-in calc(220ms * var(--motion-scale)) ease-out;
+}
+/* 窄窗与移动壳：悬浮卡复位成贴边全屏（桌面宽窗才悬浮），与 .ledger-drawer 同规则。
+   任务弹窗的宽度声明在下方更具体的选择器里，复位须一并覆盖，故两个选择器并列。 */
+@media (max-width: 700px) {
+  html:not([data-shell="mobile"]) .floating-card,
+  html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    max-height: none;
+    height: auto;
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: -14px 0 42px var(--slate-200-11);
+    animation: none;
+  }
+}
+
+/* 璃幕 / 破晓的主题面板色本身半透明（rgba .82 / .78）。浮层悬在页面内容之上，
+   不像居中弹窗有毛玻璃遮罩垫底，半透明会让底下的文字透上来与表单文字打架。
+   按这两个主题浮层的既有处理（.scope-card / .timeline-task-popover）补磨砂，
+   把透出的内容化成柔光。仅桌面壳——移动壳是贴底弹层，另有 mobile.css 的主题规则。 */
+:root[data-theme="glass"]:not([data-shell="mobile"]) :is(.ledger-drawer, .floating-card) {
+  backdrop-filter: blur(20px) saturate(135%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
+}
+:root[data-theme="dawn"]:not([data-shell="mobile"]) :is(.ledger-drawer, .floating-card) {
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+}
+
+/* 「新建 / 编辑任务」字段多、含下拉与日历：比族默认宽（560 保两列），并走 head/body/footer 三段
+   —— body 独立内滚、footer 钉底不悬浮、短表单零死白。仍排除 AppConfirm（它也复用 .create-task-modal）。 */
+html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) {
+  width: min(560px, calc(100vw - 28px));
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) .modal-head {
+  flex: none;
+  padding: 16px 20px 0;
+}
+/* 滚动区：字段在此独立内滚（滚动条全局已隐，见 primitives global-12），footer 不受牵连。 */
+html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) .create-task-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 16px;
+  padding: 16px 20px 6px;
+}
+html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) .create-task-actions {
+  flex: none;
+  padding: 14px 20px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-panel);
+}
+
 .project-edit-modal label {
   display: grid;
   gap: 8px;
@@ -6591,6 +6677,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 @media (prefers-reduced-motion: reduce) {
   .ledger-drawer { animation: none; }
   .ledger-progress i { transition: none; }
+  html:not([data-shell="mobile"]) .floating-card { animation: none; }
 }
 
 .app-root[data-privacy="on"] :is(

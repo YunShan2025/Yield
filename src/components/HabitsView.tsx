@@ -17,6 +17,7 @@ import { WeekdayPicker } from "@/components/WeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import type { RepeatRule } from "@/types";
@@ -205,6 +206,9 @@ export function HabitsView() {
     if (ok) void removeHabit(habit.id);
   };
 
+  // 桌面悬浮卡：新建/编辑习惯收进右上角，点外/Esc 收起（同「新建任务」）。
+  useFloatingDismiss(creating || Boolean(editingHabit), closeEditor);
+
   return (
     <main className="main-workspace habits-view">
       <div className="workspace-top">
@@ -317,9 +321,9 @@ export function HabitsView() {
       </div>
 
       {creating || editingHabit ? (
-        <div className="modal-backdrop" onMouseDown={closeEditor}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={closeEditor}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}

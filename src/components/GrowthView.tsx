@@ -21,6 +21,7 @@ import { SelectMenu } from "@/components/SelectMenu";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";import {
   activityLevelFromValue,
@@ -332,6 +333,8 @@ export function GrowthView() {
     setShowCreate(true);
   };
 
+  // 桌面悬浮卡：新建/编辑目标收进右上角，点外/Esc 收起（同「新建任务」）。
+  useFloatingDismiss(showCreate, () => setShowCreate(false));
 
   // 表单不再问「这是什么类型的目标」，但每种类型的进度算法不同，
   // 所以按目标自身的类型决定该出现哪些输入框、以及引导框怎么说。
@@ -713,8 +716,8 @@ export function GrowthView() {
       ) : null}
 
       {showCreate ? (
-        <div className="modal-backdrop" onMouseDown={() => setShowCreate(false)}>
-          <div className="goal-create-modal" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setShowCreate(false)}>
+          <div className="goal-create-modal floating-card" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-head">
               <div>
                 <h3>{editingGoalId ? "编辑目标" : "新建目标"}</h3>

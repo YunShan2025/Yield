@@ -10,6 +10,7 @@ import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
 import type { Tag, Task } from "@/types";
@@ -157,6 +158,10 @@ export function TagsView() {
     setEditingTag(null);
     useAppStore.getState().setToast("标签已更新");
   };
+
+  // 桌面悬浮卡：新建/编辑标签收进右上角，点外/Esc 收起（同「新建任务」）。
+  useFloatingDismiss(creating, () => setCreating(false));
+  useFloatingDismiss(Boolean(editingTag), () => setEditingTag(null));
 
   return (
     <main className="main-workspace tags-view">
@@ -415,9 +420,9 @@ export function TagsView() {
       </div>
 
       {creating ? (
-        <div className="modal-backdrop" onMouseDown={() => setCreating(false)}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setCreating(false)}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}
@@ -465,9 +470,9 @@ export function TagsView() {
       ) : null}
 
       {editingTag ? (
-        <div className="modal-backdrop" onMouseDown={() => setEditingTag(null)}>
+        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setEditingTag(null)}>
           <form
-            className="project-edit-modal"
+            className="project-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}

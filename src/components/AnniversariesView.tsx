@@ -20,6 +20,7 @@ import { SelectMenu } from "@/components/SelectMenu";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { isMobileShell } from "@/lib/platform";
+import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import { DatePicker } from "@/components/DatePicker";
@@ -140,6 +141,11 @@ export function AnniversariesView() {
     Boolean(title.trim()) &&
     (calendar === "solar" ? Boolean(eventDate) : Boolean(lunarSolarPreview));
 
+  // 桌面悬浮卡：新建纪念日收进右上角，点外/Esc 收起；写入中不收（同 backdrop 的 busy 判断）。
+  useFloatingDismiss(composerOpen, () => {
+    if (!busy) setComposerOpen(false);
+  });
+
   return (
     <main className="main-workspace moments-page anniversaries-page">
       {/* 与「今日」同构的标题区:h2 标题 + 副标题,右侧直达「新建纪念日」。 */}
@@ -185,7 +191,7 @@ export function AnniversariesView() {
 
       <div className="moments-body">
 
-      {composerOpen ?<div className="modal-backdrop" onMouseDown={() => !busy && setComposerOpen(false)}><section className="anni-composer anni-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-compose-title" onMouseDown={(event) => event.stopPropagation()}><header><div><h2 id="anni-compose-title">新建纪念日</h2></div><button type="button" className="anni-close" aria-label="关闭" onClick={() => setComposerOpen(false)}><AppIcon name="close" size={14} /></button></header>
+      {composerOpen ?<div className="modal-backdrop floating-backdrop" onMouseDown={() => !busy && setComposerOpen(false)}><section className="anni-composer anni-composer-dialog floating-card" role="dialog" aria-modal="true" aria-labelledby="anni-compose-title" onMouseDown={(event) => event.stopPropagation()}><header><div><h2 id="anni-compose-title">新建纪念日</h2></div><button type="button" className="anni-close" aria-label="关闭" onClick={() => setComposerOpen(false)}><AppIcon name="close" size={14} /></button></header>
         <div className="anni-field">
           <label className="field-label">名称</label>
           <input
