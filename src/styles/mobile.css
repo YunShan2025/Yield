@@ -1917,7 +1917,7 @@ html[data-shell="mobile"] .mledger-comp-bar i {
   border-radius: 3px;
 }
 
-/* ---------- 六个月流向：成对竖条小图 ---------- */
+/* ---------- 半年走向：账本脉搏(图例章) ---------- */
 
 html[data-shell="mobile"] .mledger-legend {
   display: inline-flex;
@@ -1928,71 +1928,39 @@ html[data-shell="mobile"] .mledger-legend {
 }
 
 html[data-shell="mobile"] .mledger-legend i {
-  width: 8px;
-  height: 8px;
-  border-radius: 3px;
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
   margin-left: 7px;
 }
 
 html[data-shell="mobile"] .mledger-legend i.inc {
-  background: color-mix(in srgb, var(--success) 70%, transparent);
+  background: var(--success);
 }
 
 html[data-shell="mobile"] .mledger-legend i.exp {
-  background: color-mix(in srgb, var(--danger) 78%, transparent);
+  background: var(--danger);
 }
 
-html[data-shell="mobile"] .mledger-trend {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 134px;
-  padding-top: 6px;
+/* 半年走向改共用账本脉搏(.lt-*,components.css):绘图区压矮一档,
+   圆点靠百分比 top 自动跟随;月份标签沿用移动行件的字档。
+   旧 .mledger-trend 双柱族已删(2026-10-27)。 */
+html[data-shell="mobile"] .lt-chart {
+  --lt-h: 118px;
 }
 
-html[data-shell="mobile"] .mledger-trend-col {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  text-align: center;
-}
-
-html[data-shell="mobile"] .mledger-trend-bars {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 4px;
-  height: 100%;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, var(--surface-panel));
-}
-
-html[data-shell="mobile"] .mledger-trend-bars i {
-  width: 11px;
-  max-width: 34%;
-  border-radius: 3px 3px 0 0;
-}
-
-html[data-shell="mobile"] .mledger-trend-bars i.inc {
-  background: color-mix(in srgb, var(--success) 55%, transparent);
-}
-
-html[data-shell="mobile"] .mledger-trend-bars i.exp {
-  background: color-mix(in srgb, var(--danger) 78%, transparent);
-}
-
-html[data-shell="mobile"] .mledger-trend-col small {
+html[data-shell="mobile"] .lt-m {
   font-size: 0.719rem;
   font-weight: 600;
   color: var(--text-secondary);
-  font-variant-numeric: lining-nums tabular-nums;
 }
 
-html[data-shell="mobile"] .mledger-trend-col.on small {
+html[data-shell="mobile"] .lt-col.is-sel .lt-m {
   color: var(--accent-strong);
-  font-weight: 600;
+}
+
+html[data-shell="mobile"] .lt-col:active {
+  background: var(--surface-hover);
 }
 
 html[data-shell="mobile"] .mledger-month-stat {

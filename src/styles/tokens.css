@@ -347,6 +347,15 @@
   --shadow-1: 0 6px 20px rgba(36, 64, 112, 0.06);
 }
 
+/* 账本配色别名:由主题原语派生,四套主题自动换挡。放 :root(而非 .ledger-view)
+   是因为「半年走向」脉搏双端共用——桌面根 .ledger-view 与移动壳根 .mledger
+   都继承 :root,变量在两壳都解析;挂在 .ledger-view 上时移动壳取不到,折线会回退成黑色。 */
+:root {
+  --ledger-income: var(--success);
+  --ledger-expense: var(--danger);
+  --ledger-line: color-mix(in srgb, var(--border) 78%, var(--surface-panel));
+}
+
 /* ============================================================
    语义层 · 静夜（沉静 · 低眩光）
    ============================================================ */

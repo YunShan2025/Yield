@@ -29,12 +29,13 @@ const MOBILE_TASK_PREVIEW = 5;
 /** 桌面脉搏图详情：一天最多露这么多条，溢出折叠成「还有 N 项」。 */
 const PULSE_TASK_PREVIEW = 10;
 
-/* 脉搏图几何（viewBox 单位）：高 152 与 .wp-lines 的固定高度 1:1，dot 才能用
+/* 脉搏图几何（viewBox 单位）：高 136 与 .wp-lines 的固定高度 1:1，dot 才能用
    py() 的像素值直接落位；x 是 0-100 随容器拉伸，描边吃 non-scaling-stroke。
-   顶部留 34 单位：峰值标签要悬在峰点上方而不被卡片裁掉。 */
-const PULSE_PLOT_TOP = 34;
+   顶部留 28 单位：峰值标签（-26 偏移）要悬在峰点上方而不被卡片裁掉；
+   基线以下留 18（2026-10-27 收紧，账本半年走向同口径）。 */
+const PULSE_PLOT_TOP = 28;
 const PULSE_PLOT_BASE = 118;
-const PULSE_PLOT_H = PULSE_PLOT_BASE + PULSE_PLOT_TOP;
+const PULSE_PLOT_H = 136;
 
 function formatMd(date: string) {
   const [, m, d] = date.split("-");
@@ -170,8 +171,9 @@ export function WeeklyChecklistView() {
   const selectedPulseDay = days[weekDates.indexOf(selectedPulseDate)];
 
   // 折线坐标：x 七天均分（与 .wp-days 的 7 个 flex 列同一套中心线），
-  // y 下限 max(4, 峰值) 防空周折线贴地。
-  const pulseMax = Math.max(4, ...days.map((day) => day.total));
+  // y 按实际峰值定标（下限 1，与账本脉搏同口径）：峰值日总是顶到画满，
+  // 轻任务周不再被 max(4,…) 地板压成贴地一线（2026-10-27：空白率高=读不到形状）。
+  const pulseMax = Math.max(1, ...days.map((day) => day.total));
   const pulseX = (index: number) => ((index + 0.5) / 7) * 100;
   const pulseY = (value: number) =>
     PULSE_PLOT_BASE - (value / pulseMax) * (PULSE_PLOT_BASE - PULSE_PLOT_TOP);

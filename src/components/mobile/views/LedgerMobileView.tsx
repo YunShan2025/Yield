@@ -3,13 +3,16 @@ import {
   fetchLedgerCategorySummary,
   fetchLedgerTransactions,
   fetchLedgerTrend,
+  fetchLedgerTrendMonths,
   formatLedgerMoney,
+  pickTrendWindow,
   type LedgerCategorySummary,
   type LedgerMonthSummary,
   type LedgerTransaction,
 } from "@/lib/db";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
 import { LedgerEntrySheet } from "@/components/mobile/LedgerEntrySheet";
+import { LedgerTrendPulse } from "@/components/LedgerTrendPulse";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { addDays } from "@/lib/dates";
@@ -54,7 +57,7 @@ function weekdayLabel(date: string) {
 
 /**
  * 移动端「记账」—— 以账单统计与展示为主：月度总览、支出去向、
- * 六个月流向与按日分组的明细。新建与修改走 FAB 打开的底部弹层。
+ * 半年走向与按日分组的明细。新建与修改走 FAB 打开的底部弹层。
  */
 export function LedgerMobileView() {
   const today = useTodayDate();
@@ -70,13 +73,16 @@ export function LedgerMobileView() {
     void Promise.all([
       fetchLedgerTransactions(month),
       fetchLedgerCategorySummary(month),
-      fetchLedgerTrend(month),
-    ]).then(([tx, categories, months]) => {
-      setTransactions(tx);
-      setSummary(categories);
-      setTrend(months);
-      setLoading(false);
-    });
+      fetchLedgerTrendMonths(),
+      // 展示窗与桌面同逻辑:含浏览月、有账月最多,不随点选缩水。
+    ]).then(([tx, categories, active]) =>
+      fetchLedgerTrend(pickTrendWindow(active, month)).then((months) => {
+        setTransactions(tx);
+        setSummary(categories);
+        setTrend(months);
+        setLoading(false);
+      }),
+    );
   }, [month]);
 
   useEffect(() => {
@@ -117,10 +123,6 @@ export function LedgerMobileView() {
     return [...map.entries()];
   }, [transactions]);
 
-  const chartMax = Math.max(
-    1,
-    ...trend.map((item) => Math.max(item.expense_cents, item.income_cents)),
-  );
   // 构成默认只列前 3 类，「展开全部 N 类」看全量（与计数、顶卡色条同口径）。
   const visibleCategories = compExpanded ? summary : summary.slice(0, 3);
 
@@ -231,45 +233,18 @@ export function LedgerMobileView() {
           ) : null}
         </section>
 
-        <section className="mtoday-card" aria-label="六个月流向">
+        <section className="mtoday-card" aria-label="半年走向">
           <div className="mtoday-shead">
-            <h3>六个月流向</h3>
+            <h3>半年走向</h3>
             <span className="mledger-legend">
               <i className="inc" aria-hidden="true" />收入
               <i className="exp" aria-hidden="true" />支出
             </span>
           </div>
           {trend.length ? (
-            <div className="mledger-trend">
-              {trend.map((item) => (
-                <div
-                  className={`mledger-trend-col${item.month === month ? " on" : ""}`}
-                  key={item.month}
-                >
-                  <div className="mledger-trend-bars">
-                    <i
-                      className="inc"
-                      style={{
-                        height: `${Math.max(
-                          3,
-                          Math.round((item.income_cents / chartMax) * 100),
-                        )}%`,
-                      }}
-                    />
-                    <i
-                      className="exp"
-                      style={{
-                        height: `${Math.max(
-                          3,
-                          Math.round((item.expense_cents / chartMax) * 100),
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                  <small>{Number(item.month.slice(5))}月</small>
-                </div>
-              ))}
-            </div>
+            /* 与桌面共用同一具脉搏(组件内注释):点一月跳看该月、展示窗不缩。
+               移动壳把绘图区压矮(mobile.css --lt-h),折线几何不用改。 */
+            <LedgerTrendPulse trend={trend} month={month} hidden={false} onPick={setMonth} />
           ) : (
             <p className="mtoday-empty">还没有趋势数据。</p>
           )}

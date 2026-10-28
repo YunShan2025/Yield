@@ -93,6 +93,43 @@ export function monthRange(month: string): [string, string] {
   return [start, end];
 }
 
+function shiftMonth(month: string, delta: number): string {
+  const date = new Date(`${month}-01T00:00:00`);
+  date.setMonth(date.getMonth() + delta);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * 「半年走向」展示窗：6 个月宽、必须含浏览月，取窗口内有账月份最多的一种摆法。
+ * 浏览月不强行钉在最右——点/切到窗口中段的月份时窗不动，月份数不会缩水；
+ * 只有切到窗外（更早的月份）窗才整体平移，把尽量多的有账月拉进画面。
+ * 平局取「浏览月靠右」的先解（退化为旧「截至浏览月的近 6 月」）。返回窗尾月，
+ * 喂给 fetchLedgerTrend（窗恒 6 宽，endMonth 即可完全确定窗）。
+ */
+export function pickTrendWindow(activeMonths: string[], browseMonth: string, span = 6): string {
+  let bestEnd = browseMonth;
+  let bestCount = -1;
+  for (let back = span - 1; back >= 0; back--) {
+    const start = shiftMonth(browseMonth, -back);
+    const end = shiftMonth(browseMonth, span - 1 - back);
+    const count = activeMonths.filter((m) => m >= start && m <= end).length;
+    if (count > bestCount) {
+      bestCount = count;
+      bestEnd = end;
+    }
+  }
+  return bestEnd;
+}
+
+/** 有账的月份全集（升序）：给 pickTrendWindow 挑窗用。 */
+export async function fetchLedgerTrendMonths(): Promise<string[]> {
+  const db = await getDb();
+  const rows = await db.select<{ month: string }[]>(
+    `SELECT DISTINCT substr(date, 1, 7) month FROM ledger_transactions WHERE is_deleted=0 ORDER BY month`,
+  );
+  return rows.map((row) => row.month);
+}
+
 export async function fetchLedgerCategories(kind?: LedgerKind, includeDisabled = false) {
   const db = await getDb();
   const where = [kind ? "kind = $1" : "1=1", includeDisabled ? "1=1" : "is_enabled = 1"];
