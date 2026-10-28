@@ -775,6 +775,16 @@ export function GrowthView() {
                 <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
               </div>
             </div>
+
+            {/* 成就只读栏（桌面）：详情底部的承接——这个目标攒下的值得记下的日子
+                在这里回响；想记新的去成就墙。移动壳不渲染，零像素差。 */}
+            {!isMobileShell() ? (
+              <GoalAchievementsBar
+                goalId={selectedGoal.id}
+                achievements={achievements}
+                onOpenWall={() => setAchievementsOpen(true)}
+              />
+            ) : null}
           </section>
           ) : (
             <div className="goal-workbench-empty">
@@ -1035,6 +1045,36 @@ function GoalDetailHero({ goal }: { goal: Goal }) {
         <b>{Math.round(progress)}%</b>
       </div>
     </div>
+  );
+}
+
+/* 详情底部的成就只读栏（桌面）：按 goal_id 过滤、时间倒序、3 条封顶，
+   只读不管理——增删改都在成就墙浮层里做。组件只在桌面分支渲染，无需壳门控。 */
+function GoalAchievementsBar({ goalId, achievements, onOpenWall }: { goalId: string; achievements: Achievement[]; onOpenWall: () => void }) {
+  const items = achievements
+    .filter((item) => item.goal_id === goalId)
+    .sort((a, b) => b.achieved_at.localeCompare(a.achieved_at))
+    .slice(0, 3);
+  return (
+    <section className="goal-linked-achievements">
+      <div className="goal-section-head">
+        <span>这个目标的成就</span>
+        <button className="text-btn" onClick={onOpenWall}>去成就墙</button>
+      </div>
+      {items.length ? (
+        <ul>
+          {items.map((item) => (
+            <li key={item.id}>
+              <span className="goal-linked-medal">✦</span>
+              <strong>{item.title}</strong>
+              <time>{item.achieved_at}</time>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="goal-empty">还没有值得记下的时刻——攒到了，会先出现在这里。</p>
+      )}
+    </section>
   );
 }
 
