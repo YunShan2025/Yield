@@ -502,7 +502,8 @@ export function GrowthView() {
           </button>
         </div>
       </div>
-      {/* 顶卡两端同一套读数：移动壳是数据型引导卡，桌面走「今日」同款 .today-hero-meter。 */}
+      {/* 顶卡两端都在说「现在」：移动壳是数据型引导卡（连续成长）；桌面顶卡报今天投入，
+          连续与累计归下面的读数条（四格与移动壳同口径），一个数只在一处当大字。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={currentStreak}
@@ -513,17 +514,17 @@ export function GrowthView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            {/* 顶卡说「现在」：一句今天的话，读数交给右侧 .today-hero-meter（与项目/标签/复盘同族）。 */}
+            {/* 顶卡说「今天」：一句今天的话，数字交给右侧 .today-hero-meter（与项目/标签/复盘同族）。 */}
             <p className="today-hero-note">
-              {todayInvestment ? `今天已投入 ${todayInvestment} 项。` : "今天还没有投入——记一笔或打卡一件小事都算。"}
+              {todayInvestment ? "今天动的每一项，都算进了下面这张图。" : "今天还没有投入——记一笔或打卡一件小事都算。"}
             </p>
           </div>
           <div className="today-hero-meter">
             <span className="today-hero-meter-count">
-              <strong>{currentStreak}</strong>
-              <span>天</span>
+              <strong>{todayInvestment}</strong>
+              <span>项</span>
             </span>
-            <span className="today-hero-meter-label">连续成长</span>
+            <span className="today-hero-meter-label">今天已投入</span>
           </div>
         </section>
       )}
@@ -540,7 +541,7 @@ export function GrowthView() {
         <>
           <section className="growth-metrics">
             <article><span>活跃天数</span><strong>{activeDateKeys.length}</strong></article>
-            <article className="growth-metric-streak"><span>当前连续</span><strong>{currentStreak}<small> 天</small></strong></article>
+            <article><span>当前连续</span><strong>{currentStreak}<small> 天</small></strong></article>
             <article><span>最长连续</span><strong>{longestStreak}<small> 天</small></strong></article>
             <article><span>累计投入</span><strong>{Math.round(totalValue * 10) / 10}<small> 次</small></strong></article>
           </section>

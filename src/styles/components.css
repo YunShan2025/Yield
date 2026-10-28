@@ -1280,11 +1280,6 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
    移动壳的成长页是另一套（mobile.css），下面整体用 html:not([data-shell="mobile"])
    门控：桌面改的是「怎么读这张图」，移动壳逐像素不动。 */
 
-/* 读数条：顶卡已用衬线大字报了「连续 N 天」，这一格不再重复报一遍——收掉后三格
-   各说一件事（活跃 / 最长 / 累计），也免得四格里三格都是「天」。 */
-html:not([data-shell="mobile"]) .growth-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-html:not([data-shell="mobile"]) .growth-metric-streak { display: none; }
-
 /* 格子去描边：26 周里四分之三是空档，1px 描边把空档画成一格格待填的表格线，整块
    读作「没填完的表」。空档改用内凹底、亮格保留档色渐进——同一张图从「表格」读成
    「日历」：底色退到后面，投入自己跳出来。 */
