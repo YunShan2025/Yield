@@ -2515,6 +2515,27 @@ html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) .crea
   min-width: 108px;
 }
 
+/* 习惯表单字段多（名称/排期/星期/每周次数/关联目标/目标计量/单位数/打卡日数/无限期开关），
+   440 悬浮卡里单列要堆到 803 高，比屏幕还高。桌面把「短标签 + 一行控件」的字段两两并排：
+   名称、星期选择（7 个筹码要宽度）、底部动作条横跨整行，其余按文档流自动配对。
+   只加类不改 DOM，且整块限定 .habit-edit-modal 与非移动壳 —— 项目/标签/提醒等同族弹窗、
+   移动壳的单列底部弹层（含 .project-edit-modal > * + * 那套节奏）一律不受影响。 */
+html:not([data-shell="mobile"]) .habit-edit-modal {
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+html:not([data-shell="mobile"]) .habit-edit-modal > .modal-head,
+html:not([data-shell="mobile"]) .habit-edit-modal > .project-edit-actions,
+html:not([data-shell="mobile"]) .habit-edit-modal > .field-full {
+  grid-column: 1 / -1;
+}
+/* -6px 是单列时代收「开关紧贴上一格」间隙用的，并排后会顶出本行；改用 align-self 贴本行底 ——
+   开关与左格输入框同一水平线成对，又不像 margin-top 那样把整行撑高 27px。 */
+html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
+  margin: 0;
+  align-self: end;
+}
+
 .empty-state {
   padding: 48px 12px;
   text-align: center;

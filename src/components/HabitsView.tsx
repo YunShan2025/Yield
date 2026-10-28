@@ -323,7 +323,7 @@ export function HabitsView() {
       {creating || editingHabit ? (
         <div className="modal-backdrop floating-backdrop" onMouseDown={closeEditor}>
           <form
-            className="project-edit-modal floating-card"
+            className="project-edit-modal habit-edit-modal floating-card"
             role="dialog"
             aria-modal="true"
             onMouseDown={(event) => event.stopPropagation()}
@@ -338,7 +338,7 @@ export function HabitsView() {
               </div>
               <button type="button" onClick={closeEditor}>×</button>
             </div>
-            <label>
+            <label className="field-full">
               习惯名称
               <input
                 autoFocus
@@ -354,7 +354,7 @@ export function HabitsView() {
                 value={scheduleMode}
                 onChange={(value) => setScheduleMode(value as "daily" | "weekdays" | "flexible")}
                 options={[
-                  { value: "flexible", label: "每周若干次（不指定日子）" },
+                  { value: "flexible", label: "每周若干次" },
                   { value: "daily", label: "每天" },
                   { value: "weekdays", label: "每周指定几天" },
                 ]}
@@ -364,7 +364,7 @@ export function HabitsView() {
               </small>
             </label>
             {scheduleMode === "weekdays" ? (
-              <label>
+              <label className="field-full">
                 选择星期
                 <WeekdayPicker weekdays={weekdays} onChange={setWeekdays} />
                 <small className="project-field-hint">
