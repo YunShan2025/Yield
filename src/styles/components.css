@@ -1803,10 +1803,64 @@ html:not([data-shell="mobile"]) .growth-panel > .goal-card .goal-progress-track 
 /* 目标详情与成就 tab 都是「读一条 / 写一条」的内容：全宽拉伸会把进度条、阶段输入框
    与空态框拉到一千一百多像素，一行两端拉断。桌面收成一条读数栏宽度的列，靠左不居中
    ——页面其余内容也都靠左，居中的孤岛反而更怪。 */
-html:not([data-shell="mobile"]) .goal-detail,
-html:not([data-shell="mobile"]) .achievement-compose,
-html:not([data-shell="mobile"]) .achievement-grid,
-html:not([data-shell="mobile"]) .growth-page > section > .empty-state { max-width: 940px; }
+html:not([data-shell="mobile"]) .goal-detail { max-width: 940px; }
+
+/* 窄桌（≤960）引导框有 138px 的最低高度——那是给「标语 + 一句说明」那种顶卡留的。
+   成长页顶卡是「一句今天 + 一个读数」，撑到 138 就又变回一块空：按内容收高。 */
+@media (max-width: 960px) {
+  html:not([data-shell="mobile"]) .growth-page .guide-hero { min-height: 0; }
+}
+
+/* ── 目标工作台（B2）：清单在左、详情在右，同屏改不来回跳 ──────────────────
+   DOM 是详情在前（选中后眼睛先看详情），桌面用 grid-column 把清单摆回左边；
+   移动壳仍是钻入，切换在 mobile.css。 */
+html:not([data-shell="mobile"]) .goal-workbench {
+  display: grid;
+  grid-template-columns: minmax(272px, 320px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+html:not([data-shell="mobile"]) .goal-workbench-list { grid-column: 1; grid-row: 1; min-width: 0; }
+html:not([data-shell="mobile"]) .goal-workbench-detail { grid-column: 2; grid-row: 1; min-width: 0; }
+/* 详情列桌面永远在场：没选目标时给一句指引，右栏不至于空成一片。 */
+html:not([data-shell="mobile"]) .goal-workbench-empty {
+  padding: 34px 26px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-panel);
+  color: var(--text-secondary);
+}
+html:not([data-shell="mobile"]) .goal-workbench-empty strong { display: block; margin-bottom: 6px; color: var(--text-primary); font-size: var(--font-size-h3); }
+html:not([data-shell="mobile"]) .goal-workbench-empty p { margin: 0 0 14px; }
+/* 详情常驻，「← 返回目标列表」没有对象了（移动壳钻入时才需要它）。 */
+html:not([data-shell="mobile"]) .goal-detail > .text-btn { display: none; }
+/* 清单里的卡读作「可选条目」：选中态主色描边 + accent 淡底，与 hover 只一档之别。 */
+html:not([data-shell="mobile"]) .goal-workbench-list .goal-card { width: 100%; }
+html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-color: var(--accent); background: var(--accent-faint); }
+/* 窄桌（≤1080）：两栏会把详情挤成 250px，改成上下堆叠——清单在上、详情在下；
+   清单就在眼前时，那句「选一个目标」的占位不必再占一屏。 */
+@media (max-width: 1080px) {
+  html:not([data-shell="mobile"]) .goal-workbench { grid-template-columns: minmax(0, 1fr); }
+  html:not([data-shell="mobile"]) .goal-workbench-list { grid-column: 1; grid-row: 1; }
+  html:not([data-shell="mobile"]) .goal-workbench-detail { grid-column: 1; grid-row: 2; }
+  html:not([data-shell="mobile"]) .goal-workbench-empty { display: none; }
+}
+
+/* 成就墙（浮层卡内，桌面右上角 / 移动壳底部弹层）：录入行 + 墙列表。
+   弹层本身就是一张卡，墙里的条目再带一圈边框又是「卡中卡」——这里收成行，
+   发丝线分隔，置顶仍用一道左沿琥珀说话。 */
+.achievement-compose-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 2px 0 6px; }
+/* 输入框独占一行，「关联目标 + 保存」同排：440 的浮层卡里三件挤一排必然断行，
+   与其让它断得随机，不如把两行定下来（移动壳底部弹层同一排法）。 */
+.achievement-compose-row > input { flex: 1 1 100%; min-width: 0; }
+.achievement-compose-row > .select-menu { flex: 1 1 auto; }
+.achievement-compose-row > .btn-primary { flex: 0 0 auto; width: auto; }
+.achievement-wall-list { display: grid; }
+.achievement-wall-list .achievement-card { padding: 12px 10px; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+.achievement-wall-list .achievement-card:first-child { border-top: 0; }
+.achievement-wall-list .achievement-card.pinned { box-shadow: inset 2px 0 0 var(--amber-550); }
+/* 总览「最近成就」空态：一句话，别让面板空成一块白板。 */
+.growth-panel-hint { margin: 2px 0 0; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1.6; }
 
 .growth-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-width: 0; margin-top: 14px; }
 .goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }

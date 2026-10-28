@@ -2999,6 +2999,20 @@ html[data-shell="mobile"] button.heat-cell:hover {
   outline: 0;
 }
 
+/* 目标 tab 在移动壳仍是钻入：两端共用同一套 DOM（详情 + 清单都在 .goal-workbench 里），
+   这里只切两栏——没选中只出清单，选中就整屏看详情（「← 返回目标列表」留着）。 */
+html[data-shell="mobile"] .goal-workbench-detail {
+  display: none;
+}
+
+html[data-shell="mobile"] .goal-workbench.has-detail .goal-workbench-detail {
+  display: block;
+}
+
+html[data-shell="mobile"] .goal-workbench.has-detail .goal-workbench-list {
+  display: none;
+}
+
 html[data-shell="mobile"] .goal-grid {
   grid-template-columns: 1fr;
   gap: 10px;

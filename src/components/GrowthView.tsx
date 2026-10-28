@@ -33,7 +33,7 @@ import { confirmAction } from "@/components/AppConfirm";import {
   resolveGoalTarget,
 } from "@/lib/growth";
 
-type GrowthTab = "overview" | "goals" | "achievements";
+type GrowthTab = "overview" | "goals";
 
 const COLORS = ["#2F6FED", "#6F83D6", "#3E9B78", "#D7864D", "#C35D77", "#7367A8"];
 const GOAL_STATUS_LABEL: Record<Goal["status"], string> = {
@@ -94,6 +94,9 @@ export function GrowthView() {
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  // 成就不再单独占一个页签：墙与录入收进一处浮层卡（移动壳是底部弹层），
+  // 入口在总览「最近成就」栏头，看完顺手记一条，不用先在页签之间来回跳。
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalTitle, setGoalTitle] = useState("");
   // 表单不再让用户选目标类型/单位：新建一律「累计数量 · 次」；编辑时记住目标
@@ -375,6 +378,23 @@ export function GrowthView() {
     setShowCreate(true);
   };
 
+  // 成就只有「标题 + 关联目标」两项，回车即存；描述与来源留给同步端与自动来源。
+  const saveAchievement = () => {
+    const title = achievementTitle.trim();
+    if (!title) return;
+    void createAchievement({
+      title,
+      description: "",
+      achieved_at: todayDateString(),
+      goal_id: achievementGoalId || null,
+      source_type: "manual",
+    }).then(() => {
+      setAchievementTitle("");
+      setAchievementGoalId("");
+      return refresh();
+    });
+  };
+
   const openGoalEditor = (goal: Goal) => {
     setEditingGoalId(goal.id);
     setGoalTitle(goal.title);
@@ -389,6 +409,7 @@ export function GrowthView() {
 
   // 桌面悬浮卡：新建/编辑目标收进右上角，点外/Esc 收起（同「新建任务」）。
   useFloatingDismiss(showCreate, () => setShowCreate(false));
+  useFloatingDismiss(achievementsOpen, () => setAchievementsOpen(false));
 
   // 表单不再问「这是什么类型的目标」，但每种类型的进度算法不同，
   // 所以按目标自身的类型决定该出现哪些输入框、以及引导框怎么说。
@@ -508,9 +529,9 @@ export function GrowthView() {
       )}
 
       <nav className="growth-tabs">
-        {(["overview", "goals", "achievements"] as GrowthTab[]).map((item) => (
+        {(["overview", "goals"] as GrowthTab[]).map((item) => (
           <button key={item} className={tab === item ? "active" : ""} onClick={() => setTab(item)}>
-            {item === "overview" ? "成长总览" : item === "goals" ? "目标" : "成就"}
+            {item === "overview" ? "成长总览" : "目标"}
           </button>
         ))}
       </nav>
@@ -567,13 +588,18 @@ export function GrowthView() {
           </section>
           <section className="growth-columns">
             <div className="growth-panel"><div className="growth-panel-head"><h3>进行中的目标</h3><button onClick={() => setTab("goals")}>查看全部</button></div>{goals.filter((goal) => goal.status === "active").slice(0,4).map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={() => { setSelectedGoalId(goal.id); setTab("goals"); }} />)}</div>
-            <div className="growth-panel"><div className="growth-panel-head"><h3>最近成就</h3><button onClick={() => setTab("achievements")}>成就墙</button></div>{achievements.slice(0,4).map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} />)}</div>
+            <div className="growth-panel"><div className="growth-panel-head"><h3>最近成就</h3><button onClick={() => setAchievementsOpen(true)}>成就墙</button></div>{achievements.slice(0,4).map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} />)}{achievements.length ? null : <p className="growth-panel-hint">还没有记下的成就。值得记下的一天，去「成就墙」留一笔。</p>}</div>
           </section>
         </>
       ) : null}
 
       {tab === "goals" ? (
-        selectedGoal ? (
+        /* 目标工作台：清单与详情同屏，改一个目标的阶段时还看得见别的目标在什么位置，
+           不必再「点进去 → 返回列表」来回跳。移动壳仍是钻入（CSS 用 has-detail 切两栏）。
+           DOM 是详情在前、清单在后，桌面用 grid-column 把清单摆回左边。 */
+        <section className={`goal-workbench${selectedGoal ? " has-detail" : ""}`}>
+        <div className="goal-workbench-detail">
+          {selectedGoal ? (
           <section className="goal-detail">
             <button className="text-btn" onClick={() => setSelectedGoalId(null)}>← 返回目标列表</button>
             <div className="goal-detail-hero" style={{ "--goal-color": selectedGoal.color } as CSSProperties}>
@@ -741,8 +767,15 @@ export function GrowthView() {
               </div>
             </div>
           </section>
-        ) : (
-          <>
+          ) : (
+            <div className="goal-workbench-empty">
+              <strong>左边选一个目标</strong>
+              <p>阶段、推进它的任务与习惯、计入与否，都在这一栏里改。</p>
+              <button className="item-action-btn" type="button" onClick={openCreateGoal}>新建目标</button>
+            </div>
+          )}
+        </div>
+        <div className="goal-workbench-list">
           <section aria-label="进行中的目标">
             <div className="section-title-row">
               <h3>进行中</h3>
@@ -750,7 +783,7 @@ export function GrowthView() {
             </div>
             <div className="goal-grid">
               {activeGoals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />
+                <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
               ))}
               {!activeGoals.length ? (
                 <div className="empty-state">
@@ -767,7 +800,7 @@ export function GrowthView() {
               </div>
               <div className="goal-grid">
                 {finishedGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />
+                  <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
                 ))}
               </div>
             </section>
@@ -780,21 +813,49 @@ export function GrowthView() {
               </div>
               <div className="goal-grid">
                 {abandonedGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} onOpen={() => setSelectedGoalId(goal.id)} />
+                  <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
                 ))}
               </div>
             </section>
           ) : null}
-          </>
-        )
+        </div>
+        </section>
       ) : null}
 
-      {tab === "achievements" ? (
-        <section>
-          <div className="achievement-compose growth-panel"><input value={achievementTitle} placeholder="记录一个值得纪念的成就" onChange={(event) => setAchievementTitle(event.target.value)} /><SelectMenu ariaLabel="关联目标" value={achievementGoalId} onChange={setAchievementGoalId} className={achievementGoalId ? undefined : "is-placeholder"} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} /><button className="btn-primary" onClick={() => { const title = achievementTitle.trim(); if (!title) return; void createAchievement({ title, description: "", achieved_at: todayDateString(), goal_id: achievementGoalId || null, source_type: "manual" }).then(() => { setAchievementTitle(""); setAchievementGoalId(""); return refresh(); }); }}>保存成就</button></div>
-          <div className="achievement-grid">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(() => refresh())} />)}</div>
-          {!achievements.length ? <div className="empty-state">还没有成就记录。把今天值得纪念的一步留在这里。</div> : null}
-        </section>
+      {achievementsOpen ? (
+        /* 成就墙 + 录入收进一处浮层卡（移动壳是底部弹层）：看完顺手记一条，不用再跳到
+           另一个页签。挂 .goal-create-modal 是同族几何——宽度、内滚、移动壳弹层都现成。 */
+        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setAchievementsOpen(false)}>
+          <div className="goal-create-modal achievement-wall-modal floating-card" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <h3>成就墙</h3>
+                <p className="goal-create-sub">攒到值得记下的一天，就在这里留一笔。</p>
+              </div>
+              <button type="button" aria-label="关闭" onClick={() => setAchievementsOpen(false)}>×</button>
+            </div>
+            <div className="achievement-compose-row">
+              <input
+                value={achievementTitle}
+                placeholder="记录一个值得纪念的成就"
+                onChange={(event) => setAchievementTitle(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    saveAchievement();
+                  }
+                }}
+              />
+              <SelectMenu ariaLabel="关联目标" value={achievementGoalId} onChange={setAchievementGoalId} className={achievementGoalId ? undefined : "is-placeholder"} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} />
+              <button className="btn-primary" type="button" onClick={saveAchievement}>保存成就</button>
+            </div>
+            {achievements.length ? (
+              <div className="achievement-wall-list">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(() => refresh())} />)}</div>
+            ) : (
+              <p className="goal-empty">还没有成就记录。把今天值得纪念的一步留在这里。</p>
+            )}
+          </div>
+        </div>
       ) : null}
 
       {showCreate ? (
@@ -880,14 +941,27 @@ export function GrowthView() {
   );
 }
 
-function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
+function GoalCard({
+  goal,
+  onOpen,
+  selected = false,
+}: {
+  goal: Goal;
+  onOpen: () => void;
+  /** 工作台的清单里标出「右边详情正在看哪个目标」；总览等其它地方不传，行为不变。 */
+  selected?: boolean;
+}) {
   // 分母与进度走 growth 的唯一真源：目标卡、今日目标条、成长页显示同一组数字。
   const target = resolveGoalTarget(goal);
   const progress = calculateGoalProgress(goal);
   const deadline = goalDeadlineInfo(goal, todayDateString());
   const finished = goal.status === "completed" || goal.status === "abandoned";
   return (
-    <button className={`goal-card${finished ? " is-finished" : ""}`} onClick={onOpen}>
+    <button
+      className={`goal-card${finished ? " is-finished" : ""}${selected ? " is-sel" : ""}`}
+      aria-pressed={selected}
+      onClick={onOpen}
+    >
       <div className="goal-card-head">
         <span className="goal-card-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
           <i style={{ background: goal.color }} />
