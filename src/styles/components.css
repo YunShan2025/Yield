@@ -1479,13 +1479,19 @@ html:not([data-shell="mobile"]) .goal-section-head b { min-width: 22px; padding:
 html:not([data-shell="mobile"]) .goal-section-head b.is-empty { display: none; }
 html:not([data-shell="mobile"]) .goal-stage-add { max-width: 420px; }
 
-/* 详情页只留目标自身的状态管理（暂停 / 编辑 / 更多操作），统一靠右成组。 */
+/* 详情页只留目标自身的状态管理；移动壳统一靠右成组，桌面另做分级（见下）。 */
 .goal-detail-actions { display: flex; gap: 8px; margin-top: 14px; }
 .goal-detail-actions { align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
 .goal-manage-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* 详情区的动作按钮比列表内联动作大一档：这里是页面级操作，
    用列表里 34px 的小按钮会显得缩手缩脚。 */
 .goal-detail-actions button.item-action-btn { min-height: 38px; padding: 9px 14px; font-size: var(--font-size-label); }
+/* 桌面动作分级：删除可逆但破坏性强，用 order 钉到最左、danger ghost 隔离
+   （与记账抽屉 footer 同语言），暂停/编辑/更多靠右成组。order 是视觉序，
+   DOM 里删除仍在最后——移动壳只多类名、无规则命中，零像素差。 */
+html:not([data-shell="mobile"]) .goal-detail-actions .goal-manage-group { flex: 1; justify-content: flex-end; }
+html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove { order: -1; margin-right: auto; border-color: color-mix(in srgb, var(--danger) 24%, var(--border)); color: var(--danger); background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel)); }
+html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover { border-color: color-mix(in srgb, var(--danger) 42%, var(--border)); background: color-mix(in srgb, var(--danger) 8%, var(--surface-sunken)); }
 .goal-create-modal input, .goal-create-modal select, .goal-create-modal textarea { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); outline: none; background: var(--surface-panel); color: var(--text-primary); }
 
 .achievement-card { position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); transition: border-color calc(140ms * var(--motion-scale)) ease; }
@@ -2930,6 +2936,11 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 .goal-push-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .goal-push-list em { color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
 .goal-push-measure { flex: 0 0 auto; color: var(--accent); font-size: var(--font-size-caption); }
+/* 桌面推进行：计入与否是小开关不是文字链——计入 = accent 实底胶囊，
+   只关联 = 灰描边胶囊，状态看填充即得。移动壳保持文字钮原样。 */
+html:not([data-shell="mobile"]) .goal-push-measure { min-height: 26px; padding: 3px 11px; border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--text-muted); font-weight: 600; }
+html:not([data-shell="mobile"]) .goal-push-measure:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: var(--accent); }
+html:not([data-shell="mobile"]) .goal-push-measure.is-on { border-color: transparent; background: var(--accent); color: var(--text-on-accent); }
 .goal-empty { margin: 0; padding: 10px 2px; color: var(--text-muted); font-size: var(--font-size-caption); }
 /* 今日清单头部的目标筛选。 */
 /* 习惯分区与事项分区之间留一节间距。 */

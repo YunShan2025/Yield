@@ -709,7 +709,7 @@ export function GrowthView() {
                       </em>
                       <button
                         type="button"
-                        className="goal-push-measure"
+                        className={`goal-push-measure${task.goal_contribution > 0 ? " is-on" : ""}`}
                         title="切换这项是否给目标计数"
                         onClick={() =>
                           void saveTask(task.id, {
@@ -728,7 +728,7 @@ export function GrowthView() {
                       <em>{habit.archived ? "已归档" : "每周进行"}</em>
                       <button
                         type="button"
-                        className="goal-push-measure"
+                        className={`goal-push-measure${habit.goal_contribution > 0 ? " is-on" : ""}`}
                         title="切换这次打卡是否给目标计数"
                         onClick={() =>
                           void setHabitMeasurement(
@@ -772,7 +772,7 @@ export function GrowthView() {
                     ]}
                   />
                 ) : null}
-                <button className="item-action-btn" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
+                <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
               </div>
             </div>
           </section>
