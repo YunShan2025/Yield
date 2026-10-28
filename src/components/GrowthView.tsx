@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { Achievement, Goal, GoalEntry, GoalMilestone, GoalType, Task } from "@/types";
+import type { Goal, GoalEntry, GoalType, Task } from "@/types";
 import {
-  createAchievement,
   createGoal,
-  createGoalMilestone,
-  deleteGoalMilestone,
-  fetchAchievements,
   fetchGoalEntries,
-  fetchGoalMilestones,
   fetchGoals,
   setGoalCurrentProgress,
   softDeleteGoal,
-  setGoalMilestoneCompleted,
-  toggleAchievementPinned,
   updateGoal,
 } from "@/lib/db";
 import { useAppStore } from "@/store/app";
@@ -65,9 +58,6 @@ function goalHeroSummary(goal: Goal) {
     return `从 ${fmtContribution(goal.start_value)}${goal.unit} 到 ${fmtContribution(goal.target_value)}${goal.unit}，以最近一次记录为准`;
   }
   const target = resolveGoalTarget(goal);
-  if (goal.goal_type === "staged") {
-    return `阶段进度 ${fmtContribution(goal.current_value)}/${fmtContribution(target.value)} 个阶段`;
-  }
   return `累计 ${fmtContribution(goal.current_value)}${goal.unit} / ${fmtContribution(target.value)}${goal.unit}`;
 }
 
@@ -89,14 +79,10 @@ export function GrowthView() {
   const [tab, setTab] = useState<GrowthTab>("overview");
   const [goals, setGoals] = useState<Goal[]>([]);
   const [entries, setEntries] = useState<GoalEntry[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [filterGoalId, setFilterGoalId] = useState("");
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  // 成就不再单独占一个页签：墙与录入收进一处浮层卡（移动壳是底部弹层），
-  // 入口在总览「最近成就」栏头，看完顺手记一条，不用先在页签之间来回跳。
-  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goalTitle, setGoalTitle] = useState("");
   // 表单不再让用户选目标类型/单位：新建一律「累计数量 · 次」；编辑时记住目标
@@ -106,14 +92,8 @@ export function GrowthView() {
   const [targetValue, setTargetValue] = useState("21");
   const [startValue, setStartValue] = useState("0");
   const [color, setColor] = useState(COLORS[0]);
-  const [achievementTitle, setAchievementTitle] = useState("");
-  // 成就表单的关联目标必须独立于 selectedGoalId：后者是目标详情页的选中态，
-  // 共用会让表单默认落在「刚看过的那个目标」上，默认值和保存关联都会不对。
-  const [achievementGoalId, setAchievementGoalId] = useState("");
-  const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
 
   const today = todayDateString();
-  const [stageTitle, setStageTitle] = useState("");
   const allTasks = useAppStore((state) => state.tasks);
   const habits = useAppStore((state) => state.habits);
   const archivedHabits = useAppStore((state) => state.archivedHabits);
@@ -122,33 +102,16 @@ export function GrowthView() {
   const saveTask = useAppStore((state) => state.saveTask);
   const setHabitMeasurement = useAppStore((state) => state.setHabitMeasurement);  const clearFocus = useAppStore((state) => state.clearFocus);
 
-  // 选中目标时载入它的阶段清单（阶段型目标的进度刻度）。
-  useEffect(() => {
-    if (!selectedGoalId) {
-      setMilestones([]);
-      return;
-    }
-    let cancelled = false;
-    void fetchGoalMilestones(selectedGoalId).then((rows) => {
-      if (!cancelled) setMilestones(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedGoalId, goals]);
-
   const refresh = async () => {
-    const [nextGoals, nextEntries, nextAchievements] = await Promise.all([
+    const [nextGoals, nextEntries] = await Promise.all([
       fetchGoals(true),
       fetchGoalEntries(),
-      fetchAchievements(),
     ]);
     setGoals(nextGoals);
     setEntries(nextEntries);
-    setAchievements(nextAchievements);
   };
 
-  // 目标、记录、成就都是页内本地状态（不在全局 store），同步拉回对端写入后
+  // 目标与记录都是页内本地状态（不在全局 store），同步拉回对端写入后
   // 必须在这里重载，否则成长页要重开一次才看得到对端的新目标与新记录。
   useEffect(() => {
     const reload = () => void refresh();
@@ -378,23 +341,6 @@ export function GrowthView() {
     setShowCreate(true);
   };
 
-  // 成就只有「标题 + 关联目标」两项，回车即存；描述与来源留给同步端与自动来源。
-  const saveAchievement = () => {
-    const title = achievementTitle.trim();
-    if (!title) return;
-    void createAchievement({
-      title,
-      description: "",
-      achieved_at: todayDateString(),
-      goal_id: achievementGoalId || null,
-      source_type: "manual",
-    }).then(() => {
-      setAchievementTitle("");
-      setAchievementGoalId("");
-      return refresh();
-    });
-  };
-
   const openGoalEditor = (goal: Goal) => {
     setEditingGoalId(goal.id);
     setGoalTitle(goal.title);
@@ -409,18 +355,13 @@ export function GrowthView() {
 
   // 桌面悬浮卡：新建/编辑目标收进右上角，点外/Esc 收起（同「新建任务」）。
   useFloatingDismiss(showCreate, () => setShowCreate(false));
-  useFloatingDismiss(achievementsOpen, () => setAchievementsOpen(false));
 
-  // 表单不再问「这是什么类型的目标」，但每种类型的进度算法不同，
-  // 所以按目标自身的类型决定该出现哪些输入框、以及引导框怎么说。
-  const formShowsValues = goalKind === "milestone" || goalKind === "measure";
-
+  // 表单不再问「这是什么类型的目标」：累计型显示「当前值/目标值」，
+  // 数值变化型显示「起始值/目标值」，输入框名字随类型走。
   const goalGuide =
     goalKind === "measure"
       ? "数值型目标以最近一次记录作为当前值，起点值只在还没有记录时生效。"
-      : goalKind === "staged"
-        ? "阶段型目标：把大目标拆成几个可勾选的阶段，勾一个进一个。"
-        : "任务完成与习惯打卡可按你声明的计量自动累计；重复动作交给「习惯」，目标只放要达成的结果。";
+      : "任务完成与习惯打卡可按你声明的计量自动累计；重复动作交给「习惯」，目标只放要达成的结果。";
   // 目标列表分区，与项目页 / 习惯页同一套做法：主区放还在进行的，
   // 收起来的（已完成、已放弃）各自成区——"撤回"得到的目标找得回来。
   const activeGoals = useMemo(
@@ -453,23 +394,6 @@ export function GrowthView() {
     if (!ok) return;
     await softDeleteGoal(goal.id);
     setSelectedGoalId(null);
-    await refresh();
-  };
-
-  // 阶段：把大目标拆成可勾选的阶段，勾一个进一个。
-  const addStage = async () => {
-    const title = stageTitle.trim();
-    if (!title || !selectedGoal) return;
-    await createGoalMilestone(selectedGoal.id, title, 0, null);
-    if (selectedGoal.goal_type !== "staged") {
-      // 第一个阶段加入后，目标切换成阶段型：进度 = 已完成阶段 / 总阶段。
-      await updateGoal(selectedGoal.id, {
-        goal_type: "staged",
-        unit: "个阶段",
-        start_value: 0,
-      });
-    }
-    setStageTitle("");
     await refresh();
   };
 
@@ -587,15 +511,15 @@ export function GrowthView() {
             </div>
             <div className="heatmap-legend"><span>少</span>{[0,1,2,3,4].map((level) => <i key={level} className={`heat-cell level-${level}`} />)}<span>多</span></div>
           </section>
+          {/* 成就面板已下线：总览这一行只留「进行中的目标」，收成单栏。 */}
           <section className="growth-columns">
             <div className="growth-panel"><div className="growth-panel-head"><h3>进行中的目标</h3><button onClick={() => setTab("goals")}>查看全部</button></div>{goals.filter((goal) => goal.status === "active").slice(0,4).map((goal) => <GoalCard key={goal.id} goal={goal} onOpen={() => { setSelectedGoalId(goal.id); setTab("goals"); }} />)}</div>
-            <div className="growth-panel"><div className="growth-panel-head"><h3>最近成就</h3><button onClick={() => setAchievementsOpen(true)}>成就墙</button></div>{achievements.slice(0,4).map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} />)}{achievements.length ? null : <p className="growth-panel-hint">还没有记下的成就。值得记下的一天，去「成就墙」留一笔。</p>}</div>
           </section>
         </>
       ) : null}
 
       {tab === "goals" ? (
-        /* 目标工作台：清单与详情同屏，改一个目标的阶段时还看得见别的目标在什么位置，
+        /* 目标工作台：清单与详情同屏，改一个目标的进度时还看得见别的目标在什么位置，
            不必再「点进去 → 返回列表」来回跳。移动壳仍是钻入（CSS 用 has-detail 切两栏）。
            DOM 是详情在前、清单在后，桌面用 grid-column 把清单摆回左边。 */
         <section className={`goal-workbench${selectedGoal ? " has-detail" : ""}`}>
@@ -617,75 +541,6 @@ export function GrowthView() {
             ) : (
               <GoalDetailHero goal={selectedGoal} />
             )}
-            {/* 阶段清单：目标即里程碑，勾一个进一个。 */}
-            <section className="goal-stages">
-              <div className="goal-section-head">
-                <span>阶段</span>
-                <b className={milestones.length ? undefined : "is-empty"}>
-                  {milestones.filter((item) => item.completed_at).length}/{milestones.length}
-                </b>
-              </div>
-              {milestones.length ? (
-                <ul className="goal-stage-list">                  {milestones.map((milestone) => (
-                    <li
-                      key={milestone.id}
-                      className={milestone.completed_at ? "is-done" : ""}
-                    >
-                      <button
-                        type="button"
-                        className="goal-stage-check"
-                        title={milestone.completed_at ? "取消达成" : "标记达成"}
-                        onClick={() =>
-                          void setGoalMilestoneCompleted(
-                            milestone.id,
-                            !milestone.completed_at,
-                          ).then(() => refresh())
-                        }
-                      >
-                        <AppIcon name="check" size={13} />
-                      </button>
-                      <span>{milestone.title}</span>
-                      <button
-                        type="button"
-                        className="goal-stage-remove"
-                        title="删除阶段"
-                        onClick={() =>
-                          void deleteGoalMilestone(milestone.id).then(() => refresh())
-                        }
-                      >
-                        <AppIcon name="trash" size={13} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="goal-empty">
-                  还没有阶段。把大目标拆成 3–5 个可勾选的阶段，勾一个进一个。
-                </p>
-              )}
-              <div className="goal-stage-add">
-                <input
-                  value={stageTitle}
-                  placeholder="添加阶段，例如「读完前 5 本」"
-                  onChange={(event) => setStageTitle(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void addStage();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className="item-action-btn"
-                  disabled={!stageTitle.trim()}
-                  onClick={() => void addStage()}
-                >
-                  添加阶段
-                </button>
-              </div>
-            </section>
-
             {/* 正在推进：关联的任务与习惯。 */}
             <section className="goal-pushing">
               <div className="goal-section-head">
@@ -749,47 +604,24 @@ export function GrowthView() {
               )}
             </section>
 
+            {/* 动作分级：状态管理靠左成组（编辑 → 暂停 → 完成 → 放弃），
+                删除是破坏性动作，孤零零钉最右、danger ghost 警示。
+                已放弃可反悔改主意；已达成是终点，不给「重新打开」。 */}
             <div className="goal-detail-actions">
               <div className="goal-manage-group">
-                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
-                {/* 已放弃可以改主意撤回；已达成是终点，不给"重新打开"。 */}
-                {selectedGoal.status === "abandoned" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
                 <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
-                {["active", "paused"].includes(selectedGoal.status) ? (
-                  <SelectMenu
-                    className="item-action-btn"
-                    variant="action"
-                    ariaLabel="更多状态操作"
-                    value=""
-                    onChange={(value) => {
-                      if (!["completed", "abandoned"].includes(value)) return;
-                      void updateGoal(selectedGoal.id, { status: value as Goal["status"] }).then(() => refresh());
-                    }}
-                    options={[
-                      { value: "", label: "更多操作" },
-                      { value: "completed", label: "标记完成" },
-                      { value: "abandoned", label: "放弃目标" },
-                    ]}
-                  />
-                ) : null}
-                <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
+                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
+                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(() => refresh())}>完成</button> : null}
+                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: "abandoned" }).then(() => refresh())}>放弃</button> : null}
+                {selectedGoal.status === "abandoned" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
               </div>
+              <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>删除目标</button>
             </div>
-
-            {/* 成就只读栏（桌面）：详情底部的承接——这个目标攒下的值得记下的日子
-                在这里回响；想记新的去成就墙。移动壳不渲染，零像素差。 */}
-            {!isMobileShell() ? (
-              <GoalAchievementsBar
-                goalId={selectedGoal.id}
-                achievements={achievements}
-                onOpenWall={() => setAchievementsOpen(true)}
-              />
-            ) : null}
           </section>
           ) : (
             <div className="goal-workbench-empty">
               <strong>左边选一个目标</strong>
-              <p>阶段、推进它的任务与习惯、计入与否，都在这一栏里改。</p>
+              <p>推进它的任务与习惯、计入与否，都在这一栏里改。</p>
               <button className="item-action-btn" type="button" onClick={openCreateGoal}>新建目标</button>
             </div>
           )}
@@ -841,42 +673,6 @@ export function GrowthView() {
         </section>
       ) : null}
 
-      {achievementsOpen ? (
-        /* 成就墙 + 录入收进一处浮层卡（移动壳是底部弹层）：看完顺手记一条，不用再跳到
-           另一个页签。挂 .goal-create-modal 是同族几何——宽度、内滚、移动壳弹层都现成。 */
-        <div className="modal-backdrop floating-backdrop" onMouseDown={() => setAchievementsOpen(false)}>
-          <div className="goal-create-modal achievement-wall-modal floating-card" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="modal-head">
-              <div>
-                <h3>成就墙</h3>
-                <p className="goal-create-sub">攒到值得记下的一天，就在这里留一笔。</p>
-              </div>
-              <button type="button" aria-label="关闭" onClick={() => setAchievementsOpen(false)}>×</button>
-            </div>
-            <div className="achievement-compose-row">
-              <input
-                value={achievementTitle}
-                placeholder="记录一个值得纪念的成就"
-                onChange={(event) => setAchievementTitle(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    saveAchievement();
-                  }
-                }}
-              />
-              <SelectMenu ariaLabel="关联目标" value={achievementGoalId} onChange={setAchievementGoalId} className={achievementGoalId ? undefined : "is-placeholder"} options={[{ value: "", label: "不关联目标" }, ...goals.map((goal) => ({ value: String(goal.id), label: goal.title }))]} />
-              <button className="btn-primary" type="button" onClick={saveAchievement}>保存成就</button>
-            </div>
-            {achievements.length ? (
-              <div className="achievement-wall-list">{achievements.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} onPin={() => void toggleAchievementPinned(achievement.id).then(() => refresh())} />)}</div>
-            ) : (
-              <p className="goal-empty">还没有成就记录。把今天值得纪念的一步留在这里。</p>
-            )}
-          </div>
-        </div>
-      ) : null}
-
       {showCreate ? (
         <div className="modal-backdrop floating-backdrop" onMouseDown={() => setShowCreate(false)}>
           <div className="goal-create-modal floating-card" onMouseDown={(event) => event.stopPropagation()}>
@@ -889,18 +685,14 @@ export function GrowthView() {
             </div>
             <label>目标名称<input autoFocus value={goalTitle} placeholder="想达成什么结果？例如「读完 21 本书」" onChange={(event) => setGoalTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void submitGoal(); }} /></label>
             <div className="goal-form-grid">
-              {formShowsValues ? (
-                <>
-                  <label>
-                    {goalKind === "measure" ? "起始值" : "当前值"}（{goalUnit}）
-                    <input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} />
-                  </label>
-                  <label>
-                    目标值（{goalUnit}）
-                    <input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} />
-                  </label>
-                </>
-              ) : null}
+              <label>
+                {goalKind === "measure" ? "起始值" : "当前值"}（{goalUnit}）
+                <input type="number" value={startValue} onChange={(event) => setStartValue(event.target.value)} />
+              </label>
+              <label>
+                目标值（{goalUnit}）
+                <input type="number" value={targetValue} onChange={(event) => setTargetValue(event.target.value)} />
+              </label>
 
               <div className="goal-form-color">
                 <span>标记颜色</span>
@@ -981,25 +773,29 @@ function GoalCard({
       aria-pressed={selected}
       onClick={onOpen}
     >
-      <div className="goal-card-head">
-        <span className="goal-card-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
-          <i style={{ background: goal.color }} />
-          {GOAL_STATUS_LABEL[goal.status]}
-        </span>
-      </div>
+      {/* 卡片待在哪个分区就说哪个状态：只有「已暂停」需要额外一个字——
+          它混在进行中列表里，不标就看不出来。 */}
+      {goal.status === "paused" ? (
+        <div className="goal-card-head">
+          <span className="goal-card-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
+            <i style={{ background: goal.color }} />
+            {GOAL_STATUS_LABEL[goal.status]}
+          </span>
+        </div>
+      ) : null}
       <h3>{goal.title}</h3>
       <p>
         <b>{fmtContribution(goal.current_value)}{target.unit}</b> / {fmtContribution(target.value)}{target.unit}
       </p>
-      <div className="goal-progress-track"><i style={{ width: `${progress}%`, background: goal.color }} /></div>
+      <div className="goal-card-progress">
+        <div className="goal-progress-track"><i style={{ width: `${progress}%`, background: goal.color }} /></div>
+        <b>{Math.round(progress)}%</b>
+      </div>
       <footer>
-        <span>{Math.round(progress)}%</span>
         <span className={deadline?.behind ? "is-behind" : undefined}>
           {deadline
             ? `${deadline.behind ? "进度落后 · " : ""}${deadline.daysLeft > 0 ? `剩 ${deadline.daysLeft} 天` : "已到目标日"}`
-            : goal.goal_type === "staged"
-              ? "阶段目标"
-              : "长期目标"}
+            : "长期目标"}
         </span>
       </footer>
     </button>
@@ -1023,9 +819,7 @@ function GoalDetailHero({ goal }: { goal: Goal }) {
         <span className={`goal-hero-deadline${deadline?.behind ? " is-behind" : ""}`}>
           {deadline
             ? `${deadline.behind ? "进度落后 · " : ""}${deadline.daysLeft > 0 ? `剩 ${deadline.daysLeft} 天` : "已到目标日"}`
-            : goal.goal_type === "staged"
-              ? "阶段目标"
-              : "长期目标"}
+            : "长期目标"}
         </span>
       </div>
       <div className="goal-hero-main">
@@ -1046,38 +840,4 @@ function GoalDetailHero({ goal }: { goal: Goal }) {
       </div>
     </div>
   );
-}
-
-/* 详情底部的成就只读栏（桌面）：按 goal_id 过滤、时间倒序、3 条封顶，
-   只读不管理——增删改都在成就墙浮层里做。组件只在桌面分支渲染，无需壳门控。 */
-function GoalAchievementsBar({ goalId, achievements, onOpenWall }: { goalId: string; achievements: Achievement[]; onOpenWall: () => void }) {
-  const items = achievements
-    .filter((item) => item.goal_id === goalId)
-    .sort((a, b) => b.achieved_at.localeCompare(a.achieved_at))
-    .slice(0, 3);
-  return (
-    <section className="goal-linked-achievements">
-      <div className="goal-section-head">
-        <span>这个目标的成就</span>
-        <button className="text-btn" onClick={onOpenWall}>去成就墙</button>
-      </div>
-      {items.length ? (
-        <ul>
-          {items.map((item) => (
-            <li key={item.id}>
-              <span className="goal-linked-medal">✦</span>
-              <strong>{item.title}</strong>
-              <time>{item.achieved_at}</time>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="goal-empty">还没有值得记下的时刻——攒到了，会先出现在这里。</p>
-      )}
-    </section>
-  );
-}
-
-function AchievementCard({ achievement, onPin }: { achievement: Achievement; onPin?: () => void }) {
-  return <article className={`achievement-card${achievement.pinned ? " pinned" : ""}`}><div className="achievement-medal">✦</div><div><time>{achievement.achieved_at}</time><h3>{achievement.title}</h3><p>{achievement.description || "这一刻值得被记住。"}</p></div>{onPin ? <button className={achievement.pinned ? "active" : ""} onClick={onPin}>{achievement.pinned ? "已置顶" : "置顶"}</button> : null}</article>;
 }

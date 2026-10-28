@@ -1506,6 +1506,27 @@ DROP TABLE IF EXISTS attachments;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 27,
+            description: "drop_goal_milestones_achievements",
+            // 阶段目标与成就功能下线：阶段清单（goal_milestones）会劫持进度——给
+            // 一个累计型目标加第一个阶段就把 goal_type 翻成 staged、单位换成「个
+            // 阶段」、分母换成阶段数，之前累计的投入进度被覆盖。连同成就墙一起删，
+            // 进度只留一个口径：投入 / 目标值。先把历史 staged 目标改回累计计数型
+            // （单位「个阶段」归成「次」），再删两张表。两表带的同步触发器随表消失。
+            sql: r#"
+UPDATE goals
+SET goal_type = 'milestone',
+    unit = CASE WHEN unit = '个阶段' THEN '次' ELSE unit END
+WHERE goal_type = 'staged';
+DROP TABLE IF EXISTS goal_milestones;
+DROP TABLE IF EXISTS achievements;
+DELETE FROM sync_outbox WHERE table_name IN ('goal_milestones', 'achievements');
+DELETE FROM sync_state WHERE table_name IN ('goal_milestones', 'achievements');
+DELETE FROM sync_merge_seen WHERE table_name IN ('goal_milestones', 'achievements');
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

@@ -34,7 +34,7 @@ const {
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -111,18 +111,12 @@ describe("目标可撤回", () => {
     expect((await fetchGoals()).map((g) => g.id)).toContain(goal.id);
   });
 
-  it("永久删除连同记录、阶段与成就一起清掉，不留孤儿", async () => {
+  it("永久删除连同记录一起清掉，不留孤儿", async () => {
     const goal = await seedGoal();
     await softDeleteGoal(goal.id);
     db.prepare(
       "INSERT INTO goal_entries (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
     ).run("e1", goal.id, "2026-10-20", 1, "manual", null, "", "2026-10-20", "2026-10-20");
-    db.prepare(
-      "INSERT INTO goal_milestones (id,goal_id,title,target_value,sort_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?)",
-    ).run("m1", goal.id, "阶段一", 0, 0, "2026-10-20", "2026-10-20");
-    db.prepare(
-      "INSERT INTO achievements (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
-    ).run("a1", goal.id, "成就", "", "2026-10-20", "goal", goal.id, 0, "2026-10-20");
 
     await purgeGoal(goal.id);
     expect(goalRow(goal.id)).toBeUndefined();
@@ -131,8 +125,6 @@ describe("目标可撤回", () => {
       return Number(row.c);
     };
     expect(countOf("goal_entries")).toBe(0);
-    expect(countOf("goal_milestones")).toBe(0);
-    expect(countOf("achievements")).toBe(0);
   });
 
   it("备份导出连回收站里的目标一起带走", async () => {

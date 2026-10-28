@@ -35,8 +35,6 @@ describe("backup coverage", () => {
       "task_events",
       "goals",
       "goal_entries",
-      "goal_milestones",
-      "achievements",
       "timers",
       "anniversaries",
     ]) {
@@ -66,6 +64,9 @@ describe("backup coverage", () => {
       "schedule_locked",
       "delay_reason",
       "saveTaskPlanningMetadata",
+      "goal_milestones",
+      "goalMilestones",
+      "achievements",
     ]) {
       expect(source).not.toContain(legacy);
     }
@@ -137,7 +138,7 @@ describe("backup pure helpers", () => {
 
   it("does not warn about growth when goals are present", () => {
     const summary = summarizeBackupRestore(
-      minimalPayload({ goals: [], goalEntries: [], achievements: [] }),
+      minimalPayload({ goals: [], goalEntries: [] }),
     );
     expect(summary).toContain("成长目标：0 个");
     expect(summary).not.toMatch(/将保留当前内容：.*成长目标/);

@@ -140,7 +140,7 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
   let total = 0;
   const updatable = [
     "projects", "goals", "tags", "habits", "anniversaries", "tasks",
-    "goal_entries", "goal_milestones",
+    "goal_entries",
     "memos", "timers", "ledger_categories", "ledger_accounts",
     "ledger_transactions", "ledger_budgets",
   ];
@@ -158,17 +158,6 @@ export async function backfillOutbox(db: SqlClient): Promise<number> {
        SELECT 'task_tags', task_id || ':' || tag_id, 'upsert', ${TS_MS_SQL} FROM task_tags`,
     ),
   );
-  // achievements 为追加型表：按 created_at 派生 ts_ms。
-  {
-    const createdMs =
-      "COALESCE(CAST(ROUND((julianday(NULLIF(created_at,''))-2440587.5)*86400000.0) AS INTEGER), 0)";
-    total += rowsAffected(
-      await db.execute(
-        `INSERT OR IGNORE INTO sync_outbox(table_name, row_id, op, ts_ms)
-         SELECT 'achievements', CAST(id AS TEXT), 'upsert', ${createdMs} FROM achievements`,
-      ),
-    );
-  }
   // habit_checks 无任何时间戳列：与 v5 触发器一致，ts_ms 取常量 0。
   total += rowsAffected(
     await db.execute(
@@ -445,17 +434,18 @@ function projectRowData(
     if (col in data) out[col] = data[col];
   }
   if (table === "goals" && typeof out.goal_type === "string") {
-    // migration v22 把目标类型收敛为三种判据：milestone（数值·次数）、
-    // measure（数值变化）、staged（阶段）。未升级的对端仍可能发来旧类型
-    // （quantity / change / frequency / time / project / custom）：在本机落库前
-    // 归一，否则本端 goalAcceptsSource 认不出旧类型，会静默拒收贡献记录。
-    // 只改投影值，不额外写库，因此不产生回声。
+    // 目标类型只认两种判据：milestone（数值·次数）、measure（数值变化）。
+    // 未升级的对端仍可能发来旧类型（quantity / change / frequency / time /
+    // project / custom / staged）：在本机落库前归一，否则本端
+    // goalAcceptsSource 认不出旧类型，会静默拒收贡献记录。阶段型功能已下线，
+    // staged 按累计计数型对待。只改投影值，不额外写库，因此不产生回声。
     const legacy: Record<string, string> = {
       quantity: "milestone",
       custom: "milestone",
       frequency: "milestone",
       time: "milestone",
       project: "milestone",
+      staged: "milestone",
       change: "measure",
     };
     const mapped = legacy[out.goal_type];
@@ -466,7 +456,7 @@ function projectRowData(
 
 /**
  * 带「来源唯一索引」的追加型表：goal_entries 按 (goal_id, source_type,
- * source_id)、achievements 按 (source_type, source_id) 唯一。同一业务来源
+ * source_id) 唯一。同一业务来源
  * （同一任务完成、同一习惯打卡）在两端离线各写一行时 id 不同，直接 INSERT
  * 必撞 UNIQUE，整条合并失败——而水位照样推进，那条记录从此永久丢失。
  * 本机已有同来源的行即视为等价行：不删本地行（删除触发器无守卫，墓碑会反过来
@@ -475,7 +465,6 @@ function projectRowData(
  */
 const SOURCE_UNIQUE_COLUMNS: Partial<Record<SyncTableName, string[]>> = {
   goal_entries: ["goal_id", "source_type", "source_id"],
-  achievements: ["source_type", "source_id"],
 };
 
 /** 归并只搬业务内容：时间戳保持本机原值（见 adoptEquivalentRow）。 */

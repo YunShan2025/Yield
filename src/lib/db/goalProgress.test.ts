@@ -31,17 +31,14 @@ vi.mock("./client", () => {
 const {
   addGoalEntry,
   createGoal,
-  createGoalMilestone,
-  fetchGoalMilestones,
   refreshGoalProgress,
   setGoalCurrentProgress,
-  setGoalMilestoneCompleted,
   updateGoal,
 } = await import("@/lib/db/growth");
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -106,17 +103,13 @@ describe("编辑累计型目标的当前值", () => {
     expect(Number(goalRow(goal.id).current_value)).toBe(3);
   });
 
-  it("改大当前值累计到目标即完成，并生成成就", async () => {
+  it("改大当前值累计到目标即完成", async () => {
     const goal = await seededGoal();
     expect(await setGoalCurrentProgress(goal.id, 21)).toBe(true);
 
     const row = goalRow(goal.id);
     expect(Number(row.current_value)).toBe(21);
     expect(row.status).toBe("completed");
-    const achievements = db
-      .prepare("SELECT source_type FROM achievements WHERE goal_id=?")
-      .all(goal.id) as Row[];
-    expect(achievements.map((item) => item.source_type)).toContain("goal");
   });
 
   it("值没变时不补记录", async () => {
@@ -125,51 +118,5 @@ describe("编辑累计型目标的当前值", () => {
     expect(await setGoalCurrentProgress(goal.id, 5)).toBe(false);
     expect(entryRows(goal.id)).toHaveLength(before);
     expect(Number(goalRow(goal.id).current_value)).toBe(5);
-  });
-});
-
-describe("阶段型目标", () => {
-  it("进度由阶段勾选推进，完成全部阶段即达成", async () => {
-    const goal = await createGoal({
-      title: "读完 21 本书",
-      goal_type: "staged",
-      unit: "个阶段",
-      target_value: 2,
-    });
-    await createGoalMilestone(goal.id, "读完前 5 本", 0, null);
-    await createGoalMilestone(goal.id, "全部读完", 0, null);
-    await refreshGoalProgress(goal.id);
-
-    let row = goalRow(goal.id);
-    expect(Number(row.current_value)).toBe(0);
-    expect(Number(row.target_value)).toBe(2);
-    expect(row.status).toBe("active");
-
-    const milestones = await fetchGoalMilestones(goal.id);
-    await setGoalMilestoneCompleted(milestones[0].id, true);
-    await refreshGoalProgress(goal.id);
-    row = goalRow(goal.id);
-    expect(Number(row.current_value)).toBe(1);
-    expect(row.status).toBe("active");
-
-    await setGoalMilestoneCompleted(milestones[1].id, true);
-    await refreshGoalProgress(goal.id);
-    row = goalRow(goal.id);
-    expect(Number(row.current_value)).toBe(2);
-    expect(row.status).toBe("completed");
-  });
-
-  it("阶段型目标不接受任何进度记录", async () => {
-    const goal = await createGoal({
-      title: "毕业设计",
-      goal_type: "staged",
-      unit: "个阶段",
-      target_value: 1,
-    });
-    const added = await addGoalEntry({
-      goal_id: goal.id, entry_date: todayDateString(), value: 1,
-      source_type: "task", source_id: "task-1",
-    });
-    expect(added).toBe(false);
   });
 });

@@ -69,10 +69,6 @@ describe("growth metrics", () => {
     expect(goalAcceptsSource(typed("measure"), "manual")).toBe(true);
     expect(goalAcceptsSource(typed("measure"), "task")).toBe(false);
     expect(goalAcceptsSource(typed("measure"), "habit")).toBe(false);
-    // 阶段型：进度只由阶段勾选推进，任何记录都不接受。
-    expect(goalAcceptsSource(typed("staged"), "task")).toBe(false);
-    expect(goalAcceptsSource(typed("staged"), "habit")).toBe(false);
-    expect(goalAcceptsSource(typed("staged"), "manual")).toBe(false);
     expect(goalAcceptsSource(typed("milestone", "paused"), "task")).toBe(false);
   });
 
@@ -83,10 +79,10 @@ describe("growth metrics", () => {
   it("uses one denominator for every goal kind", () => {
     // 数值·次数型：分母就是目标值。
     expect(resolveGoalTarget(fullGoal("milestone")).value).toBe(10);
-    // 阶段型：起点 0、当前值是已完成阶段数，天然落在同一套公式里。
-    const staged = { ...fullGoal("staged"), unit: "个阶段", target_value: 4, current_value: 2 };
-    expect(resolveGoalTarget(staged).value).toBe(4);
-    expect(calculateGoalProgress(staged)).toBe(50);
+    // 数值变化型：起点→目标值的跨度决定进度，分母同样是目标值。
+    const measure = { ...fullGoal("measure"), start_value: 0, target_value: 4, current_value: 2 };
+    expect(resolveGoalTarget(measure).value).toBe(4);
+    expect(calculateGoalProgress(measure)).toBe(50);
   });
 
   it("flags deadline pace only when progress is clearly behind", () => {

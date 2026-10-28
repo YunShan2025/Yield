@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -295,6 +295,29 @@ describe("database migration declarations", () => {
       /version:\s*26,\s*description:\s*"drop_attachments",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
     );
     expect(match?.[1]).toContain("DROP TABLE IF EXISTS attachments");
+  });
+
+  it("阶段与成就下线：migration v27 改回 staged 并删表", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*27,\s*description:\s*"drop_goal_milestones_achievements",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 阶段劫持过的目标先改回累计计数型（「个阶段」单位归成「次」），再删两表。
+    expect(sql).toContain("SET goal_type = 'milestone'");
+    expect(sql).toContain("WHERE goal_type = 'staged'");
+    expect(sql).toContain("DROP TABLE IF EXISTS goal_milestones");
+    expect(sql).toContain("DROP TABLE IF EXISTS achievements");
+    // 未排水的同步簿记不得残留已删表的条目（同 v7 / v16 的先例）。
+    for (const book of ["sync_outbox", "sync_state", "sync_merge_seen"]) {
+      expect(sql).toContain(
+        `DELETE FROM ${book} WHERE table_name IN ('goal_milestones', 'achievements')`,
+      );
+    }
   });
 
   it("目标的「归档」并入「已完成」：migration v25", () => {

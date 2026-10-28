@@ -257,9 +257,8 @@ export interface Anniversary {
  * 目标的内部判据种类（界面上不让用户选）。
  * - milestone 数值·次数：起点 → 目标值，靠记录累计推进
  * - measure  数值变化：起点 → 目标值，靠最新一次测量推进
- * - staged   阶段：靠勾选阶段清单推进
  */
-export type GoalType = "milestone" | "measure" | "staged";
+export type GoalType = "milestone" | "measure";
 /**
  * 目标的状态。四个：
  * - active    进行中
@@ -301,30 +300,6 @@ export interface GoalEntry {
   updated_at: string;
 }
 
-export interface GoalMilestone {
-  id: string;
-  goal_id: string;
-  title: string;
-  target_value: number;
-  target_date: string | null;
-  completed_at: string | null;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Achievement {
-  id: string;
-  goal_id: string | null;
-  title: string;
-  description: string;
-  achieved_at: string;
-  source_type: "manual" | "milestone" | "goal";
-  source_id: string | null;
-  pinned: number;
-  created_at: string;
-}
-
 export interface AppNotification {
   id: string;
   task_id: string | null;
@@ -351,8 +326,6 @@ export interface BackupPayload {
   taskEvents?: TaskEvent[];
   goals?: Goal[];
   goalEntries?: GoalEntry[];
-  goalMilestones?: GoalMilestone[];
-  achievements?: Achievement[];
   timers?: Timer[];
   anniversaries?: Anniversary[];
   ledgerCategories?: Record<string, unknown>[];

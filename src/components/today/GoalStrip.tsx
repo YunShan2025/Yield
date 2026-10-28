@@ -50,7 +50,7 @@ export function GoalStrip() {
           const target = resolveGoalTarget(goal);
           const progress = calculateGoalProgress(goal);
           // 只有接受"任务完成自动计量"的目标才给「推进」入口：
-          // 阶段型目标由阶段勾选推进，数值变化型只认手动测量。
+          // 数值变化型只认手动测量，推进入口对它没有意义。
           const canSchedule = goalAcceptsSource(goal, "task");
           return (
             <div key={goal.id} className="today-goal-row">

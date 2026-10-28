@@ -65,17 +65,9 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
     idColumns: ["id"],
     columns: ["goal_id", "entry_date", "value", "source_type", "source_id", "note", "created_at", "updated_at"],
   },
-  goal_milestones: {
-    idColumns: ["id"],
-    columns: ["goal_id", "title", "target_value", "target_date", "completed_at", "sort_order", "created_at", "updated_at"],
-  },
   habit_checks: {
     idColumns: ["id"],
     columns: ["habit_id", "check_date"],
-  },
-  achievements: {
-    idColumns: ["id"],
-    columns: ["goal_id", "title", "description", "achieved_at", "source_type", "source_id", "pinned", "created_at"],
   },
   memos: {
     idColumns: ["id"],

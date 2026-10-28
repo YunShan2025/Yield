@@ -26,7 +26,7 @@ beforeAll(() => {
   // migration（v19 任务延期原因、v20 目标瘦身）与列白名单的偏差测不出来。
   // 新增 migration 时把版本号补进这里。
   schemaSql = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
   ]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
@@ -865,7 +865,8 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     const b = createDevice("android", transport);
     await b.sync(); // 先建好 B 的日志文件
 
-    // 模拟旧端日志：goal_type 仍是 migration v20 之前的旧值域。
+    // 模拟旧端日志：goal_type 仍在已下线的值域里（阶段型功能已删，
+    // staged 按累计计数型对待；quantity 等 v20 前的旧值同样归 milestone）。
     const legacyGoal = JSON.stringify({
       hlc: { p: Date.parse("2026-09-16T07:00:00.000Z"), l: 0, d: "legacy" },
       schema_v: SYNC_SCHEMA_VERSION,
@@ -876,7 +877,7 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
         id: "gt",
         title: "晨跑",
         color: "#E4572E",
-        goal_type: "milestone",
+        goal_type: "staged",
         start_date: "2026-09-01",
         start_value: 0,
         target_value: 600,
@@ -905,29 +906,13 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     const a = createDevice("desktop", transport);
     const b = createDevice("android", transport);
     await insertGoal(a, "g1", "2026-09-16T01:00:00.000Z");
-    await a.run(
-      `INSERT INTO goal_milestones
-       (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at,updated_at)
-       VALUES ('m1','g1','读完前三章',1,NULL,NULL,1,'2026-09-16T01:00:00.000Z','2026-09-16T01:00:00.000Z')`,
-    );
     await a.sync();
     await b.sync();
 
-    // 离线期间两端都为「同一个任务完成」各记一笔（id 不同，来源相同）；
-    // 阶段达成也各自生成一条同源成就。
-    await insertEntry(a, "eA", "g1", 1, "t1", "2026-09-16T04:00:00.000Z");
-    await a.run(
-      `INSERT INTO achievements
-       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
-       VALUES ('aA','g1','读完前三章','','2026-09-16','milestone','m1',0,'2026-09-16T04:00:00.000Z')`,
-    );
+    // 离线期间两端都为「同一个任务完成」各记一笔（id 不同，来源相同），
     // 贡献值也不同：B 在完成前把任务的贡献改成了 5。
+    await insertEntry(a, "eA", "g1", 1, "t1", "2026-09-16T04:00:00.000Z");
     await insertEntry(b, "eB", "g1", 5, "t1", "2026-09-16T05:00:00.000Z");
-    await b.run(
-      `INSERT INTO achievements
-       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
-       VALUES ('aB','g1','读完前三章','','2026-09-16','milestone','m1',0,'2026-09-16T05:00:00.000Z')`,
-    );
 
     await a.sync();
     const pulled = await b.sync();
@@ -940,40 +925,10 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
       const entries = await device.rows("SELECT id,value FROM goal_entries");
       expect(entries).toHaveLength(1);
       expect(entries[0]?.value).toBe(5);
-      expect(await device.rows("SELECT id FROM achievements")).toHaveLength(1);
     }
     for (const device of [a, b]) {
       await recomputeGoalsAfterSync(device.client);
       expect((await goalRow(device, "g1"))[0]?.current_value).toBe(5);
     }
-    // 阶段目标本身正常同步（同源重复行被归并进本机那一行）。
-    expect(await b.rows("SELECT id,title FROM goal_milestones")).toEqual([
-      { id: "m1", title: "读完前三章" },
-    ]);
-  });
-
-  it("成就置顶同步：追加型表的 UPDATE 也有触发器接住", async () => {
-    const transport = new MemoryTransport();
-    const a = createDevice("desktop", transport);
-    const b = createDevice("android", transport);
-    await a.run(
-      `INSERT INTO achievements
-       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
-       VALUES ('ac1','g1','读完前三章','','2026-09-16','milestone','m1',0,'2026-09-16T01:00:00.000Z')`,
-    );
-    await a.sync();
-    await b.sync();
-    expect((await b.rows("SELECT pinned FROM achievements WHERE id='ac1'"))[0]?.pinned).toBe(0);
-
-    // B 端置顶：achievements 此前只有 ins/del 触发器，UPDATE 永远不入箱。
-    await b.run("UPDATE achievements SET pinned=1 WHERE id='ac1'");
-    expect(
-      await b.rows("SELECT row_id FROM sync_outbox WHERE table_name='achievements'"),
-    ).toEqual([{ row_id: "ac1" }]);
-    await b.sync();
-    await a.sync();
-    expect((await a.rows("SELECT pinned FROM achievements WHERE id='ac1'"))[0]?.pinned).toBe(1);
-    // 应用后不反弹回声（登记 ts 与触发器 ts 都取 created_at）。
-    expect(await a.outboxCount()).toBe(0);
   });
 });

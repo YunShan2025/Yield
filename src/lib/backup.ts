@@ -191,12 +191,6 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
       }
       return true;
     }),
-    goalMilestones: payload.goalMilestones?.filter(
-      (item) => !hasGoals || goalIds.has(item.goal_id),
-    ),
-    achievements: payload.achievements?.filter(
-      (item) => !item.goal_id || !hasGoals || goalIds.has(item.goal_id),
-    ),
   };
 }
 
@@ -214,7 +208,7 @@ export function summarizeBackupRestore(payload: BackupPayload): string {
     lines.push(`纪念日：${payload.anniversaries?.length ?? 0} 个`);
   }
   const keep: string[] = [];
-  if (!has("goals") && !has("goalEntries") && !has("achievements")) {
+  if (!has("goals") && !has("goalEntries")) {
     keep.push("成长目标");
   }
   if (!has("anniversaries")) {

@@ -403,7 +403,7 @@ function TrashView() {
                   onClick={() => {
                     void confirmAction({
                       title: `永久删除目标「${goal.title}」？`,
-                      description: "不可恢复，目标记录、阶段与成就会一并删除。",
+                      description: "不可恢复，目标与它的记录会一并删除。",
                       confirmText: "永久删除",
                       danger: true,
                     }).then((ok) => {

@@ -41,7 +41,6 @@ const GOAL_STATUS_LABELS: Record<Goal["status"], string> = {
 const GOAL_TYPE_LABELS: Record<Goal["goal_type"], string> = {
   milestone: "累计",
   measure: "数值",
-  staged: "阶段",
 };
 
 function compactPreview(text: string, max = 44) {

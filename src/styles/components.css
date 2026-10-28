@@ -1334,11 +1334,10 @@ html:not([data-shell="mobile"]) .heat-months span { min-width: 0; overflow: hidd
 /* 今天只标位置不给亮度——今天未必有投入，环比颜色诚实。 */
 html:not([data-shell="mobile"]) .heat-cell.is-today { box-shadow: 0 0 0 1.5px var(--text-secondary); }
 
-/* 总览两栏里再放一张完整的卡 = 双层边框「卡中卡」。桌面撤掉内层卡的边框、圆角与
+/* 总览面板里再放一张完整的卡 = 双层边框「卡中卡」。桌面撤掉内层卡的边框、圆角与
    底色，改成面板里的行：发丝线分隔、hover 提整行，面板仍是这里唯一的一张卡。
    目标 tab 的 .goal-grid 里它们照旧是一张张卡（那里没有 .growth-panel 包着）。 */
-html:not([data-shell="mobile"]) .growth-panel > .goal-card,
-html:not([data-shell="mobile"]) .growth-panel > .achievement-card {
+html:not([data-shell="mobile"]) .growth-panel > .goal-card {
   margin: 0 -10px;
   padding: 14px 10px;
   border: 0;
@@ -1346,20 +1345,17 @@ html:not([data-shell="mobile"]) .growth-panel > .achievement-card {
   background: transparent;
   transition: background calc(140ms * var(--motion-scale)) ease;
 }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card:hover,
-html:not([data-shell="mobile"]) .growth-panel > .achievement-card:hover { background: var(--surface-sunken); }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card + .goal-card,
-html:not([data-shell="mobile"]) .growth-panel > .achievement-card + .achievement-card {
+html:not([data-shell="mobile"]) .growth-panel > .goal-card:hover { background: var(--surface-sunken); }
+html:not([data-shell="mobile"]) .growth-panel > .goal-card + .goal-card {
   margin-top: 0;
   border-top: 1px solid var(--border);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
-/* 置顶成就原来靠琥珀描边说话，行式没有边框，换成一道左沿琥珀。 */
-html:not([data-shell="mobile"]) .growth-panel > .achievement-card.pinned { box-shadow: inset 2px 0 0 var(--amber-550); }
-/* 行式里的内容与卡片同尺寸会各自撑一段留白，读起来还是「卡叠卡」。把标题与进度条
-   的上下留白收到行距一档，一行就是：色点状态 / 标题 / 进度 / 读数。 */
+/* 行式里的内容与卡片同尺寸会各自撑一段留白，读起来还是「卡叠卡」。把标题与进度行
+   的上下留白收到行距一档，一行就是：标题 / 进度+读数 / 期限。 */
 html:not([data-shell="mobile"]) .growth-panel > .goal-card h3 { margin: 9px 0 5px; }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card .goal-progress-track { margin: 10px 0 7px; }
+html:not([data-shell="mobile"]) .growth-panel > .goal-card h3:first-child { margin-top: 0; }
+html:not([data-shell="mobile"]) .growth-panel > .goal-card .goal-card-progress { margin: 10px 0 7px; }
 
 /* 目标详情与成就 tab 都是「读一条 / 写一条」的内容：全宽拉伸会把进度条、阶段输入框
    与空态框拉到一千一百多像素，一行两端拉断。桌面收成一条读数栏宽度的列，靠左不居中
@@ -1407,23 +1403,8 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
   html:not([data-shell="mobile"]) .goal-workbench-empty { display: none; }
 }
 
-/* 成就墙（浮层卡内，桌面右上角 / 移动壳底部弹层）：录入行 + 墙列表。
-   弹层本身就是一张卡，墙里的条目再带一圈边框又是「卡中卡」——这里收成行，
-   发丝线分隔，置顶仍用一道左沿琥珀说话。 */
-.achievement-compose-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 2px 0 6px; }
-/* 输入框独占一行，「关联目标 + 保存」同排：440 的浮层卡里三件挤一排必然断行，
-   与其让它断得随机，不如把两行定下来（移动壳底部弹层同一排法）。 */
-.achievement-compose-row > input { flex: 1 1 100%; min-width: 0; }
-.achievement-compose-row > .select-menu { flex: 1 1 auto; }
-.achievement-compose-row > .btn-primary { flex: 0 0 auto; width: auto; }
-.achievement-wall-list { display: grid; }
-.achievement-wall-list .achievement-card { padding: 12px 10px; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
-.achievement-wall-list .achievement-card:first-child { border-top: 0; }
-.achievement-wall-list .achievement-card.pinned { box-shadow: inset 2px 0 0 var(--amber-550); }
-/* 总览「最近成就」空态：一句话，别让面板空成一块白板。 */
-.growth-panel-hint { margin: 2px 0 0; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1.6; }
-
-.growth-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-width: 0; margin-top: 14px; }
+/* 总览第二面板（最近成就）已下线：这一行只剩「进行中的目标」，收成单栏。 */
+.growth-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; margin-top: 14px; }
 .goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 /* 目标为空时,空状态占满整行(此前只占一个 260px 网格列,框显得很窄)。 */
 .goal-grid .empty-state { grid-column: 1 / -1; padding: 44px 24px; font-size: var(--font-size-label); }
@@ -1432,17 +1413,22 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 /* 收起来的目标（已完成 / 已放弃）弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
 .goal-card.is-finished { opacity: .72; box-shadow: none; }
 .goal-card.is-finished:hover { opacity: 1; }
-/* 总览「进行中的目标 / 最近成就」的卡片直排在面板里：卡片之间补与 goal-grid
-   同档的间隙（桌面 14、移动壳 10）。此前紧贴成一片，圆角卡片互碰像叠在一起。 */
-.growth-panel > .goal-card + .goal-card,
-.growth-panel > .achievement-card + .achievement-card { margin-top: 14px; }
+/* 总览「进行中的目标」的卡片直排在面板里：卡片之间补与 goal-grid 同档的间隙
+   （桌面 14、移动壳 10）。此前紧贴成一片，圆角卡片互碰像叠在一起。 */
+.growth-panel > .goal-card + .goal-card { margin-top: 14px; }
 .goal-card-head { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-caption); }
 .goal-card-chip { display: inline-flex; align-items: center; gap: 6px; }
 .goal-card-head i { width: 10px; height: 10px; border-radius: 50%; }
 .goal-card h3 { margin: 14px 0 6px; font-size: var(--font-size-h3); }
+/* 只有「已暂停」带状态行；其余卡片标题打头，上留白归零，卡因此矮一档。 */
+.goal-card h3:first-child { margin-top: 0; }
 .goal-card p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); }
 .goal-progress-track { height: 7px; margin: 14px 0 8px; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-sunken); }
 .goal-progress-track i { display: block; height: 100%; border-radius: inherit; transition: width calc(240ms * var(--motion-scale)) ease; }
+/* 进度读数移到卡片右侧：轨道吃满剩余宽度，百分比靠右同读——详情头部同款语言。 */
+.goal-card-progress { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
+.goal-card-progress .goal-progress-track { flex: 1; margin: 0; }
+.goal-card-progress b { min-width: 34px; color: var(--text-muted); font-size: var(--font-size-label); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .goal-card footer { display: flex; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-caption); }
 
 .goal-detail > .text-btn { margin-bottom: 12px; }
@@ -1471,46 +1457,22 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 .goal-hero-progress .goal-progress-track { flex: 1; margin: 0; }
 .goal-hero-progress b { min-width: 34px; color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 
-/* 栏头上到面板 h3 一档（与总览 .growth-panel-head 同族）；计数改列表同款胶囊，
-   空阶段不摆 0/0；添加行不随宽栏通铺。 */
+/* 栏头上到面板 h3 一档（与总览 .growth-panel-head 同族）；计数用列表同款胶囊。 */
 html:not([data-shell="mobile"]) .goal-section-head { margin-bottom: 10px; }
 html:not([data-shell="mobile"]) .goal-section-head span { color: var(--text-heading); font-size: var(--font-size-h3); font-weight: 700; }
 html:not([data-shell="mobile"]) .goal-section-head b { min-width: 22px; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); text-align: center; }
-html:not([data-shell="mobile"]) .goal-section-head b.is-empty { display: none; }
-html:not([data-shell="mobile"]) .goal-stage-add { max-width: 420px; }
 
-/* 详情底部成就只读栏（组件只在桌面渲染，选择器无需壳门控）。 */
-.goal-linked-achievements { margin-top: 16px; }
-.goal-linked-achievements ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.goal-linked-achievements li { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); }
-.goal-linked-medal { color: var(--amber-550); }
-.goal-linked-achievements li time { margin-left: auto; color: var(--text-muted); font-size: var(--font-size-caption); }
-
-/* 详情页只留目标自身的状态管理；移动壳统一靠右成组，桌面另做分级（见下）。 */
-.goal-detail-actions { display: flex; gap: 8px; margin-top: 14px; }
-.goal-detail-actions { align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+/* 详情页只留目标自身的状态管理：状态动作靠左成组（编辑 → 暂停 → 完成 → 放弃），
+   删除是破坏性动作，孤零零钉最右——两端同构。 */
+.goal-detail-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .goal-manage-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* 详情区的动作按钮比列表内联动作大一档：这里是页面级操作，
    用列表里 34px 的小按钮会显得缩手缩脚。 */
 .goal-detail-actions button.item-action-btn { min-height: 38px; padding: 9px 14px; font-size: var(--font-size-label); }
-/* 桌面动作分级：删除可逆但破坏性强，用 order 钉到最左、danger ghost 隔离
-   （与记账抽屉 footer 同语言），暂停/编辑/更多靠右成组。order 是视觉序，
-   DOM 里删除仍在最后——移动壳只多类名、无规则命中，零像素差。 */
-html:not([data-shell="mobile"]) .goal-detail-actions .goal-manage-group { flex: 1; justify-content: flex-end; }
-html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove { order: -1; margin-right: auto; border-color: color-mix(in srgb, var(--danger) 24%, var(--border)); color: var(--danger); background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel)); }
+/* 删除可逆但破坏性强：danger ghost 警示（与记账抽屉 footer 同语言）。 */
+html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove { border-color: color-mix(in srgb, var(--danger) 24%, var(--border)); color: var(--danger); background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel)); }
 html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover { border-color: color-mix(in srgb, var(--danger) 42%, var(--border)); background: color-mix(in srgb, var(--danger) 8%, var(--surface-sunken)); }
 .goal-create-modal input, .goal-create-modal select, .goal-create-modal textarea { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); outline: none; background: var(--surface-panel); color: var(--text-primary); }
-
-.achievement-card { position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); transition: border-color calc(140ms * var(--motion-scale)) ease; }
-.achievement-card:hover { border-color: var(--accent); }
-.achievement-card.pinned { border-color: color-mix(in srgb, var(--amber-550) 55%, var(--border)); box-shadow: 0 8px 20px var(--amber-550-14); }
-.achievement-card.pinned:hover { border-color: var(--amber-550); }
-.achievement-medal { display: grid; width: 42px; height: 42px; place-items: center; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--gold-200), var(--amber-550)); color: var(--amber-950-c); font-size: var(--font-size-h2); }
-.achievement-card time { color: var(--text-muted); font-size: var(--font-size-caption); letter-spacing: 0.05em; }
-.achievement-card h3 { margin: 4px 0; font-size: var(--font-size-h3); }
-.achievement-card p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.5; }
-.achievement-card > button { position: absolute; top: 10px; right: 10px; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
-.achievement-card > button.active { color: var(--accent); }
 
 .goal-create-modal, .day-activity-modal { width: min(520px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 40px)); padding: 22px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); box-shadow: var(--shadow-2); }
 .day-activity-date { margin: -8px 0 12px; color: var(--text-muted); font-size: var(--font-size-label); }
@@ -1550,7 +1512,6 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
   .growth-metrics { grid-template-columns: repeat(2, 1fr); }
   .growth-metrics article:nth-child(odd) { border-left: 0; }
   .growth-metrics article:nth-child(n+3) { border-top: 1px solid var(--border); }
-  .growth-columns { grid-template-columns: 1fr; }
   .growth-panel-head { align-items: flex-start; flex-direction: column; gap: 10px; }
   .growth-panel-head .select-btn { width: 100%; }
   .goal-detail-hero { align-items: flex-start; padding: 20px; }
@@ -2924,20 +2885,12 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
   flex: none;
 }
 
-/* 目标详情：阶段清单与「正在推进」。 */
-.goal-stages, .goal-pushing { margin-top: 16px; }
+/* 目标详情：「正在推进」关联区。 */
+.goal-pushing { margin-top: 16px; }
 .goal-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .goal-section-head span { color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 650; }
 .goal-section-head b { color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 600; }
-.goal-stage-list, .goal-push-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.goal-stage-list li { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--border); }
-.goal-stage-list li span { flex: 1; min-width: 0; font-size: var(--font-size-label); }
-.goal-stage-list li.is-done span { color: var(--text-muted); text-decoration: line-through; }
-.goal-stage-check, .goal-stage-remove { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); cursor: pointer; }
-.goal-stage-check.is-done, .goal-stage-list li.is-done .goal-stage-check { color: var(--accent); border-color: var(--accent); }
-.goal-stage-remove:hover { color: var(--danger, var(--magenta-150)); }
-.goal-stage-add { display: flex; gap: 8px; margin-top: 10px; }
-.goal-stage-add input { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); color: var(--text-primary); font-size: var(--font-size-label); }
+.goal-push-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .goal-push-list li { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--border); font-size: var(--font-size-label); }
 .goal-push-kind { flex: 0 0 auto; padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-rail); color: var(--text-secondary); font-size: var(--font-size-caption); }
 .goal-push-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

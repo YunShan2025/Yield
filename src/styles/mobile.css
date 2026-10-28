@@ -2663,7 +2663,6 @@ html[data-shell="mobile"] .review-story-card,
 html[data-shell="mobile"] .settings-card,
 html[data-shell="mobile"] .habits-card,
 html[data-shell="mobile"] .goal-card,
-html[data-shell="mobile"] .achievement-card,
 html[data-shell="mobile"] .timer-card,
 html[data-shell="mobile"] .anni-card,
 html[data-shell="mobile"] .trash-item,
@@ -2684,7 +2683,6 @@ html[data-theme="dark"][data-shell="mobile"] .review-story-card,
 html[data-theme="dark"][data-shell="mobile"] .settings-card,
 html[data-theme="dark"][data-shell="mobile"] .habits-card,
 html[data-theme="dark"][data-shell="mobile"] .goal-card,
-html[data-theme="dark"][data-shell="mobile"] .achievement-card,
 html[data-theme="dark"][data-shell="mobile"] .timer-card,
 html[data-theme="dark"][data-shell="mobile"] .anni-card,
 html[data-theme="dark"][data-shell="mobile"] .trash-item,
@@ -2699,7 +2697,6 @@ html[data-theme="glass"][data-shell="mobile"] .review-story-card,
 html[data-theme="glass"][data-shell="mobile"] .settings-card,
 html[data-theme="glass"][data-shell="mobile"] .habits-card,
 html[data-theme="glass"][data-shell="mobile"] .goal-card,
-html[data-theme="glass"][data-shell="mobile"] .achievement-card,
 html[data-theme="glass"][data-shell="mobile"] .timer-card,
 html[data-theme="glass"][data-shell="mobile"] .anni-card,
 html[data-theme="glass"][data-shell="mobile"] .trash-item,
@@ -2718,7 +2715,6 @@ html[data-theme="glass"][data-shell="mobile"] .data-health-panel {
   html[data-theme="system"][data-shell="mobile"] .settings-card,
   html[data-theme="system"][data-shell="mobile"] .habits-card,
   html[data-theme="system"][data-shell="mobile"] .goal-card,
-  html[data-theme="system"][data-shell="mobile"] .achievement-card,
   html[data-theme="system"][data-shell="mobile"] .timer-card,
   html[data-theme="system"][data-shell="mobile"] .anni-card,
   html[data-theme="system"][data-shell="mobile"] .trash-item,
@@ -2734,7 +2730,6 @@ html[data-theme="glass"][data-shell="mobile"] .data-health-panel {
 
 /* 触摸屏没有 hover：桌面悬浮描边/位移动作收掉，按压反馈统一为轻压。 */
 html[data-shell="mobile"] .goal-card:hover,
-html[data-shell="mobile"] .achievement-card:hover,
 html[data-shell="mobile"] .habit-card:hover,
 html[data-shell="mobile"] .anni-card:hover,
 html[data-shell="mobile"] .timer-card:hover,
@@ -2750,8 +2745,8 @@ html[data-shell="mobile"] .trash-item:active {
   transform: scale(0.99);
 }
 
-/* 统一去描边/换阴影后，三枚「状态环」按同一手法（内描边）在移动壳补回：
-   习惯今日已打卡金底、成就置顶金环、计时运行中 accent 环。 */
+/* 统一去描边/换阴影后，两枚「状态环」按同一手法（内描边）在移动壳补回：
+   习惯今日已打卡金底、计时运行中 accent 环。 */
 html[data-shell="mobile"] .habit-card.is-checked,
 html[data-shell="mobile"] .habit-card.is-checked:hover {
   background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
@@ -2769,11 +2764,6 @@ html[data-theme="glass"][data-shell="mobile"] .habit-card.is-checked {
     background: var(--amber-750-8);
     box-shadow: inset 0 0 0 1px var(--amber-750-25);
   }
-}
-
-html[data-shell="mobile"] .achievement-card.pinned {
-  border: 0;
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--amber-550) 55%, transparent), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
 html[data-shell="mobile"] .timer-card.is-running {
@@ -3056,23 +3046,31 @@ html[data-shell="mobile"] .goal-progress-track {
   background: color-mix(in srgb, var(--border-strong) 42%, transparent);
 }
 
-html[data-shell="mobile"] .goal-card footer span:first-child {
-  color: var(--text-secondary);
-  font-weight: 600;
+/* 进度读数在卡片右侧：与「当前值」同款加重，一眼锁定百分比。 */
+html[data-shell="mobile"] .goal-card-progress {
+  margin: 10px 0 6px;
+}
+
+html[data-shell="mobile"] .goal-card-progress b {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 html[data-shell="mobile"] .goal-card footer span.is-behind {
   color: var(--warning);
 }
 
-/* 总览面板里直排的目标/成就卡片：间距与移动壳 goal-grid 同为 10px。 */
-html[data-shell="mobile"] .growth-panel > .goal-card + .goal-card,
-html[data-shell="mobile"] .growth-panel > .achievement-card + .achievement-card {
+/* 总览面板里直排的目标卡片：间距与移动壳 goal-grid 同为 10px。 */
+html[data-shell="mobile"] .growth-panel > .goal-card + .goal-card {
   margin-top: 10px;
 }
 
 html[data-shell="mobile"] .goal-card h3 {
   margin: 10px 0 4px;
+}
+
+html[data-shell="mobile"] .goal-card h3:first-child {
+  margin-top: 0;
 }
 
 html[data-shell="mobile"] .goal-detail-hero {
@@ -3118,8 +3116,7 @@ html[data-shell="mobile"] .goal-detail-hero > strong {
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-/* 阶段 / 正在推进：裸列表折进移动壳同款卡，与目标卡流同一节奏。 */
-html[data-shell="mobile"] .goal-stages,
+/* 正在推进：裸列表折进移动壳同款卡，与目标卡流同一节奏。 */
 html[data-shell="mobile"] .goal-pushing {
   margin-top: 10px;
   padding: 14px 15px 15px;
@@ -3128,15 +3125,12 @@ html[data-shell="mobile"] .goal-pushing {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
-html[data-theme="dark"][data-shell="mobile"] .goal-stages,
 html[data-theme="dark"][data-shell="mobile"] .goal-pushing,
-html[data-theme="glass"][data-shell="mobile"] .goal-stages,
 html[data-theme="glass"][data-shell="mobile"] .goal-pushing {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
 }
 
 @media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .goal-stages,
   html[data-theme="system"][data-shell="mobile"] .goal-pushing {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
   }
@@ -3148,32 +3142,18 @@ html[data-shell="mobile"] .goal-section-head {
 
 /* 卡内列表节奏：行距交给 padding + 分隔线（线上下等距才居中），
    grid gap 与行内 padding 双份叠加会撑出 21px 的乱缝，归零。 */
-html[data-shell="mobile"] .goal-stage-list,
 html[data-shell="mobile"] .goal-push-list {
   gap: 0;
 }
 
-html[data-shell="mobile"] .goal-stage-list li,
 html[data-shell="mobile"] .goal-push-list li {
   padding: 9px 2px;
 }
 
 /* 首行离节头近一档、离下一行不粘连。 */
-html[data-shell="mobile"] .goal-stage-list li:first-child,
 html[data-shell="mobile"] .goal-push-list li:first-child {
   border-top: 0;
   padding-top: 4px;
-}
-
-html[data-shell="mobile"] .goal-stage-add input,
-html[data-shell="mobile"] .goal-stage-add .item-action-btn {
-  min-height: 40px;
-  border-radius: var(--radius-md);
-}
-
-html[data-shell="mobile"] .goal-stage-add .item-action-btn {
-  background: var(--surface-sunken);
-  border-color: transparent;
 }
 
 /* 返回键：text-btn 在移动壳没有皮（裸原生按钮），收成一枚 sunken 胶囊。 */
@@ -3195,20 +3175,9 @@ html[data-shell="mobile"] .goal-detail > .text-btn:active {
   transform: scale(0.97);
 }
 
-/* 操作组：整组靠右，换行后各行右缘也对齐。 */
-html[data-shell="mobile"] .goal-manage-group {
-  justify-content: flex-end;
-}
-
-/* 「删除目标」组内最后一个按钮，用危险色示警。 */
-html[data-shell="mobile"] .goal-manage-group > button:last-of-type {
+/* 「删除目标」离开了动作组、钉在行尾，仍用危险色示警。 */
+html[data-shell="mobile"] .goal-action-remove {
   color: var(--danger);
-}
-
-html[data-shell="mobile"] .goal-stage-check input,
-html[data-shell="mobile"] .goal-stage-remove {
-  min-width: 40px;
-  min-height: 40px;
 }
 
 html[data-shell="mobile"] .goal-detail-actions button.item-action-btn {
@@ -3216,43 +3185,6 @@ html[data-shell="mobile"] .goal-detail-actions button.item-action-btn {
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
   border-color: transparent;
-}
-
-/* 成就卡进同款卡族：去描边、16 圆角、统一卡影；金牌勋章保留做识别。 */
-html[data-shell="mobile"] .achievement-card {
-  padding: 14px 15px;
-  border: 0;
-  border-radius: 16px;
-  background: var(--surface-panel);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
-}
-
-html[data-theme="dark"][data-shell="mobile"] .achievement-card,
-html[data-theme="glass"][data-shell="mobile"] .achievement-card {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
-}
-
-@media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .achievement-card {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(18, 32, 60, 0.85);
-  }
-}
-
-/* 置顶卡改用琥珀底色示异（描边已被卡族化去掉，amber 投影沿用桌面语义）。 */
-html[data-shell="mobile"] .achievement-card.pinned {
-  background: color-mix(in srgb, var(--amber-550) 6%, var(--surface-panel));
-  box-shadow: 0 8px 20px var(--amber-550-14);
-}
-
-html[data-shell="mobile"] .achievement-card > button {
-  min-height: 40px;
-  padding: 0 12px;
-  color: var(--text-secondary);
-}
-
-/* 已置顶：与卡底琥珀底色同族发声（桌面 accent 蓝在移动壳偏跳）。 */
-html[data-shell="mobile"] .achievement-card > button.active {
-  color: var(--amber-550);
 }
 
 /* ---------- 7) 习惯 / 项目 / 标签：卡片流与可展开行 ---------- */

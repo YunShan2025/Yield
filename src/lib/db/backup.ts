@@ -18,9 +18,7 @@ import { fetchMemos } from "./memos";
 import { fetchTimers } from "./timers";
 import {
   addGoalEntry,
-  fetchAchievements,
   fetchGoalEntries,
-  fetchGoalMilestones,
   fetchAllGoals,
   refreshGoalProgress,
 } from "./growth";
@@ -46,8 +44,6 @@ export async function exportBackup(): Promise<BackupPayload> {
   const taskEvents = await db.select<TaskEvent[]>("SELECT * FROM task_events");
   const goals = await fetchAllGoals();
   const goalEntries = await fetchGoalEntries();
-  const goalMilestones = await fetchGoalMilestones();
-  const achievements = await fetchAchievements();
   const timers = await fetchTimers();
   const anniversaries = await fetchAnniversaries();
   const ledgerCategories = await db.select<Record<string, unknown>[]>("SELECT * FROM ledger_categories");
@@ -75,8 +71,6 @@ export async function exportBackup(): Promise<BackupPayload> {
     taskEvents,
     goals,
     goalEntries,
-    goalMilestones,
-    achievements,
     timers,
     anniversaries,
     ledgerCategories,
@@ -104,13 +98,9 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     if (has("anniversaries")) await db.execute("DELETE FROM anniversaries");
     if (has("timers")) await db.execute("DELETE FROM timers");
     if (
-      has("achievements") ||
-      has("goalMilestones") ||
       has("goalEntries") ||
       has("goals")
     ) {
-      await db.execute("DELETE FROM achievements");
-      await db.execute("DELETE FROM goal_milestones");
       await db.execute("DELETE FROM goal_entries");
       await db.execute("DELETE FROM goals");
     } else {
@@ -299,26 +289,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [entry.id,entry.goal_id,entry.entry_date,entry.value,entry.source_type,
        entry.source_id,entry.note,entry.created_at,entry.updated_at ?? entry.created_at],
-    );
-  }
-  for (const milestone of payload.goalMilestones ?? []) {
-    await db.execute(
-      `INSERT INTO goal_milestones
-       (id,goal_id,title,target_value,target_date,completed_at,sort_order,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [milestone.id,milestone.goal_id,milestone.title,milestone.target_value,
-       milestone.target_date,milestone.completed_at,milestone.sort_order,milestone.created_at,
-       milestone.updated_at ?? milestone.created_at],
-    );
-  }
-  for (const achievement of payload.achievements ?? []) {
-    await db.execute(
-      `INSERT INTO achievements
-       (id,goal_id,title,description,achieved_at,source_type,source_id,pinned,created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [achievement.id,achievement.goal_id,achievement.title,achievement.description,
-       achievement.achieved_at,achievement.source_type,
-       achievement.source_id,achievement.pinned,achievement.created_at],
     );
   }
   for (const timer of payload.timers ?? []) {
