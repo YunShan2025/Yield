@@ -33,7 +33,6 @@ const GOAL_STATUS_LABEL: Record<Goal["status"], string> = {
   active: "进行中",
   paused: "已暂停",
   completed: "已完成",
-  abandoned: "已放弃",
 };
 
 function toDateKey(date: Date) {
@@ -363,7 +362,7 @@ export function GrowthView() {
       ? "数值型目标以最近一次记录作为当前值，起点值只在还没有记录时生效。"
       : "任务完成与习惯打卡可按你声明的计量自动累计；重复动作交给「习惯」，目标只放要达成的结果。";
   // 目标列表分区，与项目页 / 习惯页同一套做法：主区放还在进行的，
-  // 收起来的（已完成、已放弃）各自成区——"撤回"得到的目标找得回来。
+  // 已完成的自成一区。
   const activeGoals = useMemo(
     () => goals.filter((goal) => goal.status === "active" || goal.status === "paused"),
     [goals],
@@ -372,16 +371,6 @@ export function GrowthView() {
     () => goals.filter((goal) => goal.status === "completed"),
     [goals],
   );
-  const abandonedGoals = useMemo(
-    () => goals.filter((goal) => goal.status === "abandoned"),
-    [goals],
-  );
-
-  /** 放弃 / 归档都能一键撤回：回到进行中。 */
-  const resumeGoal = async (goal: Goal) => {
-    await updateGoal(goal.id, { status: "active" });
-    await refresh();
-  };
 
   /** 删除目标 = 移入回收站，可恢复。 */
   const deleteGoalWithConfirm = async (goal: Goal) => {
@@ -604,16 +593,14 @@ export function GrowthView() {
               )}
             </section>
 
-            {/* 动作分级：状态管理靠左成组（编辑 → 暂停 → 完成 → 放弃），删除钉在行尾
-                警示——桌面 danger ghost，移动壳与面板底部动作条同源等分通栏（见 mobile.css）。
-                已放弃可反悔改主意；已达成是终点，不给「重新打开」。 */}
+            {/* 动作分级：状态管理靠左成组（编辑 → 暂停 → 完成），删除钉在行尾
+                警示——桌面 danger ghost；移动壳分两排（见 mobile.css）：
+                上排日常状态，底排「完成=蓝主钮 + 删除=红衬」。已达成只剩编辑与删除。 */}
             <div className="goal-detail-actions">
               <div className="goal-manage-group">
                 <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
                 {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
-                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(() => refresh())}>完成</button> : null}
-                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: "abandoned" }).then(() => refresh())}>放弃</button> : null}
-                {selectedGoal.status === "abandoned" ? <button className="item-action-btn" onClick={() => void resumeGoal(selectedGoal)}>恢复目标</button> : null}
+                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn goal-act-done" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(() => refresh())}>完成</button> : null}
               </div>
               <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>
                 {isMobileShell() ? "删除" : "删除目标"}
@@ -653,19 +640,6 @@ export function GrowthView() {
               </div>
               <div className="goal-grid">
                 {finishedGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
-                ))}
-              </div>
-            </section>
-          ) : null}
-          {abandonedGoals.length ? (
-            <section aria-label="已放弃的目标">
-              <div className="section-title-row">
-                <h3>已放弃</h3>
-                <span className="tags-filtered-count">{abandonedGoals.length}</span>
-              </div>
-              <div className="goal-grid">
-                {abandonedGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
                 ))}
               </div>
@@ -768,7 +742,7 @@ function GoalCard({
   const target = resolveGoalTarget(goal);
   const progress = calculateGoalProgress(goal);
   const deadline = goalDeadlineInfo(goal, todayDateString());
-  const finished = goal.status === "completed" || goal.status === "abandoned";
+  const finished = goal.status === "completed";
   return (
     <button
       className={`goal-card${finished ? " is-finished" : ""}${selected ? " is-sel" : ""}`}

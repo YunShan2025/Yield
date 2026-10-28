@@ -1527,6 +1527,19 @@ DELETE FROM sync_merge_seen WHERE table_name IN ('goal_milestones', 'achievement
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 28,
+            description: "goal_abandoned_to_paused",
+            // 「放弃」功能整体下线：动作行的放弃钮、恢复钮与「已放弃」分区全部
+            // 移除，GoalStatus 收敛为 active / paused / completed。历史 abandoned
+            // 目标归为暂停——不进进行中的流程感、但可继续可完成，用户回来自己能
+            // 定夺。同步层 SYNC_SCHEMA_VERSION 升至 12：旧端发来的 abandoned 在
+            // 投影落库前同样归一为 paused。
+            sql: r#"
+UPDATE goals SET status = 'paused' WHERE status = 'abandoned';
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

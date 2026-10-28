@@ -1,5 +1,5 @@
 /**
- * 目标的生命周期回归：放弃 / 归档可撤回，删除进回收站、可恢复、可永久删除。
+ * 目标的生命周期回归：暂停可撤回，删除进回收站、可恢复、可永久删除。
  */
 import { readFileSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
@@ -34,7 +34,7 @@ const {
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -87,12 +87,11 @@ describe("目标的状态只有四个", () => {
 });
 
 describe("目标可撤回", () => {
-  it("放弃后能改回进行中", async () => {
+  it("暂停后能改回进行中", async () => {
     const goal = await seedGoal();
-    await updateGoal(goal.id, { status: "abandoned" });
-    // 放弃的目标不在主列表里（收进"已放弃"区），要带 includeFinished 才看得到
-    expect((await fetchGoals(true)).find((g) => g.id === goal.id)?.status).toBe("abandoned");
-    expect((await fetchGoals()).map((g) => g.id)).not.toContain(goal.id);
+    await updateGoal(goal.id, { status: "paused" });
+    // 暂停仍算"还在进行"：主列表带得回来，靠卡片上的已暂停 chip 区分
+    expect((await fetchGoals()).find((g) => g.id === goal.id)?.status).toBe("paused");
     await updateGoal(goal.id, { status: "active" });
     expect((await fetchGoals()).find((g) => g.id === goal.id)?.status).toBe("active");
   });

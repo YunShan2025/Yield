@@ -1410,7 +1410,7 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 .goal-grid .empty-state { grid-column: 1 / -1; padding: 44px 24px; font-size: var(--font-size-label); }
 .goal-card { display: block; width: 100%; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); color: var(--text-primary); text-align: left; cursor: pointer; transition: border-color calc(140ms * var(--motion-scale)) ease; }
 .goal-card:hover { border-color: var(--accent); }
-/* 收起来的目标（已完成 / 已放弃）弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
+/* 已完成的目标弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
 .goal-card.is-finished { opacity: .72; box-shadow: none; }
 .goal-card.is-finished:hover { opacity: 1; }
 /* 总览「进行中的目标」的卡片直排在面板里：卡片之间补与 goal-grid 同档的间隙
@@ -1462,8 +1462,8 @@ html:not([data-shell="mobile"]) .goal-section-head { margin-bottom: 10px; }
 html:not([data-shell="mobile"]) .goal-section-head span { color: var(--text-heading); font-size: var(--font-size-h3); font-weight: 700; }
 html:not([data-shell="mobile"]) .goal-section-head b { min-width: 22px; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); text-align: center; }
 
-/* 详情页只留目标自身的状态管理：状态动作靠左成组（编辑 → 暂停 → 完成 → 放弃），
-   删除是破坏性动作，孤零零钉最右——两端同构。 */
+/* 详情页只留目标自身的状态管理：状态动作靠左成组（编辑 → 暂停 → 完成），
+   删除是破坏性动作，孤零零钉最右——两端同构（移动壳分两排见 mobile.css）。 */
 .goal-detail-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .goal-manage-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* 详情区的动作按钮比列表内联动作大一档：这里是页面级操作，

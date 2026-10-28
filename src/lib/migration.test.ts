@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -295,6 +295,21 @@ describe("database migration declarations", () => {
       /version:\s*26,\s*description:\s*"drop_attachments",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
     );
     expect(match?.[1]).toContain("DROP TABLE IF EXISTS attachments");
+  });
+
+  it("放弃状态下线：migration v28 把历史 abandoned 归为暂停", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*28,\s*description:\s*"goal_abandoned_to_paused",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    // 「放弃」整体下线：历史 abandoned 归 paused——不进进行中的流程感、可继续可完成。
+    expect(match?.[1]).toContain(
+      "UPDATE goals SET status = 'paused' WHERE status = 'abandoned'",
+    );
   });
 
   it("阶段与成就下线：migration v27 改回 staged 并删表", () => {

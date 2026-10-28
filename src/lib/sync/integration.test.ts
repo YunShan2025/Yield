@@ -26,7 +26,7 @@ beforeAll(() => {
   // migration（v19 任务延期原因、v20 目标瘦身）与列白名单的偏差测不出来。
   // 新增 migration 时把版本号补进这里。
   schemaSql = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
   ]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
@@ -859,14 +859,15 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     expect(await a.outboxCount()).toBe(0);
   });
 
-  it("未升级的对端发来旧类型目标：落库归一为 milestone", async () => {
+  it("未升级的对端发来旧值域目标：类型与状态落库归一", async () => {
     const transport = new MemoryTransport();
     const a = createDevice("desktop", transport);
     const b = createDevice("android", transport);
     await b.sync(); // 先建好 B 的日志文件
 
-    // 模拟旧端日志：goal_type 仍在已下线的值域里（阶段型功能已删，
-    // staged 按累计计数型对待；quantity 等 v20 前的旧值同样归 milestone）。
+    // 模拟旧端日志：goal_type 与 status 仍在已下线的值域里（阶段型功能已删，
+    // staged 按累计计数型对待；quantity 等 v20 前的旧值同样归 milestone；
+    // 「放弃」状态下线后 abandoned 归 paused，同 migration v28 的语义）。
     const legacyGoal = JSON.stringify({
       hlc: { p: Date.parse("2026-09-16T07:00:00.000Z"), l: 0, d: "legacy" },
       schema_v: SYNC_SCHEMA_VERSION,
@@ -883,7 +884,7 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
         target_value: 600,
         current_value: 0,
         unit: "分钟",
-        status: "active",
+        status: "abandoned",
         manual_completion: 0,
         created_at: "2026-09-16T07:00:00.000Z",
         updated_at: "2026-09-16T07:00:00.000Z",
@@ -894,8 +895,8 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     await a.sync();
 
     // 归一后本端才认得它：goalAcceptsSource 对未知类型一律拒收贡献记录。
-    expect(await a.rows("SELECT id,goal_type,unit FROM goals WHERE id='gt'")).toEqual([
-      { id: "gt", goal_type: "milestone", unit: "分钟" },
+    expect(await a.rows("SELECT id,goal_type,unit,status FROM goals WHERE id='gt'")).toEqual([
+      { id: "gt", goal_type: "milestone", unit: "分钟", status: "paused" },
     ]);
     // 归一只发生在投影写入时，不该顺手把行再推回对端。
     expect(await a.outboxCount()).toBe(0);

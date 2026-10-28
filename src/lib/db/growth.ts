@@ -5,8 +5,8 @@ import { getDb } from "./client";
 
 /* Growth goals and contributions */
 /**
- * 目标列表。默认只给"还在进行"的（进行中 + 暂停）——已完成的收进完成区、
- * 已放弃的收进放弃区，都不在主列表里，与项目 / 习惯的"已归档"分区同一套做法。
+ * 目标列表。默认只给"还在进行"的（进行中 + 暂停）——已完成的收进完成区，
+ * 不在主列表里，与项目 / 习惯的"已归档"分区同一套做法。
  * includeFinished = true 时给全部未删除的目标。
  */
 export async function fetchGoals(includeFinished = false): Promise<Goal[]> {

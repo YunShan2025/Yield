@@ -260,13 +260,12 @@ export interface Anniversary {
  */
 export type GoalType = "milestone" | "measure";
 /**
- * 目标的状态。四个：
+ * 目标的状态。三个（「放弃」已下线，历史数据经 migration v28 归为暂停）：
  * - active    进行中
  * - paused    暂停
  * - completed 已完成（达成即止；对应项目 / 习惯里"归档"的那层意思）
- * - abandoned 已放弃（可以改主意撤回）
  */
-export type GoalStatus = "active" | "paused" | "completed" | "abandoned";
+export type GoalStatus = "active" | "paused" | "completed";
 
 export interface Goal {
   id: string;

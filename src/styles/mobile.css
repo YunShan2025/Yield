@@ -3175,27 +3175,27 @@ html[data-shell="mobile"] .goal-detail > .text-btn:active {
   transform: scale(0.97);
 }
 
-/* 移动壳动作行与面板底部动作条同源（expand-row-foot / timer-actions 语言）：
-   按钮等分通栏一排走完，删除 inline 红底示警。≤560 的整行堆叠是给桌面窄窗的，
-   移动壳里解除；「删除目标」在壳内收进等分格，文案减为「删除」（见 GrowthView）。 */
+/* 移动壳动作行分两排（桌面保持原单排）：按钮半宽起排、自然换行——
+   上排「编辑 · 暂停/继续目标」，底排「完成 · 删除」；已达成只剩编辑与删除，
+   自动回落成单排。底排承担颜色：完成=原生主钮皮肤（accent 实底、白字、蓝柔光），
+   删除=danger 红衬，其余是下沉 ghost chip。≤560 的整行堆叠是给桌面窄窗的，
+   移动壳里解除，换行由 flex basis 控制。 */
 html[data-shell="mobile"] .goal-detail-actions {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 html[data-shell="mobile"] .goal-detail-actions > * {
   width: auto;
-  flex: 1 1 0;
-  min-width: 0;
 }
 
-/* 组拆掉盒子，四枚状态按钮与删除成为同排兄弟，等分才不是一宽四窄。 */
+/* 组拆掉盒子：状态按钮与删除成为同排兄弟，换行才落得到每枚按钮上。 */
 html[data-shell="mobile"] .goal-detail-actions .goal-manage-group {
   display: contents;
 }
 
 html[data-shell="mobile"] .goal-detail-actions button.item-action-btn {
-  flex: 1 1 0;
+  flex: 1 1 calc(50% - 4px);
   min-width: 0;
   min-height: 40px;
   padding: 9px 2px;
@@ -3205,7 +3205,15 @@ html[data-shell="mobile"] .goal-detail-actions button.item-action-btn {
   white-space: nowrap;
 }
 
-html[data-shell="mobile"] .goal-detail-actions .goal-action-remove {
+/* 底排强调：完成=蓝主钮（item-action-primary 同款），删除=红衬示警，各占半宽。 */
+html[data-shell="mobile"] .goal-detail-actions button.goal-act-done {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-weight: 600;
+  box-shadow: 0 2px 7px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+html[data-shell="mobile"] .goal-detail-actions button.goal-action-remove {
   background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
   color: var(--text-overdue);
 }

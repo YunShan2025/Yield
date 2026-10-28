@@ -35,7 +35,6 @@ const GOAL_STATUS_LABELS: Record<Goal["status"], string> = {
   active: "进行中",
   paused: "已暂停",
   completed: "已完成",
-  abandoned: "已放弃",
 };
 
 const GOAL_TYPE_LABELS: Record<Goal["goal_type"], string> = {

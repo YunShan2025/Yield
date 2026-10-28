@@ -88,8 +88,11 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
  * v11：阶段目标与成就下线（migration 删 goal_milestones / achievements 两表，
  * goal_type 收敛为 milestone / measure）。旧格式条目里的这两张表经
  * isSyncTable 过滤自然跳过；旧端读到 v11 条目被 header 闸门拒收并提示升级。
+ * v12：「放弃」目标状态下线（migration v28 把历史 abandoned 归为 paused）。
+ * 旧端发来的 abandoned 在落库前归一为 paused；旧端读到 v12 条目被 header
+ * 闸门拒收并提示升级。
  */
-export const SYNC_SCHEMA_VERSION = 11;
+export const SYNC_SCHEMA_VERSION = 12;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);
