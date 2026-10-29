@@ -71,32 +71,28 @@ export async function createGoal(
     id: createId(),
     title: draft.title.trim(),
     color: draft.color ?? "#2F6FED",
-    goal_type: draft.goal_type ?? "milestone",
     start_date: draft.start_date ?? todayDateString(),
     target_date: draft.target_date ?? null,
-    start_value: Number(draft.start_value ?? 0),
     target_value: Math.max(1, Number(draft.target_value ?? 1)),
-    current_value: Number(draft.current_value ?? draft.start_value ?? 0),
+    current_value: 0,
     unit: draft.unit?.trim() || "次",
     status: draft.status ?? "active",
     motivation: draft.motivation?.trim() ?? "",
-    manual_completion: draft.status === "completed" ? 1 : 0,
     deleted_at: null,
     created_at: stamp,
     updated_at: stamp,
   };
   await db.execute(
     `INSERT INTO goals
-     (id,title,color,goal_type,start_date,target_date,start_value,
+     (id,title,color,start_date,target_date,
       target_value,current_value,unit,status,motivation,
-      manual_completion,deleted_at,created_at,updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+      deleted_at,created_at,updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
     [
       goal.id, goal.title, goal.color,
-      goal.goal_type, goal.start_date, goal.target_date, goal.start_value,
+      goal.start_date, goal.target_date,
       goal.target_value, goal.current_value, goal.unit, goal.status,
-      goal.motivation, goal.manual_completion, goal.deleted_at ?? null,
-      goal.created_at, goal.updated_at,
+      goal.motivation, goal.deleted_at ?? null, goal.created_at, goal.updated_at,
     ],
   );
   return goal;
@@ -112,23 +108,18 @@ export async function updateGoal(
   const next = {
     ...rows[0],
     ...updates,
-    manual_completion: updates.status === "completed"
-      ? 1
-      : updates.status !== undefined
-        ? 0
-        : rows[0].manual_completion ?? 0,
     updated_at: nowIso(),
   };
   await db.execute(
-    `UPDATE goals SET title=$1,color=$2,goal_type=$3,
-     start_date=$4,target_date=$5,start_value=$6,target_value=$7,current_value=$8,
-     unit=$9,status=$10,motivation=$11,
-     manual_completion=$12,updated_at=$13 WHERE id=$14`,
+    `UPDATE goals SET title=$1,color=$2,
+     start_date=$3,target_date=$4,target_value=$5,current_value=$6,
+     unit=$7,status=$8,motivation=$9,
+     updated_at=$10 WHERE id=$11`,
     [
-      next.title, next.color, next.goal_type,
-      next.start_date, next.target_date, next.start_value, next.target_value,
+      next.title, next.color,
+      next.start_date, next.target_date, next.target_value,
       next.current_value, next.unit, next.status, next.motivation,
-      next.manual_completion, next.updated_at, id,
+      next.updated_at, id,
     ],
   );
 }
@@ -172,35 +163,19 @@ export async function refreshGoalProgressOn(
   const goal = goalRows[0];
   let wrote = false;
   const target = Number(goal.target_value);
-  let current: number;
+  // 进度 = 计量事件之和（migration v29 起的唯一口径）。求和只认 task/habit
+  // 两种来源：混窗期旧端「当前值校准」同步来的 manual 行永不进账。
+  const sums = await db.select<{ total: number | null }[]>(
+    `SELECT SUM(value) AS total FROM goal_entries
+     WHERE goal_id=$1 AND source_type IN ('task','habit')`,
+    [goalId],
+  );
+  const current = Number(sums[0]?.total ?? 0);
 
-  if (goal.goal_type === "measure") {
-    // 数值变化型目标：以最近一次手动测量为当前值。
-    const latest = await db.select<{ value: number }[]>(
-      `SELECT value FROM goal_entries
-       WHERE goal_id=$1 AND source_type='manual'
-       ORDER BY entry_date DESC, created_at DESC LIMIT 1`,
-      [goalId],
-    );
-    current = latest.length ? Number(latest[0].value) : Number(goal.start_value);
-  } else {
-    // 数值·次数型目标：起点 + 记录之和。
-    const sums = await db.select<{ total: number | null }[]>(
-      "SELECT SUM(value) AS total FROM goal_entries WHERE goal_id=$1",
-      [goalId],
-    );
-    current = Number(goal.start_value) + Number(sums[0]?.total ?? 0);
-  }
-
-  const reached =
-    target >= Number(goal.start_value) ? current >= target : current <= target;
-  // 与原先的 CASE 等价：只在 active/completed 之间按达成情况切换，其余状态不动。
+  // completed 是终点态：达成自动进、手点完成进，进度回落不再翻回去。
+  const reached = current >= target;
   const nextStatus: GoalStatus =
-    reached && goal.status === "active"
-      ? "completed"
-      : !reached && goal.status === "completed" && !goal.manual_completion
-        ? "active"
-        : goal.status;
+    reached && goal.status === "active" ? "completed" : goal.status;
   if (
     !opts.skipUnchanged ||
     nextStatus !== goal.status ||
@@ -258,41 +233,4 @@ export async function removeGoalEntryBySource(
     [goalId, sourceType, sourceId],
   );
   await refreshGoalProgress(goalId);
-}
-
-/**
- * 按用户输入校准累计型目标的「当前值」，返回是否补了记录。
- *
- * 累计型目标的进度是「基线 + 记录之和」，每次刷新都会按这个口径重算：
- * 直接写 current_value 会被下一次复算覆盖回去，把基线压成负数又会让进度条
- * 的起点跑到零以下。所以差额落成一条手动校准记录——数字改得准，历史上也
- * 留得下这笔账（改小改大都有效）。change / frequency 型不走这套口径，勿用。
- */
-export async function setGoalCurrentProgress(
-  goalId: string,
-  desired: number,
-): Promise<boolean> {
-  const db = await getDb();
-  const goals = await db.select<Goal[]>("SELECT * FROM goals WHERE id=$1 LIMIT 1", [goalId]);
-  const goal = goals[0];
-  if (!goal) return false;
-  const sums = await db.select<{ total: number | null }[]>(
-    "SELECT SUM(value) AS total FROM goal_entries WHERE goal_id=$1",
-    [goalId],
-  );
-  const derived = Number(goal.start_value) + Number(sums[0]?.total ?? 0);
-  const delta = Number(desired) - derived;
-  if (!Number.isFinite(delta) || Math.abs(delta) < 1e-9) return false;
-  const step = Math.round(delta * 100) / 100;
-  await db.execute(
-    `INSERT INTO goal_entries
-     (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
-     VALUES ($1,$2,$3,$4,'manual',NULL,$5,$6,$7)`,
-    [
-      createId(), goalId, todayDateString(), step,
-      `手动校准 ${step > 0 ? "+" : ""}${step}${goal.unit}`, nowIso(), nowIso(),
-    ],
-  );
-  await refreshGoalProgress(goalId);
-  return true;
 }

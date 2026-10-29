@@ -3,18 +3,16 @@ import type { Goal, GoalEntry } from "@/types";
 /**
  * 这个目标接不接受某种来源的进度记录。
  *
- * 判定口径只有一条：**这条记录能不能代表目标的进度单位**。
- * - 数值变化型目标：只认手动测量。"读完一本书"推不动"体重从 80 到 75"。
- * - 数值·次数型目标：任务完成与习惯打卡都可以，但必须是**显式声明的计量关联**
- *   （goal_contribution > 0）。
+ * 判定口径只有一条（migration v29 起）：**进度只能来自事件**。
+ * - 进行中的目标接受任务完成与习惯打卡的计量记录（显式声明的
+ *   goal_contribution > 0 由写入方把关）；
+ * - 手动记录已下线，任何情况下都不接受；暂停 / 已完成的目标不收新记录。
  */
 export function goalAcceptsSource(
   goal: Goal,
   source: GoalEntry["source_type"],
 ): boolean {
   if (goal.status !== "active") return false;
-  if (source === "manual") return true;
-  if (goal.goal_type === "measure") return false;
   return source === "task" || source === "habit";
 }
 
@@ -42,24 +40,20 @@ export interface GoalTarget {
  *
  * 过去每个界面各自取分母（target_value / effectiveWeeklyTarget / weekly_target），
  * 于是同一个目标在今日条和目标卡上出现两个分母。现在只有一个来源：
- * 分母就是目标的 target_value。
- * - 数值·次数型：target_value = 目标次数（"读完 21 本"）；
- * - 数值变化型：target_value = 目标测量值（"体重 75kg"）。
+ * 分母就是目标的 target_value（目标次数，"读完 21 本"）。
  */
 export function resolveGoalTarget(goal: Goal): GoalTarget {
   return { value: Number(goal.target_value), unit: goal.unit };
 }
 
 /**
- * 目标进度（0–100）。分母一律走 resolveGoalTarget，不再各界面各取一套。
+ * 目标进度（0–100）。分子是当前累计、分母一律走 resolveGoalTarget——
+ * 没有基线（migration v29 起 start_value 已下线），current 从 0 起算。
  */
 export function calculateGoalProgress(goal: Goal): number {
-  const ascending = Number(goal.target_value) >= Number(goal.start_value);
-  const span = Math.max(0.0001, Math.abs(Number(goal.target_value) - Number(goal.start_value)));
-  const moved = ascending
-    ? Number(goal.current_value) - Number(goal.start_value)
-    : Number(goal.start_value) - Number(goal.current_value);
-  return Math.max(0, Math.min(100, (moved / span) * 100));
+  const target = Number(goal.target_value);
+  if (!Number.isFinite(target) || target <= 0) return 0;
+  return Math.max(0, Math.min(100, (Number(goal.current_value) / target) * 100));
 }
 
 interface GoalDeadlineInfo {

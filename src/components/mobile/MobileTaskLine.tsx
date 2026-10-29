@@ -18,7 +18,7 @@ export function mobileDoneStamp(iso: string | null): string | null {
 }
 
 /**
- * 移动壳的统一任务行：周清单「本周任务」、当周日历、项目面板、标签任务列表共用。
+ * 移动壳的统一任务行：本周页当周日历、项目面板、标签任务列表共用。
  *
  * 原子全部复用今日 / 待办那一套（优先级方点 `.minbox-pdot`、日期语气药丸
  * `.minbox-due`、归属胶囊 `.mtoday-pill`、完成圆钮 `.mtoday-check`），行外壳是

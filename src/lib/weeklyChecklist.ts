@@ -143,7 +143,7 @@ function dayTasksOf(
   });
 }
 
-/** 满勤天数:当日事项全部完成的天数(与周清单日历列同一套归属口径)。 */
+/** 满勤天数:当日事项全部完成的天数(与本周页日历列同一套归属口径)。 */
 export function countFullDays(tasks: Task[], weekDates: string[]): number {
   const weekStart = weekDates[0];
   const weekEnd = weekDates[6];

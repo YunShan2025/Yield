@@ -32,9 +32,9 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
   goals: {
     idColumns: ["id"],
     columns: [
-      "title", "color", "goal_type", "start_date", "target_date",
-      "start_value", "target_value", "current_value", "unit", "status", "motivation",
-      "manual_completion", "deleted_at", "created_at", "updated_at",
+      "title", "color", "start_date", "target_date",
+      "target_value", "current_value", "unit", "status", "motivation",
+      "deleted_at", "created_at", "updated_at",
     ],
   },
   tags: {

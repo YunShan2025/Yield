@@ -34,7 +34,7 @@ const {
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -57,7 +57,6 @@ beforeEach(() => {
 async function seedGoal() {
   return createGoal({
     title: "读完 21 本书",
-    goal_type: "milestone",
     unit: "次",
     target_value: 21,
   });
@@ -115,7 +114,7 @@ describe("目标可撤回", () => {
     await softDeleteGoal(goal.id);
     db.prepare(
       "INSERT INTO goal_entries (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
-    ).run("e1", goal.id, "2026-10-20", 1, "manual", null, "", "2026-10-20", "2026-10-20");
+    ).run("e1", goal.id, "2026-10-20", 1, "task", "task-1", "", "2026-10-20", "2026-10-20");
 
     await purgeGoal(goal.id);
     expect(goalRow(goal.id)).toBeUndefined();

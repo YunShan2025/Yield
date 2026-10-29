@@ -7,12 +7,12 @@ import type { Goal } from "@/types";
 
 /**
  * 今日页的目标条：把"长期方向"压缩成一行可执行入口，
- * 让目标在每日流程里有存在感，而不必先跳去成长页。
+ * 让目标在每日流程里有存在感，而不必先跳去目标页。
  */
 export function GoalStrip() {
   const [goals, setGoals] = useState<Goal[]>([]);
 
-  // 目标进度在同步后才会被复算，这里跟随同一条事件重载，今日页才不落后于成长页。
+  // 目标进度在同步后才会被复算，这里跟随同一条事件重载，今日页才不落后于目标页。
   useEffect(() => {
     const reload = () => void fetchGoals().then(setGoals);
     reload();
@@ -39,9 +39,9 @@ export function GoalStrip() {
         <span>本周目标</span>
         <button
           type="button"
-          onClick={() => useAppStore.getState().setNav("growth")}
+          onClick={() => useAppStore.getState().setNav("goals")}
         >
-          成长页
+          目标页
         </button>
       </div>
       <div className="today-goal-rows">
@@ -61,7 +61,7 @@ export function GoalStrip() {
                 title="查看目标详情"
                 onClick={() => {
                   useAppStore.getState().requestFocus({ kind: "goal", id: goal.id });
-                  useAppStore.getState().setNav("growth");
+                  useAppStore.getState().setNav("goals");
                 }}
               >
                 <i aria-hidden />

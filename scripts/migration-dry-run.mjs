@@ -147,7 +147,7 @@ console.log("\n关键列：");
 for (const [table, expect] of [
   ["habits", ["repeat_rule"]],
   ["tasks", ["repeat_rule", "generated_from_id"]],
-  ["goals", ["weekly_target", "project_id"]],
+  ["goals", ["weekly_target", "project_id", "goal_type", "start_value", "manual_completion"]],
 ]) {
   const cols = columnsOf(table);
   for (const col of expect) {
@@ -156,19 +156,19 @@ for (const [table, expect] of [
 }
 
 console.log(
-  "\n目标类型分布：",
-  JSON.stringify(db.prepare("SELECT goal_type, COUNT(*) AS c FROM goals GROUP BY goal_type").all()),
+  "目标记录来源分布：",
+  JSON.stringify(db.prepare("SELECT source_type, COUNT(*) AS c FROM goal_entries GROUP BY source_type").all()),
 );
 console.log(
   "带排期规则的习惯：",
   Number(db.prepare("SELECT COUNT(*) AS c FROM habits WHERE repeat_rule IS NOT NULL").get().c),
 );
 console.log(
-  "残留的旧来源目标记录：",
+  "残留的非事件来源目标记录：",
   Number(
     db
       .prepare(
-        "SELECT COUNT(*) AS c FROM goal_entries WHERE source_type IN ('task','habit','focus')",
+        "SELECT COUNT(*) AS c FROM goal_entries WHERE source_type NOT IN ('task','habit')",
       )
       .get().c,
   ),

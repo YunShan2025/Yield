@@ -271,14 +271,13 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
   for (const goal of payload.goals ?? []) {
     await db.execute(
       `INSERT INTO goals
-       (id,title,color,goal_type,start_date,target_date,start_value,
+       (id,title,color,start_date,target_date,
         target_value,current_value,unit,status,motivation,
-        manual_completion,deleted_at,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
-      [goal.id,goal.title,goal.color,goal.goal_type,
-       goal.start_date,goal.target_date,goal.start_value,goal.target_value,
-       goal.current_value,goal.unit,goal.status,goal.motivation,
-       goal.manual_completion ?? (goal.status === "completed" ? 1 : 0),
+        deleted_at,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [goal.id,goal.title,goal.color,
+       goal.start_date,goal.target_date,
+       goal.target_value,goal.current_value,goal.unit,goal.status,goal.motivation,
        goal.deleted_at ?? null,goal.created_at,goal.updated_at],
     );
   }
@@ -328,15 +327,22 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     await setSetting(key, value);
   }
   if (!has("goalEntries")) {
+    // 旧备份补齐与运行时同口径：只有显式声明的计量（contribution > 0）才写
+    // 目标记录。旧代码 `contribution || 1` 会把只关联（0）也算成 1，恢复一次
+    // 旧备份就把「只关联 = 不计数」的账偷偷记回去了。
     for (const task of payload.tasks) {
       if (task.status !== "completed" || !task.goal_id) continue;
-      await addGoalEntry({ goal_id: task.goal_id, entry_date: (task.completed_at ?? task.updated_at).slice(0, 10), value: task.goal_contribution || 1, source_type: "task", source_id: task.id, note: task.title });
+      const value = Number(task.goal_contribution) || 0;
+      if (value <= 0) continue;
+      await addGoalEntry({ goal_id: task.goal_id, entry_date: (task.completed_at ?? task.updated_at).slice(0, 10), value, source_type: "task", source_id: task.id, note: task.title });
     }
     const habitsById = new Map(payload.habits.map((habit) => [habit.id, habit]));
     for (const check of payload.habitChecks) {
       const habit = habitsById.get(check.habit_id);
       if (!habit?.goal_id) continue;
-      await addGoalEntry({ goal_id: habit.goal_id, entry_date: check.check_date, value: habit.goal_contribution || 1, source_type: "habit", source_id: `${habit.id}:${check.check_date}`, note: habit.title });
+      const value = Number(habit.goal_contribution) || 0;
+      if (value <= 0) continue;
+      await addGoalEntry({ goal_id: habit.goal_id, entry_date: check.check_date, value, source_type: "habit", source_id: `${habit.id}:${check.check_date}`, note: habit.title });
     }
   }
   const retainedGoals = await db.select<{ id: string }[]>("SELECT id FROM goals");

@@ -88,13 +88,12 @@ for (const h of habits) {
   }
 }
 
-// —— 目标条目 ——
-const goals = db.prepare("SELECT id, title, goal_type, target_value, unit FROM goals WHERE deleted_at IS NULL").all();
+// —— 目标条目（进度只来自任务/打卡事件，migration v29 起）——
+const goals = db.prepare("SELECT id, title, unit, target_value FROM goals WHERE deleted_at IS NULL").all();
 for (const g of goals) {
-  const step = g.goal_type === "quantity" ? 1 : 1;
-  for (const d of [day(-9), day(-7), day(-5), day(-3), day(-1)]) {
-    db.prepare("INSERT INTO goal_entries (id,goal_id,entry_date,value,source_type,note,created_at,updated_at) VALUES (?,?,?,?,'manual','',?,?)")
-      .run(uid(`ge-${g.id}-${d}`), g.id, d, step, now, now);
+  for (const [i, d] of [day(-9), day(-7), day(-5), day(-3), day(-1)].entries()) {
+    db.prepare("INSERT INTO goal_entries (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)")
+      .run(uid(`ge-${g.id}-${d}`), g.id, d, 1, i % 2 ? "task" : "habit", `seed:${g.id}:${d}`, "评审样例", now, now);
   }
 }
 

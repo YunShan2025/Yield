@@ -5,7 +5,7 @@ import type { NavId } from "@/types";
 
 /** 更多页按侧栏典故分组的次级入口（MOBILE-IA §3.2）。
  *  分组头只留一句白话释义，典故全文收在「设置 · 命名缘起」；
- *  图标口径与桌面侧栏 NavSidebar 对齐（周清单 checklist、纪念日 gift）。 */
+ *  图标口径与桌面侧栏 NavSidebar 对齐（本周 checklist、纪念日 gift）。 */
 const MORE_GROUPS: {
   name: string;
   gloss?: string;
@@ -14,15 +14,15 @@ const MORE_GROUPS: {
   {
     name: "积微",
     gloss: "每天的小积累",
-    items: [{ id: "week", label: "周清单", icon: "checklist" }],
+    items: [{ id: "week", label: "本周", icon: "checklist" }],
   },
   {
     name: "有恒",
-    gloss: "成长靠的是不间断",
+    gloss: "习惯与长线投入，都靠不间断",
     items: [
-      { id: "growth", label: "成长", icon: "sparkle" },
       { id: "habits", label: "习惯", icon: "heart" },
-      { id: "review", label: "复盘", icon: "review" },
+      { id: "goals", label: "目标", icon: "sparkle" },
+      { id: "footprint", label: "足迹", icon: "trend" },
     ],
   },
   {
@@ -73,7 +73,7 @@ export function MobileMoreSheet({ onNavigate }: { onNavigate: (id: NavId) => voi
       </header>
 
       <div className="mtoday-scroll">
-        {MORE_GROUPS.map((group) => (
+        {MORE_GROUPS.filter((group) => group.items.length).map((group) => (
           <section
             key={group.name}
             className="mtoday-card mmore-group"

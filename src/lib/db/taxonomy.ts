@@ -11,7 +11,7 @@ import { addGoalEntry, removeGoalEntryBySource } from "./growth";
 
 /* Tags */
 
-// 默认标签与周清单四分类同名同色，顺序即产品约定的默认展示顺序。
+// 默认标签与本周页四分类同名同色，顺序即产品约定的默认展示顺序。
 const DEFAULT_TAGS: { name: string; color: string }[] = ["工作", "生活", "健康", "学习"].map(
   (name) => ({
     name,

@@ -1540,6 +1540,28 @@ UPDATE goals SET status = 'paused' WHERE status = 'abandoned';
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 29,
+            description: "goal_progress_events_only",
+            // 目标进度只剩一个来源：任务完成与习惯打卡的计量事件。
+            // - goal_type 下线：measure（只认手动测量）随手动记录一起退役，
+            //   所有目标统一为「基线 0 + 事件累计」的计数口径；
+            // - start_value 下线：没有数值输入后它恒为 0，进度公式退化为
+            //   current / target；
+            // - manual_completion 下线：completed 改终点语义（达成或手点完成
+            //   即定，永不自动回退），这列的回退保护分支整个删除；
+            // - 手动记录（manual 及历史残留 focus/milestone 来源）删除：
+            //   测试期数据，不做语义并入基线的换算。
+            // 同步层 SYNC_SCHEMA_VERSION 升至 13：旧端多余列经列白名单投影
+            // 丢弃，旧端 manual 记录由本端复算口径天然忽略。
+            sql: r#"
+DELETE FROM goal_entries WHERE source_type NOT IN ('task','habit');
+ALTER TABLE goals DROP COLUMN goal_type;
+ALTER TABLE goals DROP COLUMN start_value;
+ALTER TABLE goals DROP COLUMN manual_completion;
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

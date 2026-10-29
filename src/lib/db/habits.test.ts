@@ -32,7 +32,7 @@ const { createGoal } = await import("@/lib/db/growth");
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -83,7 +83,6 @@ describe("习惯与目标的计量", () => {
   it("默认只关联不计数：打卡不写目标的进度记录", async () => {
     const goal = await createGoal({
       title: "读完 21 本书",
-      goal_type: "milestone",
       unit: "次",
       target_value: 21,
     });
@@ -99,7 +98,6 @@ describe("习惯与目标的计量", () => {
   it("显式声明计量后打卡才写记录，撤掉关联时记录跟着撤", async () => {
     const goal = await createGoal({
       title: "读完 21 本书",
-      goal_type: "milestone",
       unit: "次",
       target_value: 21,
     });

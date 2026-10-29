@@ -186,6 +186,9 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
     timers: payload.timers,
     goalEntries: payload.goalEntries?.filter((item) => {
       if (hasGoals && !goalIds.has(item.goal_id)) return false;
+      // 进度只认任务/打卡事件（migration v29）：旧备份里的手动记录
+      // （校准、measure 测量、历史残留来源）不再复活。
+      if (!["task", "habit"].includes(item.source_type)) return false;
       if (item.source_type === "task" && item.source_id && !taskIds.has(item.source_id)) {
         return false;
       }

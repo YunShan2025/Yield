@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Goal, GoalEntry } from "@/types";
+import type { Goal } from "@/types";
 import {
   activityLevelFromValue,
   calculateGoalProgress,
@@ -11,33 +11,34 @@ import {
   resolveGoalTarget,
 } from "./growth";
 
-const goal = (start: number, current: number, target: number) =>
-  ({ start_value: start, current_value: current, target_value: target }) as Goal;
+const goal = (current: number, target: number) =>
+  ({ current_value: current, target_value: target }) as Goal;
 
-const fullGoal = (goal_type: Goal["goal_type"]): Goal => ({
+const fullGoal = (overrides: Partial<Goal> = {}): Goal => ({
   id: "g1",
   title: "阅读",
   color: "#2F6FED",
-  goal_type,
   start_date: "2026-10-01",
   target_date: null,
-  start_value: 0,
   target_value: 10,
   current_value: 0,
   unit: "本",
   status: "active",
   motivation: "",
-  manual_completion: 0,
   deleted_at: null,
   created_at: "",
   updated_at: "",
+  ...overrides,
 });
 
 describe("growth metrics", () => {
-  it("calculates ascending and descending goal progress", () => {
-    expect(calculateGoalProgress(goal(0, 6, 24))).toBe(25);
-    expect(calculateGoalProgress(goal(80, 75, 70))).toBe(50);
-    expect(calculateGoalProgress(goal(80, 68, 70))).toBe(100);
+  it("calculates goal progress from zero as current / target", () => {
+    expect(calculateGoalProgress(goal(6, 24))).toBe(25);
+    expect(calculateGoalProgress(goal(4, 4))).toBe(100);
+    // 超出目标值封顶 100，负数与坏分母落到 0。
+    expect(calculateGoalProgress(goal(8, 4))).toBe(100);
+    expect(calculateGoalProgress(goal(-1, 4))).toBe(0);
+    expect(calculateGoalProgress(goal(3, 0))).toBe(0);
   });
 
   it("groups activity into bounded heat levels", () => {
@@ -58,60 +59,35 @@ describe("growth metrics", () => {
     expect(currentDateStreak(["2026-08-02", "2026-08-03"], "2026-08-03")).toBe(2);
   });
 
-  it("routes contribution sources by goal kind", () => {
-    const typed = (goal_type: Goal["goal_type"], status: Goal["status"] = "active") =>
-      ({ goal_type, status }) as Goal;
-    // 数值·次数型：任务与习惯都能按显式声明的计量推进。
-    expect(goalAcceptsSource(typed("milestone"), "task")).toBe(true);
-    expect(goalAcceptsSource(typed("milestone"), "habit")).toBe(true);
-    expect(goalAcceptsSource(typed("milestone"), "manual")).toBe(true);
-    // 数值变化型：只认手动测量。
-    expect(goalAcceptsSource(typed("measure"), "manual")).toBe(true);
-    expect(goalAcceptsSource(typed("measure"), "task")).toBe(false);
-    expect(goalAcceptsSource(typed("measure"), "habit")).toBe(false);
-    expect(goalAcceptsSource(typed("milestone", "paused"), "task")).toBe(false);
+  it("accepts progress only from task and habit events", () => {
+    const active = fullGoal();
+    // 进度只来自事件：进行中的目标接受任务完成与习惯打卡。
+    expect(goalAcceptsSource(active, "task")).toBe(true);
+    expect(goalAcceptsSource(active, "habit")).toBe(true);
+    // 暂停 / 已完成不收新记录。
+    expect(goalAcceptsSource(fullGoal({ status: "paused" }), "task")).toBe(false);
+    expect(goalAcceptsSource(fullGoal({ status: "completed" }), "habit")).toBe(false);
   });
 
   it("calculates the local Monday without UTC conversion", () => {
     expect(localWeekStartKey(new Date("2026-08-05T00:30:00+08:00"))).toBe("2026-08-03");
   });
 
-  it("uses one denominator for every goal kind", () => {
-    // 数值·次数型：分母就是目标值。
-    expect(resolveGoalTarget(fullGoal("milestone")).value).toBe(10);
-    // 数值变化型：起点→目标值的跨度决定进度，分母同样是目标值。
-    const measure = { ...fullGoal("measure"), start_value: 0, target_value: 4, current_value: 2 };
-    expect(resolveGoalTarget(measure).value).toBe(4);
-    expect(calculateGoalProgress(measure)).toBe(50);
+  it("uses one denominator for every goal", () => {
+    expect(resolveGoalTarget(fullGoal()).value).toBe(10);
+    expect(calculateGoalProgress(fullGoal({ current_value: 5 }))).toBe(50);
   });
 
   it("flags deadline pace only when progress is clearly behind", () => {
-    const dated = (current: number) => ({
-      ...fullGoal("milestone"),
-      start_date: "2026-10-01",
-      target_date: "2026-10-31",
-      target_value: 30,
-      current_value: current,
-    });
+    const dated = (current: number) =>
+      fullGoal({
+        start_date: "2026-10-01",
+        target_date: "2026-10-31",
+        target_value: 30,
+        current_value: current,
+      });
     expect(goalDeadlineInfo(dated(5), "2026-10-21")).toEqual({ daysLeft: 10, behind: true });
     expect(goalDeadlineInfo(dated(20), "2026-10-21")?.behind).toBe(false);
-    expect(goalDeadlineInfo({ ...fullGoal("milestone"), target_date: null }, "2026-10-16")).toBeNull();
-  });
-});
-
-describe("goal entries", () => {
-  it("keeps manual records as the only always-allowed source", () => {
-    const entry: GoalEntry = {
-      id: "e1",
-      goal_id: "g1",
-      entry_date: "2026-10-20",
-      value: 1,
-      source_type: "manual",
-      source_id: null,
-      note: "",
-      created_at: "",
-      updated_at: "",
-    };
-    expect(entry.source_type).toBe("manual");
+    expect(goalDeadlineInfo(fullGoal({ target_date: null }), "2026-10-16")).toBeNull();
   });
 });

@@ -189,9 +189,9 @@ export function CreateTaskDialog() {
           </label>
           <label>标签<SelectMenu ariaLabel="标签" value={selectedTagId} onChange={setSelectedTagId} options={[{ value: "", label: "无标签" }, ...tags.map((tag) => ({ value: tag.id, label: tag.name }))]} /></label>
           <label>
-            成长目标
+            目标
             <SelectMenu
-              ariaLabel="成长目标"
+              ariaLabel="目标"
               value={goalId}
               onChange={(value) => {
                 setGoalId(value);

@@ -26,7 +26,7 @@ beforeAll(() => {
   // migration（v19 任务延期原因、v20 目标瘦身）与列白名单的偏差测不出来。
   // 新增 migration 时把版本号补进这里。
   schemaSql = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
   ]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
@@ -663,13 +663,13 @@ describe("双端同步集成（真实 SQLite 触发器 + 内存传输）", () =>
  * current_value/status 由 goal_entries 复算、阶段达成又派生成成就，
  * 而合并是整行 LWW，既不重算也不算和，最容易在这里露馅。
  */
-describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
-  const GOAL_COLUMNS = `(id,title,color,goal_type,start_date,start_value,target_value,
-        current_value,unit,status,manual_completion,created_at,updated_at)`;
+describe("目标模块同步（目标 / 记录）", () => {
+  const GOAL_COLUMNS = `(id,title,color,start_date,target_date,
+        target_value,current_value,unit,status,created_at,updated_at)`;
 
   const goalRow = (device: Device, id: string) =>
     device.rows(
-      `SELECT title,goal_type,unit,target_value,current_value,status
+      `SELECT title,unit,target_value,current_value,status
        FROM goals WHERE id='${id}'`,
     );
 
@@ -682,22 +682,18 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     const row = {
       title: "读书",
       color: "#2F6FED",
-      goal_type: "milestone",
       start_date: "2026-09-01",
-      start_value: 0,
       target_value: 21,
       current_value: 0,
       unit: "次",
       status: "active",
-      manual_completion: 0,
       ...overrides,
     };
     return device.run(
       `INSERT INTO goals ${GOAL_COLUMNS}
-       VALUES ('${id}','${row.title}','${row.color}','${row.goal_type}',
-       '${row.start_date}',${row.start_value},${row.target_value},${row.current_value},
-       '${row.unit}','${row.status}',${row.manual_completion},
-       '${ts}','${ts}')`,
+       VALUES ('${id}','${row.title}','${row.color}',
+       '${row.start_date}',NULL,${row.target_value},${row.current_value},
+       '${row.unit}','${row.status}','${ts}','${ts}')`,
     );
   };
 
@@ -746,6 +742,12 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     expect(goalCols).not.toContain("weekly_target");
     expect(goalCols).not.toContain("project_id");
     expect(TABLE_SPECS.goals.columns).not.toContain("weekly_target");
+    // migration v29：类型、基线、手动完成下线——进度只剩任务/打卡事件，
+    // 白名单与 schema 都要同步收窄，旧端多余列经投影丢弃。
+    for (const column of ["goal_type", "start_value", "manual_completion"]) {
+      expect(goalCols).not.toContain(column);
+      expect(TABLE_SPECS.goals.columns).not.toContain(column);
+    }
     // 习惯新增排期规则，白名单必须带上。
     const habitCols = (await device.rows("PRAGMA table_info(habits)")).map((c) => c.name);
     expect(habitCols).toContain("repeat_rule");
@@ -766,7 +768,6 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     expect(await goalRow(b, "g1")).toEqual([
       {
         title: "读书",
-        goal_type: "milestone",
         unit: "次",
         target_value: 21,
         current_value: 0,
@@ -794,7 +795,6 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     expect(await goalRow(a, "g1")).toEqual([
       {
         title: "读书(改)",
-        goal_type: "milestone",
         unit: "次",
         target_value: 25,
         current_value: 3,
@@ -859,15 +859,15 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     expect(await a.outboxCount()).toBe(0);
   });
 
-  it("未升级的对端发来旧值域目标：类型与状态落库归一", async () => {
+  it("未升级的对端发来旧结构目标：多余列投影丢弃、状态落库归一", async () => {
     const transport = new MemoryTransport();
     const a = createDevice("desktop", transport);
     const b = createDevice("android", transport);
     await b.sync(); // 先建好 B 的日志文件
 
-    // 模拟旧端日志：goal_type 与 status 仍在已下线的值域里（阶段型功能已删，
-    // staged 按累计计数型对待；quantity 等 v20 前的旧值同样归 milestone；
-    // 「放弃」状态下线后 abandoned 归 paused，同 migration v28 的语义）。
+    // 模拟旧端日志：goal_type / start_value / manual_completion 已被 v29
+    // 删列（白名单投影一律丢弃，只搬认识的键）；status 仍在已下线的值域里
+    // （「放弃」状态下线后 abandoned 归 paused，同 migration v28 的语义）。
     const legacyGoal = JSON.stringify({
       hlc: { p: Date.parse("2026-09-16T07:00:00.000Z"), l: 0, d: "legacy" },
       schema_v: SYNC_SCHEMA_VERSION,
@@ -880,12 +880,12 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
         color: "#E4572E",
         goal_type: "staged",
         start_date: "2026-09-01",
-        start_value: 0,
+        start_value: 42,
         target_value: 600,
         current_value: 0,
         unit: "分钟",
         status: "abandoned",
-        manual_completion: 0,
+        manual_completion: 1,
         created_at: "2026-09-16T07:00:00.000Z",
         updated_at: "2026-09-16T07:00:00.000Z",
       },
@@ -894,9 +894,10 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     await b.sync();
     await a.sync();
 
-    // 归一后本端才认得它：goalAcceptsSource 对未知类型一律拒收贡献记录。
-    expect(await a.rows("SELECT id,goal_type,unit,status FROM goals WHERE id='gt'")).toEqual([
-      { id: "gt", goal_type: "milestone", unit: "分钟", status: "paused" },
+    // 只落白名单里的键，abandoned 归 paused；旧端带来的 start_value 幽灵
+    // 值无处可落，进度公式退化为 current / target，不会再有第二个口径。
+    expect(await a.rows("SELECT id,unit,target_value,status FROM goals WHERE id='gt'")).toEqual([
+      { id: "gt", unit: "分钟", target_value: 600, status: "paused" },
     ]);
     // 归一只发生在投影写入时，不该顺手把行再推回对端。
     expect(await a.outboxCount()).toBe(0);
@@ -930,6 +931,33 @@ describe("目标模块同步（目标 / 记录 / 阶段 / 成就）", () => {
     for (const device of [a, b]) {
       await recomputeGoalsAfterSync(device.client);
       expect((await goalRow(device, "g1"))[0]?.current_value).toBe(5);
+    }
+  });
+
+  it("旧端校准记录混窗同步进来：落得了库，但永远不进进度账", async () => {
+    const transport = new MemoryTransport();
+    const a = createDevice("desktop", transport);
+    const b = createDevice("android", transport);
+    await insertGoal(a, "g1", "2026-09-16T01:00:00.000Z");
+    await a.sync();
+    await b.sync();
+
+    // B 还是旧版本：「当前值校准」往 goal_entries 写 manual 行并同步过来。
+    // 行本身照旧整行落库（不炸合并），但复算求和只认 task/habit——
+    // 幽灵贡献被口径天然挡在账外。
+    await b.run(
+      `INSERT INTO goal_entries
+       (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
+       VALUES ('m1','g1','2026-09-16',10,'manual',NULL,'手动校准',
+       '2026-09-16T08:00:00.000Z','2026-09-16T08:00:00.000Z')`,
+    );
+    await b.sync();
+    await a.sync();
+    expect(await a.rows("SELECT id FROM goal_entries WHERE id='m1'")).toHaveLength(1);
+
+    for (const device of [a, b]) {
+      await recomputeGoalsAfterSync(device.client);
+      expect((await goalRow(device, "g1"))[0]?.current_value).toBe(0);
     }
   });
 });

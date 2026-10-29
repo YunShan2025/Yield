@@ -61,7 +61,7 @@ interface AppStore {
   createTaskOpen: boolean;
   /** 新建任务是否从待办箱发起:截止日期默认不填,不自动排时间。 */
   createTaskInbox: boolean;
-  /** 从目标页/今日目标条发起时预关联的成长目标 id。 */
+  /** 从目标页/今日目标条发起时预关联的目标 id。 */
   createTaskGoalId: string | null;
   commandPaletteOpen: boolean;
   focusRequest: FocusRequest | null;

@@ -58,7 +58,7 @@ function sortGroups(groups: ReviewGroup[]): ReviewGroup[] {
 
 /**
  * 当周任务按成长目标聚合。没有关联目标或目标已不存在时归入"未归类"；
- * 空目标不占位，避免复盘页被零使用目标刷屏。
+ * 空目标不占位，避免本周页被零使用目标刷屏。
  */
 export function aggregateReviewByGoal(
   tasks: Task[],
@@ -131,9 +131,9 @@ export function aggregateReviewByTag(
 }
 
 /**
- * 复盘页"整体完成率 / 高效时段"的当周口径。
+ * 本周页"整体完成率 / 高效时段"的当周口径。
  *
- * 归属沿用周清单的 isTaskInWeek：优先 due_date，其次 completed_at；子任务、
+ * 归属沿用本周页的 isTaskInWeek：优先 due_date，其次 completed_at；子任务、
  * 回收站任务与已取消任务不计入。切周时只需换 weekDates，三项指标随之变化。
  */
 export function computeWeekReviewMetrics(

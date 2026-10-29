@@ -260,7 +260,7 @@ export function SettingsView() {
           <li>
             <div className="brand-origin-head"><strong>有恒</strong><span>《论语·述而》</span></div>
             <p className="brand-origin-quote">「得见有恒者，斯可矣。」</p>
-            <p className="brand-origin-meaning">成长靠的是不间断的人。</p>
+            <p className="brand-origin-meaning">习惯与长线投入，都靠不间断。</p>
           </li>
           <li>
             <div className="brand-origin-head"><strong>百工</strong><span>《论语·子张》</span></div>

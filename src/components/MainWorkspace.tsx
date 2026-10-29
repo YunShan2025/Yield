@@ -66,11 +66,6 @@ const TagsView = lazy(() =>
     default: module.TagsView,
   })),
 );
-const ReviewView = lazy(() =>
-  import("@/components/ReviewView").then((module) => ({
-    default: module.ReviewView,
-  })),
-);
 const WeeklyChecklistView = lazy(() =>
   import("@/components/WeeklyChecklistView").then((module) => ({
     default: module.WeeklyChecklistView,
@@ -86,9 +81,14 @@ const MemosView = lazy(() =>
     default: module.MemosView,
   })),
 );
-const GrowthView = lazy(() =>
-  import("@/components/GrowthView").then((module) => ({
-    default: module.GrowthView,
+const GoalsView = lazy(() =>
+  import("@/components/GoalsView").then((module) => ({
+    default: module.GoalsView,
+  })),
+);
+const FootprintView = lazy(() =>
+  import("@/components/FootprintView").then((module) => ({
+    default: module.FootprintView,
   })),
 );
 const AnniversariesView = lazy(() =>
@@ -380,7 +380,7 @@ function TrashView() {
                 <p className="task-title">{goal.title}</p>
                 <div className="trash-item-meta">
                   {goal.deleted_at ? <span>删除于 {formatStamp(goal.deleted_at)}</span> : null}
-                  <span>成长目标</span>
+                  <span>目标</span>
                 </div>
               </div>
               <div className="trash-item-actions">
@@ -590,21 +590,27 @@ export function MainWorkspace() {
       </main>
     );
   }
-  if (nav === "review") {
-    return (
-      <Suspense fallback={<div className="empty-state">正在打开复盘…</div>}>
-        <ReviewView />
-      </Suspense>
-    );
-  }
   if (nav === "week") {
     return (
-      <Suspense fallback={<div className="empty-state">正在打开周清单…</div>}>
+      <Suspense fallback={<div className="empty-state">正在打开本周…</div>}>
         <WeeklyChecklistView />
       </Suspense>
     );
   }
-  if (nav === "growth") return <Suspense fallback={<div className="empty-state">正在加载成长数据…</div>}><GrowthView /></Suspense>;
+  if (nav === "goals") {
+    return (
+      <Suspense fallback={<div className="empty-state">正在打开目标…</div>}>
+        <GoalsView />
+      </Suspense>
+    );
+  }
+  if (nav === "footprint") {
+    return (
+      <Suspense fallback={<div className="empty-state">正在打开足迹…</div>}>
+        <FootprintView />
+      </Suspense>
+    );
+  }
   if (nav === "anniversaries") {
     return (
       <Suspense fallback={<div className="empty-state">正在打开纪念日…</div>}>

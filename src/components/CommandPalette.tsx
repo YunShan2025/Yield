@@ -37,11 +37,6 @@ const GOAL_STATUS_LABELS: Record<Goal["status"], string> = {
   completed: "已完成",
 };
 
-const GOAL_TYPE_LABELS: Record<Goal["goal_type"], string> = {
-  milestone: "累计",
-  measure: "数值",
-};
-
 function compactPreview(text: string, max = 44) {
   const plain = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   return plain.length > max ? `${plain.slice(0, max)}…` : plain;
@@ -178,10 +173,10 @@ export function CommandPalette() {
         kind: "goal",
         id: goal.id,
         title: goal.title,
-        meta: `${GOAL_TYPE_LABELS[goal.goal_type]} · ${GOAL_STATUS_LABELS[goal.status]}`,
+        meta: GOAL_STATUS_LABELS[goal.status],
       }));
     if (goalItems.length) {
-      next.push({ kind: "goal", label: "成长目标", icon: "sparkle", items: goalItems });
+      next.push({ kind: "goal", label: "目标", icon: "sparkle", items: goalItems });
     }
 
     const projectItems = [...projects, ...archivedProjects]
@@ -262,7 +257,7 @@ export function CommandPalette() {
     }
     if (item.kind === "goal") {
       store.requestFocus({ kind: "goal", id: item.id });
-      store.setNav("growth");
+      store.setNav("goals");
     }
     if (item.kind === "project") {
       store.requestFocus({ kind: "project", id: item.id });

@@ -91,8 +91,12 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
  * v12：「放弃」目标状态下线（migration v28 把历史 abandoned 归为 paused）。
  * 旧端发来的 abandoned 在落库前归一为 paused；旧端读到 v12 条目被 header
  * 闸门拒收并提示升级。
+ * v13：目标进度只剩事件来源（migration v29）——goals 的 goal_type /
+ * start_value / manual_completion 下线，goal_entries 只留 task/habit 来源。
+ * 旧端条目的多余列经列白名单投影自然丢弃；旧端仍可能写来的手动校准记录
+ * 由本端进度复算口径（求和只认 task/habit）忽略。
  */
-export const SYNC_SCHEMA_VERSION = 12;
+export const SYNC_SCHEMA_VERSION = 13;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);

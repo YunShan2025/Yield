@@ -1089,7 +1089,7 @@ html[data-shell="mobile"] .expand-task-row {
 
 /* 桌面行级精修(14px 横向留白/61px 行高)不外溢到移动壳:
    移动密度仍按旧值,由移动层规则单独演进。 */
-html[data-shell="mobile"] :is(.expand-task-row, .task-row) {
+html[data-shell="mobile"] .expand-task-row {
   min-height: 0;
   padding: 12px 10px;
 }
@@ -1698,11 +1698,6 @@ html[data-shell="mobile"] .version-update-notice {
     justify-content: flex-end;
   }
 
-  .project-tasks-toggle {
-    flex: none;
-    min-height: 0;
-  }
-
   .workspace-subtitle {
     font-size: var(--font-size-caption);
   }
@@ -1767,8 +1762,7 @@ html[data-shell="mobile"] .version-update-notice {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .weekly-days,
-  .weekly-goals {
+  .weekly-days {
     margin-left: 16px;
     margin-right: 16px;
   }
@@ -1830,15 +1824,6 @@ html[data-shell="mobile"] .review-workspace .top-controls {
 html[data-shell="mobile"] .review-workspace .top-controls .btn-ghost,
 html[data-shell="mobile"] .weekly-checklist .top-controls .btn-ghost {
   white-space: nowrap;
-}
-
-/* 复盘:完成数挪到「‹上周 本周 下周›」右侧,发丝线分隔。 */
-html[data-shell="mobile"] .review-workspace .top-controls .review-hero-total {
-  order: 10;
-  margin-right: 0;
-  margin-left: 4px;
-  padding-left: 10px;
-  border-left: 1px solid var(--border);
 }
 
 /* ---------- 5) 验收修复（2026-09-15 第二轮）----------
@@ -2026,7 +2011,6 @@ html[data-shell="mobile"] .modal-backdrop {
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal),
 html[data-shell="mobile"] .project-edit-modal,
 html[data-shell="mobile"] .goal-create-modal,
-html[data-shell="mobile"] .day-activity-modal,
 html[data-shell="mobile"] .completed-time-modal,
 html[data-shell="mobile"] .anni-composer-dialog,
 html[data-shell="mobile"] .anni-detail-dialog {
@@ -2174,7 +2158,6 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal),
 html[data-shell="mobile"] .project-edit-modal,
 html[data-shell="mobile"] .goal-create-modal,
-html[data-shell="mobile"] .day-activity-modal,
 html[data-shell="mobile"] .completed-time-modal,
 html[data-shell="mobile"] .anni-detail-dialog {
   display: flex;
@@ -2203,7 +2186,6 @@ html[data-shell="mobile"] .anni-detail-dialog > * {
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head,
 html[data-shell="mobile"] .project-edit-modal .modal-head,
 html[data-shell="mobile"] .goal-create-modal .modal-head,
-html[data-shell="mobile"] .day-activity-modal .modal-head,
 html[data-shell="mobile"] .completed-time-modal .modal-head {
   position: sticky;
   top: -20px;

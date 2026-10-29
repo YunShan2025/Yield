@@ -188,29 +188,21 @@ export function getViewTitle(view: string): string {
     today: "今日",
     myday: "今日",
     inbox: "待办箱",
-    week: "周清单",
+    week: "本周",
     board: "看板",
     calendar: "日历",
     tags: "标签",
     habits: "习惯",
     reminders: "提醒",
     memos: "备忘录",
-    review: "复盘",
-    growth: "成长",
+    goals: "目标",
+    footprint: "足迹",
     anniversaries: "纪念日",
     projects: "项目",
     trash: "回收站",
     settings: "设置",
   };
   return map[view] ?? "有秋";
-}
-
-export function taskRowClassName(task: Task, selected: boolean): string {
-  const classes = ["task-row"];
-  if (selected) classes.push("is-selected");
-  if (task.status === "completed") classes.push("is-completed");
-  if (isOverdue(task)) classes.push("is-overdue");
-  return classes.join(" ");
 }
 
 export function boardColumns(tasks: Task[]) {

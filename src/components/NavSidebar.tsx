@@ -45,7 +45,7 @@ export function NavSidebar({
       items: [
         { id: "today", label: "今日", icon: "today", count: counts.today },
         { id: "inbox", label: "待办箱", count: counts.inbox, icon: "inbox" },
-        { id: "week", label: "周清单", icon: "checklist" },
+        { id: "week", label: "本周", icon: "checklist" },
       ],
     },
     {
@@ -55,11 +55,11 @@ export function NavSidebar({
     },
     {
       label: "有恒",
-      note: "有恒 —— 《论语·述而》：「得见有恒者，斯可矣。」成长靠的是不间断的人。",
+      note: "有恒 —— 《论语·述而》：「得见有恒者，斯可矣。」习惯与长线投入，都靠不间断。",
       items: [
-        { id: "growth", label: "成长", icon: "sparkle" },
         { id: "habits", label: "习惯", icon: "heart" },
-        { id: "review", label: "复盘", icon: "review" },
+        { id: "goals", label: "目标", icon: "sparkle" },
+        { id: "footprint", label: "足迹", icon: "trend" },
       ],
     },
     {

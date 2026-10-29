@@ -1,30 +1,31 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
+import { fetchGoalEntries, fetchGoals } from "@/lib/db";
 import { currentDateStreak } from "@/lib/growth";
 import {
   buildWeekBuckets,
   categoryColor,
+  countFullDays,
   mondayWeekDates,
   resolveCategoryId,
   shiftWeek,
   weekdayShort,
-  type WeeklyCategoryId,
 } from "@/lib/weeklyChecklist";
+import {
+  aggregateReviewByGoal,
+  aggregateReviewByProject,
+  aggregateReviewByTag,
+  type ReviewDimension,
+} from "@/lib/review";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
-import { ExpandRow } from "@/components/ExpandRow";
-import { formatDueDateBadge, priorityLabel } from "@/lib/dates";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { getMobileTaskPills } from "@/components/mobile/MobileTaskPills";
-import { mobileDoneStamp } from "@/components/mobile/MobileTaskLine";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
-import type { Goal, Project, Tag, Task } from "@/types";
-
-/** 移动壳里一个分类默认只露这么多条：sunken 子面板被拉成十几条会吃满一屏。 */
-const MOBILE_TASK_PREVIEW = 5;
+import type { Goal, GoalEntry, Task } from "@/types";
 
 /** 桌面脉搏图详情：一天最多露这么多条，溢出折叠成「还有 N 项」。 */
 const PULSE_TASK_PREVIEW = 10;
@@ -51,83 +52,6 @@ function formatCompletedAt(iso: string | null): string | null {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-/**
- * 「本周任务」的桌面行：移动 MobileTaskLine 的桌面对应物——标题在上，第二行
- * 是优先级点·截止徽标·归属胶囊·目标徽标，右端完成圆钮。徽标全部复用今日/
- * 待办的桌面原子（.due-chip/.task-pill/.goal-chip），完成态走同页当周日历
- * 那套「成就金」认可（不划线、不置灰）。
- */
-function WeeklyTaskRow({
-  task,
-  today,
-  projects,
-  tags,
-  tagMap,
-  goal,
-  onOpen,
-  onComplete,
-}: {
-  task: Task;
-  today: string;
-  projects: Project[];
-  tags: Tag[];
-  tagMap: Record<string, string[]>;
-  goal: Goal | null;
-  onOpen: () => void;
-  onComplete: () => void;
-}) {
-  const done = task.status === "completed";
-  // 与移动行同一口径：完成的事不再标截止语气，哪天做完的由行尾小注说。
-  const due = done ? null : formatDueDateBadge(task.due_date, today);
-  const pills = getMobileTaskPills(task, projects, tags, tagMap);
-  const stamp = done ? mobileDoneStamp(task.completed_at) : null;
-  return (
-    <div className={`weekly-goal-task${done ? " is-done" : ""}`}>
-      <button type="button" className="weekly-goal-task-open" onClick={onOpen}>
-        <span className="weekly-goal-task-title">{task.title}</span>
-        <span className="weekly-goal-task-meta">
-          <i
-            className={`weekly-goal-task-pdot pr${task.priority}`}
-            title={priorityLabel(task.priority)}
-            aria-hidden
-          />
-          {due ? (
-            <span
-              className={`due-chip is-${due.tone}`}
-              title={due.title}
-              aria-label={due.tone === "none" ? "未安排日期" : `${due.label}，${due.title}`}
-            >
-              {due.label}
-            </span>
-          ) : null}
-          {pills.map((pill) => (
-            <span
-              key={pill.key}
-              className="task-pill"
-              style={{ "--pill-color": pill.color } as CSSProperties}
-            >
-              {pill.name}
-            </span>
-          ))}
-          {goal ? (
-            <span className="goal-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
-              {goal.title}
-            </span>
-          ) : null}
-          {stamp ? <span className="done-chip">{stamp} 完成</span> : null}
-        </span>
-      </button>
-      <button
-        type="button"
-        className="weekly-goal-task-check"
-        aria-label={done ? `取消完成 ${task.title}` : `完成 ${task.title}`}
-        aria-pressed={done}
-        onClick={onComplete}
-      />
-    </div>
-  );
-}
-
 export function WeeklyChecklistView() {
   const tasks = useAppStore((s) => s.tasks);
   const tags = useAppStore((s) => s.tags);
@@ -148,16 +72,46 @@ export function WeeklyChecklistView() {
   const weekStart = weekDates[0];
   const weekEnd = weekDates[6];
 
-  const { days, categories, stats } = useMemo(
+  const { days, stats } = useMemo(
     () => buildWeekBuckets(tasks, weekDates, tagMap, tags),
     [tasks, weekDates, tagMap, tags],
   );
 
   const donePct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
-  // 哪个分类展开着：点哪行就在哪行下面展开，不另起一块。
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  // 移动壳：展开的分类里默认只露前 MOBILE_TASK_PREVIEW 条，切分类回到预览。
-  const [showAllTasks, setShowAllTasks] = useState(false);
+  // 当周目标推进读目标与目标记录两份页内数据（自复盘页并入），同步拉回对端
+  // 写入后要重载。
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goalEntries, setGoalEntries] = useState<GoalEntry[]>([]);
+  const [dimension, setDimension] = useState<ReviewDimension>("goal");
+  useEffect(() => {
+    const reload = () =>
+      void Promise.all([fetchGoals(true), fetchGoalEntries()]).then(
+        ([nextGoals, nextEntries]) => {
+          setGoals(nextGoals);
+          setGoalEntries(nextEntries);
+        },
+      );
+    reload();
+    window.addEventListener("youqiu:sync-applied", reload);
+    return () => window.removeEventListener("youqiu:sync-applied", reload);
+  }, []);
+
+  // 任务完成去向：按目标/项目/标签三视角聚合（自复盘页并入，口径同 isTaskInWeek）。
+  // 「去向」只讲完成：有任务但零完成的组滤掉，不摆 0% 的空白横条占位。
+  const breakdown = useMemo(() => {
+    const groups =
+      dimension === "project"
+        ? aggregateReviewByProject(tasks, weekDates, projects)
+        : dimension === "tag"
+          ? aggregateReviewByTag(tasks, weekDates, tags, tagMap)
+          : aggregateReviewByGoal(tasks, weekDates, goals);
+    return groups.filter((group) => group.done > 0);
+  }, [dimension, goals, projects, tagMap, tags, tasks, weekDates]);
+  const fullDays = useMemo(() => countFullDays(tasks, weekDates), [tasks, weekDates]);
+  const activeGoals = useMemo(
+    () => goals.filter((goal) => goal.status === "active"),
+    [goals],
+  );
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
   // 当周日历（桌面脉搏图）点选的日期。null = 回退默认：今天 → 峰值日 → 周一；
   // 切周后 pulseDate 不在这一周里，自动落回默认，不用 effect 重置。
@@ -186,7 +140,7 @@ export function WeeklyChecklistView() {
   const pulseTotals = days.map((day) => day.total);
   const pulseDones = days.map((day) => day.done);
 
-  // 周节奏放在周清单：今日页只留今天要做的事，周统计归这里。
+  // 周节奏放在本周页：今日页只留今天要做的事，周统计归这里。
   const weekChecks = useMemo(
     () =>
       habitChecks.filter(
@@ -210,21 +164,13 @@ export function WeeklyChecklistView() {
     return currentDateStreak([...days], today);
   }, [habitChecks, tasks, today]);
 
-  // 分类行旁的备注：有任务就报数（本周有x项任务），不再拿首个任务名当副标题——
-  // 任务名长短不一、还会和右侧「已完成/总数」抢读；空类保留「本周暂无任务」。
-  const summaryLine = (id: WeeklyCategoryId) => {
-    const bucket = categories.find((item) => item.category.id === id);
-    if (!bucket || bucket.total === 0) return "本周暂无任务";
-    return `本周有${bucket.total}项任务`;
-  };
-
   return (
     <main className="main-workspace weekly-checklist">
       <div className="workspace-top weekly-checklist-top">
         <div>
-          <h2 aria-label={isMobileShell() ? "周清单" : undefined}>
+          <h2 aria-label={isMobileShell() ? "本周" : undefined}>
 
-            {isMobileShell() ? <MobileTitleChars text="周清单" /> : "周清单"}
+            {isMobileShell() ? <MobileTitleChars text="本周" /> : "本周"}
 
           </h2>
           <p className="workspace-subtitle">把一周摊开来看。</p>
@@ -289,9 +235,9 @@ export function WeeklyChecklistView() {
       </section>
       )}
 
-      {/* 当周概览放在列表之前：这三项是这一周的节奏（打卡、连续、峰值日），先给一眼
-          再进任务列表。它与引导块不重复 —— 引导块是本周完成进度，这里是习惯侧与峰值；
-          本周事项 / 已完成 / 剩余与完成率条早就随引导块去重掉了，没留下来。 */}
+      {/* 当周概览放在列表之前：这几项是这一周的节奏（打卡、连续、峰值、满勤），
+          先给一眼再进日历。完成率归引导块（大读数 + 细轨），这里不再重复；
+          成就数（连续/峰值/满勤）描金。桌面账目列，移动壳折成读数格。 */}
       <section className="weekly-stat-strip" aria-label="当周概览">
         <div className="weekly-stat-track">
           <div className="weekly-stat-item">
@@ -301,14 +247,14 @@ export function WeeklyChecklistView() {
               <span className="weekly-stat-note">次</span>
             </div>
           </div>
-          <div className="weekly-stat-item">
+          <div className="weekly-stat-item is-gold">
             <span className="weekly-stat-label">当前连续</span>
             <div className="weekly-stat-value">
               <strong className="weekly-stat-num">{streak}</strong>
               <span className="weekly-stat-note">天</span>
             </div>
           </div>
-          <div className="weekly-stat-item">
+          <div className="weekly-stat-item is-gold">
             <span className="weekly-stat-label">峰值日</span>
             <div className="weekly-stat-value">
               <strong className="weekly-stat-num">
@@ -319,102 +265,13 @@ export function WeeklyChecklistView() {
               </span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* 本周任务：按分类聚合，一行一条。点行就地展开这一类的任务 —— 分类是「按标签
-          分组」的口径，当周日历是「按天」的口径，两个视角不重复。 */}
-      <section className="weekly-goals" aria-label="本周任务">
-        <h3>本周任务</h3>
-        <div className="weekly-goal-list">
-          {categories.map((bucket) => {
-            const on = expandedCategory === bucket.category.id;
-            const visibleTasks =
-              isMobileShell() && !showAllTasks
-                ? bucket.tasks.slice(0, MOBILE_TASK_PREVIEW)
-                : bucket.tasks;
-            return (
-              <ExpandRow
-                key={bucket.category.id}
-                open={on}
-                className={
-                  bucket.total && bucket.done === bucket.total ? "is-clear" : undefined
-                }
-                onToggle={() => {
-                  setShowAllTasks(false);
-                  setExpandedCategory(on ? null : bucket.category.id);
-                }}
-                accent={bucket.category.color}
-                rowId={bucket.category.id}
-                dot={
-                  <span
-                    className="weekly-goal-dot"
-                    style={{ background: bucket.category.color }}
-                    aria-hidden
-                  />
-                }
-                title={bucket.category.label}
-                meta={summaryLine(bucket.category.id)}
-                trailing={`${bucket.done}/${bucket.total}`}
-                toggleTitle={on ? "收起这一类" : "查看这一类的任务"}
-              >
-                {bucket.tasks.length ? (
-                  isMobileShell() ? (
-                    /* 移动壳：与今日/待办同一行件。分类是「四类」的粗分组，行里
-                       的项目 / 标签胶囊正好补上「这条到底属于哪件事」。 */
-                    <ul className="mrow-list">
-                      {visibleTasks.map((task) => (
-                        <MobileTaskLine
-                          key={task.id}
-                          task={task}
-                          today={today}
-                          projects={projects}
-                          tags={tags}
-                          tagMap={tagMap}
-                          goalById={goalById}
-                          doneStamp
-                          onOpen={() => selectTask(task.id)}
-                          onComplete={() => void toggleComplete(task.id)}
-                          onMore={() => setSheetTask(task)}
-                        />
-                      ))}
-                      {bucket.tasks.length > MOBILE_TASK_PREVIEW ? (
-                        <li>
-                          <button
-                            type="button"
-                            className="mrow-toggle"
-                            onClick={() => setShowAllTasks((value) => !value)}
-                          >
-                            {showAllTasks
-                              ? "收起任务列表"
-                              : `展开全部 ${bucket.tasks.length} 项`}
-                          </button>
-                        </li>
-                      ) : null}
-                    </ul>
-                  ) : (
-                    <div className="weekly-goal-tasks">
-                      {bucket.tasks.map((task) => (
-                        <WeeklyTaskRow
-                          key={task.id}
-                          task={task}
-                          today={today}
-                          projects={projects}
-                          tags={tags}
-                          tagMap={tagMap}
-                          goal={task.goal_id ? goalById.get(task.goal_id) ?? null : null}
-                          onOpen={() => selectTask(task.id)}
-                          onComplete={() => void toggleComplete(task.id)}
-                        />
-                      ))}
-                    </div>
-                  )
-                ) : (
-                  <p className="expand-row-empty">这一类本周没有任务。</p>
-                )}
-              </ExpandRow>
-            );
-          })}
+          <div className="weekly-stat-item is-gold">
+            <span className="weekly-stat-label">满勤天数</span>
+            <div className="weekly-stat-value">
+              <strong className="weekly-stat-num">{fullDays}</strong>
+              <span className="weekly-stat-note">天全清</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -629,7 +486,7 @@ export function WeeklyChecklistView() {
                           <span className="weekly-day-main">
                             <span className="weekly-day-title">{task.title}</span>
                             {pills.length || goal || stamp ? (
-                              <span className="weekly-goal-task-meta">
+                              <span className="weekly-day-task-meta">
                                 {pills.map((pill) => (
                                   <span
                                     key={pill.key}
@@ -673,6 +530,101 @@ export function WeeklyChecklistView() {
           </div>
         )}
       </section>
+
+      {/* 回顾两块（自复盘页并入）：先看这一周完成了什么的去向，再看长期方向的推进。 */}
+      <div className="weekly-review">
+        <section className="review-story-card review-breakdown">
+          <div className="review-section-head">
+            <div>
+              <span>当周完成的任务</span>
+              <h3>任务完成去向</h3>
+            </div>
+            <div className="review-dimension-tabs" role="tablist" aria-label="聚合维度">
+              {(
+                [
+                  ["goal", "按目标"],
+                  ["project", "按项目"],
+                  ["tag", "按标签"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={dimension === value}
+                  className={dimension === value ? "is-active" : ""}
+                  onClick={() => setDimension(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="review-breakdown-list">
+            {breakdown.map((group) => (
+              <div key={group.key} className="review-breakdown-row">
+                <div className="review-breakdown-label">
+                  <i style={group.color ? { background: group.color } : undefined} />
+                  <span>{group.label}</span>
+                </div>
+                <div
+                  className="review-breakdown-track"
+                  title={`完成 ${group.done}/${group.total}`}
+                >
+                  <i style={{ width: `${group.rate}%` }} />
+                </div>
+                <strong>{group.done}/{group.total}</strong>
+              </div>
+            ))}
+            {!breakdown.length ? (
+              <p className="review-soft-empty">本周还没有完成的任务。</p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="review-story-card review-goals">
+          <div className="review-section-head"><div><span>长期方向</span><h3>当周目标推进</h3></div><b>{activeGoals.length}</b></div>
+          <div className="review-goal-list">
+            {activeGoals.map((goal) => {
+              const weekEntries = goalEntries
+                .filter(
+                  (entry) =>
+                    entry.goal_id === goal.id &&
+                    entry.entry_date >= weekStart &&
+                    entry.entry_date <= weekEnd,
+                )
+                .sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+              const value = weekEntries.reduce((sum, entry) => sum + Number(entry.value), 0);
+              const fromTask = weekEntries
+                .filter((entry) => entry.source_type === "task")
+                .reduce((sum, entry) => sum + Number(entry.value), 0);
+              const fromHabit = weekEntries
+                .filter((entry) => entry.source_type === "habit")
+                .reduce((sum, entry) => sum + Number(entry.value), 0);
+              const parts = [
+                fromTask ? `任务 +${Math.round(fromTask * 10) / 10}` : "",
+                fromHabit ? `打卡 +${Math.round(fromHabit * 10) / 10}` : "",
+              ].filter(Boolean);
+              return (
+                <div key={goal.id} className="review-goal-row">
+                  <i style={{ background: goal.color }} />
+                  <span>
+                    {goal.title}
+                    {parts.length ? (
+                      <em className="review-goal-source">{parts.join(" · ")}</em>
+                    ) : null}
+                  </span>
+                  <strong>
+                    +{Math.round(value * 10) / 10}{goal.unit}
+                  </strong>
+                </div>
+              );
+            })}
+            {!activeGoals.length ? <p className="review-soft-empty">暂无进行中的长期目标。</p> : null}
+          </div>
+        </section>
+      </div>
 
       {sheetTask ? (
         <TaskActionSheet

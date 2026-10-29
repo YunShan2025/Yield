@@ -254,7 +254,7 @@ export function TodayMobileView() {
           <section className="mtoday-card" aria-label="推进目标">
             <div className="mtoday-shead">
               <h3>推进目标</h3>
-              <button type="button" onClick={() => setNav("growth")}>
+              <button type="button" onClick={() => setNav("goals")}>
                 查看全部 ›
               </button>
             </div>
@@ -269,7 +269,7 @@ export function TodayMobileView() {
                     className="mtoday-goal"
                     onClick={() => {
                       requestFocus({ kind: "goal", id: goal.id });
-                      setNav("growth");
+                      setNav("goals");
                     }}
                   >
                     <i

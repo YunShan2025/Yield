@@ -390,13 +390,13 @@ export function HabitsView() {
               </small>
             </label>
             <label>
-              关联成长目标
+              关联目标
               <SelectMenu
-                ariaLabel="关联成长目标"
+                ariaLabel="关联目标"
                 value={goalId}
                 onChange={setGoalId}
                 options={[
-                  { value: "", label: "不关联成长目标" },
+                  { value: "", label: "不关联目标" },
                   ...activeGoals.map((goal) => ({
                     value: goal.id,
                     label: goal.title,
@@ -447,7 +447,7 @@ export function HabitsView() {
                 onChange={(event) => setTargetDays(event.target.value)}
               />
               {goalId ? (
-                <small className="project-field-hint">已关联成长目标，进度以目标为准。</small>
+                <small className="project-field-hint">已关联目标，进度以目标为准。</small>
               ) : null}
             </label>
             <label className="settings-toggle habit-unlimited-toggle">

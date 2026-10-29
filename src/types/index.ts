@@ -20,8 +20,8 @@ export type NavId =
   | "tags"
   | "habits"
   | "reminders"
-  | "review"
-  | "growth"
+  | "goals"
+  | "footprint"
   | "anniversaries"
   | "memos"
   | "trash"
@@ -254,33 +254,29 @@ export interface Anniversary {
 }
 
 /**
- * 目标的内部判据种类（界面上不让用户选）。
- * - milestone 数值·次数：起点 → 目标值，靠记录累计推进
- * - measure  数值变化：起点 → 目标值，靠最新一次测量推进
- */
-export type GoalType = "milestone" | "measure";
-/**
  * 目标的状态。三个（「放弃」已下线，历史数据经 migration v28 归为暂停）：
  * - active    进行中
  * - paused    暂停
- * - completed 已完成（达成即止；对应项目 / 习惯里"归档"的那层意思）
+ * - completed 已完成（终点态：达成或手动完成即定，不再自动回退）
  */
 export type GoalStatus = "active" | "paused" | "completed";
 
+/**
+ * 目标。进度只有一个来源（migration v29 起）：关联任务完成与习惯打卡的
+ * 计量事件累计。没有类型、没有基线、没有手动记录——current_value 恒等于
+ * 记录之和，「正在推进」清单就是进度的全部输入。
+ */
 export interface Goal {
   id: string;
   title: string;
   color: string;
-  goal_type: GoalType;
   start_date: string;
   target_date: string | null;
-  start_value: number;
   target_value: number;
   current_value: number;
   unit: string;
   status: GoalStatus;
   motivation: string;
-  manual_completion: number;
   /** 目标回收站：非空即已删除，可在回收站恢复。 */
   deleted_at: string | null;
   created_at: string;
@@ -292,7 +288,7 @@ export interface GoalEntry {
   goal_id: string;
   entry_date: string;
   value: number;
-  source_type: "manual" | "task" | "habit" | "focus" | "milestone";
+  source_type: "task" | "habit";
   source_id: string | null;
   note: string;
   created_at: string;

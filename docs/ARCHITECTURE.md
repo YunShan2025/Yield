@@ -146,7 +146,7 @@ src-tauri/
 
 ## 12. 审查附注（复杂度热点，后续演进参考）
 
-- `src/components/MainWorkspace.tsx`（1054 行）与 `src/components/GrowthView.tsx`（826 行）是最大的两个模块，`src/app/MainApp.tsx`（790 行）、`src/store/app.ts`（741 行）次之（行数只作量级参考），继续加功能时优先考虑按域拆分而非追加；
+- `src/components/MainWorkspace.tsx`（1054 行）是最大的模块，`src/app/MainApp.tsx`（790 行）、`src/store/app.ts`（741 行）次之（行数只作量级参考），继续加功能时优先考虑按域拆分而非追加；
 - `src-tauri/src/lib.rs`（1727 行）混合了入口、迁移、11 个 command、Android content:// 读取与托盘，若命令继续增多应拆出 `commands/` 模块；
 - 样式层五个层叠文件 + `index.css` 级联入口（`tokens → primitives → components → views → mobile`）的顺序是隐性契约，不可重排；移动端新增覆盖一律追加进 `mobile.css`，`!important` 只允许压 TSX 内联样式的场景且需注释说明（`scripts/ui-css-audit.mjs` 把关，目标清零）；
 - 备份/恢复与同步合并是数据安全关键路径，改动必须同时更新 `migration.test.ts`、`backup.test.ts` 与 `lib/sync/` 的契约断言；

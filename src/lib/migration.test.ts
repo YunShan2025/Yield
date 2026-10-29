@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -310,6 +310,26 @@ describe("database migration declarations", () => {
     expect(match?.[1]).toContain(
       "UPDATE goals SET status = 'paused' WHERE status = 'abandoned'",
     );
+  });
+
+  it("目标进度只剩事件来源：migration v29 删类型/基线/手动完成与手动记录", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const match = source.match(
+      /version:\s*29,\s*description:\s*"goal_progress_events_only",[\s\S]*?sql:\s*r#"\n([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 手动与历史残留来源的记录删除：进度只剩任务完成与习惯打卡。
+    expect(sql).toContain("DELETE FROM goal_entries WHERE source_type NOT IN ('task','habit')");
+    // 类型、基线、手动完成三列下线（测试期数据，不做语义并入换算）。
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN goal_type");
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN start_value");
+    expect(sql).toContain("ALTER TABLE goals DROP COLUMN manual_completion");
+    // 只向前升级，不触碰 updated_at（回填不被同步触发器当成用户编辑）。
+    expect(sql).not.toContain("updated_at");
   });
 
   it("阶段与成就下线：migration v27 改回 staged 并删表", () => {

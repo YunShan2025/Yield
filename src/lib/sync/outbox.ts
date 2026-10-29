@@ -434,24 +434,6 @@ function projectRowData(
     if (col in data) out[col] = data[col];
   }
   if (table === "goals") {
-    if (typeof out.goal_type === "string") {
-      // 目标类型只认两种判据：milestone（数值·次数）、measure（数值变化）。
-      // 未升级的对端仍可能发来旧类型（quantity / change / frequency / time /
-      // project / custom / staged）：在本机落库前归一，否则本端
-      // goalAcceptsSource 认不出旧类型，会静默拒收贡献记录。阶段型功能已下线，
-      // staged 按累计计数型对待。只改投影值，不额外写库，因此不产生回声。
-      const legacy: Record<string, string> = {
-        quantity: "milestone",
-        custom: "milestone",
-        frequency: "milestone",
-        time: "milestone",
-        project: "milestone",
-        staged: "milestone",
-        change: "measure",
-      };
-      const mapped = legacy[out.goal_type];
-      if (mapped) out.goal_type = mapped;
-    }
     // 「放弃」状态已下线（migration v28）：旧端发来的 abandoned 落库前归为
     // paused——仍可继续、可完成，与本机迁移后的状态域一致。同样只改投影值。
     if (out.status === "abandoned") out.status = "paused";
