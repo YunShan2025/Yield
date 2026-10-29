@@ -10,10 +10,8 @@ export function ExpandRow({
   onToggle,
   dot,
   title,
-  tag,
   meta,
   trailing,
-  actions,
   accent,
   toggleTitle,
   children,
@@ -26,17 +24,14 @@ export function ExpandRow({
   onToggle: () => void;
   dot?: ReactNode;
   title: ReactNode;
-  /** 紧跟标题的小胶囊（如项目所属标签：标签色底 + 标签名）。 */
-  tag?: ReactNode;
   meta?: ReactNode;
   /** 右对齐的计数/状态。 */
   trailing?: ReactNode;
-  /** 行内右对齐的操作（编辑 / 删除…）。 */
-  actions?: ReactNode;
   accent?: string;
   toggleTitle?: string;
   children?: ReactNode;
-  /** 附着在行上、不随展开收起的动作条（编辑/归档/删除属于项目本身，不是任务的）。 */
+  /** 附着在行上的动作条。挂载时机由调用方决定：项目页双端都只随展开行渲染
+   *  （展开＝选中，一屏一套；2026-10-29 移动壳常驻条退役，改行即卡片）。 */
   foot?: ReactNode;
   bodyClassName?: string;
   /** 行级状态类（移动壳用它承载「整组已完成」的成就标记）。 */
@@ -59,14 +54,12 @@ export function ExpandRow({
         >
           {dot}
           <strong className="expand-row-title">{title}</strong>
-          {tag}
           {meta ? <span className="expand-row-meta">{meta}</span> : null}
           {trailing ? <span className="expand-row-trailing">{trailing}</span> : null}
           <span className={`expand-row-caret${open ? " open" : ""}`} aria-hidden>
             <AppIcon name="chevron" size={14} />
           </span>
         </button>
-        {actions ? <div className="expand-row-actions">{actions}</div> : null}
       </div>
       {open ? <div className={`expand-row-body${bodyClassName ? ` ${bodyClassName}` : ""}`}>{children}</div> : null}
       {foot}

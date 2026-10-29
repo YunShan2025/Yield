@@ -381,55 +381,6 @@ select {
   padding: 0 22px 24px;
 }
 
-.task-row {
-  display: grid;
-  grid-template-columns: 20px 1fr auto;
-  gap: 12px;
-  align-items: center;
-  min-height: 61px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  cursor: pointer;
-  background: var(--surface-panel);
-  margin-bottom: 8px;
-  box-shadow: 0 1px 0 var(--border);
-}
-
-.task-row:hover {
-  border-color: var(--border-strong);
-}
-
-.task-row.is-selected {
-  border-color: var(--accent);
-  background: var(--surface-selected);
-}
-
-/* 标签页任务行的完成态：与日历/周历同一套「成就式」金色认可——✓ 金章、暖金底。
-   不置灰、不划线、不降透明：完成是成就感，不是退场。 */
-.task-row.is-completed {
-  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
-  border-color: var(--amber-900-28);
-  box-shadow: 0 1px 0 var(--amber-900-12);
-}
-
-.task-row.is-completed .task-title {
-  color: var(--amber-950-a);
-}
-
-.task-row.is-completed .tags-task-due {
-  color: var(--amber-950-a);
-}
-
-.task-row.is-overdue .task-title {
-  color: var(--text-overdue);
-}
-
-/* 整行同一语气：逾期行的截止日不再留在辅助灰里（移动壳逾期组同为 overdue 墨）。 */
-.task-row.is-overdue .tags-task-due {
-  color: var(--text-overdue);
-}
-
 .task-check {
   position: relative;
   width: 22px;
@@ -448,12 +399,6 @@ select {
   content: "";
   position: absolute;
   inset: -8px;
-}
-
-.task-row.is-completed .task-check {
-  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
-  border-color: transparent;
-  color: var(--white);
 }
 
 /* 可点击「事项名」字样族:字重 560 + 收紧 -0.012em 字距 + heading 墨色。
@@ -494,24 +439,6 @@ select {
   margin: 0 0 10px;
   font-size: var(--font-size-label);
   color: var(--text-secondary);
-}
-
-/* 标签页任务行完成态暗色适配（与周历完成态同一套金色）。 */
-:root[data-theme="dark"] .task-row.is-completed {
-  background: var(--amber-750-14);
-  border-color: var(--amber-750-40);
-  box-shadow: none;
-}
-
-:root[data-theme="dark"] .task-row.is-completed .task-title,
-:root[data-theme="dark"] .task-row.is-completed .tags-task-due {
-  color: var(--amber-700);
-}
-
-:root[data-theme="dark"] .task-row.is-completed .task-check {
-  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
-  border-color: transparent;
-  color: var(--white);
 }
 
 .detail-panel {
@@ -1200,44 +1127,27 @@ select {
     var(--surface-base);
 }
 
-/* 成长页标题区:与「今日/待办箱」同构的 workspace-top。上下边距沿用全局
+/* 目标/足迹页标题区:与「今日/待办箱」同构的 workspace-top。上下边距沿用全局
    workspace-top 值(25px/13px,global-10 最终生效);水平方向归零——
    .growth-page 已统一提供水平内边距,避免标题行相对引导框双重缩进。
    提高特异性以稳定压过 global-10 的等特异性覆盖。 */
 .growth-page .workspace-top.growth-top { padding: 25px 0 13px; }
 .growth-top .btn-primary { flex: 0 0 auto; width: auto; }
-/* 成长页引导框:复用「今日」同款 .today-hero(配色/排版随主题自动同步)。
-   guide-hero 修饰类由 成长/习惯/提醒/项目 四页共用;下间距仅成长页需要,
+/* 足迹页引导框:复用「今日」同款 .today-hero(配色/排版随主题自动同步)。
+   guide-hero 修饰类由 足迹/习惯/提醒/项目 共用;下间距仅足迹页需要,
    其余页面交由容器自身的 gap 控制节奏。 */
 .growth-page .guide-hero { margin-bottom: 14px; }
-/* 复盘/标签页引导框:统一对齐 28px 内容边距。 */
-.review-workspace .guide-hero { margin: 0 28px 18px; }
 /* 设置页页头与其余页同构：桌面引导框与卡片流同用 22px 横留白。 */
 .settings-page .guide-hero {
   margin: 0 22px;
 }
 .tags-view .guide-hero { margin: 0 28px 6px; }
 
-.growth-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
-.growth-tabs button { padding: 9px 15px; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-secondary); cursor: pointer; }
-.growth-tabs button.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; }
-
-/* KPI 读数卡：四个读数收进一张分组面（单卡 + 列间发丝线），数字用收支统计卡
-   同档读数（h1 24px 等宽数字），不再浮在页面底色上。仍不做四张同尺寸卡 ——
-   「大数字 + 小标签 + 辅助统计」当页面结构是 craft-floor 禁项。 */
-.growth-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 14px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
-.growth-metrics article { display: grid; gap: 4px; align-content: start; padding: 18px 24px; }
-.growth-metrics article + article { border-left: 1px solid var(--border); }
-.growth-metrics span { color: var(--text-muted); font-size: var(--font-size-caption); }
-.growth-metrics strong { color: var(--text-primary); font: 700 var(--font-size-h1)/1.15 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.growth-metrics small { font-size: var(--font-size-caption); font-weight: 500; color: var(--text-muted); }
-
 .growth-panel { min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
 .growth-panel h3 { margin: 0 0 14px; }
 .growth-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .growth-panel-head h3 { margin: 0 0 3px; }
 .growth-panel-head p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); }
-.growth-panel-head button { min-height: 24px; padding: 0 4px; border: 0; background: transparent; color: var(--accent-strong); cursor: pointer; }
 
 /* 最近半年（26 周 × 7 天，列优先，每周一列）的热力图：桌面与手机同一数量。 */
 .growth-heatmap { display: grid; grid-template-columns: repeat(26, minmax(8px, 1fr)); grid-template-rows: repeat(7, auto); grid-auto-flow: column; gap: clamp(2px, .3vw, 4px); width: 100%; min-width: 0; padding: 5px 2px 10px; }
@@ -1276,8 +1186,8 @@ button.heat-cell:hover { transform: scale(1.35); outline: 2px solid var(--accent
 .heatmap-legend { display: flex; align-items: center; justify-content: flex-end; gap: 5px; color: var(--text-muted); font-size: var(--font-size-caption); }
 .heatmap-legend .heat-cell { flex: 0 0 12px; width: 12px; height: 12px; aspect-ratio: auto; }
 
-/* ── 桌面成长页收口（2026-10-28）────────────────────────────────────────
-   移动壳的成长页是另一套（mobile.css），下面整体用 html:not([data-shell="mobile"])
+/* ── 足迹页桌面收口（2026-10-28）────────────────────────────────────────
+   移动壳的足迹页是另一套（mobile.css），下面整体用 html:not([data-shell="mobile"])
    门控：桌面改的是「怎么读这张图」，移动壳逐像素不动。 */
 
 /* 格子去描边：26 周里四分之三是空档，1px 描边把空档画成一格格待填的表格线，整块
@@ -1333,37 +1243,41 @@ html:not([data-shell="mobile"]) .heat-months {
 html:not([data-shell="mobile"]) .heat-months span { min-width: 0; overflow: hidden; white-space: nowrap; }
 /* 今天只标位置不给亮度——今天未必有投入，环比颜色诚实。 */
 html:not([data-shell="mobile"]) .heat-cell.is-today { box-shadow: 0 0 0 1.5px var(--text-secondary); }
+/* 正被下方当日面板看着的那一格描金环（成就金，与「整天清空」同一认可语气）；
+   写在 is-today 之后：今天恰是选中日时，金环盖过灰环，位置信息不丢。 */
+.heat-cell.is-sel { box-shadow: 0 0 0 2px var(--amber-700); }
+html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--amber-700), 0 0 0 3.5px var(--surface-panel); }
 
-/* 总览面板里再放一张完整的卡 = 双层边框「卡中卡」。桌面撤掉内层卡的边框、圆角与
-   底色，改成面板里的行：发丝线分隔、hover 提整行，面板仍是这里唯一的一张卡。
-   目标 tab 的 .goal-grid 里它们照旧是一张张卡（那里没有 .growth-panel 包着）。 */
-html:not([data-shell="mobile"]) .growth-panel > .goal-card {
-  margin: 0 -10px;
-  padding: 14px 10px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  transition: background calc(140ms * var(--motion-scale)) ease;
+/* ── 足迹页读数条 + 当日明细 ─────────────────────────────────────────────
+   统计不再用四格高卡：与本周页同族的横向一条（.weekly-stat-track 原子复用），
+   窄窗折行、≤720 两列网格由本周页那套规则接管。容器水平留白交给 .growth-page。 */
+.footprint-stats { margin: 0 0 14px; padding: 10px 18px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); }
+/* 当日明细常驻在热力图下方通栏（弹窗退役）：点格子换日，面板只两列——
+   完成任务（多列表宽一档）与习惯打卡。行件不再自带一套朴素行：桌面复用本周
+   脉搏详情的 .weekly-day-task 家族，移动壳复用 MobileTaskLine/.mrow 行件。 */
+.footprint-day { margin-top: 14px; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
+.footprint-day-head { display: flex; align-items: baseline; gap: 8px; }
+.footprint-day-head strong { color: var(--text-heading); font-size: var(--font-size-h3); font-variant-numeric: tabular-nums; }
+.footprint-day-chip { padding: 1px 8px; border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-strong); font-size: var(--font-size-caption); font-weight: 600; }
+.footprint-day-sum { margin-left: auto; color: var(--text-muted); font-size: var(--font-size-caption); }
+.footprint-day-cols { display: grid; grid-template-columns: 1.6fr 1fr; gap: 4px 28px; margin-top: 8px; }
+.footprint-day-col h4 { margin: 0; padding: 8px 0 6px; border-bottom: 1px solid var(--border); color: var(--text-heading); font-size: var(--font-size-label); }
+.footprint-day-col h4 span { color: var(--text-muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.footprint-day-empty { margin: 10px 0 2px; color: var(--text-muted); font-size: var(--font-size-caption); }
+/* 习惯行：与任务行同一壳（含行尾成就金勾选钮），色点用打卡绿（状态色 solid，
+   同 DESIGN 契约）。 */
+.footprint-habit-dot { background: var(--success-solid); }
+@media (max-width: 760px) {
+  .footprint-day-cols { grid-template-columns: 1fr; }
 }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card:hover { background: var(--surface-sunken); }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card + .goal-card {
-  margin-top: 0;
-  border-top: 1px solid var(--border);
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
-/* 行式里的内容与卡片同尺寸会各自撑一段留白，读起来还是「卡叠卡」。把标题与进度行
-   的上下留白收到行距一档，一行就是：标题 / 进度+读数 / 期限。 */
-html:not([data-shell="mobile"]) .growth-panel > .goal-card h3 { margin: 9px 0 5px; }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card h3:first-child { margin-top: 0; }
-html:not([data-shell="mobile"]) .growth-panel > .goal-card .goal-card-progress { margin: 10px 0 7px; }
 
-/* 目标详情与成就 tab 都是「读一条 / 写一条」的内容：全宽拉伸会把进度条、阶段输入框
-   与空态框拉到一千一百多像素，一行两端拉断。桌面收成一条读数栏宽度的列，靠左不居中
+/* 目标详情是「读一条」的内容：全宽拉伸会把进度条与空态框拉到一千一百多像素，
+   一行两端拉断。桌面收成一条读数栏宽度的列，靠左不居中
    ——页面其余内容也都靠左，居中的孤岛反而更怪。 */
 html:not([data-shell="mobile"]) .goal-detail { max-width: 940px; }
 
 /* 窄桌（≤960）引导框有 138px 的最低高度——那是给「标语 + 一句说明」那种顶卡留的。
-   成长页顶卡是「一句今天 + 一个读数」，撑到 138 就又变回一块空：按内容收高。 */
+   足迹页顶卡是「一句今天 + 一个读数」，撑到 138 就又变回一块空：按内容收高。 */
 @media (max-width: 960px) {
   html:not([data-shell="mobile"]) .growth-page .guide-hero { min-height: 0; }
 }
@@ -1404,7 +1318,6 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 }
 
 /* 总览第二面板（最近成就）已下线：这一行只剩「进行中的目标」，收成单栏。 */
-.growth-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; margin-top: 14px; }
 .goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 /* 目标为空时,空状态占满整行(此前只占一个 260px 网格列,框显得很窄)。 */
 .goal-grid .empty-state { grid-column: 1 / -1; padding: 44px 24px; font-size: var(--font-size-label); }
@@ -1413,9 +1326,6 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 /* 已完成的目标弱化显示，与项目、习惯的"已归档"分区同一套观感。 */
 .goal-card.is-finished { opacity: .72; box-shadow: none; }
 .goal-card.is-finished:hover { opacity: 1; }
-/* 总览「进行中的目标」的卡片直排在面板里：卡片之间补与 goal-grid 同档的间隙
-   （桌面 14、移动壳 10）。此前紧贴成一片，圆角卡片互碰像叠在一起。 */
-.growth-panel > .goal-card + .goal-card { margin-top: 14px; }
 .goal-card-head { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-caption); }
 .goal-card-chip { display: inline-flex; align-items: center; gap: 6px; }
 .goal-card-head i { width: 10px; height: 10px; border-radius: 50%; }
@@ -1430,6 +1340,12 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 .goal-card-progress .goal-progress-track { flex: 1; margin: 0; }
 .goal-card-progress b { min-width: 34px; color: var(--text-muted); font-size: var(--font-size-label); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .goal-card footer { display: flex; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-caption); }
+/* 桌面卡三档式：标题 → 读数·截止同行（读数靠左、截止靠右，baseline 相衬）→ 进度条。
+   进度条 order:1 排到自动放置的最后，截止因此自然落进取数行的右格。移动壳版式不动。 */
+html:not([data-shell="mobile"]) .goal-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; }
+html:not([data-shell="mobile"]) .goal-card-head,
+html:not([data-shell="mobile"]) .goal-card h3 { grid-column: 1 / -1; }
+html:not([data-shell="mobile"]) .goal-card-progress { grid-column: 1 / -1; order: 1; margin: 10px 0 0; }
 
 .goal-detail > .text-btn { margin-bottom: 12px; }
 .goal-detail-hero { display: flex; align-items: center; justify-content: space-between; padding: 25px 28px; border: 1px solid color-mix(in srgb, var(--goal-color) 28%, var(--border)); border-radius: var(--radius-lg); background: linear-gradient(135deg, color-mix(in srgb, var(--goal-color) 13%, var(--surface-panel)), var(--surface-panel)); }
@@ -1446,7 +1362,7 @@ html:not([data-shell="mobile"]) .goal-workbench-list .goal-card.is-sel { border-
 .goal-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .goal-hero-status { display: inline-flex; align-items: center; gap: 7px; }
 .goal-hero-status i { width: 8px; height: 8px; border-radius: 50%; }
-.goal-detail-hero .goal-hero-deadline { color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 500; }
+.goal-detail-hero .goal-hero-deadline { color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 500; font-style: normal; }
 .goal-detail-hero .goal-hero-deadline.is-behind { color: var(--warning); font-weight: 600; }
 .goal-hero-main { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .goal-hero-count { display: flex; align-items: baseline; gap: 6px; flex: 0 0 auto; }
@@ -1462,10 +1378,12 @@ html:not([data-shell="mobile"]) .goal-section-head { margin-bottom: 10px; }
 html:not([data-shell="mobile"]) .goal-section-head span { color: var(--text-heading); font-size: var(--font-size-h3); font-weight: 700; }
 html:not([data-shell="mobile"]) .goal-section-head b { min-width: 22px; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); text-align: center; }
 
-/* 详情页只留目标自身的状态管理：状态动作靠左成组（编辑 → 暂停 → 完成），
-   删除是破坏性动作，孤零零钉最右——两端同构（移动壳分两排见 mobile.css）。 */
+/* 详情页动作行：编辑 · 暂停靠左成组；完成（蓝主钮 item-action-primary）
+   与删除靠右——auto 边距把两枚推到行尾，完成在删除左边隔开。两端同构
+   （移动壳分两排见 mobile.css）。 */
 .goal-detail-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .goal-manage-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+html:not([data-shell="mobile"]) .goal-detail-actions > .goal-act-done { margin-left: auto; }
 /* 详情区的动作按钮比列表内联动作大一档：这里是页面级操作，
    用列表里 34px 的小按钮会显得缩手缩脚。 */
 .goal-detail-actions button.item-action-btn { min-height: 38px; padding: 9px 14px; font-size: var(--font-size-label); }
@@ -1474,8 +1392,7 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove { borde
 html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover { border-color: color-mix(in srgb, var(--danger) 42%, var(--border)); background: color-mix(in srgb, var(--danger) 8%, var(--surface-sunken)); }
 .goal-create-modal input, .goal-create-modal select, .goal-create-modal textarea { min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); outline: none; background: var(--surface-panel); color: var(--text-primary); }
 
-.goal-create-modal, .day-activity-modal { width: min(520px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 40px)); padding: 22px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); box-shadow: var(--shadow-2); }
-.day-activity-date { margin: -8px 0 12px; color: var(--text-muted); font-size: var(--font-size-label); }
+.goal-create-modal { width: min(520px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 40px)); padding: 22px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); box-shadow: var(--shadow-2); }
 /* 目标表单沿用「新建任务」弹窗的排版语言：13px 加粗字段名、40px 等高控件、
    两列网格，底部取消/主操作靠右。 */
 .goal-create-modal label { display: grid; gap: 7px; margin-bottom: 13px; color: var(--text-secondary); font-size: var(--font-size-label); font-weight: 700; }
@@ -1494,11 +1411,6 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
 .goal-color-picker { display: flex; gap: 8px; }
 .goal-color-picker button { width: 25px; height: 25px; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
 .goal-color-picker button.active { outline: 2px solid var(--text-primary); outline-offset: 2px; }
-.day-activity-row { display: grid; grid-template-columns: 10px 1fr; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.day-activity-row > i { width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; }
-.day-activity-row > i.done { background: linear-gradient(135deg, var(--amber-700), var(--amber-900)); }
-.day-activity-row strong, .day-activity-row span { display: block; }
-.day-activity-row span { margin-top: 3px; color: var(--text-secondary); font-size: var(--font-size-caption); }
 .review-goal-list { display: grid; gap: 9px; }
 .review-goal-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .review-goal-row i { width: 9px; height: 9px; border-radius: 50%; }
@@ -1509,9 +1421,6 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
 .review-goal-source { display: block; margin-top: 3px; color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; font-weight: 500; }
 
 @media (max-width: 900px) {
-  .growth-metrics { grid-template-columns: repeat(2, 1fr); }
-  .growth-metrics article:nth-child(odd) { border-left: 0; }
-  .growth-metrics article:nth-child(n+3) { border-top: 1px solid var(--border); }
   .growth-panel-head { align-items: flex-start; flex-direction: column; gap: 10px; }
   .growth-panel-head .select-btn { width: 100%; }
   .goal-detail-hero { align-items: flex-start; padding: 20px; }
@@ -1520,10 +1429,7 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
 
 @media (max-width: 560px) {
   .growth-page { padding-inline: 12px; }
-  .growth-metrics { grid-template-columns: 1fr 1fr; }
-  .growth-metrics article, .growth-panel { padding: 14px; }
-  .growth-metrics strong { font-size: var(--font-size-h2); }
-  .growth-tabs { overflow-x: auto; }
+  .growth-panel { padding: 14px; }
   .goal-grid { grid-template-columns: 1fr; }
   .goal-detail-hero { flex-direction: column; gap: 14px; }
   .goal-detail-actions > * { width: 100%; flex: 1 0 100%; }
@@ -1757,6 +1663,7 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
   .item-action-primary.is-flash > svg { animation: none; }
   .item-action-primary::after { transition: none; }
 }
+/* 悬停配色：语义色只点亮描边与文字。 */
 .item-action-edit:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   color: var(--accent);
@@ -1790,6 +1697,40 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
   border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
   color: var(--text-on-solid);
   background: var(--danger-solid);
+}
+/* 桌面两端动作条（项目/标签）：常态＝白底 + 有色字体——语义色只落在文字、图标
+   与描边上，底保持面板白（不再常态铺蓝软底/金底/红实心）；悬停加一档同色浅底。
+   删除与编辑/归档同档，红色只写字与描边。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-edit,
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-edit {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: var(--accent);
+  background: var(--surface-panel);
+}
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-edit:hover:not(:disabled),
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-edit:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-archive,
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-archive {
+  border-color: color-mix(in srgb, var(--brand-gold) 38%, var(--border));
+  color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
+  background: var(--surface-panel);
+}
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-archive:hover:not(:disabled),
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-archive:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand-gold) 10%, var(--surface-panel));
+}
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot .quiet-danger,
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .quiet-danger {
+  border-color: color-mix(in srgb, var(--danger) 24%, var(--border));
+  color: var(--danger);
+  background: var(--surface-panel);
+}
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot .quiet-danger:hover:not(:disabled),
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .quiet-danger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface-panel));
 }
 .item-action-primary.danger,
 .item-action-primary.danger:hover:not(:disabled) {
@@ -1893,41 +1834,19 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
   .brand-origin { grid-template-columns: 1fr; }
 }
 
-/* Editorial weekly review:页头与「今日」同构(workspace-top),内容统一 28px 边距。 */
-.review-workspace { overflow: auto; }
-.review-body { padding: 0 28px 28px; }
-.top-controls .review-hero-total { flex: 0 0 auto; display: grid; min-width: 0; margin-right: 6px; text-align: right; }
-.top-controls .review-hero-total strong { color: var(--accent-strong); font: 700 20px/1 var(--font-display); letter-spacing: -.02em; }
-.top-controls .review-hero-total span { margin-top: 2px; color: var(--text-label); font-size: var(--font-size-caption); }
-/* 本周摘要 KPI：与成长页同款分组读数卡（单面 + 列间发丝线），数字同收支统计卡
-   读数档（h1 24px 等宽数字）；辅助说明行留在卡内，不做四张 hero 数字卡。 */
-.review-metrics { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
-.review-metrics article { display: grid; gap: 5px; align-content: start; padding: 20px 24px; }
-.review-metrics article + article { border-left: 1px solid var(--border); }
-.review-metrics span { color: var(--text-muted); font-size: var(--font-size-caption); }
-.review-metrics strong { color: var(--text-primary); font: 700 var(--font-size-h1)/1.15 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.review-metrics small { color: var(--text-muted); }
-.review-main-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(240px, .8fr); gap: 16px; margin-top: 18px; }
+/* 「本周」页的回顾两块（任务完成去向 / 当周目标推进）：独立复盘页已并入本周，
+   这组样式随 .weekly-review 里的两张卡存活，与当周日历同一套 28px 内容边距。 */
+.weekly-review { display: grid; gap: 16px; margin: 24px 28px 0; }
+.weekly-review .review-breakdown { margin-top: 0; }
 .review-story-card { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
 .review-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .review-section-head span { color: var(--text-muted); font-size: var(--font-size-caption); }
 .review-section-head h3 { margin: 4px 0 0; font: 700 18px/1.3 var(--font-display); }
 .review-section-head > b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--accent-strong); background: var(--accent-soft); font-size: var(--font-size-caption); }
-.review-chart-legend { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--font-size-caption); }
-.review-chart-legend i { width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; }
-.review-chart-legend .is-created, .review-bar-pair .is-created { background: color-mix(in srgb, var(--accent) 28%, var(--surface-rail)); }
-.review-chart-legend .is-completed, .review-bar-pair .is-completed { background: var(--accent); }
-.review-rhythm-chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(8px, 2vw, 20px); height: 218px; margin-top: 18px; padding-top: 12px; border-bottom: 1px solid var(--border); background: repeating-linear-gradient(to bottom, transparent 0, transparent 49px, color-mix(in srgb, var(--border) 65%, transparent) 50px); }
-.review-day { display: grid; grid-template-rows: 1fr auto auto; min-width: 0; text-align: center; }
-.review-bar-pair { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 158px; }
-.review-bar-pair i { width: min(14px, 42%); min-height: 5px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: height calc(300ms * var(--motion-scale)) ease; }
-.review-day strong { margin-top: 7px; font-size: var(--font-size-caption); }
-.review-day > span { color: var(--text-muted); font-size: var(--font-size-caption); }
 .review-goals .review-goal-list { margin-top: 15px; }
 .review-goals .review-goal-row { grid-template-columns: 8px minmax(0, 1fr) auto; padding: 12px 2px; }
 .review-soft-empty { color: var(--text-muted); font-size: var(--font-size-caption); }
 /* 当周精力投向：目标/项目/标签三视角聚合。 */
-.review-breakdown { margin-top: 16px; }
 .review-dimension-tabs { display: inline-flex; flex: 0 0 auto; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-rail); }
 .review-dimension-tabs button { min-height: 28px; padding: 0 10px; border: 0; border-radius: var(--radius-sm); color: var(--text-secondary); background: transparent; font-size: var(--font-size-caption); font-weight: 650; cursor: pointer; }
 .review-dimension-tabs button.is-active { color: var(--accent-strong); background: var(--surface-panel); box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 10%, transparent); }
@@ -1941,26 +1860,9 @@ html:not([data-shell="mobile"]) .goal-detail-actions .goal-action-remove:hover {
 .review-breakdown-track i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--accent); transition: width calc(300ms * var(--motion-scale)) ease; }
 .review-breakdown-row strong { font-size: var(--font-size-caption); font-variant-numeric: tabular-nums; text-align: right; }
 
-/* 桌面端窄窗口（最小窗口 800px、侧栏展开时工作区约 500px）：
-   操作区不再被挤压，容器不够宽时整块换行右对齐，避免「下周 ›」被裁切。 */
-@media (max-width: 1080px) {
-  .review-workspace .workspace-top { flex-wrap: wrap; row-gap: 8px; }
-  .review-workspace .top-controls { flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
-  .review-workspace .top-controls .btn-ghost { white-space: nowrap; }
-}
-/* 工作区再窄时（约 900px 视口、侧栏展开）两张卡片改单列，
-   否则右栏 240px 下限会把 7 天柱状图挤到放不下日期。 */
-@media (max-width: 900px) {
-  .review-main-grid { grid-template-columns: 1fr; }
-  .review-rhythm-chart { gap: clamp(6px, 1.5vw, 14px); }
-}
+/* 工作区再窄时（约 760px 视口、侧栏展开）：维度页签整行等分，
+   去向行把进度条降到第二行通栏，标签名不再被挤成省略号。 */
 @media (max-width: 760px) {
-  .review-main-grid { grid-template-columns: 1fr; }
-  .review-hero-total { display: none; }
-  .review-metrics { grid-template-columns: repeat(2, 1fr); }
-  .review-metrics article { padding: 16px 24px; }
-  .review-metrics article:nth-child(odd) { border-left: 0; }
-  .review-metrics article:nth-child(n+3) { border-top: 1px solid var(--border); }
   .review-breakdown .review-section-head { flex-direction: column; }
   .review-dimension-tabs { width: 100%; }
   .review-dimension-tabs button { flex: 1; }
@@ -2322,18 +2224,8 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
   white-space: nowrap;
 }
 
-/* 标题后的标签胶囊：浅色底 + 标签名，底色就是标签的颜色。 */
-.expand-row-tag {
-  flex: none;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.3;
-  white-space: nowrap;
-  color: var(--text-label);
-  background: color-mix(in srgb, var(--pill-color, var(--accent)) 12%, transparent);
-}
+/* 标题后的标签胶囊 .expand-row-tag 已退役（2026-10-30）：项目行头改由名字前的
+   标签色圆点（.tag-card-dot）承载归属颜色，行内不再挂第二枚徽标。 */
 
 .expand-row-meta {
   min-width: 0;
@@ -2364,13 +2256,6 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 
 .expand-row-caret.open {
   transform: rotate(180deg);
-}
-
-.expand-row-actions {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .expand-row-body {
@@ -2439,57 +2324,23 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 }
 
 /* 标签筛选区：项目与任务分成两个区块。小节标签与移动壳 .mrow-section 统一样式：
-   caption 字号 + 600 + 次级墨色 + 微字距（移动壳为 0.719rem，同档观感）。 */
+   caption 字号 + 600 + 次级墨色 + 微字距（移动壳为 0.719rem，同档观感）。
+   描边框内口径（对齐项目页 B+）：行走共享 proj-task 原子族（透底 + 发丝分割），
+   小节签与行内 14px 留白对齐；行首色点走优先级语义。 */
 .tags-project-section h4,
 .tags-task-section h4 {
-  margin: 14px 0 0;
+  margin: 12px 14px 0;
   color: var(--text-secondary);
   font-size: var(--font-size-caption);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
 
+.tags-project-list,
 .tags-task-list {
   display: grid;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-/* 标签筛选区里的项目行（标签按项目数优先统计的展示面） */
-.tags-project-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.tags-project-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* 与下方任务行（.task-row）同款盒模型：内边距/圆角/行高一致 */
-  padding: 12px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-panel);
-  min-height: 48px;
-  font-size: var(--font-size-label);
-}
-
-/* 项目名与任务标题同字号同字重，两个列表观感一致 */
-.tags-project-name,
-.tags-task-section .task-title {
-  overflow: hidden;
-  margin: 0;
-  color: var(--text-primary);
-  font-size: var(--font-size-body);
-  font-weight: 610;
-  letter-spacing: -0.012em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tags-project-row .tags-task-due {
-  margin-left: auto;
+  gap: 0;
+  margin-top: 2px;
 }
 
 /* 项目页与标签页同构：上方一行一条的列表，点击条目在下方展开详情 */
@@ -2499,77 +2350,342 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
   margin-top: 12px;
 }
 
-/* 任务链接区：默认只展示前五条（倒序），可展开全部，不做高度截断 */
-.project-task-links {
-  display: grid;
-  gap: 2px;
+/* ---------- 项目页桌面升级（B+）：顶卡数据条 / 行头胶囊 / 面板行件 ---------- */
+
+/* 顶卡：外壳沿用 .today-hero 主题底与麦穗水印。引导框不限制高度、不挤一行——
+   第一行恢复说明文案 + 衬线数字读数（复用今日页 today-hero-meter 原子），
+   第二行整幅三段实数据条 + 图例，色段与移动壳 MobileGuideCard.segments 同源
+   （heroSegments 一份数据双端共用）。 */
+.projects-view .today-hero.projects-guide {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 15px;
+  padding: 18px 22px 15px;
 }
 
-/* 展开全部/收起按钮，与头部按钮同观感 */
-.project-tasks-toggle {
-  margin-top: 8px;
-  padding: 3px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--white);
-  color: var(--ink-950-g);
-  font-size: var(--font-size-caption);
-  cursor: pointer;
+/* 引导框读数用主字体：项目页不再挂衬线显示体（「一屏一处衬线数字」
+   留在今日页），字号与取色沿用 meter 原子。 */
+.projects-view .today-hero-meter-count strong,
+.projects-view .today-hero-meter-count span {
+  font-family: var(--font-body);
 }
 
-.project-tasks-toggle:hover {
-  background: var(--paper-850);
+.projects-view .today-hero-meter-count strong {
+  font-weight: 650;
 }
 
-/* 行内布局：标题截断省略，完成日期靠右 */
-.project-task-links button {
+.projects-guide-top {
+  position: relative;
+  z-index: 1;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-  width: 100%;
-  padding: 4px 6px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--text-secondary);
-  font-size: var(--font-size-caption);
-  text-align: left;
-  cursor: pointer;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
 }
 
-.project-task-links button:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.project-task-links .project-task-link-title {
+.projects-hero-bar {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.projects-hero-track {
+  display: flex;
+  gap: 3px;
+  height: 8px;
+}
+
+.projects-hero-track i {
+  display: block;
+  height: 100%;
+  min-width: 8px;
+  border-radius: var(--radius-pill);
+}
+
+.projects-hero-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 7px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.projects-hero-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.projects-hero-legend em {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+/* 行头比率胶囊：done/total 一句话取代「n 项任务 · 已完成 x」；全完成暖金读数
+   （light 用 --warning、dark/glass 用 --brand-gold，同周脉搏 .wp-xcount.is-clear 档）；
+   零任务描边「未启动」（同 due-chip.is-none 手法）。 */
+.ratio-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  color: var(--text-label);
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.project-task-done-at {
-  flex: none;
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
+.ratio-chip.is-clear {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  font-weight: 700;
 }
+
+:root[data-theme="dark"] .ratio-chip.is-clear,
+:root[data-theme="glass"] .ratio-chip.is-clear {
+  color: var(--brand-gold);
+  background: color-mix(in srgb, var(--brand-gold) 14%, transparent);
+}
+
+.ratio-chip.is-idle {
+  color: var(--text-muted);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* 桌面行=卡片（方案 B）：每个项目/标签一张独立白卡，卡片间距靠网格留白；
+   选中卡给左上角 accent 短条 + caret 变蓝，名称/详情/动作条都在卡内。
+   标签页与项目页共用同一族选择器（B+ 验收口径对两页同样成立）。
+   移动壳不卡片化（保持已验收的整列行 + 发丝线）。 */
+html:not([data-shell="mobile"]) .projects-view .projects-grid,
+html:not([data-shell="mobile"]) .tags-view .tags-grid {
+  gap: 10px;
+}
+
+html:not([data-shell="mobile"]) .projects-view .expand-row,
+html:not([data-shell="mobile"]) .tags-view .expand-row {
+  position: relative;
+  overflow: hidden;
+  padding: 2px 18px;
+  border-bottom: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  box-shadow: 0 1px 2px rgba(18, 32, 60, 0.04), 0 12px 22px -18px rgba(18, 32, 60, 0.4);
+  transition: box-shadow calc(160ms * var(--motion-scale)) ease, opacity var(--motion-fast);
+}
+
+/* hover 反馈由「toggle 亮底」升级为整卡抬升（卡内再铺灰底会显得脏）。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row:hover,
+html:not([data-shell="mobile"]) .tags-view .expand-row:hover {
+  box-shadow: 0 2px 4px rgba(18, 32, 60, 0.06), 0 16px 26px -18px rgba(18, 32, 60, 0.5);
+}
+
+html:not([data-shell="mobile"]) .projects-view .expand-row.is-open,
+html:not([data-shell="mobile"]) .tags-view .expand-row.is-open {
+  background: var(--surface-panel);
+  box-shadow: 0 1px 2px rgba(18, 32, 60, 0.04), 0 14px 24px -18px rgba(18, 32, 60, 0.45);
+}
+
+/* 选中态＝左上角一截 accent 短条：3px 竖条顺着卡片圆角描下来，
+   高度刚盖过 12px 圆角再多一点点（右上角色标已按验收口径删除）。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row.is-open::before,
+html:not([data-shell="mobile"]) .tags-view .expand-row.is-open::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 34px;
+  border-left: 3px solid var(--accent);
+  border-top-left-radius: var(--radius-md);
+  pointer-events: none;
+}
+
+html:not([data-shell="mobile"]) .projects-view .expand-row.is-open .expand-row-caret,
+html:not([data-shell="mobile"]) .tags-view .expand-row.is-open .expand-row-caret {
+  color: var(--accent);
+}
+
+/* 归档行淡出（取代无任何规则的 .projects-grid-archived 死类），桌面专属——
+   移动壳归档行保持原档：hover / 展开回全透明度，动作区与任务面板不跟着淡。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row.is-archived {
+  opacity: 0.55;
+}
+
+html:not([data-shell="mobile"]) .projects-view .expand-row.is-archived:hover,
+html:not([data-shell="mobile"]) .projects-view .expand-row.is-archived.is-open {
+  opacity: 1;
+}
+
+/* 面板行件：优先级点 + 正文主墨标题 + 目标徽标 + 截止/完成胶囊 + 完成圆钮。
+   圆钮用桌面统一成就金档（同周清单/任务行勾圈一族），金色只落在完成态上。
+   卡内结构（方案图口径）：头部 → 描边圆角任务框（行内发丝分割）→ 动作条，
+   框底边就是与动作条的分隔线，不再另铺发丝线。标签详情同框（框内是项目/任务两节）。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row-body,
+html:not([data-shell="mobile"]) .tags-view .expand-row-body {
+  gap: 0;
+  margin: 8px 0 8px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+/* 空态没内容，不给空提示套空框。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row-body:not(:has(.proj-task)),
+html:not([data-shell="mobile"]) .tags-view .expand-row-body:not(:has(.proj-task)) {
+  margin: 2px 0 8px;
+  border: 0;
+}
+
+/* 任务框与按钮之间不放横线（验收口径）：圆角框的底边就是分界。 */
+html:not([data-shell="mobile"]) .projects-view .expand-row-foot,
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot {
+  padding: 10px 0 12px;
+  border-top: 0;
+}
+
+/* 标签详情：首个小节签贴框顶（与行内 10px 上内边距同档），后续小节签保持 12px。 */
+html:not([data-shell="mobile"]) .tags-view .expand-row-body > :first-child h4 {
+  margin-top: 10px;
+}
+
+.proj-task {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 14px;
+}
+
+/* 任务行之间的发丝分割（方案图口径）；最后一行的下线由动作条 border-top 承担。 */
+.proj-task:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+/* 优先级色块：今日页 .minbox-pdot 方点同规（6px / 2px 圆角），
+   桌面项目页与标签页（任务行＋详情项目行）共用同一原子。 */
+.proj-pdot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 2px;
+}
+
+.proj-pdot.pr1 { background: var(--prio-1); }
+.proj-pdot.pr2 { background: var(--prio-2); }
+.proj-pdot.pr3 { background: var(--prio-3); }
+.proj-pdot.pr4 { background: var(--prio-4); }
+
+.proj-task-title {
+  flex: 0 1 auto;
+  min-width: 40px;
+  overflow: hidden;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: 520;
+  letter-spacing: -0.012em;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.proj-task-title:hover {
+  color: var(--accent);
+}
+
+/* 目标徽标紧跟标题（原型档），日期/完成胶囊 + 圆钮收进 tail 簇贴右。 */
+.proj-task .goal-chip {
+  flex: none;
+}
+
+.proj-task-tail {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  margin-left: auto;
+}
+
+/* 项目面板完成戳：比通用档小一号、改金底（验收口径）——金色与完成圆钮、
+   比率胶囊同族（light 走 --warning，dark/glass 走 --brand-gold）。
+   足迹/周清单/移动壳的 .done-chip 不在此列，保持中性墨档。 */
+.proj-task .done-chip {
+  padding: 1px 7px;
+  font-size: var(--font-size-caption);
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--warning);
+}
+
+/* tail 簇同位置的截止胶囊同步缩一号，密度对齐完成戳；取色不动。 */
+.proj-task .due-chip {
+  padding: 1px 7px;
+  font-size: var(--font-size-caption);
+}
+
+:root[data-theme="dark"] .proj-task .done-chip,
+:root[data-theme="glass"] .proj-task .done-chip {
+  background: color-mix(in srgb, var(--brand-gold) 16%, transparent);
+  color: var(--brand-gold);
+}
+.proj-check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  padding: 0;
+  border: 1.6px solid var(--border-strong);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  transition: border-color var(--motion-fast), background var(--motion-fast);
+}
+
+.proj-check:hover {
+  border-color: var(--accent);
+}
+
+/* 完成勾圈＝桌面统一「成就金」档（与周清单 .weekly-day-check、今日/待办
+   .task-check.is-completed 同一族：深金实心 + 白勾，钮自己就是完成态，
+   hover 不再描 accent 环——环会撞未完成 hover 的语义）。移动壳保持 accent 档。 */
+.proj-check.is-done {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
+}
+
+.proj-check.is-done:hover {
+  border-color: transparent;
+}
+
+.proj-check.is-done::after {
+  content: "";
+  box-sizing: content-box;
+  width: 5px;
+  height: 8px;
+  margin-top: -3px;
+  border-right: 2px solid var(--text-on-solid);
+  border-bottom: 2px solid var(--text-on-solid);
+  transform: rotate(45deg);
+}
+
+/* 完成折迭行已删（「N 项已完成」与行头比率胶囊 x/x 计数重复），
+   已完成任务直接内联排在未完成之后，靠完成戳 + 勾圈表达状态。 */
 
 .project-field-hint {
   margin-top: 4px;
   color: var(--text-muted);
   font-size: var(--font-size-caption);
   font-weight: 400;
-}
-
-.tags-task-due {
-  margin-left: auto;
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  white-space: nowrap;
 }
 
 .tags-filtered-empty {
@@ -2685,7 +2801,7 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 }
 
 /* 成长目标联动（v1.4）：今日行内目标徽标、今日目标条、贡献构成。 */
-/* 行内药丸原子（与 .expand-row-tag 同款）：目标色 12% 底 + --text-label 墨 + 500 字重。
+/* 行内药丸原子（与 .meta-chip 同族）：目标色 12% 底 + --text-label 墨 + 500 字重。
    13% 曾在深色下比邻枚淡一档；移动壳的同款徽标自持 --mt-pill-bg 变量，不受此处影响。 */
 .goal-chip {
   display: inline-flex;
@@ -2750,8 +2866,8 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 }
 
 /* 完成戳徽标：已完成行不标截止徽标，完成日是行上唯一的日期信息，同样收进
-   徽标而非素文本「M/D 完成」。形随 due-chip、中性墨色——完成的金色留给行底
-   与勾选钮表达，徽标本身不参与状态。双端同源同文案（移动规格见 mobile.css）。 */
+   徽标而非素文本「M/D 完成」。形随 due-chip、中性墨色。双端同源同文案
+   （移动规格见 mobile.css；桌面项目面板例外——小一号金底，见 .proj-task .done-chip）。 */
 .done-chip {
   display: inline-flex;
   align-items: center;
@@ -2780,10 +2896,6 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.habit-day-dot {
-  background: linear-gradient(135deg, var(--green-100), var(--green-250));
 }
 
 .today-goal-strip {
@@ -2892,15 +3004,33 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 .goal-section-head b { color: var(--text-muted); font-size: var(--font-size-caption); font-weight: 600; }
 .goal-push-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .goal-push-list li { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--border); font-size: var(--font-size-label); }
-.goal-push-kind { flex: 0 0 auto; padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-rail); color: var(--text-secondary); font-size: var(--font-size-caption); }
+/* 种类不再垫灰块 chip：小方点 + 词。任务点随目标主色（JSX 内联），习惯点麦金。 */
+.goal-push-kind { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1; }
+.goal-push-kind i { width: 8px; height: 8px; border-radius: 3px; background: var(--warning); }
 .goal-push-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .goal-push-list em { color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
-.goal-push-measure { flex: 0 0 auto; color: var(--accent); font-size: var(--font-size-caption); }
-/* 桌面推进行：计入与否是小开关不是文字链——计入 = accent 实底胶囊，
-   只关联 = 灰描边胶囊，状态看填充即得。移动壳保持文字钮原样。 */
-html:not([data-shell="mobile"]) .goal-push-measure { min-height: 26px; padding: 3px 11px; border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--text-muted); font-weight: 600; }
-html:not([data-shell="mobile"]) .goal-push-measure:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: var(--accent); }
-html:not([data-shell="mobile"]) .goal-push-measure.is-on { border-color: transparent; background: var(--accent); color: var(--text-on-accent); }
+/* meta 语气：已完成 = 蓝勾圆点（与移动壳勾选 data-uri 同族），逾期 = 逾期红。 */
+.goal-push-list em.is-done { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-strong); }
+.goal-push-list em.is-done::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9 17.5l-5-5'/%3E%3C/svg%3E") no-repeat center / 11px 11px;
+}
+.goal-push-list em.is-overdue { color: var(--text-overdue); }
+/* 计入切换双端同款软药丸：计入 = accent 10% 软底 + 蓝勾，只关联 = 虚线描边。
+   实心蓝留给主操作（完成钮），小开关用软底，不抢重量。 */
+.goal-push-measure { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; min-height: 26px; padding: 2px 11px; border: 1px dashed color-mix(in srgb, var(--text-muted) 45%, transparent); border-radius: var(--radius-pill); background: none; color: var(--text-muted); font-size: var(--font-size-caption); }
+.goal-push-measure:hover { border-style: solid; border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: var(--accent); }
+.goal-push-measure.is-on { border-style: solid; border-color: transparent; background: color-mix(in srgb, var(--accent) 10%, var(--surface-panel)); color: var(--accent-strong); font-weight: 600; }
+.goal-push-measure.is-on:hover { border-color: transparent; background: color-mix(in srgb, var(--accent) 16%, var(--surface-panel)); color: var(--accent-strong); }
+/* 桌面：裸摆列表收进白底 1px 边子块，与顶卡、动作行成「态势 → 推进 → 动作」
+   三段节奏；移动壳沿用 goal-pushing 阴影卡容器，只换行件。 */
+html:not([data-shell="mobile"]) .goal-push-list { gap: 0; padding: 2px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-panel); }
+html:not([data-shell="mobile"]) .goal-push-list li { padding: 11px 0; }
+html:not([data-shell="mobile"]) .goal-push-list li:first-child { border-top: 0; }
 .goal-empty { margin: 0; padding: 10px 2px; color: var(--text-muted); font-size: var(--font-size-caption); }
 /* 今日清单头部的目标筛选。 */
 /* 习惯分区与事项分区之间留一节间距。 */
@@ -4111,20 +4241,6 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-size: var(--font-size-caption);
 }
 
-.project-task-links {
-  display: grid;
-  gap: 4px;
-  margin-top: 10px;
-}
-
-.project-task-links button {
-  overflow: hidden;
-  color: var(--text-secondary);
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .command-backdrop {
   position: fixed;
   inset: 0;
@@ -4630,7 +4746,7 @@ html[data-nav="railed"] .nav-edge-collapse {
   gap: 12px;
 }
 
-/* 引导框与 workspace-top / weekly-goals 同宽对齐(28px)。 */
+/* 引导框与 workspace-top / 各板块同宽对齐(28px)。 */
 .weekly-checklist .guide-hero {
   margin: 0 28px;
 }
@@ -4641,9 +4757,8 @@ html[data-nav="railed"] .nav-edge-collapse {
   gap: 8px;
 }
 
-/* 两个板块统一节奏:与页头 28px 内边距对齐,板块间距 24px。
-   当周概览自成 section(单卡,无 h3)。 */
-.weekly-goals,
+/* 各板块统一节奏:与页头 28px 内边距对齐,板块间距 24px。
+   当周概览自成 section(单卡,无 h3)；回顾两块的间距在 .weekly-review 上。 */
 .weekly-days {
   margin: 24px 28px 0;
 }
@@ -4654,180 +4769,19 @@ html[data-nav="railed"] .nav-edge-collapse {
   container-type: inline-size;
 }
 
-.weekly-goals h3,
 .weekly-days h3 {
   margin: 0 0 12px;
   font-size: var(--font-size-h3);
 }
 
-/* 本周任务：按分类聚合的可展开行。分类色只留在色点上（数据），不再铺成四条
-   并排的彩色进度条（装饰）。 */
-.weekly-goal-list {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 桌面壳：列表卡片化，与同页「当周概览」「当周日历」同一套卡语
-   （发丝描边 + radius-md + panel 底）。行与行发丝线保留，末行收掉。 */
-html:not([data-shell="mobile"]) .weekly-goal-list {
-  padding: 2px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-panel);
-}
-
-html:not([data-shell="mobile"]) .weekly-goal-list .expand-row:last-child {
-  border-bottom: 0;
-}
-
-/* 展开分层与移动壳同规（升一级表面 = 换底色）：父行留在白卡层，
-   展开内容挂 sunken 圆角子面板——旧「is-open 灰块铺满整行」是扁平列表
-   时代的分层，卡片里再铺灰块会让卡内出现没有圆角的灰带。 */
-html:not([data-shell="mobile"]) .weekly-goal-list .expand-row.is-open {
-  background: transparent;
-}
-
-html:not([data-shell="mobile"]) .weekly-goal-list .expand-row-body {
-  margin: 2px 0 10px;
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-}
-
-/* 玻璃/晨光主题的 --surface-sunken 是半透明白，压在白卡上边界太软，
-   补一道内描边（与移动壳 expand-row-body 同招）。 */
-html[data-theme="dawn"]:not([data-shell="mobile"]) .weekly-goal-list .expand-row-body,
-html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-row-body {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 65%, transparent);
-}
-
-.weekly-goal-dot {
-  width: 9px;
-  height: 9px;
-  flex: none;
-  border-radius: 99px;
-  align-self: center;
-}
-
-.weekly-goal-tasks {
-  display: grid;
-  gap: 6px;
-}
-
-/* 「本周任务」桌面行：白卡浮在展开层的 sunken 子面板上（卡内再升一级表面），
-   标题在上、徽标行在下（优先级点·截止·归属·目标），右端完成圆钮。旧「○ 标题 日期」
-   素行退场：那排 ○/✓ 文本字形也一并换成 CSS 圆钮（DESIGN 禁字形图标）。 */
-.weekly-goal-task {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-panel);
-}
-
-.weekly-goal-task:hover {
-  box-shadow: inset 0 0 0 1px var(--border-strong);
-}
-
-/* 打开任务的主体（标题+徽标两行）；完成钮是它的兄弟,不嵌套按钮。 */
-.weekly-goal-task-open {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-}
-
-.weekly-goal-task-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-heading);
-  font-size: var(--font-size-body);
-  font-weight: 560;
-  letter-spacing: -0.012em;
-}
-
-.weekly-goal-task-meta {
+/* 当周日历脉搏详情的任务行徽标行：归属胶囊·目标徽标·完成时刻一排（自
+   「本周任务」退役后留下的共用原子，现只有脉搏详情在用）。 */
+.weekly-day-task-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   font-size: var(--font-size-caption);
-}
-
-/* 优先级圆点：色板同 tokens 的 --prio-N，与移动壳优先级方点同数据不同形——
-   这页的圆点族（分类点/完成钮）都是圆的。 */
-.weekly-goal-task-pdot {
-  width: 7px;
-  height: 7px;
-  flex: none;
-  border-radius: var(--radius-pill);
-  background: var(--prio-3);
-}
-
-.weekly-goal-task-pdot.pr1 { background: var(--prio-1); }
-.weekly-goal-task-pdot.pr2 { background: var(--prio-2); }
-.weekly-goal-task-pdot.pr3 { background: var(--prio-3); }
-.weekly-goal-task-pdot.pr4 { background: var(--prio-4); }
-
-/* 完成戳不再用行内素文本：改挂双端共用的 .done-chip 徽标（见 due-chip 旁）。 */
-
-.weekly-goal-task-check {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 1.6px solid var(--border-strong);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-
-.weekly-goal-task-check:hover {
-  border-color: var(--accent);
-}
-
-/* 完成态：桌面统一的「成就金」认可——金底金钮、不划线不置灰。
-   （2026-10-27 定：桌面完成语义全页同一族，当周日历从移动壳的 accent 环
-   口径切回这里；移动壳保持单条 accent 环、整组才给金读数。） */
-.weekly-goal-task.is-done {
-  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
-  box-shadow: inset 0 0 0 1px var(--amber-900-28);
-}
-
-.weekly-goal-task.is-done .weekly-goal-task-title {
-  color: var(--text-primary);
-}
-
-.weekly-goal-task.is-done .weekly-goal-task-check {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--amber-700), var(--amber-900));
-}
-
-/* 完成勾与移动壳 .mtoday-check.is-done 同一形制：实心圆上一枚白色粗勾
-   （AppIcon 的圈中勾退场——钮本身就是圈，再套一环成了双圈）。底色仍是成就金。 */
-.weekly-goal-task.is-done .weekly-goal-task-check::after {
-  content: "";
-  width: 13px;
-  height: 13px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9 17.5l-5-5'/%3E%3C/svg%3E") no-repeat center / 13px 13px;
-}
-
-:root[data-theme="dark"] .weekly-goal-task.is-done,
-:root[data-theme="glass"] .weekly-goal-task.is-done {
-  background: var(--amber-750-14);
-  box-shadow: inset 0 0 0 1px var(--amber-750-40);
 }
 
 .weekly-day-col header {
@@ -5427,8 +5381,10 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   min-height: 56px;
 }
 
-/* 当周概览：一行元信息，发丝线分隔。数字不再撑成 21px 的「KPI 墙」——
-   这三项是补充信息，不是本页主角（本周完成进度在引导块里）。 */
+/* 当周概览：账目列 —— 等宽列一行排开，列内「小灰标签在上，数+单位右对齐在下」，
+   列间竖发丝线；数字右对齐是契约要求，窄窗折成两列 grid（见下方 720px）。仍是
+   白卡+发丝，全平。描金(is-gold)=成就数（连续/峰值/满勤），与 .wp-d-count.is-clear
+   同谱：静夜/璃幕换品牌金。数字不再撑成 21px 的「KPI 墙」——这三项是补充信息。 */
 .weekly-stat-strip {
   margin: 24px 28px 0;
   padding: 10px 18px;
@@ -5440,20 +5396,27 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
 .weekly-stat-track {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px 24px;
+  align-items: stretch;
+  gap: 12px 0;
 }
 
 .weekly-stat-item {
-  display: inline-flex;
-  align-items: baseline;
+  display: flex;
+  flex-direction: column;
   gap: 7px;
+  flex: 1 1 128px;
   min-width: 0;
 }
 
+/* 发丝两侧留白只走 padding：移动壳读数格整条 padding 覆写（mobile.css §15），
+   margin 与 justify-content 不在其覆写面，桌面侧要加就加守卫。 */
 .weekly-stat-item + .weekly-stat-item {
-  padding-left: 24px;
+  padding-left: 18px;
   border-left: 1px solid var(--border);
+}
+
+.weekly-stat-item:not(:last-child) {
+  padding-right: 18px;
 }
 
 .weekly-stat-label {
@@ -5462,21 +5425,35 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
 }
 
 .weekly-stat-value {
-  display: inline-flex;
+  display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 5px;
+}
+
+/* 数字右对齐是桌面账目列的列脚线；移动壳格内保持左对齐，故只给桌面。 */
+html:not([data-shell="mobile"]) .weekly-stat-value {
+  justify-content: flex-end;
 }
 
 .weekly-stat-num {
-  font: 700 15px/1 var(--font-display);
+  font: 700 18px/1 var(--font-display);
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
+  color: var(--text-heading);
 }
 
 .weekly-stat-note {
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: var(--font-size-caption);
+}
+
+.weekly-stat-item.is-gold .weekly-stat-num {
+  color: var(--warning);
+}
+
+:root[data-theme="dark"] .weekly-stat-item.is-gold .weekly-stat-num,
+:root[data-theme="glass"] .weekly-stat-item.is-gold .weekly-stat-num {
+  color: var(--brand-gold);
 }
 
 /* 当周日历列数跟随容器宽度:≥780 七列单行,≥480 两列,更窄单列 */
@@ -5501,6 +5478,9 @@ html[data-theme="glass"]:not([data-shell="mobile"]) .weekly-goal-list .expand-ro
   .weekly-stat-item + .weekly-stat-item {
     padding-left: 0;
     border-left: 0;
+  }
+  .weekly-stat-item:not(:last-child) {
+    padding-right: 0;
   }
 }
 

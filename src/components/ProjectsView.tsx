@@ -6,16 +6,17 @@ import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
-import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
+import { MobileTaskLine, mobileDoneStamp } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { useTodayDate } from "@/lib/useTodayDate";
+import { useGoals } from "@/lib/useGoals";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { ExpandRow } from "@/components/ExpandRow";
 import type { Project, Task } from "@/types";
 import { projectTasks as selectProjectTasks } from "@/lib/tasks";
-import { formatDayStamp } from "@/lib/dates";
+import { formatDueDateBadge } from "@/lib/dates";
 import { softDeleteProject, updateProject } from "@/lib/db";
 
 /** 移动壳与项目面板默认露出的任务条数。 */
@@ -50,17 +51,57 @@ export function ProjectsView() {
 
   /** 引导卡分段条口径：在册项目按有无任务分「进行中 / 未启动」，归档独立一段。 */
   const ongoingProjects = projects.filter((project) => selectProjectTasks(tasks, project.id).length).length;
+  const today = useTodayDate();
 
-  /** 项目名后挂标签胶囊：浅色底 + 标签名，底色就是标签的颜色。 */
-  const projectTagChip = (project: Project) => {
+  /** 行头标签圆点（双端共用）：点色＝标签色（同标签页 tag-card-dot 一档），无标签不打点。
+      名字后的标签胶囊已退役——颜色信息由点承载，名字行不再挂徽标。 */
+  const projectTagDot = (project: Project) => {
     const tag = tags.find((item) => item.id === project.tag_id);
     if (!tag) return undefined;
+    return <span className="tag-card-dot" style={{ background: tag.color }} aria-hidden />;
+  };
+
+  /** 项目页桌面顶卡与移动壳引导卡共用的三段实数据，色段口径一致。 */
+  const heroSegments = [
+    { label: "进行中", value: ongoingProjects, color: "var(--accent-strong)" },
+    {
+      label: "未启动",
+      value: projects.length - ongoingProjects,
+      color: "color-mix(in srgb, var(--accent-strong) 45%, transparent)",
+    },
+    {
+      label: "已归档",
+      value: archivedProjects.length,
+      color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+    },
+  ];
+
+  /** 行头截止胶囊（桌面专属）：活跃节挂（归档行整行淡出不挂），口径与任务同源。 */
+  const projectDueChip = (project: Project) => {
+    if (isMobileShell() || !project.due_date) return undefined;
+    const due = formatDueDateBadge(project.due_date, today);
+    if (due.tone === "none") return undefined;
     return (
-      <span
-        className="expand-row-tag"
-        style={{ "--pill-color": tag.color } as CSSProperties}
-      >
-        {tag.name}
+      <span className={`due-chip is-${due.tone}`} title={due.title}>
+        {due.label}
+      </span>
+    );
+  };
+
+  /**
+   * 行尾比率（2026-10-29 起双端同档，移动壳「n 项任务 · 已完成 x」文案串退役）：
+   * done/total 金色读数（周脉搏 is-clear 同口径）、零任务描边「未启动」；
+   * 移动壳小档见 mobile.css .ratio-chip（与完成戳/日期药丸同族形）。
+   */
+  const projectRatioChip = (projectTasks: Task[]) => {
+    if (!projectTasks.length) {
+      return <span className="ratio-chip is-idle">未启动</span>;
+    }
+    const done = projectTasks.filter((task) => task.status === "completed").length;
+    const clear = done === projectTasks.length;
+    return (
+      <span className={`ratio-chip${clear ? " is-clear" : ""}`}>
+        {done}/{projectTasks.length}
       </span>
     );
   };
@@ -133,17 +174,18 @@ export function ProjectsView() {
     useAppStore.getState().setToast("项目已更新");
   };
 
-  const deleteActiveProject = async () => {
-    if (!activeProject) return;
+  /** 删除按钮挂在展开行的动作条上，必须删「自己这一行」而不是当前展开项：
+      早前移动壳常驻条时代，点收起行的删除时 activeProject 为空会静默无响应。 */
+  const deleteProject = async (project: Project) => {
     const ok = await confirmAction({
-      title: `将项目「${activeProject.name}」移入回收站？`,
+      title: `将项目「${project.name}」移入回收站？`,
       description: "可在回收站中恢复；项目下的任务会保留。",
       confirmText: "删除",
       danger: true,
     });
     if (!ok) return;
-    await softDeleteProject(activeProject.id);
-    setActiveProjectId(null);
+    await softDeleteProject(project.id);
+    setActiveProjectId((current) => (current === project.id ? null : current));
     await useAppStore.getState().refreshAll();
     useAppStore.getState().setToast("项目已移入回收站");
   };
@@ -175,38 +217,46 @@ export function ProjectsView() {
       </div>
 
       <div className="projects-scroll">
-        {/* 与「今日/成长」同款的暖色引导框。移动壳换数据型顶卡：三段实数据
+        {/* 与「今日/足迹」同款的暖色引导框。移动壳换数据型顶卡：三段实数据
             色条（进行中 / 未启动 / 已归档），原 hint 的信息全部升格进 legend。 */}
+        {/* 三段实数据（heroSegments）双端共用：移动壳是 MobileGuideCard，桌面沿用
+            .today-hero 主题壳（底色/麦穗水印不动），内容换成横向色条 + 图例。 */}
         {isMobileShell() ? (
           <MobileGuideCard
             value={projects.length}
             unit="个"
             label="项目在册"
-            segments={[
-              { label: "进行中", value: ongoingProjects, color: "var(--accent-strong)" },
-              {
-                label: "未启动",
-                value: projects.length - ongoingProjects,
-                color: "color-mix(in srgb, var(--accent-strong) 45%, transparent)",
-              },
-              {
-                label: "已归档",
-                value: archivedProjects.length,
-                color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
-              },
-            ]}
+            segments={heroSegments}
           />
         ) : (
-          <section className="today-hero guide-hero">
-            <div className="today-hero-copy">
+          <section className="today-hero guide-hero projects-guide">
+            <div className="projects-guide-top">
               <p className="today-hero-note">组织长期事项，聚合相关任务。</p>
-            </div>
-            <div className="today-hero-meter">
               <span className="today-hero-meter-count">
                 <strong>{projects.length}</strong>
-                <span>个</span>
+                <span>个 · 项目</span>
               </span>
-              <span className="today-hero-meter-label">项目</span>
+            </div>
+            <div className="projects-hero-bar">
+              <div className="projects-hero-track" aria-hidden="true">
+                {heroSegments.map(
+                  (segment) =>
+                    segment.value > 0 && (
+                      <i
+                        key={segment.label}
+                        style={{ flexGrow: segment.value, background: segment.color }}
+                      />
+                    ),
+                )}
+              </div>
+              <div className="projects-hero-legend">
+                {heroSegments.map((segment) => (
+                  <span key={segment.label}>
+                    <em style={{ background: segment.color }} aria-hidden="true" />
+                    {segment.label} {segment.value}
+                  </span>
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -250,11 +300,12 @@ export function ProjectsView() {
                         onToggle={() => setActiveProjectId(on ? null : project.id)}
                         accent={projectColor(project)}
                         rowId={project.id}
-                        tag={projectTagChip(project)}
+                        dot={projectTagDot(project)}
                         title={project.name}
-                        trailing={`${projectTasks.length} 项任务 · 已完成 ${done}`}
+                        meta={projectDueChip(project)}
+                        trailing={projectRatioChip(projectTasks)}
                         toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
-                        foot={<PanelFoot onEdit={() => beginEditProject(project)} onArchive={() => void archiveProject(project.id)} onDelete={() => void deleteActiveProject()} />}
+                        foot={on ? <PanelFoot onEdit={() => beginEditProject(project)} onArchive={() => void archiveProject(project.id)} onDelete={() => void deleteProject(project)} /> : undefined}
                       >
                         <ProjectTaskPanel
                           tasks={projectTasks}
@@ -273,7 +324,7 @@ export function ProjectsView() {
                     <h3>未开始</h3>
                     <span className="tags-filtered-count">{notStarted.length}</span>
                   </div>
-                  <div className="projects-grid projects-grid-archived">
+                  <div className="projects-grid">
                     {notStarted.map((project) => {
                       const on = activeProjectId === project.id;
                       return (
@@ -283,13 +334,14 @@ export function ProjectsView() {
                           onToggle={() => setActiveProjectId(on ? null : project.id)}
                           accent={projectColor(project)}
                           rowId={project.id}
-                          tag={projectTagChip(project)}
+                          dot={projectTagDot(project)}
                           title={project.name}
-                          trailing="暂无任务"
+                          meta={projectDueChip(project)}
+                          trailing={projectRatioChip(selectProjectTasks(tasks, project.id))}
                           toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
-                          foot={<PanelFoot onEdit={() => beginEditProject(project)} onArchive={() => void archiveProject(project.id)} onDelete={() => void deleteActiveProject()} />}
+                          foot={on ? <PanelFoot onEdit={() => beginEditProject(project)} onArchive={() => void archiveProject(project.id)} onDelete={() => void deleteProject(project)} /> : undefined}
                         >
-                          {/* 编辑/归档/删除附着在项目行本身，收起也可见。 */}
+                          {/* 编辑/归档/删除在展开行动作条（双端同构：收起不铺动作）。 */}
                           <ProjectTaskPanel
                             tasks={selectProjectTasks(tasks, project.id)}
                             tags={tags}
@@ -310,29 +362,23 @@ export function ProjectsView() {
               <h3>已归档</h3>
               <span className="tags-filtered-count">{archivedProjects.length}</span>
             </div>
-            <div className="projects-grid projects-grid-archived">
+            <div className="projects-grid">
               {archivedProjects.map((project) => {
                 const projectTasks = selectProjectTasks(tasks, project.id);
-                const done = projectTasks.filter(
-                  (task) => task.status === "completed",
-                ).length;
                 const on = activeProjectId === project.id;
                 return (
                   <ExpandRow
                     key={project.id}
                     open={on}
+                    className="is-archived"
                     onToggle={() => setActiveProjectId(on ? null : project.id)}
                     accent={projectColor(project)}
                     rowId={project.id}
-                    tag={projectTagChip(project)}
+                    dot={projectTagDot(project)}
                     title={project.name}
-                    trailing={
-                      projectTasks.length
-                        ? `${projectTasks.length} 项任务 · 已完成 ${done}`
-                        : "暂无任务"
-                    }
+                    trailing={projectRatioChip(projectTasks)}
                     toggleTitle={on ? "收起该项目" : "查看该项目的任务"}
-                    foot={<PanelFoot archived onRestore={() => void restoreProject(project.id)} onDelete={() => void deleteActiveProject()} />}
+                    foot={on ? <PanelFoot archived onRestore={() => void restoreProject(project.id)} onDelete={() => void deleteProject(project)} /> : undefined}
                   >
                     <ProjectTaskPanel
                       tasks={projectTasks}
@@ -444,7 +490,7 @@ export function ProjectsView() {
   );
 }
 
-/** 展开在行内的任务面板：任务列表（操作已上移到行 foot，附着于项目本身）。 */
+/** 展开在行内的任务面板：任务列表（操作在展开行 foot 动作条，双端只随展开渲染）。 */
 function ProjectTaskPanel({
   tasks,
   tags,
@@ -455,6 +501,7 @@ function ProjectTaskPanel({
   const selectTask = useAppStore((s) => s.selectTask);
   const toggleComplete = useAppStore((s) => s.toggleComplete);
   const tagMap = useAppStore((s) => s.tagMap);
+  const { goalById } = useGoals();
   const today = useTodayDate();
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
@@ -520,32 +567,66 @@ function ProjectTaskPanel({
     );
   }
 
-  return (
-    <div className="expand-row-body">
-      <div className="project-task-links">
-        {visibleTasks.map((task) => (
-          <button key={task.id} type="button" onClick={() => selectTask(task.id)}>
-            <span className="project-task-link-title">
-              {task.status === "completed" ? "✓" : "○"} {task.title}
-            </span>
-            {task.completed_at ? (
-              <span className="project-task-done-at">
-                {formatDayStamp(task.completed_at)}
-              </span>
-            ) : null}
-          </button>
-        ))}
-      </div>
-      {canToggleAll ? (
-        <button
-          type="button"
-          className="btn-ghost project-tasks-toggle"
-          onClick={() => setShowAllTasks((v) => !v)}
-        >
-          {showAllTasks ? "收起任务列表" : `展开全部 ${sortedTasks.length} 项任务`}
+  /* 桌面端任务行：图标原子（优先级点 + 完成圆钮）+ 目标徽标 + 截止胶囊，
+     行内直接完成。未完成在前（按截止升序，无截止排后），已完成按完成时刻倒序
+     直接内联排在后面——不再做「N 项已完成」折迭（计数与行头比率胶囊 x/x 重复），
+     完成态由行上的完成戳 + 勾圈表达。
+     标题统一主墨黑（验收口径），完成态不淡出不划线，只由行尾金色圆钮表达。 */
+  const orderTasks = (list: Task[]) =>
+    [...list].sort((a, b) => {
+      if (a.status === "completed" && b.status !== "completed") return 1;
+      if (a.status !== "completed" && b.status === "completed") return -1;
+      if (a.status === "completed" && b.status === "completed") {
+        return (Date.parse(b.completed_at ?? "") || 0) - (Date.parse(a.completed_at ?? "") || 0);
+      }
+      const da = a.due_date ?? "9999-12-31";
+      const db = b.due_date ?? "9999-12-31";
+      if (da !== db) return da < db ? -1 : 1;
+      return a.priority - b.priority;
+    });
+  const taskRow = (task: Task) => {
+    const done = task.status === "completed";
+    const due = done ? null : formatDueDateBadge(task.due_date, today);
+    const stamp = done ? mobileDoneStamp(task.completed_at) : null;
+    const goal = task.goal_id ? goalById.get(task.goal_id) : undefined;
+    return (
+      <div className={`proj-task${done ? " is-done" : ""}`} key={task.id}>
+        <i className={`proj-pdot pr${task.priority}`} aria-hidden />
+        <button type="button" className="proj-task-title" onClick={() => selectTask(task.id)}>
+          {task.title}
         </button>
+        {goal ? (
+          <span className="goal-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
+            {goal.title}
+          </span>
+        ) : null}
+        <span className="proj-task-tail">
+          {due && due.tone !== "none" ? (
+            <span className={`due-chip is-${due.tone}`} title={due.title}>
+              {due.label}
+            </span>
+          ) : null}
+          {stamp ? <span className="done-chip">{stamp} 完成</span> : null}
+          <button
+            type="button"
+            className={`proj-check${done ? " is-done" : ""}`}
+            aria-label={done ? `取消完成 ${task.title}` : `完成 ${task.title}`}
+            aria-pressed={done}
+            onClick={() => void toggleComplete(task.id)}
+          />
+        </span>
+      </div>
+    );
+  };
+  /* ExpandRow 已经把 children 包进它自己的 .expand-row-body——这里不能再套一层
+     （两层会把描边任务框叠成双重边框），直接交任务列表本体。 */
+  return (
+    <>
+      <div className="proj-task-list">{orderTasks(tasks).map(taskRow)}</div>
+      {!tasks.length ? (
+        <p className="expand-row-empty">这个项目还没有挂任务。</p>
       ) : null}
-    </div>
+    </>
   );
 }
 

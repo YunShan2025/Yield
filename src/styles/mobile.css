@@ -669,14 +669,7 @@ html[data-shell="mobile"] .mtoday-pill {
   background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
 }
 
-/* 项目行标题后的标签胶囊：并入上面那组行内徽标的共用规格，别再各写一套。 */
-html[data-shell="mobile"] .expand-row-tag {
-  padding: 2px 6px;
-  border-radius: 5px;
-  font-size: 0.656rem;
-  letter-spacing: 0.01em;
-  background: color-mix(in srgb, var(--pill-color) var(--mt-pill-bg), transparent);
-}
+/* 项目行标题后的标签胶囊 .expand-row-tag 已退役（双端统一为行首标签色圆点）。 */
 
 /* 完成态不在标题上：移动壳里完成行与未完成行的字体、墨色、行样式完全一样，深浅只由
    行尾那枚圈（勾上 / 空着）来说。因此这里刻意没有 .is-done 的标题规则——
@@ -2208,7 +2201,7 @@ html[data-shell="mobile"] .detail-footer .btn-ghost.danger {
 
 /* ==================================================================
    ---------- 二级页（更多 → 其余入口）移动端适配层（2026-10-24） ----------
-   周清单 / 成长 / 习惯 / 复盘 / 提醒 / 备忘录 / 项目 / 标签 / 纪念日 /
+   本周 / 足迹 / 目标 / 习惯 / 提醒 / 备忘录 / 项目 / 标签 / 纪念日 /
    设置 / 回收站：桌面组件直接渲染在移动壳里，此前只有 views.css 的
    M2 触控补丁，观感仍是「被压扁的桌面」。本层把这些二级页拉回与
    「今日 / 待办 / 记账 / 更多」同一视觉世界：
@@ -2269,7 +2262,7 @@ html[data-shell="mobile"] .workspace-subtitle {
    sticky/留白/渐变标题随共享骨架规则统一生效，无需特例。 */
 
 /* 页面左右留白统一 18px（与 mtoday-scroll 同值）：挂在真正的滚动根上。
-   习惯/复盘/备忘/标签/提醒的根无横留白，由其内层 body 提供（见下）；
+   习惯/备忘/标签/提醒的根无横留白，由其内层 body 提供（见下）；
    回收站的 .task-scroll、项目页的 .projects-scroll 是内滚容器，自带。 */
 html[data-shell="mobile"] .weekly-checklist,
 html[data-shell="mobile"] .growth-page,
@@ -2288,8 +2281,7 @@ html[data-shell="mobile"] .projects-scroll {
 html[data-shell="mobile"] .habits-body,
 html[data-shell="mobile"] .reminders-body,
 html[data-shell="mobile"] .tags-body,
-html[data-shell="mobile"] .memo-body,
-html[data-shell="mobile"] .review-body {
+html[data-shell="mobile"] .memo-body {
   padding: 9px 18px 0;
 }
 
@@ -2299,7 +2291,6 @@ html[data-shell="mobile"] .reminders-view,
 html[data-shell="mobile"] .tags-view,
 html[data-shell="mobile"] .memo-page,
 html[data-shell="mobile"] .habits-view,
-html[data-shell="mobile"] .review-workspace,
 html[data-shell="mobile"] .weekly-checklist,
 html[data-shell="mobile"] .growth-page,
 html[data-shell="mobile"] .moments-page {
@@ -2309,7 +2300,7 @@ html[data-shell="mobile"] .moments-page {
 /* 暖色引导框 → 淡蓝顶卡族（今日主卡 / 待办摘要 / 记账顶卡同色同阴影）。
    桌面暖底与同心圆装饰线收掉，文案节奏保留；带 meter 的页面进度条
    加粗到 mtoday-progress 的 8px 档。横向 18px 边距默认自给；容器已带
-   18px 留白的页面（成长/纪念日/周清单/习惯/提醒/项目）再归零，避免双份。 */
+   18px 留白的页面（足迹/纪念日/本周/习惯/提醒/项目）再归零，避免双份。 */
 html[data-shell="mobile"] .today-hero.guide-hero {
   gap: 10px;
   margin: 0 18px 12px;
@@ -2400,8 +2391,7 @@ html[data-shell="mobile"] .workspace-top .btn-primary {
   letter-spacing: 0.01em;
 }
 
-/* 分段控件（复盘维度 tabs / 提醒 tabs / 习惯页头输入）统一成分段药丸。 */
-html[data-shell="mobile"] .growth-tabs,
+/* 分段控件（本周聚合维度 tabs / 提醒 tabs / 习惯页头输入）统一成分段药丸。 */
 html[data-shell="mobile"] .timer-tabs,
 html[data-shell="mobile"] .review-dimension-tabs,
 html[data-shell="mobile"] .memo-list-tabs {
@@ -2412,7 +2402,6 @@ html[data-shell="mobile"] .memo-list-tabs {
   background: var(--surface-sunken);
 }
 
-html[data-shell="mobile"] .growth-tabs button,
 html[data-shell="mobile"] .timer-tabs button,
 html[data-shell="mobile"] .review-dimension-tabs button,
 html[data-shell="mobile"] .memo-list-tabs button {
@@ -2426,7 +2415,6 @@ html[data-shell="mobile"] .memo-list-tabs button {
   touch-action: manipulation;
 }
 
-html[data-shell="mobile"] .growth-tabs button.active,
 html[data-shell="mobile"] .timer-tabs button.active,
 html[data-shell="mobile"] .review-dimension-tabs button.is-active,
 html[data-shell="mobile"] .memo-list-tabs button.active {
@@ -2442,15 +2430,6 @@ html[data-shell="mobile"] .memo-list-tabs {
 }
 
 html[data-shell="mobile"] .memo-list-tabs button {
-  flex: 1;
-}
-
-html[data-shell="mobile"] .growth-tabs {
-  margin-bottom: 12px;
-  overflow: visible;
-}
-
-html[data-shell="mobile"] .growth-tabs button {
   flex: 1;
 }
 
@@ -2538,7 +2517,6 @@ html[data-shell="mobile"] .anni-detail-dialog > footer > button {
 
 html[data-shell="mobile"] .project-edit-modal,
 html[data-shell="mobile"] .goal-create-modal,
-html[data-shell="mobile"] .day-activity-modal,
 html[data-shell="mobile"] .completed-time-modal,
 html[data-shell="mobile"] .anni-composer-dialog,
 html[data-shell="mobile"] .anni-detail-dialog {
@@ -2562,7 +2540,6 @@ html[data-shell="mobile"] .anni-detail-dialog {
 /* 握把：弹窗本体是滚动容器，sticky 在面板顶与页头同排钉住（同新建任务）。 */
 html[data-shell="mobile"] .project-edit-modal::before,
 html[data-shell="mobile"] .goal-create-modal::before,
-html[data-shell="mobile"] .day-activity-modal::before,
 html[data-shell="mobile"] .completed-time-modal::before,
 html[data-shell="mobile"] .anni-composer-dialog::before,
 html[data-shell="mobile"] .anni-detail-dialog::before {
@@ -2669,6 +2646,8 @@ html[data-shell="mobile"] .trash-item,
 html[data-shell="mobile"] .trash-summary,
 html[data-shell="mobile"] .weekly-day-col,
 html[data-shell="mobile"] .weekly-stat-strip,
+html[data-shell="mobile"] .footprint-stats,
+html[data-shell="mobile"] .footprint-day,
 html[data-shell="mobile"] .timer-status-rail,
 html[data-shell="mobile"] .memo-list-item,
 html[data-shell="mobile"] .data-health-panel {
@@ -2689,6 +2668,8 @@ html[data-theme="dark"][data-shell="mobile"] .trash-item,
 html[data-theme="dark"][data-shell="mobile"] .trash-summary,
 html[data-theme="dark"][data-shell="mobile"] .weekly-day-col,
 html[data-theme="dark"][data-shell="mobile"] .weekly-stat-strip,
+html[data-theme="dark"][data-shell="mobile"] .footprint-stats,
+html[data-theme="dark"][data-shell="mobile"] .footprint-day,
 html[data-theme="dark"][data-shell="mobile"] .timer-status-rail,
 html[data-theme="dark"][data-shell="mobile"] .memo-list-item,
 html[data-theme="dark"][data-shell="mobile"] .data-health-panel,
@@ -2703,6 +2684,8 @@ html[data-theme="glass"][data-shell="mobile"] .trash-item,
 html[data-theme="glass"][data-shell="mobile"] .trash-summary,
 html[data-theme="glass"][data-shell="mobile"] .weekly-day-col,
 html[data-theme="glass"][data-shell="mobile"] .weekly-stat-strip,
+html[data-theme="glass"][data-shell="mobile"] .footprint-stats,
+html[data-theme="glass"][data-shell="mobile"] .footprint-day,
 html[data-theme="glass"][data-shell="mobile"] .timer-status-rail,
 html[data-theme="glass"][data-shell="mobile"] .memo-list-item,
 html[data-theme="glass"][data-shell="mobile"] .data-health-panel {
@@ -2776,7 +2759,6 @@ html[data-shell="mobile"] .section-title-row h3,
 html[data-shell="mobile"] .growth-panel-head h3,
 html[data-shell="mobile"] .growth-panel h3,
 html[data-shell="mobile"] .reminders-section-head h3,
-html[data-shell="mobile"] .weekly-goals h3,
 html[data-shell="mobile"] .weekly-days h3,
 html[data-shell="mobile"] .review-section-head h3 {
   margin: 0;
@@ -2819,80 +2801,30 @@ html[data-shell="mobile"] .reminders-empty {
   border-radius: var(--radius-md);
 }
 
-/* ---------- 4) 指标条：growth / review 的大数字带 → 一行读数卡 ----------
-   桌面的「一排大数字 + 发丝线」是三列以上表格压进 390px 的头号受害者，
-   也撞上「大数字当页面结构」的桌面红线；移动壳折进一张卡：
-   成长 1×4、复盘 1×3，数字降到与三页顶卡读数同档。 */
-html[data-shell="mobile"] .growth-metrics,
-html[data-shell="mobile"] .review-metrics {
-  gap: 1px;
-  margin: 0 0 10px;
-  border: 0;
-  border-radius: 16px;
-  background: var(--surface-panel);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
-  overflow: hidden;
-}
-
-html[data-theme="dark"][data-shell="mobile"] .growth-metrics,
-html[data-theme="dark"][data-shell="mobile"] .review-metrics,
-html[data-theme="glass"][data-shell="mobile"] .growth-metrics,
-html[data-theme="glass"][data-shell="mobile"] .review-metrics {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
-}
-
-@media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .growth-metrics,
-  html[data-theme="system"][data-shell="mobile"] .review-metrics {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
-  }
-}
-
-html[data-shell="mobile"] .growth-metrics {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-html[data-shell="mobile"] .review-metrics {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-html[data-shell="mobile"] .growth-metrics article {
-  padding: 12px 10px;
-  border-left: 0;
-}
-
-html[data-shell="mobile"] .review-metrics article {
+/* ---------- 4) 足迹页当日明细：下方通栏面板在移动壳收紧一档 ----------
+   弹窗退役后它与同页其它卡共用 10px 节奏；两列在窄屏堆叠由桌面断点接管。 */
+html[data-shell="mobile"] .footprint-day {
+  margin-top: 10px;
   padding: 12px 14px;
-  border-left: 0;
 }
 
-/* 发丝线当格线：成长 1×4、复盘 1×3 都是一行，只留列分隔。 */
-html[data-shell="mobile"] .growth-metrics article,
-html[data-shell="mobile"] .review-metrics article {
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--border) 62%, transparent);
+/* 当日明细的 mrow 列表：标题行的发丝线就是列表的起点线，列表不再自己让位——
+   首行紧贴标题（再留 6px 会读成两行空隙）。 */
+html[data-shell="mobile"] .footprint-day-col ul.mrow-list {
+  margin-top: 0;
 }
 
-html[data-shell="mobile"] .growth-metrics article:last-child,
-html[data-shell="mobile"] .review-metrics article:last-child {
-  box-shadow: none;
+/* 习惯行整行不可点（记录没有详情页），行尾打卡钮可点：整行不做 mrow 的入口
+   对待（指针光标、按压轻染都收掉）。 */
+html[data-shell="mobile"] .mrow.footprint-habit-row {
+  cursor: default;
 }
 
-html[data-shell="mobile"] .growth-metrics strong {
-  font-size: 1.25rem;
+html[data-shell="mobile"] .mrow.footprint-habit-row:active {
+  background: transparent;
 }
 
-html[data-shell="mobile"] .review-metrics strong {
-  font-size: 1.375rem;
-}
-
-html[data-shell="mobile"] .growth-metrics small,
-html[data-shell="mobile"] .review-metrics small {
-  font-size: 0.719rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-/* ---------- 5) 周清单：七日横向滑动 + 段落卡片化 ---------- */
+/* ---------- 5) 本周：七日横向滑动 + 段落卡片化 ---------- */
 
 /* 页头 4 个导航小药丸收成一行（weekly-checklist-nav 已 wrap）。 */
 html[data-shell="mobile"] .weekly-checklist-nav {
@@ -2900,13 +2832,12 @@ html[data-shell="mobile"] .weekly-checklist-nav {
   justify-content: flex-end;
 }
 
-html[data-shell="mobile"] .weekly-goals,
 html[data-shell="mobile"] .weekly-days,
-html[data-shell="mobile"] .weekly-stat-strip {
+html[data-shell="mobile"] .weekly-stat-strip,
+html[data-shell="mobile"] .weekly-review {
   margin: 10px 0 0;
 }
 
-html[data-shell="mobile"] .weekly-goals h3,
 html[data-shell="mobile"] .weekly-days h3 {
   margin: 0 0 10px;
 }
@@ -2940,15 +2871,9 @@ html[data-shell="mobile"] .weekly-day-col.is-today {
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
 }
 
-/* 「当周概览」的表现形式在 §15 统一为复盘指标卡风格，这里不再单独微调。 */
+/* 「当周概览」的表现形式在 §15 统一为读数格网格，这里不再单独微调。 */
 
 /* ---------- 6) 成长：目标卡流 + 热力图横滚 + 双栏折单栏 ---------- */
-
-html[data-shell="mobile"] .growth-columns {
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin-top: 10px;
-}
 
 html[data-shell="mobile"] .growth-panel {
   padding: 14px 15px;
@@ -3060,11 +2985,6 @@ html[data-shell="mobile"] .goal-card footer span.is-behind {
   color: var(--warning);
 }
 
-/* 总览面板里直排的目标卡片：间距与移动壳 goal-grid 同为 10px。 */
-html[data-shell="mobile"] .growth-panel > .goal-card + .goal-card {
-  margin-top: 10px;
-}
-
 html[data-shell="mobile"] .goal-card h3 {
   margin: 10px 0 4px;
 }
@@ -3074,11 +2994,13 @@ html[data-shell="mobile"] .goal-card h3:first-child {
 }
 
 html[data-shell="mobile"] .goal-detail-hero {
-  /* 窄屏媒体查询把 hero 折成了竖排，读数掉到卡底、卡虚高 —— 移动壳改回横排：
-     文本居左自然换行，百分比贴右侧垂直居中，卡高压到内容本身的高度。 */
-  flex-direction: row;
+  /* 窄屏媒体查询把 hero 折成了竖排，读数掉到卡底、卡虚高 —— 移动壳改 grid：
+     文本居左自然换行、百分比贴右垂直居中，进度条作为第二行通栏收进卡内
+     （与桌面详情顶卡同规：条在框内）。卡高压到内容本身的高度。 */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  column-gap: 12px;
   padding: 14px 16px;
   border: 0;
   border-radius: 16px;
@@ -3086,7 +3008,19 @@ html[data-shell="mobile"] .goal-detail-hero {
 }
 
 html[data-shell="mobile"] .goal-detail-hero > div {
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
+}
+
+html[data-shell="mobile"] .goal-detail-hero > .goal-progress-track {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 12px 0 0;
+}
+
+html[data-shell="mobile"] .goal-detail-hero .goal-hero-deadline {
+  margin-left: 6px;
 }
 
 html[data-theme="dark"][data-shell="mobile"] .goal-detail-hero,
@@ -3269,59 +3203,72 @@ html[data-shell="mobile"] .habit-week-progress.is-full em {
 /* 动作钮与项目面板底部动作条同源（.expand-row-foot 共享规则见下）：
    灰底等分、删除淡红底，两端与项目页完全一致。 */
 
-/* 项目 / 标签 / 周清单的 ExpandRow 列表装进卡片面板：行与行发丝线（桌面原样），
-   行高垫到 48dp，行尾动作钮收小。 */
+/* 行即卡片（对齐桌面 B+，2026-10-29）：一张大白卡 + 通栏发丝行 → 每个项目/
+   标签一张独立白卡，卡间留白 10。选中卡＝左上角 accent 短条 + caret 变蓝。
+   整卡 hover 抬升留在桌面——触屏有粘滞 hover，移动按压反馈走 :active 轻染。 */
 html[data-shell="mobile"] .projects-grid,
-html[data-shell="mobile"] .tags-grid,
-html[data-shell="mobile"] .weekly-goal-list {
-  padding: 2px 14px;
-  border-radius: 16px;
-  background: var(--surface-panel);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+html[data-shell="mobile"] .tags-grid {
+  gap: 10px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-html[data-theme="dark"][data-shell="mobile"] .projects-grid,
-html[data-theme="dark"][data-shell="mobile"] .tags-grid,
-html[data-theme="dark"][data-shell="mobile"] .weekly-goal-list,
-html[data-theme="glass"][data-shell="mobile"] .projects-grid,
-html[data-theme="glass"][data-shell="mobile"] .tags-grid,
-html[data-theme="glass"][data-shell="mobile"] .weekly-goal-list {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+html[data-shell="mobile"] .projects-view .expand-row,
+html[data-shell="mobile"] .tags-view .tags-grid .expand-row {
+  position: relative;
+  overflow: hidden;
+  padding: 2px 14px;
+  border-bottom: 0;
+  border-radius: 12px;
+  background: var(--surface-panel);
+  box-shadow: 0 1px 2px rgba(18, 32, 60, 0.05), 0 14px 24px -20px rgba(18, 32, 60, 0.45);
+}
+
+html[data-theme="dark"][data-shell="mobile"] .projects-view .expand-row,
+html[data-theme="dark"][data-shell="mobile"] .tags-view .tags-grid .expand-row,
+html[data-theme="glass"][data-shell="mobile"] .projects-view .expand-row,
+html[data-theme="glass"][data-shell="mobile"] .tags-view .tags-grid .expand-row {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.26), 0 16px 28px -20px rgba(0, 0, 0, 0.85);
 }
 
 @media (prefers-color-scheme: dark) {
-  html[data-theme="system"][data-shell="mobile"] .projects-grid,
-  html[data-theme="system"][data-shell="mobile"] .tags-grid,
-  html[data-theme="system"][data-shell="mobile"] .weekly-goal-list {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
+  html[data-theme="system"][data-shell="mobile"] .projects-view .expand-row,
+  html[data-theme="system"][data-shell="mobile"] .tags-view .tags-grid .expand-row {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.26), 0 16px 28px -20px rgba(0, 0, 0, 0.85);
   }
+}
+
+/* 选中卡＝左上角一截 accent 短条：3px 竖条顺 12px 圆角描下来（桌面同款公式，
+   高度刚盖过圆角再多一点点）。 */
+html[data-shell="mobile"] .projects-view .expand-row.is-open::before,
+html[data-shell="mobile"] .tags-view .tags-grid .expand-row.is-open::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 34px;
+  border-left: 3px solid var(--accent);
+  border-top-left-radius: 12px;
+  pointer-events: none;
+}
+
+html[data-shell="mobile"] .projects-view .expand-row.is-open .expand-row-caret,
+html[data-shell="mobile"] .tags-view .tags-grid .expand-row.is-open .expand-row-caret {
+  color: var(--accent);
 }
 
 html[data-shell="mobile"] .expand-row-toggle {
   min-height: 48px;
 }
 
-/* 项目列表密度：行高 40（触控热区仍是整行含发丝线），标签页同档，标签页、周复盘的其余部分保持原档。 */
+/* 项目列表密度：卡内行高 40（点题热区仍是整卡行），标签页同档。 */
 html[data-shell="mobile"] .projects-view .expand-row-toggle,
 html[data-shell="mobile"] .tags-view .expand-row-toggle {
   min-height: 40px;
   padding: 2px;
-}
-
-/* 列表行装进卡片后，末行不再拖一条贴卡片内缘的发丝线。 */
-html[data-shell="mobile"] .projects-grid .expand-row:last-child,
-html[data-shell="mobile"] .tags-grid .expand-row:last-child,
-html[data-shell="mobile"] .weekly-goal-list .expand-row:last-child {
-  border-bottom: 0;
-}
-
-html[data-shell="mobile"] .expand-row-actions .item-action-btn {
-  min-height: 36px;
-  min-width: 0;
-  padding: 6px 9px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
 }
 
 /* 面板底部动作条按钮：灰底无描边。习惯卡的动作行与它同源，一并命中。 */
@@ -3362,38 +3309,10 @@ html[data-shell="mobile"] .tags-grid {
   margin-top: 0;
 }
 
-/* ---------- 8) 复盘 / 提醒：图卡与计时卡 ---------- */
-
-html[data-shell="mobile"] .review-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* flex 下 margin 不再与 gap 合并，指标卡自带 10px 下距在这里归零。 */
-html[data-shell="mobile"] .review-body .review-metrics {
-  margin-bottom: 0;
-}
+/* ---------- 8) 本周回顾两块 / 提醒：图卡与计时卡 ---------- */
 
 html[data-shell="mobile"] .review-story-card {
   padding: 14px 15px;
-}
-
-html[data-shell="mobile"] .review-main-grid {
-  gap: 10px;
-  margin-top: 0;
-}
-
-/* 7 天节奏图压高度：218px 的桌面图高在手机上把后面的投向卡推出首屏。 */
-html[data-shell="mobile"] .review-rhythm-chart {
-  height: 168px;
-  margin-top: 12px;
-  padding-top: 8px;
-  gap: 8px;
-}
-
-html[data-shell="mobile"] .review-bar-pair {
-  height: 106px;
 }
 
 html[data-shell="mobile"] .review-breakdown {
@@ -3638,7 +3557,7 @@ html[data-shell="mobile"] .trash-item {
   padding: 12px 14px;
 }
 
-/* 回收站里的任务名也是事件名：与今日 / 待办 / 周清单一档（0.875rem / 500 / --text-heading），
+/* 回收站里的任务名也是事件名：与今日 / 待办 / 本周一档（0.875rem / 500 / --text-heading），
    桌面回收站沿用 components.css 那套次级墨色，不跟着动。 */
 html[data-shell="mobile"] .trash-item-main .task-title {
   font-size: 0.875rem;
@@ -3852,7 +3771,7 @@ html[data-shell="mobile"] .top-controls .field:focus-visible {
 
 /* ---------- 13) 二轮反馈（2026-10-24）：页头对齐 / 当周日历竖排 / 展开详情 / 复盘页头 / 弹窗按钮 ---------- */
 
-/* 13.1 页头文字统一落在 18px：周清单/成长/纪念日的滚动根自带 18px 横留白，
+/* 13.1 页头文字统一落在 18px：本周/足迹/纪念日的滚动根自带 18px 横留白，
    页头用负 margin 拉回通栏（文字 18、底色与发丝线通栏，与其余页一致）。 */
 html[data-shell="mobile"] .weekly-checklist .workspace-top,
 html[data-shell="mobile"] .moments-page .workspace-top {
@@ -3941,50 +3860,8 @@ html[data-shell="mobile"] .weekly-day-empty {
    逐族打的补丁随 DOM 一起退出移动壳；`.expand-row-body .expand-task` 一族从未生效
    （ExpandRow 里没有 ExpandableTaskItem），一并清掉。 */
 
-/* 13.4 复盘页头：导航三药丸与统计数字互挤——控制行整体落到标题下方：
-   统计读数独占一行靠左，‹上周|本周|下周› 等分三格通栏成排。
-   views.css:1874 用 order 把统计挪到药丸右端，这里等特异度改回。 */
-html[data-shell="mobile"] .review-workspace .workspace-top {
-  flex-wrap: wrap;
-}
-
-html[data-shell="mobile"] .review-workspace .workspace-top > .top-controls {
-  flex: 1 1 100%;
-  flex-basis: 100%;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-html[data-shell="mobile"] .review-workspace .top-controls .review-hero-total {
-  order: -1;
-  display: flex;
-  flex: 1 1 100%;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  border-left: 0;
-}
-
-html[data-shell="mobile"] .review-workspace .top-controls .review-hero-total strong {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-html[data-shell="mobile"] .review-workspace .top-controls .review-hero-total span {
-  color: var(--text-muted);
-  font-size: 0.719rem;
-}
-
-html[data-shell="mobile"] .review-workspace .top-controls .btn-ghost {
-  flex: 1 1 0;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+/* 13.4 复盘页头随独立复盘页退役：本周页页头用 .weekly-checklist-nav 一套
+   （见 §14.2），此处不再另立 review-workspace 规则。 */
 
 /* 13.5 弹窗动作条按钮：views.css §9 全屏时代留下「贴边直角」通栏按钮，
    对齐 92dvh 弹层家族——圆角 + sunken ghost。特异度 (0,4,1) 起平、后来赢。 */
@@ -4216,7 +4093,8 @@ html[data-shell="mobile"] .guide-stat-legend b {
   font-variant-numeric: tabular-nums;
 }
 
-/* 14.2 周清单页头：导航三药丸落到标题下方通栏等分（同复盘 13.4）。
+/* 14.2 本周页页头：导航三药丸落到标题下方通栏等分（原复盘页 13.4 同招，
+   已随独立复盘页退役）。
    「打开周历」跳今日页周视图、名实不符，移动壳已从 DOM 移除
    （本页自带当周日历）。 */
 html[data-shell="mobile"] .weekly-checklist .workspace-top.weekly-checklist-top {
@@ -4238,10 +4116,12 @@ html[data-shell="mobile"] .weekly-checklist .top-controls .btn-ghost {
   justify-content: center;
 }
 
-/* ---------- 15) 周清单「当周概览」：改成复盘指标卡的表现形式 ---------- */
-/* 桌面是一行 baseline 挤排 + 竖分隔线；移动壳对齐 review-metrics（§4）：
-   一行三等分格，格内「小标签 → 大读数 → 小注」竖堆，发丝线作列分隔。 */
-html[data-shell="mobile"] .weekly-stat-strip {
+/* ---------- 15) 本周「当周概览」：读数格的移动壳表现形式 ---------- */
+/* 桌面是账目列（标签在上、数右对齐在下、竖发丝）；移动壳折成 2×2 读数格
+   （本周与足迹都是四项，共用一套）：格内「小标签 → 大读数 → 小注」竖堆，
+   发丝线作列分隔。 */
+html[data-shell="mobile"] .weekly-stat-strip,
+html[data-shell="mobile"] .footprint-stats {
   flex: none; /* 根是 flex column：不锁住会被可收缩项压成 0 高 */
   padding: 0;
   overflow: hidden;
@@ -4249,7 +4129,7 @@ html[data-shell="mobile"] .weekly-stat-strip {
 
 html[data-shell="mobile"] .weekly-stat-track {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   align-items: stretch;
 }
@@ -4289,40 +4169,53 @@ html[data-shell="mobile"] .weekly-stat-note {
   color: var(--text-secondary);
 }
 
+/* 两页四项读数统一收成 2×2：每行行尾不画列线，第二行行首补一道行线
+   （inset 不占高）。 */
+html[data-shell="mobile"] .weekly-stat-item:nth-child(2n) {
+  box-shadow: none;
+}
+
+html[data-shell="mobile"] .weekly-stat-item:nth-child(n + 3) {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--border) 62%, transparent);
+}
+
+html[data-shell="mobile"] .weekly-stat-item:nth-child(3) {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--border) 62%, transparent),
+    inset -1px 0 0 color-mix(in srgb, var(--border) 62%, transparent);
+}
+
 /* ---------- 16) 方案 C（2026-10-24）：展开层分层 + 五个任务行族并入 .mrow ----------
    周清单「本周任务」、当周日历、项目面板、标签任务、标签项目行五族合并为
    MobileTaskLine / MobileTaskRow 一套行件；行内原子复用今日与待办那一套——
    `.minbox-pdot` 优先级方点、`.minbox-due` 日期语气药丸、`.mtoday-pill` 归属胶囊、
    `.mtoday-check` 完成圆钮（22px 环 / 48dp 命中区，右置，与拇指落点统一）。
-   分层：白卡（父行 48dp）→ sunken 子面板（radius 12）→ 行透底 + 发丝线 65%。
-   完成态统一 accent 环 + 标题置灰；「成就式金底」从单条任务上移到整组（.is-clear）。 */
+   完成态＝accent 实色环，标题不置灰不划线；「成就金读数」从单条任务上移到
+   整组（.is-clear）。项目/标签父行 2026-10-29 起卡片化（见第 7 节「行即卡片」）。 */
 
-/* 16.1 展开层：桌面「灰块 + 30px 缩进」换成 sunken 子面板。父行留在白卡层，
-   展开的内容靠换底色分层（DESIGN.md：升一级表面 = 换底色 XOR 加边框）。 */
-html[data-shell="mobile"] .expand-row.is-open {
+/* 16.1 展开层（2026-10-29 对齐桌面 B+）：sunken 换底分层退役，改描边圆角任务
+   框（DESIGN.md：升一级表面＝换底色 XOR 加边框——卡已经是升层，框改用边框）。
+   dawn/glass 给 sunken 底补内描边的补丁随换底一起退役。 */
+html[data-shell="mobile"] .expand-row-body {
+  gap: 0;
+  margin: 8px 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   background: transparent;
 }
 
-html[data-shell="mobile"] .expand-row-body {
-  gap: 0;
-  margin: 2px 0 4px;
-  padding: 2px 10px;
-  border-radius: 12px;
-  background: var(--surface-sunken);
+/* 空态没内容，不给空提示套空框（桌面 :has(.proj-task) 同法，移动看 .mrow）。 */
+html[data-shell="mobile"] .expand-row-body:not(:has(.mrow)) {
+  margin: 2px 0 8px;
+  padding: 0;
+  border: 0;
 }
 
-/* 玻璃主题的 --surface-sunken 是半透明白，压在白卡上边界太软，补一道内描边。 */
-html[data-theme="dawn"][data-shell="mobile"] .expand-row-body,
-html[data-theme="glass"][data-shell="mobile"] .expand-row-body {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 65%, transparent);
-}
-
-/* 面板底部动作条：现在是行上的常驻条——发丝线把操作与标题行/任务块隔开，
-   收合时按钮就贴在项目名下一档，展开时落在任务灰底之外。 */
+/* 动作条只随展开行渲染（常驻条退役，与桌面同构）：任务框与按钮之间不放
+   横线——圆角框的底边就是分界。 */
 html[data-shell="mobile"] .expand-row-foot {
-  margin-top: 6px;
   padding: 8px 0 10px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-top: 0;
 }
 
 /* 16.2 行件：容器与行本体。间距全部交给行间发丝线（gap/padding 清零后，
@@ -4468,6 +4361,19 @@ html[data-shell="mobile"] .done-chip {
   letter-spacing: 0.01em;
 }
 
+/* 行尾比率读数移动档（2026-10-29：「n 项任务 · 已完成 x」文案串退役改 x/x）：
+   与完成戳 / 日期药丸同族（18px / 5px 径 / 0.656rem）；is-clear 金色、is-idle
+   描边「未启动」走 components.css 共用档不动。 */
+html[data-shell="mobile"] .ratio-chip {
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 0.656rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
 /* 16.3 变体：day = 当周日历（密集档内边距同今日页 .mtoday-row 的 3px，一屏七天要省
    垂直空间）；plain = 标签页项目行（无完成钮，靠 min-height 兜到 44dp）。
    行高主要由 48dp 的完成钮决定（它上下各 -3px 外边距），与待办 .minbox-row 同档。
@@ -4492,13 +4398,13 @@ html[data-shell="mobile"] .mrow.is-single .mtoday-check {
 }
 
 /* 色点从元信息行挪进标题后按行内盒排布：inline-block 才吃得到宽高，
-   基线下沉 1px 与 0.875rem 文字取得光学居中。 */
+   基线下沉 2px 与 0.875rem 汉字的墨迹中心对齐（1px 实测仍低 1.25px）。 */
 html[data-shell="mobile"] .mrow.is-single .minbox-pdot {
   display: inline-block;
   margin-right: 6px;
   vertical-align: baseline;
   position: relative;
-  top: -1px;
+  top: -2px;
 }
 
 /* 密集档只收内边距，字号不再单独下调：当周日历的事件名要和今日、待办同一档
@@ -4523,9 +4429,13 @@ html[data-shell="mobile"] .mrow-plain .mrow-title {
   -webkit-line-clamp: 1;
 }
 
-/* 16.4 「展开全部」收成文本式小钮（同 mtoday-shead 右端的「整理」）。 */
+/* 16.4 「展开全部」收成文本式小钮（同 mtoday-shead 右端的「整理」）；
+   命中区按移动触控档垫到 44dp（钮身仍是一行小字）。 */
 html[data-shell="mobile"] .mrow-toggle {
-  padding: 7px 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
   border: 0;
   background: none;
   color: var(--text-secondary);
@@ -4570,7 +4480,6 @@ html[data-theme="glass"][data-shell="mobile"] .weekly-day-col.is-clear header > 
 
   html[data-shell="mobile"] .project-edit-modal,
   html[data-shell="mobile"] .goal-create-modal,
-  html[data-shell="mobile"] .day-activity-modal,
   html[data-shell="mobile"] .completed-time-modal,
   html[data-shell="mobile"] .anni-composer-dialog,
   html[data-shell="mobile"] .anni-detail-dialog,
