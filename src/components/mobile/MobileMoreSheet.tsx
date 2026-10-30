@@ -3,7 +3,7 @@ import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { useAppStore } from "@/store/app";
 import type { NavId } from "@/types";
 
-/** 更多页按侧栏典故分组的次级入口（MOBILE-IA §3.2）。
+/** 更多页按侧栏典故分组的次级入口。
  *  分组头只留一句白话释义，典故全文收在「设置 · 命名缘起」；
  *  图标口径与桌面侧栏 NavSidebar 对齐（周报 checklist、纪念日 gift）。 */
 const MORE_GROUPS: {

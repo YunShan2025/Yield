@@ -1,7 +1,5 @@
 # Product
 
-<!-- impeccable:product-schema 1 -->
-
 ## Platform
 
 adaptive
@@ -75,8 +73,8 @@ adaptive
 
 - **一个视觉世界，两个视图层**：桌面端是多栏工作台，Android 端是单栏卡片流；两端共享语义层（主题、色彩、字体角色、间距、圆角、状态含义、图标），不共享结构层（导航、布局、交互模式、密度）。
 - **移动端重建范围**：页面级组件分端各写一套，叶子组件（按钮 / 标签 / 图标 / 空态 / 列表行 / 选择器 / 日期时间）跨端共享。
-- **Android 结构基准**：Material 3 管结构与交互，有秋管色彩与语气。**自建实现，不引入 Material 组件库** —— MUI 的 CSS-in-JS 模型与本项目 100% 普通 CSS 的分层体系冲突，Material Web 的 Shadow DOM 与 ~800 条 MDC token 映射成本高于收益（评估数据见 `docs/MOBILE-IA.md` §6.1）。
-- **字体策略**：拉丁先行 + 中文系统栈（2026-10-22 阶段 4 修订，详见 DESIGN.md §Typography）——`--font-display` / `--font-body` / `--font-label` 以 Inter 领衔、中文字重回退系统字体；主视觉大数另有 `--font-num-display`（Didone 衬线 + `tabular-nums`）。是否自托管 Inter / Playfair 子集仍未决。
+- **Android 结构基准**：Material 3 管结构与交互，有秋管色彩与语气。**自建实现，不引入 Material 组件库** —— MUI 的 CSS-in-JS 模型与本项目 100% 普通 CSS 的分层体系冲突，Material Web 的 Shadow DOM 与 ~800 条 MDC token 映射成本高于收益。
+- **字体策略**：拉丁先行 + 中文系统栈（2026-10-22 阶段 4 修订，详见 DESIGN.md §Typography）——`--font-display` / `--font-body` 以 Inter 领衔、中文字重回退系统字体；主视觉大数另有 `--font-num-display`（Didone 衬线 + `tabular-nums`）。是否自托管 Inter / Playfair 子集仍未决。
 
 **明确未决的事实**
 
@@ -117,7 +115,7 @@ adaptive
 
 ## Accessibility & Inclusion
 
-本轮 UI 优化确立的工程基线（来自 `impeccable/reference/craft-floor.md` 与 `reference/android.md`）：
+本轮 UI 优化确立的工程基线：
 
 - 正文与占位文字对比度 ≥ 4.5:1，大字 ≥ 3:1；彩色底上的次级文字从该色相取色，不使用灰色
 - 桌面端可交互目标 ≥ 24×24 px（WCAG 2.5.8 AA 底线，理由与例外见 DESIGN.md §禁做）；Android 端 ≥ 48×48 dp，间距 ≥ 8 dp

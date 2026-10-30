@@ -144,9 +144,8 @@ components:
 
 # 有秋（Yield）设计系统
 
-> 本文件是**契约**，不是现状描述。阶段 2/3 已按本文件完工，当前施工面是
-> `docs/UI-REDESIGN-ROADMAP.md` 阶段 4（移动壳）。§9 迁移映射表为**历史记录（已全部实施）**，
-> 仅供考古，不再作为施工依据。
+> 本文件是**契约**，不是现状描述。阶段 1–4 界面重构已收官（双端定稿），
+> §9 迁移映射表为**历史记录（已全部实施）**，仅供考古，不再作为施工依据。
 > 数字类断言（行数 / token 数 / 色值计数）会随重构漂移，验收以 `node scripts/ui-css-audit.mjs` 现算结果为准。
 
 ## Overview
@@ -279,7 +278,7 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 
 ### Material color roles 映射（Android 端）
 
-> **实现方式**：自建，**不引入 Material 组件库**（2026-10-21 评估，理由与数据见 `docs/MOBILE-IA.md` §6.1）。
+> **实现方式**：自建，**不引入 Material 组件库**（2026-10-21 评估定案：MUI 的 CSS-in-JS 与本库 100% 普通 CSS 分层体系冲突，Material Web 的 Shadow DOM 与 ~800 条 MDC token 映射成本高于收益）。
 > 下表是**结构规范**的落地：Material 3 管结构与交互，这 13 个 color role 由有秋的语义 token 填充，不是引入 Material 自己的色板。
 
 结构用 Material 3，色彩用有秋。Android 端把有秋语义 token 映射到 Material role，**不引入 Material 自己的色板**：
@@ -631,5 +630,5 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 ## 10. 迁移映射的验证方式
 
 - 阶段 2 完成后：四主题逐一肉眼比对 + `npx vite build` + 对比度脚本复算
-- 阶段 3/4 完成后：`impeccable detect http://localhost:4173`（桌面）+ `adb exec-out screencap`（移动）
-- 每次改 token 后跑一次 `impeccable doctor`，确认契约与实现没有漂移
+- 阶段 3/4 完成后：`node scripts/ui-css-audit.mjs`（token 对账与硬编码扫描）+ 桌面/移动截图回归（`node scripts/ui-shot.mjs`）+ `adb exec-out screencap`（移动真机）
+- 每次改 token 后跑一次 `node scripts/ui-css-audit.mjs`，确认契约与实现没有漂移

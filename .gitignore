@@ -32,12 +32,6 @@ separate_resume_sections.py
 keys/
 src-tauri/gen/android/app/keystore.properties
 
-# Impeccable 设计 skill（项目级安装，约 21MB 含 Windows 引擎二进制，不入库）
-# 重装：npx impeccable install --scope=project --providers=codex -y
-.agents/
-.codex/
-.impeccable/*
-!.impeccable/config.json
 # 阶段 2 UI 视觉基线截图（由 scripts/ui-snapshot.mjs 生成，可随时重建，不入库）
 docs/ui-baseline/
 
