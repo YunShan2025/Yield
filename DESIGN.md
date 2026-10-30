@@ -32,51 +32,60 @@ colors:
   border-strong: "rgba(34, 55, 91, 0.16)"
   focus-ring: "rgba(47, 111, 237, 0.28)"
 typography:
-  display:
-    fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
-    fontSize: "30px"
-    fontWeight: 700
-    lineHeight: 1.25
-    letterSpacing: "-0.01em"
-  h1:
+  # 8 个文字角色，唯一真相源 src/styles/tokens.css（R1…R8，全应用禁手写档位）
+  hero-num:
+    fontFamily: "\"Bodoni MT\", \"Bodoni 72\", \"Playfair Display\", Didot, \"Times New Roman\", Georgia, \"Noto Serif SC\", \"Songti SC\", serif"
+    fontSize: "44px"
+    fontWeight: 400
+    fontFeature: "tabular-nums"
+    # R1 数字·大 hero：移动壳顶卡主读数，衬线数字家族，一屏最多一处
+  num:
+    fontFamily: "\"Bodoni MT\", \"Bodoni 72\", \"Playfair Display\", Didot, \"Times New Roman\", Georgia, \"Noto Serif SC\", \"Songti SC\", serif"
+    fontSize: "20px"
+    fontWeight: 400
+    fontFeature: "tabular-nums"
+    # 读数·大：桌面账目金额 / 英雄读数 / 计时读数 / 四格统计（--font-size-num-lg）
+  page-title:
     fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "24px"
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: "-0.02em"
-  heading:
-    fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
-    fontSize: "20px"
-    fontWeight: 650
-    lineHeight: 1.35
-    letterSpacing: "normal"
-  h3:
+    # R2 页标题：一屏仅一处
+  section-title:
     fontFamily: "\"Inter\", \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "16px"
     fontWeight: 650
     lineHeight: 1.35
-    letterSpacing: "normal"
-  body:
+    # R3 区块标题：标题位两分——事件类落画布，展示类在卡内
+  entity:
     fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "14px"
     fontWeight: 400
-    lineHeight: 1.6
-    letterSpacing: "normal"
-  label:
+    # R4 实体名：任务/习惯/项目/备忘名；已完成＝同档+灰+删除线
+  copy:
     fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "13px"
-    fontWeight: 600
-    lineHeight: 1.4
-    letterSpacing: "0.01em"
-  caption:
+    fontWeight: 400
+    lineHeight: 1.6
+    # R5 正文
+  meta:
     fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
     fontSize: "12px"
     fontWeight: 500
-    lineHeight: 1.4
-    letterSpacing: "0.01em"
-  num-display:
-    fontFamily: "\"Bodoni MT\", \"Bodoni 72\", \"Playfair Display\", Didot, \"Times New Roman\", Georgia, \"Songti SC\", serif"
     fontFeature: "tabular-nums"
+    # R6 批注：计数 / 时间戳
+  chip:
+    fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
+    fontSize: "11px"
+    fontWeight: 500
+    # R7 微标识：徽章角标
+  control:
+    fontFamily: "\"Inter\", \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Noto Sans SC\", \"HarmonyOS Sans SC\", \"PingFang SC\", \"Microsoft YaHei UI\", sans-serif"
+    fontSize: "13px"
+    fontWeight: 600
+    # R8 控件文字：按钮 / 输入 / 分段（与 R5 同档不同字重）
+
 rounded:
   sm: "8px"
   md: "12px"
@@ -121,9 +130,6 @@ components:
   tag-success:
     backgroundColor: "{colors.success}"
     textColor: "{colors.text-on-accent}"
-  tag-warning:
-    backgroundColor: "{colors.warning}"
-    textColor: "{colors.text-on-accent}"
   input:
     backgroundColor: "{colors.surface-panel}"
     textColor: "{colors.text-primary}"
@@ -134,7 +140,7 @@ components:
   card:
     backgroundColor: "{colors.surface-panel}"
     textColor: "{colors.text-primary}"
-    rounded: "{rounded.md}"
+    rounded: "16px"  # 桌面卡与移动壳 mtoday-card 同族：16px 固定圆角 + --shadow-card 软阴影 + 去描边
     padding: "16px"
   nav-item-active:
     backgroundColor: "{colors.surface-selected}"
@@ -182,7 +188,6 @@ components:
 P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`。
 用于今日清单界栏上的节点方点 —— 尺寸统一 9px，**颜色是唯一的优先级编码**，
 不要再用透明度或尺寸二次编码（会让「低优先级」与「已完成」撞在一起）。
-```
 
 ### 四套主题（语义层取值）
 
@@ -196,15 +201,15 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 | 弱化 | `#667389` | `#a7b3c6` | `#4d5f7a` | `#b0bcd0` |
 | 强调 | `#2f6fed` | `#70a1ff` | `#3478ee` | `#7eb0ff` |
 | 成功 | `#2c8561` | `#32986e` | `#247c68` | `#5dcf9e` |
-| 警告 | `#a96622` | `#c77828` | `#ae642e` | `#f0b35a` |
+| 警告 | `#a96622` | `#c77828` | `#aa612b` | `#f0b35a` |
 | 危险 | `#bd4a54` | `#e05c67` | `#b8404f` | `#f0888d` |
 | 品牌金 | `#f4b942` | `#f4b942` | `#f4b942` | `#f4b942` |
 
 > 品牌金是**品牌色，不随主题变**。它只用于题铭、里程碑这类有品牌含义的位置，绝不用于普通装饰。
 
-### 状态色修正（阶段 2 必须落地）
+### 状态色修正（已落地留档）
 
-**现状问题**：静夜主题**没有定义** `--success` / `--warning` / `--danger`，继承了浅色值；浅色主题的三个状态色本身也不达标。
+**重构前现状（历史）**：静夜主题**没有定义** `--success` / `--warning` / `--danger`，继承了浅色值；浅色主题的三个状态色本身也不达标。
 
 | 用法 | 现状 | 对比度 | 判定 |
 |---|---|---|---|
@@ -218,7 +223,7 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 | 清昼 `--accent #2f6fed` 作文字 | on `#ffffff` | 4.55:1 | ✅ 刚好达标 |
 | 清昼 `--text-secondary` / `--text-label` | on `#ffffff` | 5.25 / 7.94 | ✅ |
 
-**契约取值**（最小改动量，全部 ≥4.5:1）：
+**契约取值**（已实施，最小改动量，全部 ≥4.5:1）：
 
 | token | 清昼 | 静夜 | 晨曦玻璃 | 璃幕 |
 |---|---|---|---|---|
@@ -257,7 +262,8 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 > 任何「用强调色写文字」的地方一律改用 `--accent-strong`（清昼 `#174ea6` / 静夜 `#a8c6ff` /
 > 晨曦 `#1f59b8` / 璃幕 `#c5dbff`），它在四主题的浅色底上都 ≥4.5:1。
 > 阶段 3 已把复盘计数、复盘维度页签、复盘完成数、成长页页头、备忘录页签、
-> 今日目标条跳转、习惯周进度、移动底栏选中项全部改过来。
+> 今日目标条跳转、习惯周进度、移动底栏选中项全部改过来（复盘 / 成长页此后并入
+> 「周报」与「足迹」，见 docs/CHANGES.md v1.4.0）。
 
 **「压在实心底上的文字色」也要分两种**（阶段 2 新增）：
 
@@ -287,8 +293,8 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 |---|---|
 | primary / on-primary | `--accent` / `--text-on-accent` |
 | primary-container / on-primary-container | `--accent-soft` / `--accent-strong` |
-| surface / surface-container | `--bg-root` / `--bg-panel` |
-| surface-container-high | `--surface-elevated` |
+| surface / surface-container | `--surface-base` / `--surface-panel` |
+| surface-container-high | `--surface-raised` |
 | on-surface / on-surface-variant | `--text-primary` / `--text-secondary` |
 | outline / outline-variant | `--border-strong` / `--border` |
 | error / on-error | `--danger-solid` / `--text-on-accent` |
@@ -321,22 +327,23 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
   Android 会回落到 Noto Serif，气质有差。
 - 数字与金额用 `font-variant-numeric: tabular-nums`，避免跳动。
 
-### 字号刻度
+### 字号刻度（8 个文字角色，唯一真相源 `src/styles/tokens.css`）
 
-| 级别 | 桌面 | 移动 | 用途 |
-|---|---|---|---|
-| display | 30px | 30px | 页面大标题（**仅一处**，见 Do's） |
-| h1 | 24px | 24px | 模块标题 |
-| h2 | 20px | 20px | 区块标题 |
-| h3 | 16px | 16px | 小节标题 |
-| body | 14px | 15px | 正文 |
-| label | 13px | 13px | 标签、计数 |
-| caption | 12px | 12px | 元信息、占位 |
+| 角色 | 值 | 用途 |
+|---|---|---|
+| R1 数字·大 hero | 44px | 移动壳顶卡主读数（衬线数字家族，**一屏最多一处**，见 Do's） |
+| 读数·大 | 20px | 桌面账目金额 / 英雄读数 / 计时读数 / 四格统计（`--font-size-num-lg`） |
+| R2 页标题 | 24px | 页面大标题（一屏仅一处） |
+| R3 区块标题 | 16px | 区块 / 小节标题（标题位两分：事件类落画布、展示类在卡内） |
+| R4 实体名 | 14px | 任务 / 习惯 / 项目 / 备忘名；已完成＝同档 + 灰 + 删除线 |
+| R5 正文 | 13px | 正文、说明 |
+| R6 批注 | 12px | 计数 / 时间戳（`tabular-nums`） |
+| R7 微标识 | 11px | 徽章角标 |
+| R8 控件文字 | 13px | 按钮 / 输入 / 分段（与 R5 同档不同字重） |
 
-- 正文行高 1.6；标题 1.25-1.35
-- 桌面正文字号 14px、移动 15px —— 移动端提高一档补偿密度差
-- **输入控件字号 ≥16px**（避免 iOS 聚焦时整页缩放），输入框不适用 14/15px 刻度
-- **移动端新写的视图层用 rem**（阶段 4 起）：根字号由 WebView 跟随系统 `font_scale`，
+- 正文行高 1.6；标题 1.3-1.35
+- **输入控件字号 ≥16px**（避免 Android WebView 聚焦时整页缩放），输入框不适用上表档位
+- **移动壳新写的视图层用 rem**（阶段 4 起）：根字号由 WebView 跟随系统 `font_scale`，
   文字随之放大；几何（圆角、方点、轨道高度、内边距）仍用 px，
   文字变大时布局不散。固定 px 的旧样式暂不批量改写。
 
@@ -349,7 +356,7 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 |---|---|
 | 今日事项 | `.mtoday-title` |
 | 待办箱 | `.minbox-title` |
-| 本周任务 / 当周日历 / 项目面板 / 标签列表 | `.mrow-title`（含 `.is-dense`、`.mrow-plain`） |
+| 周报任务 / 当周日历 / 项目面板 / 标签列表 | `.mrow-title`（含 `.is-dense`、`.mrow-plain`） |
 | 回收站 | `.trash-item-main .task-title` |
 
 - 写在一处：`src/styles/mobile.css` 的共用规则。单个页面不得再单独调字号、字重或换墨色。
@@ -421,10 +428,10 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 
 | 层 | token | 用途 |
 |---|---|---|
-| 0 | `--bg-root` | 应用底 |
-| 1 | `--bg-panel` | 卡片、面板、列表项 |
-| 2 | `--surface-elevated` | 弹层、下拉、浮起的行 |
-| 3 | `--surface-sunken` | 输入框、凹槽、分隔块 |
+| 0 | `--surface-base` | 应用底 |
+| 1 | `--surface-panel` | 卡片、面板、列表项 |
+| 2 | `--surface-raised` | 弹层、下拉、浮起的行 |
+| 凹槽 | `--surface-sunken` | 输入框、凹槽、分隔块 |
 
 ### 规则
 
@@ -528,7 +535,7 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 
 ### 禁做
 
-- ❌ 卡片 / 列表 / 提示块上 **>1px 的单侧彩色边框**（现状 6 处，见 §9）
+- ❌ 卡片 / 列表 / 提示块上 **>1px 的单侧彩色边框**（重构前 6 处，定稿时已清零；`ui-css-audit` 防回流）
 - ❌ 标题上方的小标（kicker / eyebrow）—— 这是**绝对禁止项，没有任何 brief 能豁免**
 - ❌ "大数字 + 小标签 + 辅助统计 + 强调色"的 hero-metric 模板
   —— **移动端顶部摘要卡豁免**（阶段 4 定稿；2026-10 修订：今日卡去大面积渐变，
