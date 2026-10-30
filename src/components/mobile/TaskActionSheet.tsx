@@ -237,7 +237,6 @@ export function TaskActionSheet({
             className="action-sheet-danger"
             onClick={() => void onDelete()}
           >
-            <AppIcon name="trash" size={18} />
             移入回收站
           </button>
           <button

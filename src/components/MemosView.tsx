@@ -345,12 +345,12 @@ export function MemosView() {
           </>
         ) : (
           <>
-            <button type="button" className="item-action-btn item-action-primary" onClick={startEditing}><AppIcon name="edit" size={14} /><span>编辑</span></button>
-            <button type="button" className="item-action-btn" onClick={() => void togglePinned()}><AppIcon name="pin" size={14} /><span>{selected.pinned ? "取消置顶" : "置顶"}</span></button>
-            <button type="button" className="item-action-btn item-action-archive" onClick={() => void archiveSelected()}><AppIcon name="archive" size={14} /><span>{selected.archived ? "恢复" : "归档"}</span></button>
+            <button type="button" className="item-action-btn item-action-primary" onClick={startEditing}>编辑</button>
+            <button type="button" className="item-action-btn" onClick={() => void togglePinned()}>{selected.pinned ? "取消置顶" : "置顶"}</button>
+            <button type="button" className={`item-action-btn item-action-archive${selected.archived ? " item-action-restore" : ""}`} onClick={() => void archiveSelected()}>{selected.archived ? "恢复" : "归档"}</button>
           </>
         )}
-        <button type="button" className="item-action-btn item-action-danger" onClick={() => void removeSelected()}><AppIcon name="trash" size={14} /><span>删除</span></button>
+        <button type="button" className="item-action-btn item-action-danger" onClick={() => void removeSelected()}>删除</button>
       </div>
     </aside> : null}
   </main>;

@@ -329,7 +329,7 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="item-action-btn item-action-archive"
+                  className="item-action-btn item-action-archive item-action-restore"
                   onClick={() => void restoreTask(task.id)}
                 >
                   <AppIcon name="review" size={14} />
@@ -374,7 +374,7 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="item-action-btn item-action-archive"
+                  className="item-action-btn item-action-archive item-action-restore"
                   onClick={() =>
                     void restoreDeletedHabit(habit.id).then(async () => {
                       await refreshAll();
@@ -429,7 +429,7 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="item-action-btn item-action-archive"
+                  className="item-action-btn item-action-archive item-action-restore"
                   onClick={() =>
                     void restoreGoal(goal.id).then(async () => {
                       await refreshAll();
@@ -485,7 +485,7 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="item-action-btn item-action-archive"
+                  className="item-action-btn item-action-archive item-action-restore"
                   onClick={() =>
                     void restoreDeletedProject(project.id).then(async () => {
                       // 项目回到进行中列表依赖 store 刷新，与任务恢复同款。
@@ -554,7 +554,7 @@ function TrashView() {
               <div className="trash-item-actions">
                 <button
                   type="button"
-                  className="item-action-btn item-action-archive"
+                  className="item-action-btn item-action-archive item-action-restore"
                   onClick={() => void restoreLedger(item.id)}
                 >
                   <AppIcon name="review" size={14} />

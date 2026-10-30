@@ -371,7 +371,6 @@ export function LedgerEntrySheet({
               className="action-sheet-danger"
               onClick={() => void remove()}
             >
-              <AppIcon name="trash" size={16} />
               移入回收站
             </button>
           ) : null}
@@ -381,7 +380,6 @@ export function LedgerEntrySheet({
             disabled={saving || !amount}
             onClick={() => void save()}
           >
-            <AppIcon name="check" size={16} />
             {saving ? "保存中…" : editing ? "保存修改" : "保存"}
           </button>
         </footer>

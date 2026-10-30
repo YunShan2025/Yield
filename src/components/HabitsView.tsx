@@ -699,7 +699,7 @@ function HabitRow({
               <span>编辑</span>
             </button>
             {archived ? (
-              <button type="button" className="item-action-btn item-action-archive" onClick={onRestore}>
+              <button type="button" className="item-action-btn item-action-archive item-action-restore" onClick={onRestore}>
                 <AppIcon name="review" size={14} />
                 <span>恢复</span>
               </button>
@@ -900,7 +900,7 @@ function HabitCard({
               <span>编辑</span>
             </button>
             {archived ? (
-              <button type="button" className="item-action-btn item-action-archive" onClick={onRestore}>
+              <button type="button" className="item-action-btn item-action-archive item-action-restore" onClick={onRestore}>
                 <AppIcon name="review" size={14} />
                 <span>恢复</span>
               </button>

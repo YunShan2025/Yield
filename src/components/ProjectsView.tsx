@@ -655,7 +655,7 @@ function PanelFoot({
         onRestore ? (
           <button
             type="button"
-            className="item-action-btn item-action-archive"
+            className="item-action-btn item-action-archive item-action-restore"
             onClick={onRestore}
           >
             <AppIcon name="review" size={14} />

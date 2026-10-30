@@ -524,7 +524,8 @@ function GoalRow({
             </button>
             {running ? (
               <button type="button" className="item-action-btn" onClick={onToggleStatus}>
-                {goal.status === "paused" ? "继续目标" : "暂停"}
+                <AppIcon name={goal.status === "paused" ? "play" : "pause"} size={14} />
+                <span>{goal.status === "paused" ? "继续目标" : "暂停"}</span>
               </button>
             ) : null}
             {running ? (
@@ -533,7 +534,8 @@ function GoalRow({
                 className="item-action-btn goal-act-done"
                 onClick={onComplete}
               >
-                完成
+                <AppIcon name="check" size={14} />
+                <span>完成</span>
               </button>
             ) : null}
             <button

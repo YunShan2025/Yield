@@ -1014,61 +1014,8 @@ html[data-shell="mobile"] .task-quick-actions {
   display: flex;
 }
 
-/* 账本明细行的编辑/删除:窄屏规则把它们藏了,触摸屏没有 hover,
- * 必须常显才可达。金额与两个操作按钮共用一行,按钮收窄但保留图标和文字。 */
-html[data-shell="mobile"] .ledger-row {
-  grid-template-columns: 32px minmax(0, 1fr) auto auto;
-  gap: 6px;
-  min-height: 56px;
-  padding: 8px 0;
-}
-
-html[data-shell="mobile"] .ledger-row-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-}
-
-html[data-shell="mobile"] .ledger-row-main {
-  min-width: 0;
-}
-
-html[data-shell="mobile"] .ledger-row-main strong,
-html[data-shell="mobile"] .ledger-row-main small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-html[data-shell="mobile"] .ledger-row > strong {
-  font-size: var(--font-size-label);
-  white-space: nowrap;
-}
-
-html[data-shell="mobile"] .ledger-row-actions {
-  grid-column: auto;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 5px;
-  justify-content: flex-end;
-  opacity: 1;
-}
-
-html[data-shell="mobile"] .ledger-row-actions .item-action-btn {
-  min-width: 0;
-  min-height: 28px;
-  padding: 4px 6px;
-  gap: 3px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-caption);
-  line-height: 1;
-  white-space: nowrap;
-}
-
-html[data-shell="mobile"] .ledger-row-actions .item-action-btn svg {
-  width: 12px;
-  height: 12px;
-}
+/* 「账本明细行编辑/删除」触控补丁（.ledger-row-actions）已退役（2026-10-30）：
+   LedgerView 在移动壳不渲染（MainWorkspace 提前走 LedgerMobileView），整组为死规则。 */
 
 /* 账本每日折叠行:日期+合计整行是手柄,触摸目标加高。 */
 html[data-shell="mobile"] .ledger-day-head {
@@ -1583,61 +1530,10 @@ html[data-shell="mobile"] .command-empty {
   margin: 4px 16px 16px;
 }
 
-/* 今日事项行操作区：44px 大按钮会把标题挤到折行、删除钮挤出卡片。
-   这里把整组动作收小并贴着行右侧，标题拿回更多宽度。
-   只作用于今日/当日事项行——.item-action-primary 同时是各弹窗主按钮的
-   共用类，那里已由第 9 节的弹窗规则单独定尺寸，不能跟着改。 */
-html[data-shell="mobile"] .day-agenda .expand-task-row {
-  gap: 6px;
-  padding: 10px;
-}
-
-html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-btn:not(.item-action-primary) {
-  min-width: 0;
-  min-height: 30px;
-  padding: 5px 8px;
-  gap: 3px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-caption);
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-btn:not(.item-action-primary) svg {
-  width: 12px;
-  height: 12px;
-}
-
-/* 主按钮（完成/打卡）固定 64×30，与详情/删除等高对齐；宽度靠 min-width 保底，
-   图标与文字保持一行不再撑高。 */
-html[data-shell="mobile"] .day-agenda .expand-task-row .item-action-primary {
-  min-width: 64px;
-  min-height: 30px;
-  padding: 5px 9px;
-  gap: 4px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-caption);
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-/* 长标题（含无空格的长串）必须完整折行显示：1fr 列虽然能收缩，
-   但默认不在词中断行，会画到右侧按钮下面形成覆盖。 */
-html[data-shell="mobile"] .day-agenda .expand-task-row .task-title {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-/* 已完成行最多四个动作钮：六字标签会把行撑爆，铅笔钮在手机端只留图标，
-   含义由 title 与桌面端文案保持一份。 */
-html[data-shell="mobile"] .day-agenda .expand-task-row > .item-action-edit {
-  min-width: 30px;
-  padding: 6px;
-}
-
-html[data-shell="mobile"] .day-agenda .expand-task-row > .item-action-edit > span {
-  display: none;
-}
+/* 今日事项行 30dp 迷你动作条组已退役（2026-10-30）：作用域 .day-agenda .expand-task-row
+   只存在于 TodayAgenda / ExpandableTaskItem，而移动壳的今日/待办在 MainWorkspace
+   提前分派 TodayMobileView / InboxMobileView，整组在壳内永不命中（桌面另有自己的
+   非移动作用域样式）。 */
 
 /* 应用内通知卡叠层：窄屏锚定在底部导航上方——顶部悬浮会盖住
    日/周/月切换器与「新建任务」按钮（实测发现）。 */
@@ -2263,17 +2159,22 @@ html[data-shell="mobile"] .anni-detail-dialog > footer .item-action-btn {
   min-height: 48px;
 }
 
+/* 弹层脚 ghost＝sunken 无边框（2026-10-30 分层统一）：与「待办 ···」面板、
+   底部 sheet 的灰底按钮同一控件语言；触摸屏没有 hover，透明 ghost 在手机上
+   等于隐形按钮，必须有常态底。目标弹窗此前自带 sunken 变体，现并入同一条。 */
 html[data-shell="mobile"] .create-task-actions:not(.app-confirm-actions) .btn-ghost,
 html[data-shell="mobile"] .project-edit-actions .btn-ghost,
 html[data-shell="mobile"] .completed-time-actions .btn-ghost,
+html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-ghost,
+html[data-shell="mobile"] .app-confirm-actions .btn-ghost,
 html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
-  border: 1px solid var(--border);
-  background: var(--surface-base);
-  color: var(--text-primary);
+  border: 0;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
 }
 
-/* 目标弹窗也变成「取消 + 保存」两动作：同样改双等宽列，btn-ghost 补常态边框
-   （触摸屏没 hover），并覆盖上面那条单按钮满宽规则。 */
+/* 目标弹窗也变成「取消 + 保存」两动作：同样改双等宽列，并覆盖上面那条单按钮满宽
+   贴边直角的旧规（92dvh 弹层家族＝圆角 + 48dp，与其余弹窗脚完全同尺寸）。 */
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2283,12 +2184,34 @@ html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-action-btn {
   width: auto;
   min-height: 48px;
+  padding: 9px 13px;
+  border-radius: var(--radius-md);
 }
 
-html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-ghost {
-  border: 1px solid var(--border);
-  background: var(--surface-base);
+/* AppConfirm 确认/输入框：居中迷你卡是「确认」的位置特征，可以与其他弹层不同形，
+   但按钮必须同一原子——此前两枚钮只有 40dp/直角 radius-sm，ghost 还没有常态底。 */
+html[data-shell="mobile"] .app-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+html[data-shell="mobile"] .app-confirm-actions .item-action-btn {
+  width: auto;
+  min-width: 0;
+  min-height: 48px;
+  padding: 9px 13px;
+  border-radius: var(--radius-md);
+}
+
+html[data-shell="mobile"] .app-confirm-input {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
   color: var(--text-primary);
+  font-weight: 500;
 }
 
 /* 表单触控目标垫到 48px（select/日期/时间触发器是按钮，min-height 可直接撑高）。 */
@@ -2390,6 +2313,36 @@ html[data-shell="mobile"] .countdown-custom-step {
 
 html[data-shell="mobile"] .countdown-custom-time input {
   min-height: 36px;
+}
+
+/* 触控地板补齐（2026-10-30 按钮分层统一）：日期选择器 ‹›/日格、palette 清除钮、
+   toast「撤销」仍是桌面小尺寸——弹层里点日期与撤销误触率最高的三处。 */
+html[data-shell="mobile"] .date-picker-head button {
+  width: 40px;
+  height: 40px;
+}
+
+html[data-shell="mobile"] .date-cell {
+  min-height: 40px;
+}
+
+html[data-shell="mobile"] .date-picker-actions .btn-ghost {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: var(--font-size-meta);
+}
+
+html[data-shell="mobile"] .command-search-clear {
+  width: 34px;
+  height: 34px;
+}
+
+html[data-shell="mobile"] .toast-undo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
 }
 
 /* 触摸屏没有 hover：备忘录卡片不做悬浮位移，改为按压反馈。 */

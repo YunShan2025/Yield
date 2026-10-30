@@ -901,24 +901,19 @@ html[data-shell="mobile"] .minbox-shead-actions {
   gap: 10px;
 }
 
+/* 节头动作原子：今日「查看全部 ›」/ 待办「整理」同一形态——无边框纯文字（与页头
+   38dp 胶囊拉开层级：胶囊是页面级动作，文字是节内捷径）。见 .mtoday-shead button。 */
 html[data-shell="mobile"] .minbox-shead-actions button {
-  min-height: 38px;
-  padding: 0 12px;
   border: 0;
-  border-radius: 15px;
-  background: var(--surface-sunken);
-  color: var(--text-secondary);
+  background: none;
+  padding: 0;
   font-family: inherit;
   font-size: var(--font-size-meta);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.02em;
+  color: var(--text-secondary);
   cursor: pointer;
   touch-action: manipulation;
-}
-
-html[data-shell="mobile"] .minbox-shead-actions button:active {
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 
 html[data-shell="mobile"] .minbox-shead-actions button:focus-visible,
@@ -1261,14 +1256,16 @@ html[data-shell="mobile"] .minbox-batchbar-head-actions {
   gap: 12px;
 }
 
+/* 批量条头部的「全选/取消」＝节头纯文字钮同档（补上此前漏掉的字重与墨色）。 */
 html[data-shell="mobile"] .minbox-batchbar-head-actions button {
   min-height: 38px;
   padding: 0 2px;
   border: 0;
   background: none;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-family: inherit;
   font-size: var(--font-size-meta);
+  font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
   touch-action: manipulation;
@@ -2189,6 +2186,21 @@ html[data-shell="mobile"] .detail-panel .panel-head h3 {
   letter-spacing: normal;
 }
 
+/* 抽屉头 ✕＝弹层头 ✕ 同一原子（44×44 · radius-md · 透明底，同 .modal-head > button）：
+   MemosView 的 ✕ 历史上挂着 btn-ghost，在移动壳被渲染成灰底文字钮，这里压回图标钮档。 */
+html[data-shell="mobile"] .detail-panel .panel-head button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-h1);
+}
+
 /* 动作条：48dp 双等宽列 + 删除整行危险钮（action-sheet-danger 同族配色）。
    底边距 16px：与弹层家族动作条统一（见「弹窗家族底部动作条」）。 */
 html[data-shell="mobile"] .detail-footer {
@@ -2211,9 +2223,9 @@ html[data-shell="mobile"] .detail-footer .btn-primary {
 }
 
 html[data-shell="mobile"] .detail-footer .btn-ghost {
-  border: 1px solid var(--border);
-  background: var(--surface-base);
-  color: var(--text-primary);
+  border: 0;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
   /* 两列等宽布局里「编辑」与「完成」是平级动作，字重跟 btn-primary（600）
      对齐；「取消」（编辑态）与整行「删除任务」同族，一并为 600。 */
   font-weight: 600;
@@ -2222,8 +2234,17 @@ html[data-shell="mobile"] .detail-footer .btn-ghost {
 html[data-shell="mobile"] .detail-footer .btn-ghost.danger {
   flex: 1 1 100%;
   border: 0;
-  background: color-mix(in srgb, var(--text-overdue) 9%, transparent);
+  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
   color: var(--text-overdue);
+  font-weight: 600;
+}
+
+/* 备忘抽屉阅读态的「置顶」是不带语义的中性 item-action-btn，桌面基线是白底描边；
+   移动壳同一动作条里 ghost 已是 sunken，中性钮补平（主/红/蓝软底语义件走各自全局规则）。 */
+html[data-shell="mobile"] .detail-footer .item-action-btn:not(.item-action-primary):not(.item-action-danger):not(.item-action-archive) {
+  border: 0;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -2420,11 +2441,12 @@ html[data-shell="mobile"] .workspace-top .btn-primary {
   letter-spacing: 0.01em;
 }
 
-/* 分段控件（本周聚合维度 tabs / 提醒 tabs / 备忘录 tabs）统一成分段药丸
-   （38dp 辅助档，与页头药丸同阶梯）。 */
+/* 分段控件（本周聚合维度 tabs / 提醒 tabs / 备忘录 tabs / 计时方式切换）统一成分段
+   药丸（38dp 辅助档，与页头药丸同阶梯）。 */
 html[data-shell="mobile"] .timer-tabs,
 html[data-shell="mobile"] .review-dimension-tabs,
-html[data-shell="mobile"] .memo-list-tabs {
+html[data-shell="mobile"] .memo-list-tabs,
+html[data-shell="mobile"] .countdown-mode-switch {
   gap: 3px;
   padding: 3px;
   border: 0;
@@ -2434,7 +2456,8 @@ html[data-shell="mobile"] .memo-list-tabs {
 
 html[data-shell="mobile"] .timer-tabs button,
 html[data-shell="mobile"] .review-dimension-tabs button,
-html[data-shell="mobile"] .memo-list-tabs button {
+html[data-shell="mobile"] .memo-list-tabs button,
+html[data-shell="mobile"] .countdown-mode-switch button {
   min-height: 38px;
   padding: 0 14px;
   border-radius: var(--radius-pill);
@@ -2447,7 +2470,8 @@ html[data-shell="mobile"] .memo-list-tabs button {
 
 html[data-shell="mobile"] .timer-tabs button.active,
 html[data-shell="mobile"] .review-dimension-tabs button.is-active,
-html[data-shell="mobile"] .memo-list-tabs button.active {
+html[data-shell="mobile"] .memo-list-tabs button.active,
+html[data-shell="mobile"] .countdown-mode-switch button.active {
   background: var(--surface-panel);
   color: var(--accent-strong);
   font-weight: 600;
@@ -2992,28 +3016,17 @@ html[data-shell="mobile"] .goal-row-pct {
 }
 
 /* 动作条两格一排（网格）：上排「编辑 · 暂停/继续」，底排「完成=蓝主钮 · 删除=红衬」；
-   已达成只剩编辑与删除，自动回落成单排。底排颜色语义与桌面一致：完成是应用内
-   蓝主钮（accent 实底白字蓝柔光），删除红衬示警（走家族 .item-action-danger 规则），
-   其余是下沉 ghost chip。选择器多带一层 .expand-row-foot 压过后面的家族统一档。 */
+   已达成只剩编辑与删除，自动回落成单排。按钮外观走「卡底动作条原子」，
+   这里只保留两排 grid 布局与完成钮的 accent 身份（无投影，语义件统一）。 */
 html[data-shell="mobile"] .goal-foot {
   display: grid;
   grid-template-columns: 1fr 1fr;
-}
-
-html[data-shell="mobile"] .expand-row-foot.goal-foot .item-action-btn {
-  min-height: 40px;
-  padding: 9px 2px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  white-space: nowrap;
 }
 
 html[data-shell="mobile"] .expand-row-foot.goal-foot button.goal-act-done {
   background: var(--accent);
   color: var(--text-on-accent);
   font-weight: 600;
-  box-shadow: 0 2px 7px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 /* ---------- 7) 习惯 / 项目 / 标签：卡片流与可展开行 ---------- */
@@ -3228,6 +3241,25 @@ html[data-shell="mobile"] .expand-row-toggle {
   min-height: 48px;
 }
 
+/* 项目/标签面板的任务完成圈（.proj-check，视觉 22px）补 44dp 命中区：
+   透明 ::before 外扩环只做触摸热区、不参与网格排布（absolute 出流），
+   完成勾的 ::after 不受影响。行尾 .mtoday-check 本就 48dp，二者热区同阶。 */
+html[data-shell="mobile"] .proj-check {
+  position: relative;
+}
+
+html[data-shell="mobile"] .proj-check::before {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
+
+/* 目标推进行的「计量计入」筹码是行内开关，桌面 26dp 低于触控地板，抬到 32。 */
+html[data-shell="mobile"] .goal-push-measure {
+  min-height: 32px;
+  padding: 4px 12px;
+}
+
 /* 项目列表密度：卡内行高 40（点题热区仍是整卡行），标签页同档。 */
 html[data-shell="mobile"] .projects-view .expand-row-toggle,
 html[data-shell="mobile"] .tags-view .expand-row-toggle,
@@ -3236,13 +3268,24 @@ html[data-shell="mobile"] .goals-list .expand-row-toggle {
   padding: 2px;
 }
 
-/* 面板底部动作条按钮：灰底无描边，等分通栏（习惯卡的展开动作条同 class 命中）。
-   40dp 卡底档（2026-10-30 与回收站卡底动作统一，32 是审计发现的同层断档）。 */
-html[data-shell="mobile"] .expand-row-foot .item-action-btn {
+/* —— 卡底动作条原子（C 档 · 2026-10-30 分层统一）——
+   面板底部动作条 / 计时器动作行 / 回收站卡底 / 设置卡按钮排共用这一套：
+   40dp 通高 · radius-md · sunken 无边框 · 等分通栏 · control 字号 · 不折行。
+   语义件（danger 红衬 / archive 蓝软底 / primary accent 实底无投影）统一走
+   下面的全局双类规则，任何容器不再各自改写外观；goal-foot 只保留两排 grid 布局。 */
+html[data-shell="mobile"] .expand-row-foot .item-action-btn,
+html[data-shell="mobile"] .timer-actions .item-action-btn,
+html[data-shell="mobile"] .trash-item-actions .item-action-btn,
+html[data-shell="mobile"] .settings-card .item-action-btn {
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 40px;
+  padding: 0 12px;
   border: 0;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
+  font-size: var(--font-size-control);
+  white-space: nowrap;
 }
 
 /* 面板底部动作条：编辑/归档/删除等分通栏，比右侧堆叠更像移动动作栏。 */
@@ -3250,14 +3293,50 @@ html[data-shell="mobile"] .expand-row-foot {
   justify-content: stretch;
 }
 
-html[data-shell="mobile"] .expand-row-foot .item-action-btn {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-html[data-shell="mobile"] .expand-row-foot .item-action-btn.item-action-danger {
+/* 语义件（全壳统一，压过上面的原子靠双类特异度）：
+   删除＝一档红衬（旧 9%/10% 两种浓度归一）；编辑＝蓝软底（卡内第一捷径，与
+   「恢复」同色）；归档＝品牌金衬（与桌面金归档同族语义，跟编辑的蓝拉开两色）；
+   主钮＝accent 实底、去桌面蓝投影（计时器/目标弹窗/建任务脚投影有无三态归一）。
+   语义件一律断掉基线语义描边与投影——原子容器外的用法（AppConfirm、备忘
+   抽屉脚）不会自带 border:0，必须在这里断干净（2026-10-30 实测红描边残留）。 */
+html[data-shell="mobile"] .item-action-btn.item-action-danger {
+  border-color: transparent;
   background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
   color: var(--text-overdue);
+  box-shadow: none;
+}
+
+html[data-shell="mobile"] .item-action-btn.item-action-edit {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+html[data-shell="mobile"] .item-action-btn.item-action-archive {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--brand-gold) 10%, transparent);
+  color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
+  box-shadow: none;
+}
+
+/* 「恢复」与「归档」共用 item-action-archive（桌面金归档语义挂在它身上，不能摘），
+   移动壳用 item-action-restore 把它压回蓝底——恢复是取回动作，与编辑同色，
+   只有「收进档案」才穿金。restore 规则必须排在 archive 之后（同特异度后发胜出）。 */
+html[data-shell="mobile"] .item-action-btn.item-action-restore {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+html[data-shell="mobile"] .item-action-btn.item-action-primary {
+  /* 底色/墨色也在这里重申：原子与 components 基线同特异度且后发胜出，
+     只写 box-shadow 的话 accent 实底会被原子灰底压掉（2026-10-30 实测）。 */
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 html[data-shell="mobile"] .projects-scroll {
@@ -3323,21 +3402,7 @@ html[data-shell="mobile"] .timer-countdown {
   font-weight: 400;
 }
 
-html[data-shell="mobile"] .timer-actions .item-action-btn {
-  min-height: 40px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-}
-
-html[data-shell="mobile"] .timer-actions .item-action-btn.item-action-primary {
-  background: var(--accent);
-}
-
-html[data-shell="mobile"] .timer-actions .item-action-btn.item-action-danger {
-  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
-  color: var(--text-overdue);
-}
+/* 计时器动作行的按钮外观走「卡底动作条原子」（40dp sunken 等分），此处不再另立。 */
 
 /* ---------- 9) 备忘录：列表卡 + 抽屉落底 ---------- */
 
@@ -3502,10 +3567,13 @@ html[data-shell="mobile"] .anni-empty strong {
   font-size: var(--font-size-section-title);
 }
 
+/* 空态 CTA 统一档：与待办箱 .minbox-empty-cta 同尺寸同字号同无投影（44 胶囊 · accent）。 */
 html[data-shell="mobile"] .anni-empty .btn-primary {
   min-height: 44px;
   padding: 0 20px;
   border-radius: var(--radius-pill);
+  font-size: var(--font-size-copy);
+  box-shadow: none;
 }
 
 html[data-shell="mobile"] .anni-detail-count {
@@ -3553,7 +3621,7 @@ html[data-shell="mobile"] .trash-clear {
   background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
   color: var(--text-overdue);
   font-size: var(--font-size-meta);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 html[data-shell="mobile"] .trash-clear:disabled {
@@ -3591,26 +3659,7 @@ html[data-shell="mobile"] .trash-item-actions {
   gap: 8px;
 }
 
-html[data-shell="mobile"] .trash-item-actions .item-action-btn {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  font-size: var(--font-size-control);
-}
-
-html[data-shell="mobile"] .trash-item-actions .item-action-archive {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-html[data-shell="mobile"] .trash-item-actions .item-action-danger {
-  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
-  color: var(--text-overdue);
-}
+/* 按钮外观走「卡底动作条原子」；「恢复」的蓝软底与「永久删除」的红衬由其语义件全局规则给。 */
 
 /* ---------- 12) 设置：卡片流与 44dp 设置行 ---------- */
 
@@ -3745,35 +3794,16 @@ html[data-shell="mobile"] .settings-card .field:focus-visible {
   background: var(--surface-panel);
 }
 
-html[data-shell="mobile"] .settings-card .btn-ghost,
-html[data-shell="mobile"] .settings-card .btn-primary {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-meta);
-}
-
-html[data-shell="mobile"] .settings-card .btn-ghost {
-  border: 0;
-  background: var(--surface-sunken);
-}
-
-/* 卡片是设置语境：实色蓝（页面级 CTA 语言）在卡里太响，
-   主/次按钮统一收成 sunken 小药丸，只靠文案分主次。 */
-html[data-shell="mobile"] .settings-card .btn-primary {
-  border: 0;
-  box-shadow: none;
-  background: var(--surface-sunken);
-  color: var(--text-secondary);
-}
-
-html[data-shell="mobile"] .settings-card .btn-primary:disabled {
+/* 设置卡按钮＝卡底动作条原子（40dp sunken 方角，与列表卡动作条同一层同一套）；
+   「导出 JSON / 保存凭据 / 立即重新同步」恢复 accent 实底、与次要按钮一眼分主次
+   （旧「灰底药丸、只靠文案分主次」把主按钮做没了）。版本号卡右侧钮保持自然宽。 */
+html[data-shell="mobile"] .settings-card .item-action-btn:disabled {
   opacity: 0.42;
 }
 
-html[data-shell="mobile"] .settings-card .btn-ghost.danger {
-  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
-  color: var(--text-overdue);
+html[data-shell="mobile"] .settings-version-card > .item-action-btn {
+  flex: 0 0 auto;
+  padding: 0 14px;
 }
 
 html[data-shell="mobile"] .data-health-panel {
@@ -3894,35 +3924,15 @@ html[data-shell="mobile"] .weekly-day-empty {
 /* 13.4 复盘页头随独立复盘页退役：本周页页头用 .weekly-checklist-nav 一套
    （见 §14.2），此处不再另立 review-workspace 规则。 */
 
-/* 13.5 弹窗动作条按钮：views.css §9 全屏时代留下「贴边直角」通栏按钮，
-   对齐 92dvh 弹层家族——圆角 + sunken ghost。特异度 (0,4,1) 起平、后来赢。 */
+/* 13.5 弹窗动作条容器：views.css §9 全屏时代留下「贴边直角」通栏按钮，
+   对齐 92dvh 弹层家族——按钮尺寸/圆角/ghost 观感全部走 views.css 的弹层脚
+   统一组（48dp · radius-md · ghost sunken），这里只负责动作条本体钉底。 */
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
   bottom: -16px;
   margin: auto -16px calc(-16px - env(safe-area-inset-bottom, 0px));
   padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
   background: var(--mobile-overlay-surface);
-}
-
-html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-action-btn {
-  min-height: 46px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: var(--radius-md);
-}
-
-html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-ghost {
-  border: 0;
-  background: var(--surface-sunken);
-  color: var(--text-secondary);
-}
-
-html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-primary {
-  box-shadow: none;
-}
-
-html[data-shell="mobile"] .project-edit-actions .item-action-btn {
-  border-radius: var(--radius-md);
 }
 
 /* ---------- 14) 三轮反馈（2026-10-24）：数据型引导卡 / 周清单页头等分导航 ---------- */
@@ -4397,10 +4407,22 @@ html[data-shell="mobile"] .mrow.is-single {
   align-items: center;
   min-height: 40px;
   padding: 0;
+  /* 长标题行的横向预算本来就紧，列距 9→8：让出的 2px 落在标题与完成戳之间。 */
+  gap: 8px;
 }
 
+/* 完成钮热区仍是 48×48，但把横向布局成本压到视觉所需：盒内环两侧各有 13px
+   是热区留白，左侧负 margin 吃掉列距、右侧吃掉环与行尾的内衬，环的观感位置
+   不动（左侧留 13px 呼吸），标题拿回约 14px。左侧 -8 恰好吃平 8px 列距、
+   不压到完成戳；纵向 -4 不变，相邻行热区仍相接不重叠。 */
 html[data-shell="mobile"] .mrow.is-single .mtoday-check {
-  margin: -4px -8px -4px 0;
+  margin: -4px -13px -4px -8px;
+}
+
+/* 完成戳内衬 6→5：精简行里戳是右列唯一的胶囊，没有同排日期药丸要对齐，
+   收 1px 不破坏与 .minbox-due 的同族形制（两行档维持原内衬）。 */
+html[data-shell="mobile"] .mrow.is-single .done-chip {
+  padding: 0 5px;
 }
 
 /* 色点从元信息行挪进标题后按行内盒排布：inline-block 才吃得到宽高，
