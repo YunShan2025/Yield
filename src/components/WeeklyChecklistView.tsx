@@ -557,7 +557,6 @@ export function WeeklyChecklistView() {
         <section className="review-story-card review-breakdown">
           <div className="review-section-head">
             <div>
-              <span>当周完成的任务</span>
               <h3>任务完成去向</h3>
             </div>
             <div className="review-dimension-tabs" role="tablist" aria-label="聚合维度">

@@ -2304,9 +2304,9 @@ html:not([data-shell="mobile"]) .goals-list .expand-row {
   overflow: hidden;
   padding: 2px 18px;
   border-bottom: 0;
-  border-radius: var(--radius-md);
+  border-radius: 16px; /* 与移动壳 mtoday-card 同档（§Shapes 卡片 ≤16）。 */
   background: var(--surface-panel);
-  box-shadow: 0 1px 2px rgba(18, 32, 60, 0.04), 0 12px 22px -18px rgba(18, 32, 60, 0.4);
+  box-shadow: var(--shadow-card);
   transition: box-shadow calc(160ms * var(--motion-scale)) ease, opacity var(--motion-fast);
 }
 
@@ -2315,7 +2315,7 @@ html:not([data-shell="mobile"]) .projects-view .expand-row:hover,
 html:not([data-shell="mobile"]) .tags-view .expand-row:hover,
 html:not([data-shell="mobile"]) .habits-view .expand-row:hover,
 html:not([data-shell="mobile"]) .goals-list .expand-row:hover {
-  box-shadow: 0 2px 4px rgba(18, 32, 60, 0.06), 0 16px 26px -18px rgba(18, 32, 60, 0.5);
+  box-shadow: var(--shadow-card-hover);
 }
 
 html:not([data-shell="mobile"]) .projects-view .expand-row.is-open,
@@ -2323,7 +2323,7 @@ html:not([data-shell="mobile"]) .tags-view .expand-row.is-open,
 html:not([data-shell="mobile"]) .habits-view .expand-row.is-open,
 html:not([data-shell="mobile"]) .goals-list .expand-row.is-open {
   background: var(--surface-panel);
-  box-shadow: 0 1px 2px rgba(18, 32, 60, 0.04), 0 14px 24px -18px rgba(18, 32, 60, 0.45);
+  box-shadow: var(--shadow-card);
 }
 
 /* 选中态＝左上角一截 accent 短条：3px 竖条顺着卡片圆角描下来，
@@ -2490,21 +2490,28 @@ html:not([data-shell="mobile"]) .habits-view .today-hero.habits-guide {
 }
 
 /* 框底数据栏：连续 / 本周 / 累计 / 目标，四格均分、发丝竖线分格（与框内行分割同族）。 */
+/* 习惯展开区的四格读数：标签与大读数同一行——标签靠左、display 数字族
+   读数（--font-num-display / --font-size-num-lg）靠右；发丝分栏，
+   首末格留 14px 内衬，不贴左右边框。 */
 .habit-stats-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--border);
 }
 .habit-stats-row > span {
-  flex: 1 1 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   min-width: 0;
-  padding: 9px 14px;
+  padding: 8px 14px;
   border-left: 1px solid var(--border);
 }
 .habit-stats-row > span:first-child {
   border-left: 0;
 }
 .habit-stats-row em {
-  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   color: var(--text-muted);
   font-size: var(--font-size-caption);
@@ -2513,13 +2520,18 @@ html:not([data-shell="mobile"]) .habits-view .today-hero.habits-guide {
   text-overflow: ellipsis;
 }
 .habit-stats-row b {
-  font-size: var(--font-size-body);
-  font-weight: 600;
+  flex: none;
+  font-family: var(--font-num-display);
+  font-size: var(--font-size-num-lg);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
+  color: var(--text-heading);
 }
 .habit-stats-row small {
-  margin-left: 2px;
-  color: var(--text-muted);
+  flex: none;
+  color: var(--text-label);
   font-size: var(--font-size-caption);
   font-weight: 500;
 }
@@ -3087,6 +3099,15 @@ html:not([data-shell="mobile"]) .goals-list .goal-foot button.goal-act-done:hove
 .goal-push-kind { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--font-size-caption); line-height: 1; }
 .goal-push-kind i { width: 8px; height: 8px; border-radius: 3px; background: var(--warning); }
 .goal-push-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 目标展开区里的任务 / 习惯名：字体与事项名族 .task-title 同一档
+   （字重 600 + 收紧字距 + 标题墨色），字号不动、仍随本行密度；
+   移动壳的目标推进行走 mobile.css 的统一行件规约，不在这里管。 */
+html:not([data-shell="mobile"]) .goal-push-title {
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--text-heading);
+}
 .goal-push-list em { color: var(--text-muted); font-size: var(--font-size-caption); font-style: normal; }
 /* meta 语气：已完成 = 蓝勾圆点（与移动壳勾选 data-uri 同族），逾期 = 逾期红。 */
 .goal-push-list em.is-done { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-strong); }
@@ -6427,4 +6448,128 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 ) {
   filter: blur(5px);
   user-select: none;
+}
+
+/* ══ 桌面卡片统一软阴影规格（2026-10-30 定，DESIGN.md §桌面卡片规格）══════
+   桌面所有卡片（列表行卡 + 内容展示卡）与移动壳 mtoday-card 同族：
+   去 1px 描边、16px 圆角、柔和阴影（--shadow-card），hover 加深一档。
+   题位两分（§标题标准）：事件类一行一卡、分区题落画布；内容展示类
+   全部内容（含标题）在同一张卡里，外壳接手卡面。
+   卡面底色沿用各自既有规则（功能色签名——完成金层、纪念日暖色、选中洗色
+   等——都保留在页面侧）；描边退役后，选中/运行等状态环改走阴影内拼
+   inset 环的手法（移动壳同款）。移动壳不走本节（自有 mtoday-card 流）。 */
+html:not([data-shell="mobile"]) .expand-task,
+html:not([data-shell="mobile"]) .memo-list-item,
+html:not([data-shell="mobile"]) .timer-card,
+html:not([data-shell="mobile"]) .anni-card,
+html:not([data-shell="mobile"]) .trash-item,
+html:not([data-shell="mobile"]) .weekly-day-col,
+html:not([data-shell="mobile"]) .weekly-stat-strip,
+html:not([data-shell="mobile"]) .ledger-stat-grid article,
+html:not([data-shell="mobile"]) .footprint-stats,
+html:not([data-shell="mobile"]) .timer-status-rail {
+  border: 0;
+  border-radius: 16px; /* §Shapes：卡片圆角不超过 16px，与移动壳同档 */
+  box-shadow: var(--shadow-card);
+}
+
+/* 内容展示类卡（题在卡内）：外层容器接手卡面——本周目标 / 今日时间轴 /
+   当周日历 / 任务完成去向 / 半年走向·支出去向·明细 / 设置页 / 足迹半年融合卡。 */
+html:not([data-shell="mobile"]) .today-goal-strip,
+html:not([data-shell="mobile"]) .today-timeline,
+html:not([data-shell="mobile"]) .weekly-days,
+html:not([data-shell="mobile"]) .review-story-card,
+html:not([data-shell="mobile"]) .ledger-card,
+html:not([data-shell="mobile"]) .settings-card,
+html:not([data-shell="mobile"]) .growth-day-fuse {
+  border: 0;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+/* 当周日历与融合卡原本只是布局壳，卡面底色搬到这里；内衬随之进壳。 */
+html:not([data-shell="mobile"]) .weekly-days,
+html:not([data-shell="mobile"]) .growth-day-fuse {
+  background: var(--surface-panel);
+}
+html:not([data-shell="mobile"]) .weekly-days { padding: 20px; }
+
+/* 账本统计读数与账本卡的卡面从 raised 归位 panel（raised 只留给控件与浮层）。 */
+html:not([data-shell="mobile"]) .ledger-stat-grid article,
+html:not([data-shell="mobile"]) .ledger-card {
+  background: var(--surface-panel);
+}
+
+/* 任务行卡间隙与 B+ 网格 10px 同档。 */
+html:not([data-shell="mobile"]) .expand-task {
+  margin-bottom: 10px;
+}
+
+/* hover = 阴影加深一档（不给位移，列表页不跳版）。 */
+html:not([data-shell="mobile"]) .expand-task:hover,
+html:not([data-shell="mobile"]) .memo-list-item:hover,
+html:not([data-shell="mobile"]) .timer-card:hover,
+html:not([data-shell="mobile"]) .anni-card:hover,
+html:not([data-shell="mobile"]) .trash-item:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* 状态环：描边退役后由 inset 环承载（卡影之上再套一圈）。
+   展开 / 打开的文档 / 运行中 / 就是今天 —— 一律 accent 内环。 */
+html:not([data-shell="mobile"]) .expand-task.is-open {
+  box-shadow: var(--shadow-card), inset 0 0 0 1px var(--border-strong);
+}
+
+html:not([data-shell="mobile"]) .memo-list-item.active,
+html:not([data-shell="mobile"]) .timer-card.is-running,
+html:not([data-shell="mobile"]) .anni-card.is-today {
+  box-shadow: var(--shadow-card), inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* 回收站概况顶卡：淡蓝洗色留在页面侧，阴影与全族同一 token
+   （移动壳仍走它自带的字面投影，不受这里影响）。 */
+html:not([data-shell="mobile"]) .trash-summary {
+  box-shadow: var(--shadow-card);
+}
+
+/* ══ 桌面卡内嵌套规则（2026-10-30 定）══════════════════════════════════════
+   展示类卡的标题随卡回位（见上「内容展示类卡」）；卡内再嵌的内容块一律
+   不再给浮框——图表区做内凹凹槽，段落顺势排布，杜绝卡中套框。 */
+/* 当周脉搏（周报）图表区：内凹凹槽。 */
+html:not([data-shell="mobile"]) .wp-plot {
+  border: 0;
+  background: var(--surface-sunken);
+}
+/* 半年走向（账本）图表区：贴卡面纯白，只退役描边（2026-10-31 定）。 */
+html:not([data-shell="mobile"]) .lt-chart { border: 0; }
+/* 时间轴图表滚区：卡已浮起，内框描边退役（坐标轴线自己就能读）。 */
+html:not([data-shell="mobile"]) .today-timeline .timeline-h-scroll { border: 0; }
+/* 当周日历卡内的选中日详情：卡内段落，不另起框。 */
+html:not([data-shell="mobile"]) .weekly-pulse-detail {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  margin-top: 14px;
+}
+/* 足迹融合卡：半年投入与当日明细两段共吃外壳卡面，中间 hairline 分段。 */
+html:not([data-shell="mobile"]) .growth-day-fuse .growth-panel,
+html:not([data-shell="mobile"]) .growth-day-fuse .footprint-day {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html:not([data-shell="mobile"]) .growth-day-fuse .footprint-day {
+  margin-top: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* 数据备份卡里的「数据健康」是嵌套子面板：改内凹凹槽（换底色档，
+   不描边不给阴影），避免卡中再浮一张卡。 */
+html:not([data-shell="mobile"]) .data-health-panel {
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  box-shadow: none;
 }

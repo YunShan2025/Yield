@@ -267,6 +267,9 @@ export function FootprintView() {
         </div>
       </section>
 
+      {/* 桌面端「最近半年的投入」与「当日明细」合成一张卡：卡面由外层 .growth-day-fuse
+          接手（components.css 桌面门控）；移动壳对该层零样式命中，仍是各自两张卡。 */}
+      <div className="growth-day-fuse">
       <section className="growth-panel heatmap-panel">
         <div className="growth-panel-head">
           <div>
@@ -462,6 +465,7 @@ export function FootprintView() {
           <p className="footprint-day-empty">这一天没有记录。空白不是失败，只是尚未留下足迹。</p>
         )}
       </section>
+      </div>
       {sheetTask ? (
         <TaskActionSheet task={sheetTask} cursor={today} onClose={() => setSheetTask(null)} />
       ) : null}

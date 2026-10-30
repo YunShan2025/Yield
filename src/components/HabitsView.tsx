@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app";
 import { todayDateString, toDateString } from "@/lib/dates";
 import { DEFAULT_HABIT_TARGET_PER_WEEK, fetchGoals } from "@/lib/db";
@@ -82,6 +82,17 @@ export function HabitsView() {
     habitChecks.filter((item) => item.habit_id === habitId);
 
   const inProgress = habits.filter((habit) => checksFor(habit.id).length > 0);
+  // 桌面默认展开「进行中」第一条习惯的本周面板（只在数据到位后生效一次，
+  // 用户手动收起后不再复活）；移动壳保持点卡展开的卡片流节奏。
+  const defaultOpenedRef = useRef(false);
+  useEffect(() => {
+    if (defaultOpenedRef.current || isMobileShell()) return;
+    const first = inProgress[0];
+    if (first) {
+      defaultOpenedRef.current = true;
+      setActiveHabitId(first.id);
+    }
+  }, [inProgress]);
   const notStarted = habits.filter((habit) => checksFor(habit.id).length === 0);
 
   const openCreate = () => {

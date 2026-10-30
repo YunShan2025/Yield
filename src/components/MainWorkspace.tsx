@@ -20,7 +20,7 @@ import {
   getEmptyMessage,
   getViewTitle,
 } from "@/lib/tasks";
-import { formatDateBrief, formatDueDate, formatStamp, formatStampBrief } from "@/lib/dates";
+import { addDays, formatDateBrief, formatDueDate, formatLongDate, formatStamp, formatStampBrief, todayDateString } from "@/lib/dates";
 import type { Goal, Habit, Project, Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { AppIcon } from "@/components/AppIcon";
@@ -595,6 +595,9 @@ export function MainWorkspace() {
   const tagMap = useAppStore((s) => s.tagMap);
   const activeTagId = useAppStore((s) => s.activeTagId);
   const openCreateTask = useAppStore((s) => s.openCreateTask);
+  // 日期调整器住在页头（新建任务左侧）：cursor 在 store 里，DayBoard 同步响应。
+  const cursor = useAppStore((s) => s.calendarCursor);
+  const todayStr = todayDateString();
 
   const visible = useMemo(
     () => filterTasksByView(tasks, nav, tagMap, activeTagId),
@@ -726,6 +729,34 @@ export function MainWorkspace() {
           ) : null}
         </div>
         <div className="top-controls">
+          {nav === "today" || nav === "myday" ? (
+            <div className="scope-nav">
+              <button
+                type="button"
+                className="btn-ghost"
+                aria-label="前一天"
+                onClick={() => useAppStore.getState().setCalendarCursor(addDays(cursor, -1))}
+              >
+                ‹
+              </button>
+              <strong>{formatLongDate(cursor)}</strong>
+              <button
+                type="button"
+                className="btn-ghost"
+                aria-label="后一天"
+                onClick={() => useAppStore.getState().setCalendarCursor(addDays(cursor, 1))}
+              >
+                ›
+              </button>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => useAppStore.getState().setCalendarCursor(todayStr)}
+              >
+                今日
+              </button>
+            </div>
+          ) : null}
           {nav === "today" ? (
             <button
               type="button"

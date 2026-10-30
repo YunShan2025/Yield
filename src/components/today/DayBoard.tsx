@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
-import { addDays, formatLongDate, todayDateString } from "@/lib/dates";
+import { todayDateString } from "@/lib/dates";
 import { isInboxTask, isActiveTask } from "@/lib/tasks";
 import { findTimeConflictIds } from "@/lib/planning";
 import { matchesRepeatRule, parseRepeatRule } from "@/lib/repeat";
@@ -92,33 +92,7 @@ export function DayBoard() {
         doneCount={done}
         totalCount={total}
       />
-      {isTodayView && cursor === today ? <GoalStrip /> : null}      {!isInboxView ? (
-        <div className="scope-nav">
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => useAppStore.getState().setCalendarCursor(addDays(cursor, -1))}
-          >
-            ‹
-          </button>
-          <strong>{formatLongDate(cursor)}</strong>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => useAppStore.getState().setCalendarCursor(addDays(cursor, 1))}
-          >
-            ›
-          </button>
-          <button
-            type="button"
-            className="btn-ghost"
-            style={{ marginLeft: "auto" }}
-            onClick={() => useAppStore.getState().setCalendarCursor(today)}
-          >
-            今日
-          </button>
-        </div>
-      ) : null}
+      {isTodayView && cursor === today ? <GoalStrip /> : null}
 
       {isTodayView ? <TodayTimeline /> : null}
 
