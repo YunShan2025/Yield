@@ -221,6 +221,3 @@ npm run release:migration-dry-run
 | [docs/CHANGES.md](docs/CHANGES.md) | 版本记录（倒序） | 活文档 |
 | [docs/GIT_CONVENTIONS.md](docs/GIT_CONVENTIONS.md) | 提交 / 发版惯例 | 活文档 |
 | [PRODUCT.md](PRODUCT.md) / [DESIGN.md](DESIGN.md) | 产品事实 / 视觉契约 | 活文档 |
-| [docs/DESKTOP_CHANGES_FOR_MOBILE.md](docs/DESKTOP_CHANGES_FOR_MOBILE.md) | 桌面→移动交接手册 | 多数条目已完成（见文首状态头） |
-| [docs/PRODUCT_REVIEW.md](docs/PRODUCT_REVIEW.md) | 使用数据复盘 | 历史快照（2026-10-18） |
-| [docs/GOAL-HABIT-TODAY-LINKAGE.md](docs/GOAL-HABIT-TODAY-LINKAGE.md) | 目标·习惯·今日打通方案 | 主体已实施（见文首状态头） |

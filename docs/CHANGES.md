@@ -18,7 +18,7 @@
 #### v1.4.0 目标 · 习惯 · 事项打通（开发中，未发布）
 
 > **迁移元信息**：migration v22–v26 已落库；同步日志升 schema v10，**两端需同批升级**。
-> 目标定位：**目标是里程碑式的长期最终结果；重复性归习惯；任务是一次性行动**。完整评估与方案见 [docs/GOAL-HABIT-TODAY-LINKAGE.md](GOAL-HABIT-TODAY-LINKAGE.md)。
+> 目标定位：**目标是里程碑式的长期最终结果；重复性归习惯；任务是一次性行动**。完整评估与方案见 `docs/GOAL-HABIT-TODAY-LINKAGE.md`（已删除，git 史可查）。
 
 - **目标重新定位为里程碑（migration v22）**：目标是长期的最终结果，不再承载任何周口径，界面上也不再让用户选「目标类型」。内部按三种判据推进——数值·次数（起点→目标值）、数值变化（最新一次测量）、阶段（可勾选的阶段清单）
 - **目标类型归并**：`quantity` / `change` / `custom` / `frequency` / `time` / `project` 六种旧类型归并为 `milestone` / `measure` / `staged`；未升级的对端发来的旧类型在落库前归一，不会静默丢数据

@@ -97,7 +97,6 @@ adaptive
 ## Evidence on Hand
 
 - `README.md` —— 产品定位、核心功能、双端能力矩阵的权威来源
-- `docs/PRODUCT_REVIEW.md` —— 基于 5 周真实使用数据的评估（截至 2026-10-18 快照：任务 48 笔、账本 106 笔、目标与习惯模块实际使用为 0 等）
 - `docs/ARCHITECTURE.md` —— 架构与模块地图
 - `design/branding/*.svg` —— 三个品牌资产
 - `src/styles/tokens.css` + `src/lib/themes.ts` —— 四套主题的现有 token 与气质定义
