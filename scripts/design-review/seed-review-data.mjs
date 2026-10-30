@@ -89,11 +89,26 @@ for (const h of habits) {
 }
 
 // —— 目标条目（进度只来自任务/打卡事件，migration v29 起）——
-const goals = db.prepare("SELECT id, title, unit, target_value FROM goals WHERE deleted_at IS NULL").all();
+// 事件必须挂在活来源上：source_id 用 `habit_id:check_date` 对齐真实写入口径。
+// 早期版本写 `seed:` 悬空来源（无对应任务/打卡行），推进清单找不到它们，
+// 评审环境里就成了「切光关联也删不掉」的幽灵进度——判读会被带偏。
+// 只给「未删除、计量计入该目标、有真实打卡」的习惯补账；重复打卡由
+// (goal_id,source_type,source_id) 唯一索引 IGNORE 兜底。
+const goals = db.prepare("SELECT id FROM goals WHERE deleted_at IS NULL").all();
 for (const g of goals) {
-  for (const [i, d] of [day(-9), day(-7), day(-5), day(-3), day(-1)].entries()) {
-    db.prepare("INSERT INTO goal_entries (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)")
-      .run(uid(`ge-${g.id}-${d}`), g.id, d, 1, i % 2 ? "task" : "habit", `seed:${g.id}:${d}`, "评审样例", now, now);
+  const measured = db
+    .prepare("SELECT id FROM habits WHERE goal_id=? AND deleted_at IS NULL AND goal_contribution > 0")
+    .all(g.id);
+  for (const h of measured) {
+    for (const c of db
+      .prepare("SELECT check_date FROM habit_checks WHERE habit_id=? ORDER BY check_date DESC LIMIT 6")
+      .all(h.id)) {
+      db.prepare(
+        `INSERT OR IGNORE INTO goal_entries
+         (id,goal_id,entry_date,value,source_type,source_id,note,created_at,updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+      ).run(uid(`ge-${g.id}-${h.id}-${c.check_date}`), g.id, c.check_date, 1, "habit", `${h.id}:${c.check_date}`, "评审样例", now, now);
+    }
   }
 }
 

@@ -37,7 +37,7 @@ const {
 
 const rustSource = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
 const schemaSql = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
 ]
   .map((version) => {
     const at = rustSource.indexOf(`version: ${version},`);
@@ -132,5 +132,41 @@ describe("进度只来自计量事件", () => {
     await refreshGoalProgress(goal.id);
     expect(Number(goalRow(goal.id).current_value)).toBe(0);
     expect(goalRow(goal.id).status).toBe("completed");
+  });
+
+  it("来源任务在回收站时事件不进账，恢复后自动回算", async () => {
+    const goal = await seededGoal(); // 任务 3 次 + 习惯 2 次
+    // 「推进」清单会过滤回收站行；事件若照常进账就成了看不见来源的幽灵进度。
+    db.prepare(
+      `INSERT INTO tasks (id,title,created_at,updated_at,deleted_at)
+       VALUES ('task-1','进回收站的任务','2026-10-01','2026-10-01','2026-10-20')`,
+    ).run();
+    await refreshGoalProgress(goal.id);
+    expect(Number(goalRow(goal.id).current_value)).toBe(2);
+
+    // 台账一行不动，恢复 = deleted_at 归位，进度跟着回来。
+    db.prepare("UPDATE tasks SET deleted_at=NULL WHERE id='task-1'").run();
+    await refreshGoalProgress(goal.id);
+    expect(Number(goalRow(goal.id).current_value)).toBe(5);
+  });
+
+  it("回收站里的习惯同样停表，恢复打卡重新进账", async () => {
+    const goal = await createGoal({ title: "读完 21 本书", unit: "次", target_value: 21 });
+    db.prepare(
+      `INSERT INTO habits (id,title,created_at,deleted_at)
+       VALUES ('h1','回收站习惯','2026-10-01','2026-10-21')`,
+    ).run();
+    db.prepare(
+      "INSERT INTO habit_checks (id,habit_id,check_date) VALUES ('c1','h1','2026-10-20')",
+    ).run();
+    await addGoalEntry({
+      goal_id: goal.id, entry_date: "2026-10-20", value: 1,
+      source_type: "habit", source_id: "h1:2026-10-20",
+    });
+    expect(Number(goalRow(goal.id).current_value)).toBe(0);
+
+    db.prepare("UPDATE habits SET deleted_at=NULL WHERE id='h1'").run();
+    await refreshGoalProgress(goal.id);
+    expect(Number(goalRow(goal.id).current_value)).toBe(1);
   });
 });

@@ -7,11 +7,11 @@ import type {
 import { createId, nowIso } from "@/lib/dates";
 import { WEEKLY_CATEGORIES } from "@/lib/weeklyChecklist";
 import { getDb } from "./client";
-import { addGoalEntry, removeGoalEntryBySource } from "./growth";
+import { addGoalEntry, refreshGoalProgress, removeGoalEntryBySource } from "./growth";
 
 /* Tags */
 
-// 默认标签与本周页四分类同名同色，顺序即产品约定的默认展示顺序。
+// 默认标签与周报页四分类同名同色，顺序即产品约定的默认展示顺序。
 const DEFAULT_TAGS: { name: string; color: string }[] = ["工作", "生活", "健康", "学习"].map(
   (name) => ({
     name,
@@ -241,18 +241,29 @@ export async function restoreHabit(id: string): Promise<void> {
 
 export async function softDeleteHabit(id: string): Promise<void> {
   const db = await getDb();
+  const goalRows = await db.select<{ goal_id: string | null }[]>(
+    "SELECT goal_id FROM habits WHERE id=$1",
+    [id],
+  );
   await db.execute(
     "UPDATE habits SET deleted_at = $1, updated_at = $1 WHERE id = $2 AND deleted_at IS NULL",
     [nowIso(), id],
   );
+  // 回收即停表：打卡事件在回收站期间不进目标进度（复算走来源活性过滤）。
+  if (goalRows[0]?.goal_id) await refreshGoalProgress(goalRows[0].goal_id);
 }
 
 export async function restoreDeletedHabit(id: string): Promise<void> {
   const db = await getDb();
+  const goalRows = await db.select<{ goal_id: string | null }[]>(
+    "SELECT goal_id FROM habits WHERE id=$1",
+    [id],
+  );
   await db.execute(
     "UPDATE habits SET deleted_at = NULL, updated_at = $1 WHERE id = $2 AND deleted_at IS NOT NULL",
     [nowIso(), id],
   );
+  if (goalRows[0]?.goal_id) await refreshGoalProgress(goalRows[0].goal_id);
 }
 
 export async function purgeHabit(id: string): Promise<void> {

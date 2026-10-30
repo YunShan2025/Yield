@@ -165,9 +165,20 @@ export async function refreshGoalProgressOn(
   const target = Number(goal.target_value);
   // 进度 = 计量事件之和（migration v29 起的唯一口径）。求和只认 task/habit
   // 两种来源：混窗期旧端「当前值校准」同步来的 manual 行永不进账。
+  // 来源在回收站（tasks/habits.deleted_at 非空）的事件同样不进账——回收站里
+  // 的事不算数；恢复后自动重新入账，事件台账本身一行都不动。
   const sums = await db.select<{ total: number | null }[]>(
-    `SELECT SUM(value) AS total FROM goal_entries
-     WHERE goal_id=$1 AND source_type IN ('task','habit')`,
+    `SELECT SUM(e.value) AS total FROM goal_entries e
+     WHERE e.goal_id=$1 AND e.source_type IN ('task','habit')
+       AND NOT EXISTS (
+         SELECT 1 FROM tasks t
+         WHERE t.id = e.source_id AND t.deleted_at IS NOT NULL
+       )
+       AND NOT EXISTS (
+         SELECT 1 FROM habit_checks hc JOIN habits h ON h.id = hc.habit_id
+         WHERE h.deleted_at IS NOT NULL
+           AND e.source_id = hc.habit_id || ':' || hc.check_date
+       )`,
     [goalId],
   );
   const current = Number(sums[0]?.total ?? 0);
@@ -190,7 +201,9 @@ export async function refreshGoalProgressOn(
   }
   return wrote;
 }
-export async function recomputeGoalsAfterSync(db: SqlDb): Promise<boolean> {
+/** 全量复算所有目标的派生值。同步合并后必跑（skipUnchanged 防互刷），
+    应用启动时也跑一次：开机对账，把历史遗留的漂移与回收站来源一次校正。 */
+export async function recomputeAllGoals(db: SqlDb): Promise<boolean> {
   const goals = await db.select<{ id: string }[]>("SELECT id FROM goals");
   let changed = false;
   for (const goal of goals) {

@@ -11,7 +11,7 @@
 import { create } from "zustand";
 import { getDb } from "@/lib/db/client";
 import { getSetting, setSetting } from "@/lib/db/settings";
-import { recomputeGoalsAfterSync } from "@/lib/db/growth";
+import { recomputeAllGoals } from "@/lib/db/growth";
 import { nowIso } from "@/lib/dates";
 import { runSync, type SyncSummary, type SyncTrigger } from "./engine";
 import {
@@ -214,7 +214,7 @@ class SyncService {
       let recalcChanged = false;
       if (summary.pulled > 0) {
         try {
-          recalcChanged = await recomputeGoalsAfterSync(await getDb());
+          recalcChanged = await recomputeAllGoals(await getDb());
         } catch {
           // 复算失败不影响本轮同步结论：本地任意一次写入或下轮同步会再补。
         }

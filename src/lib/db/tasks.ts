@@ -375,6 +375,13 @@ export async function batchSoftDeleteTasks(ids: string[]): Promise<void> {
   const targetIds = await loadTaskFamily(ids);
   const db = await getDb();
   const stamp = nowIso();
+  const placeholders = targetIds.map((_, index) => `$${index + 1}`).join(",");
+  // 回收即停表：这些任务的计量事件从此不进目标进度，受影响的要复算一次。
+  const affectedGoals = await db.select<{ goal_id: string }[]>(
+    `SELECT DISTINCT goal_id FROM goal_entries
+     WHERE source_type='task' AND source_id IN (${placeholders})`,
+    targetIds,
+  );
   await withTransaction(async () => {
     for (const id of targetIds) {
       await db.execute(
@@ -385,6 +392,7 @@ export async function batchSoftDeleteTasks(ids: string[]): Promise<void> {
     for (const id of targetIds) {
       await recordTaskEvent(id, "deleted", null, null);
     }
+    for (const row of affectedGoals) await refreshGoalProgress(row.goal_id);
   });
 }
 
@@ -404,6 +412,13 @@ export async function batchRestoreTasks(ids: string[]): Promise<void> {
     familyIds,
   );
   const targetIds = selectRestoreIds(roots, family);
+  const targetPlaceholders = targetIds.map((_, index) => `$${index + 1}`).join(",");
+  // 出回收站即复表：恢复后这些任务的事件重新进账（求和按来源活性过滤）。
+  const affectedGoals = await db.select<{ goal_id: string }[]>(
+    `SELECT DISTINCT goal_id FROM goal_entries
+     WHERE source_type='task' AND source_id IN (${targetPlaceholders})`,
+    targetIds,
+  );
   await withTransaction(async () => {
     for (const id of targetIds) {
       await db.execute(
@@ -411,6 +426,7 @@ export async function batchRestoreTasks(ids: string[]): Promise<void> {
         [nowIso(), id],
       );
     }
+    for (const row of affectedGoals) await refreshGoalProgress(row.goal_id);
   });
 }
 

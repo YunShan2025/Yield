@@ -199,6 +199,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
     try {
       const today = todayDateString();
         await db.ensureDefaultTags();
+      // 开机对账：进度永远由事件表按来源活性派生（回收站中的任务/习惯不计，
+      // 恢复自动回算）。skipUnchanged 模式数字没变不写库、不刷 updated_at。
+      await db.recomputeAllGoals(await db.getDb());
       await get().refreshAll();
       applyTheme(get().settings.theme);
       set({

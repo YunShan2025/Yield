@@ -13,7 +13,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runSync, type SyncSummary } from "./engine";
 import { SYNC_SCHEMA_VERSION } from "./tables";
 import { TABLE_SPECS } from "./columns";
-import { recomputeGoalsAfterSync } from "@/lib/db/growth";
+import { recomputeAllGoals } from "@/lib/db/growth";
 import { captureSettingWrite, backfillOutbox, remapDanglingProjectTags, type SqlClient } from "./outbox";
 import { HlcClock } from "./hlc";
 import { MemoryTransport } from "./transport";
@@ -26,7 +26,7 @@ beforeAll(() => {
   // migration（v19 任务延期原因、v20 目标瘦身）与列白名单的偏差测不出来。
   // 新增 migration 时把版本号补进这里。
   schemaSql = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
   ]
     .map((v) => {
       const i = src.indexOf(`version: ${v},`);
@@ -842,8 +842,8 @@ describe("目标模块同步（目标 / 记录）", () => {
     }
 
     // 同步层的复算补上这一课：按本机全量记录重算，值真变了才写库。
-    expect(await recomputeGoalsAfterSync(a.client)).toBe(true);
-    expect(await recomputeGoalsAfterSync(b.client)).toBe(true);
+    expect(await recomputeAllGoals(a.client)).toBe(true);
+    expect(await recomputeAllGoals(b.client)).toBe(true);
     for (const device of [a, b]) {
       expect((await goalRow(device, "g1"))[0]?.current_value).toBe(2);
     }
@@ -855,7 +855,7 @@ describe("目标模块同步（目标 / 记录）", () => {
       expect((await goalRow(device, "g1"))[0]?.current_value).toBe(2);
       expect(await device.outboxCount()).toBe(0);
     }
-    expect(await recomputeGoalsAfterSync(a.client)).toBe(false);
+    expect(await recomputeAllGoals(a.client)).toBe(false);
     expect(await a.outboxCount()).toBe(0);
   });
 
@@ -929,7 +929,7 @@ describe("目标模块同步（目标 / 记录）", () => {
       expect(entries[0]?.value).toBe(5);
     }
     for (const device of [a, b]) {
-      await recomputeGoalsAfterSync(device.client);
+      await recomputeAllGoals(device.client);
       expect((await goalRow(device, "g1"))[0]?.current_value).toBe(5);
     }
   });
@@ -956,7 +956,7 @@ describe("目标模块同步（目标 / 记录）", () => {
     expect(await a.rows("SELECT id FROM goal_entries WHERE id='m1'")).toHaveLength(1);
 
     for (const device of [a, b]) {
-      await recomputeGoalsAfterSync(device.client);
+      await recomputeAllGoals(device.client);
       expect((await goalRow(device, "g1"))[0]?.current_value).toBe(0);
     }
   });
