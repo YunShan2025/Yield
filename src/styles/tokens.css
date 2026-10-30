@@ -21,7 +21,7 @@
   --font-label: "Inter", "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
   /* 展示型数字：只给主视觉大数用。等宽数字 + Didone 衬线，与无衬线正文拉开气质。
      生产建议自托管 Playfair Display（OFL，数字子集约 30KB），三端一致。 */
-  --font-num-display: "Bodoni MT", "Bodoni 72", "Playfair Display", Didot, "Times New Roman", Georgia, "Songti SC", serif;
+  --font-num-display: "Bodoni MT", "Bodoni 72", "Playfair Display", Didot, "Times New Roman", Georgia, "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
 
   /* 间距刻度 */
   --space-xs: 4px;
@@ -32,14 +32,30 @@
   --space-xxl: 32px;
   --space-xxxl: 48px;
 
-  /* 字号刻度 */
-  --font-size-display: 30px;
-  --font-size-h1: 24px;
-  --font-size-h2: 20px;
-  --font-size-h3: 16px;
-  --font-size-body: 14px;
-  --font-size-label: 13px;
-  --font-size-caption: 12px;
+  /* 字号刻度：8 个文字角色，唯一真相源（全应用禁手写档位）。
+     R1 数字·大 hero 44（衬线数字家族）· R2 页标题 24 · R3 区块标题 16
+     R4 实体名 14（任务/习惯/项目/备忘名，已完成＝同档+灰+删除线）
+     R5 正文 13 · R6 批注 12（计数/时间戳，tabular-nums）· R7 微标识 11（徽章角标）
+     R8 控件文字 13（按钮/输入/分段，与 R5 同档不同字重）
+     --font-size-num-lg：数字·大「桌面密度档」20（账目金额/英雄读数/计时读数，衬线）。
+     旧档位名保留为角色别名，历史引用自动归档：display/h2 → 并入 24/16。 */
+  --font-size-hero: 44px;
+  --font-size-num-lg: 20px;
+  --font-size-page-title: 24px;
+  --font-size-section-title: 16px;
+  --font-size-entity: 14px;
+  --font-size-copy: 13px;
+  --font-size-meta: 12px;
+  --font-size-chip: 11px;
+  --font-size-control: 13px;
+  /* legacy 别名（勿在新代码中使用，直接引用上面的角色令牌） */
+  --font-size-display: var(--font-size-page-title);
+  --font-size-h1: var(--font-size-page-title);
+  --font-size-h2: var(--font-size-section-title);
+  --font-size-h3: var(--font-size-section-title);
+  --font-size-body: var(--font-size-entity);
+  --font-size-label: var(--font-size-copy);
+  --font-size-caption: var(--font-size-meta);
 
   /* 圆角刻度：8 / 12 / 18 三档（卡片用 md，容器用 lg，小控件用 sm） */
   --radius-sm: 8px;

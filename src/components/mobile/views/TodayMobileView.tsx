@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/store/app";
+import { AppIcon } from "@/components/AppIcon";
 import {
   MobileGoalChip,
   MobileTaskPillView,
@@ -214,7 +215,8 @@ export function TodayMobileView() {
             aria-label="前一天"
             onClick={() => setViewDate(addDays(viewDate, -1))}
           >
-            <span aria-hidden="true">‹</span>
+            {/* SVG chevron 旋转替代 ‹/› 字符：同记账页切月，字形不随字体漂。 */}
+            <AppIcon name="chevron" size={20} className="mtoday-switch-chevron is-left" />
           </button>
           <strong>{switchLabel}</strong>
           <button
@@ -224,7 +226,7 @@ export function TodayMobileView() {
             disabled={isViewToday}
             onClick={() => setViewDate(addDays(viewDate, 1))}
           >
-            <span aria-hidden="true">›</span>
+            <AppIcon name="chevron" size={20} className="mtoday-switch-chevron is-right" />
           </button>
         </div>
       </header>

@@ -225,7 +225,7 @@ export function ProjectsView() {
           <MobileGuideCard
             value={projects.length}
             unit="个"
-            label="项目在册"
+            label="项目"
             segments={heroSegments}
           />
         ) : (
@@ -505,12 +505,21 @@ function ProjectTaskPanel({
   const today = useTodayDate();
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
-  // 完成时间倒序（未完成在后）；默认只展示前五条，可展开全部
-  const sortedTasks = [...tasks].sort(
-    (a, b) =>
-      (Date.parse(b.completed_at ?? "") || 0) -
-      (Date.parse(a.completed_at ?? "") || 0),
-  );
+  /* 排序两端同口径（orderTasks）：未完成在前（截止升序、无截止排后、同日按优先级），
+     已完成按完成时刻倒序垫后——移动壳预览前 5 条优先露出未完成任务。 */
+  const orderTasks = (list: Task[]) =>
+    [...list].sort((a, b) => {
+      if (a.status === "completed" && b.status !== "completed") return 1;
+      if (a.status !== "completed" && b.status === "completed") return -1;
+      if (a.status === "completed" && b.status === "completed") {
+        return (Date.parse(b.completed_at ?? "") || 0) - (Date.parse(a.completed_at ?? "") || 0);
+      }
+      const da = a.due_date ?? "9999-12-31";
+      const db = b.due_date ?? "9999-12-31";
+      if (da !== db) return da < db ? -1 : 1;
+      return a.priority - b.priority;
+    });
+  const sortedTasks = orderTasks(tasks);
   const canToggleAll = sortedTasks.length > MOBILE_TASK_PREVIEW;
   const visibleTasks = showAllTasks
     ? sortedTasks
@@ -522,37 +531,39 @@ function ProjectTaskPanel({
        每行只剩优先级色点 + 标题，与右侧日期、完成圆钮一条线。 */
     return (
       <div className="mrow-panel">
-        {/* 标签已由行内色片表达，面板头只在需要「展开全部」时出现。 */}
-        {canToggleAll ? (
-          <div className="mrow-panel-head">
-            <span />
-            <button
-              type="button"
-              className="mrow-toggle"
-              onClick={() => setShowAllTasks((v) => !v)}
-            >
-              {showAllTasks ? "收起" : `展开全部 ${sortedTasks.length} 项`}
-            </button>
-          </div>
-        ) : null}
         {sortedTasks.length ? (
-          <ul className="mrow-list">
-            {visibleTasks.map((task) => (
-              <MobileTaskLine
-                key={task.id}
-                task={task}
-                today={today}
-                projects={[]}
-                tags={tags}
-                tagMap={tagMap}
-                dotInTitle
-                doneStamp
-                onOpen={() => selectTask(task.id)}
-                onComplete={() => void toggleComplete(task.id)}
-                onMore={() => setSheetTask(task)}
-              />
-            ))}
-          </ul>
+          <>
+            <ul className="mrow-list">
+              {visibleTasks.map((task) => (
+                <MobileTaskLine
+                  key={task.id}
+                  task={task}
+                  today={today}
+                  projects={[]}
+                  tags={tags}
+                  tagMap={tagMap}
+                  dotInTitle
+                  doneStamp
+                  onOpen={() => selectTask(task.id)}
+                  onComplete={() => void toggleComplete(task.id)}
+                  onMore={() => setSheetTask(task)}
+                />
+              ))}
+            </ul>
+            {/* 折叠钮沿用记账构成同款通栏文字钮（样式与 .mledger-comp-more
+                共享，见 mobile.css 记账节），落在列表截断处。 */}
+            {canToggleAll ? (
+              <button
+                type="button"
+                className="mrow-toggle"
+                aria-expanded={showAllTasks}
+                onClick={() => setShowAllTasks((v) => !v)}
+              >
+                <span>{showAllTasks ? "收起" : `展开全部 ${sortedTasks.length} 项`}</span>
+                <AppIcon name="chevron" size={14} />
+              </button>
+            ) : null}
+          </>
         ) : (
           <p className="expand-row-empty">这个项目还没有挂任务。</p>
         )}
@@ -568,22 +579,10 @@ function ProjectTaskPanel({
   }
 
   /* 桌面端任务行：图标原子（优先级点 + 完成圆钮）+ 目标徽标 + 截止胶囊，
-     行内直接完成。未完成在前（按截止升序，无截止排后），已完成按完成时刻倒序
-     直接内联排在后面——不再做「N 项已完成」折迭（计数与行头比率胶囊 x/x 重复），
+     行内直接完成。排序走上方 orderTasks（两端同口径：未完成在前，已完成倒序
+     内联垫后）——不再做「N 项已完成」折迭（计数与行头比率胶囊 x/x 重复），
      完成态由行上的完成戳 + 勾圈表达。
      标题统一主墨黑（验收口径），完成态不淡出不划线，只由行尾金色圆钮表达。 */
-  const orderTasks = (list: Task[]) =>
-    [...list].sort((a, b) => {
-      if (a.status === "completed" && b.status !== "completed") return 1;
-      if (a.status !== "completed" && b.status === "completed") return -1;
-      if (a.status === "completed" && b.status === "completed") {
-        return (Date.parse(b.completed_at ?? "") || 0) - (Date.parse(a.completed_at ?? "") || 0);
-      }
-      const da = a.due_date ?? "9999-12-31";
-      const db = b.due_date ?? "9999-12-31";
-      if (da !== db) return da < db ? -1 : 1;
-      return a.priority - b.priority;
-    });
   const taskRow = (task: Task) => {
     const done = task.status === "completed";
     const due = done ? null : formatDueDateBadge(task.due_date, today);

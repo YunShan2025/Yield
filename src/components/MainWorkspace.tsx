@@ -20,7 +20,7 @@ import {
   getEmptyMessage,
   getViewTitle,
 } from "@/lib/tasks";
-import { formatDueDate, formatStamp } from "@/lib/dates";
+import { formatDateBrief, formatDueDate, formatStamp, formatStampBrief } from "@/lib/dates";
 import type { Goal, Habit, Project, Task } from "@/types";
 import { ExpandableTaskItem } from "@/components/ExpandableTaskItem";
 import { AppIcon } from "@/components/AppIcon";
@@ -229,71 +229,100 @@ function TrashView() {
     if (await restoreLedgerTransaction(id)) await loadLedgerTrash();
   };
 
+  /* 清空回收站：两端顶卡共用（移动壳读数卡右上的危险药丸 / 桌面行尾按钮）。 */
+  const purgeAll = () => {
+    void confirmAction({
+      title: `确定清空回收站的 ${total} 项？`,
+      description: "此操作不可恢复。",
+      confirmText: "清空",
+      danger: true,
+    }).then(async (ok) => {
+      if (!ok) return;
+      if (goalTrash.length) {
+        for (const item of goalTrash) await purgeGoal(item.id);
+        await refreshAll();
+        void loadGoalTrash();
+      }
+      if (projectTrash.length) {
+        for (const item of projectTrash) await purgeProject(item.id);
+        await refreshAll();
+        void loadProjectTrash();
+      }
+      if (ledgerTrash.length) {
+        for (const item of ledgerTrash) await purgeLedgerTransaction(item.id);
+      }
+      if (habitTrash.length) {
+        for (const item of habitTrash) await purgeHabit(item.id);
+        await refreshAll();
+        void loadHabitTrash();
+      }
+      void purgeTrash();
+      void loadProjectTrash();
+      void loadLedgerTrash();
+      void loadHabitTrash();
+    });
+  };
+
   return (
     <div className="task-scroll">
-      <section className="trash-summary" aria-label="回收站概况">
-        <div className="trash-summary-copy">
-          <strong>已删除 {total} 项</strong>
-          <p>删除保留 30 天，可随时恢复；清空或永久删除后无法恢复。</p>
-        </div>
-        <button
-          type="button"
-          className="btn-ghost danger"
-          disabled={!total}
-          onClick={() => {
-            void confirmAction({
-              title: `确定清空回收站的 ${total} 项？`,
-              description: "此操作不可恢复。",
-              confirmText: "清空",
-              danger: true,
-            }).then(async (ok) => {
-              if (!ok) return;
-              if (goalTrash.length) {
-                for (const item of goalTrash) await purgeGoal(item.id);
-                await refreshAll();
-                void loadGoalTrash();
-              }
-              if (projectTrash.length) {
-                for (const item of projectTrash) await purgeProject(item.id);
-                await refreshAll();
-                void loadProjectTrash();
-              }
-              if (ledgerTrash.length) {
-                for (const item of ledgerTrash) await purgeLedgerTransaction(item.id);
-              }
-              if (habitTrash.length) {
-                for (const item of habitTrash) await purgeHabit(item.id);
-                await refreshAll();
-                void loadHabitTrash();
-              }
-              void purgeTrash();
-              void loadProjectTrash();
-              void loadLedgerTrash();
-              void loadHabitTrash();
-            });
-          }}
-        >
-          清空回收站
-        </button>
-        {/* 麦穗水印只挂移动壳（样式在 mobile.css）；桌面是 flex 行，
-            空 span 会多占一格 gap，故桌面不渲染。 */}
-        {isMobileShell() ? <span className="mtoday-wheat" aria-hidden="true" /> : null}
-      </section>
+      {isMobileShell() ? (
+        /* 移动壳顶卡：四页同款读数型引导卡（guide-stat）——大读数＋一句 hint，
+           「清空」收成危险小药丸钉卡右上；桌面保持原文字卡＋行尾按钮。 */
+        <section className="mtoday-card guide-stat is-compact" aria-label="回收站概况">
+          <div className="guide-stat-top">
+            <span className="guide-stat-total">
+              <b>{total}</b>
+              <span>项</span>
+            </span>
+            <span className="guide-stat-label">回收站</span>
+          </div>
+          <p className="trash-note">删除保留 30 天，可随时恢复；清空后无法恢复。</p>
+          <button type="button" className="trash-clear" disabled={!total} onClick={purgeAll}>
+            清空
+          </button>
+          <span className="mtoday-wheat" aria-hidden="true" />
+        </section>
+      ) : (
+        <section className="trash-summary" aria-label="回收站概况">
+          <div className="trash-summary-copy">
+            <strong>已删除 {total} 项</strong>
+            <p>删除保留 30 天，可随时恢复；清空或永久删除后无法恢复。</p>
+          </div>
+          <button type="button" className="btn-ghost danger" disabled={!total} onClick={purgeAll}>
+            清空回收站
+          </button>
+        </section>
+      )}
       {!total ? (
-        <div className="empty-state">{getEmptyMessage("trash")}</div>
+        /* 空态：移动壳升 anni-empty 两行壳（与备忘/纪念日同族）；桌面保留诗意句。 */
+        isMobileShell() ? (
+          <div className="empty-state anni-empty">
+            <strong>回收站是空的</strong>
+            <p>删掉的东西会先收在这里，30 天内能回来。</p>
+          </div>
+        ) : (
+          <div className="empty-state">{getEmptyMessage("trash")}</div>
+        )
       ) : (
         <div className="trash-list">
           {trashTasks.map((task) => (
             <article key={task.id} className="trash-item">
               <div className="trash-item-main">
-                <p className="task-title">{task.title}</p>
+                <p className="task-title">
+                  {isMobileShell() ? <em className="kind-badge is-blue">任务</em> : null}
+                  {task.title}
+                </p>
                 <div className="trash-item-meta">
                   {task.deleted_at ? (
-                    <span>删除于 {formatStamp(task.deleted_at)}</span>
+                    <span>
+                      删除于 {isMobileShell() ? formatStampBrief(task.deleted_at) : formatStamp(task.deleted_at)}
+                    </span>
                   ) : null}
-                  <span>优先级 P{task.priority}</span>
+                  <span>{isMobileShell() ? `P${task.priority}` : `优先级 P${task.priority}`}</span>
                   {task.due_date ? (
-                    <span>原截止 {formatDueDate(task.due_date)}</span>
+                    <span>
+                      原截止 {isMobileShell() ? formatDateBrief(task.due_date) : formatDueDate(task.due_date)}
+                    </span>
                   ) : null}
                 </div>
               </div>
@@ -329,10 +358,17 @@ function TrashView() {
           {habitTrash.map((habit) => (
             <article key={`habit-${habit.id}`} className="trash-item">
               <div className="trash-item-main">
-                <p className="task-title">{habit.title}</p>
+                <p className="task-title">
+                  {isMobileShell() ? <em className="kind-badge is-warm">习惯</em> : null}
+                  {habit.title}
+                </p>
                 <div className="trash-item-meta">
-                  {habit.deleted_at ? <span>删除于 {formatStamp(habit.deleted_at)}</span> : null}
-                  <span>习惯</span>
+                  {habit.deleted_at ? (
+                    <span>
+                      删除于 {isMobileShell() ? formatStampBrief(habit.deleted_at) : formatStamp(habit.deleted_at)}
+                    </span>
+                  ) : null}
+                  {!isMobileShell() ? <span>习惯</span> : null}
                 </div>
               </div>
               <div className="trash-item-actions">
@@ -377,10 +413,17 @@ function TrashView() {
           {goalTrash.map((goal) => (
             <article key={`goal-${goal.id}`} className="trash-item">
               <div className="trash-item-main">
-                <p className="task-title">{goal.title}</p>
+                <p className="task-title">
+                  {isMobileShell() ? <em className="kind-badge is-blue">目标</em> : null}
+                  {goal.title}
+                </p>
                 <div className="trash-item-meta">
-                  {goal.deleted_at ? <span>删除于 {formatStamp(goal.deleted_at)}</span> : null}
-                  <span>目标</span>
+                  {goal.deleted_at ? (
+                    <span>
+                      删除于 {isMobileShell() ? formatStampBrief(goal.deleted_at) : formatStamp(goal.deleted_at)}
+                    </span>
+                  ) : null}
+                  {!isMobileShell() ? <span>目标</span> : null}
                 </div>
               </div>
               <div className="trash-item-actions">
@@ -426,12 +469,17 @@ function TrashView() {
             <article key={`project-${project.id}`} className="trash-item">
               <div className="trash-item-main">
                 <p className="task-title">
+                  {isMobileShell() ? <em className="kind-badge is-neutral">项目</em> : null}
                   <span className="tag-card-dot" style={{ background: project.color }} aria-hidden />
                   {project.name}
                 </p>
                 <div className="trash-item-meta">
-                  {project.deleted_at ? <span>删除于 {formatStamp(project.deleted_at)}</span> : null}
-                  <span>项目</span>
+                  {project.deleted_at ? (
+                    <span>
+                      删除于 {isMobileShell() ? formatStampBrief(project.deleted_at) : formatStamp(project.deleted_at)}
+                    </span>
+                  ) : null}
+                  {!isMobileShell() ? <span>项目</span> : null}
                 </div>
               </div>
               <div className="trash-item-actions">
@@ -479,6 +527,7 @@ function TrashView() {
             <article key={`ledger-${item.id}`} className="trash-item">
               <div className="trash-item-main">
                 <p className="task-title">
+                  {isMobileShell() ? <em className="kind-badge is-neutral">记账</em> : null}
                   <span
                     className="ledger-row-icon"
                     style={{ background: `${item.category_color}20`, color: item.category_color }}
@@ -492,8 +541,12 @@ function TrashView() {
                   </span>
                 </p>
                 <div className="trash-item-meta">
-                  {item.deleted_at ? <span>删除于 {formatStamp(item.deleted_at)}</span> : null}
-                  <span>{item.date}</span>
+                  {item.deleted_at ? (
+                    <span>
+                      删除于 {isMobileShell() ? formatStampBrief(item.deleted_at) : formatStamp(item.deleted_at)}
+                    </span>
+                  ) : null}
+                  <span>{isMobileShell() ? formatDateBrief(item.date) : item.date}</span>
                   <span>{item.type === "expense" ? "支出" : "收入"} · {item.account_name}</span>
                   {item.note ? <span>{item.note}</span> : null}
                 </div>
@@ -592,7 +645,7 @@ export function MainWorkspace() {
   }
   if (nav === "week") {
     return (
-      <Suspense fallback={<div className="empty-state">正在打开本周…</div>}>
+      <Suspense fallback={<div className="empty-state">正在打开周报…</div>}>
         <WeeklyChecklistView />
       </Suspense>
     );

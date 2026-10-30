@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useAppStore } from "@/store/app";
-import { fetchGoalEntries, fetchGoals } from "@/lib/db";
+import { fetchGoals } from "@/lib/db";
 import { currentDateStreak } from "@/lib/growth";
 import {
   buildWeekBuckets,
@@ -19,13 +19,14 @@ import {
 } from "@/lib/review";
 import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
+import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { getMobileTaskPills } from "@/components/mobile/MobileTaskPills";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
-import type { Goal, GoalEntry, Task } from "@/types";
+import type { Goal, Task } from "@/types";
 
 /** 桌面脉搏图详情：一天最多露这么多条，溢出折叠成「还有 N 项」。 */
 const PULSE_TASK_PREVIEW = 10;
@@ -78,19 +79,13 @@ export function WeeklyChecklistView() {
   );
 
   const donePct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
-  // 当周目标推进读目标与目标记录两份页内数据（自复盘页并入），同步拉回对端
+  // 任务完成去向的「按目标」视角要读目标名册（自复盘页并入），同步拉回对端
   // 写入后要重载。
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [goalEntries, setGoalEntries] = useState<GoalEntry[]>([]);
   const [dimension, setDimension] = useState<ReviewDimension>("goal");
   useEffect(() => {
     const reload = () =>
-      void Promise.all([fetchGoals(true), fetchGoalEntries()]).then(
-        ([nextGoals, nextEntries]) => {
-          setGoals(nextGoals);
-          setGoalEntries(nextEntries);
-        },
-      );
+      void fetchGoals(true).then((nextGoals) => setGoals(nextGoals));
     reload();
     window.addEventListener("youqiu:sync-applied", reload);
     return () => window.removeEventListener("youqiu:sync-applied", reload);
@@ -108,10 +103,6 @@ export function WeeklyChecklistView() {
     return groups.filter((group) => group.done > 0);
   }, [dimension, goals, projects, tagMap, tags, tasks, weekDates]);
   const fullDays = useMemo(() => countFullDays(tasks, weekDates), [tasks, weekDates]);
-  const activeGoals = useMemo(
-    () => goals.filter((goal) => goal.status === "active"),
-    [goals],
-  );
   const [sheetTask, setSheetTask] = useState<Task | null>(null);
   // 当周日历（桌面脉搏图）点选的日期。null = 回退默认：今天 → 峰值日 → 周一；
   // 切周后 pulseDate 不在这一周里，自动落回默认，不用 effect 重置。
@@ -140,7 +131,7 @@ export function WeeklyChecklistView() {
   const pulseTotals = days.map((day) => day.total);
   const pulseDones = days.map((day) => day.done);
 
-  // 周节奏放在本周页：今日页只留今天要做的事，周统计归这里。
+  // 周节奏放在周报页：今日页只留今天要做的事，周统计归这里。
   const weekChecks = useMemo(
     () =>
       habitChecks.filter(
@@ -164,43 +155,72 @@ export function WeeklyChecklistView() {
     return currentDateStreak([...days], today);
   }, [habitChecks, tasks, today]);
 
+  // 周切换三档共用：0=跳回今天，±1=以当前所看周为基准平移。
+  const goWeek = (offset: number) =>
+    setCalendarCursor(offset === 0 ? today : shiftWeek(weekStart, offset));
+  const weekRangeLabel = `${formatMd(weekStart)} ～ ${formatMd(weekEnd)}`;
+
   return (
     <main className="main-workspace weekly-checklist">
       <div className="workspace-top weekly-checklist-top">
         <div>
-          <h2 aria-label={isMobileShell() ? "本周" : undefined}>
+          <h2 aria-label={isMobileShell() ? "周报" : undefined}>
 
-            {isMobileShell() ? <MobileTitleChars text="本周" /> : "本周"}
+            {isMobileShell() ? <MobileTitleChars text="周报" /> : "周报"}
 
           </h2>
           <p className="workspace-subtitle">把一周摊开来看。</p>
         </div>
-        <div className="top-controls weekly-checklist-nav scope-nav">
-          <strong>
-            {formatMd(weekStart)} ～ {formatMd(weekEnd)}
-          </strong>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => setCalendarCursor(shiftWeek(weekStart, -1))}
-          >
-            ‹ 上周
-          </button>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => setCalendarCursor(today)}
-          >
-            本周
-          </button>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => setCalendarCursor(shiftWeek(weekStart, 1))}
-          >
-            下周 ›
-          </button>
-        </div>
+        {isMobileShell() ? (
+          <>
+            {/* 页头（2026-10-30 方案A）：右上角「‹ 周区间 ›」步进器——与今日/记账页头
+                同件同构（mtoday-icon-btn 圆钮 + switch-chevron 旋转 SVG），‹ › 即上周/下周。 */}
+            <div className="weekly-week-steer" role="group" aria-label="切换周">
+              <button
+                type="button"
+                className="mtoday-icon-btn"
+                aria-label="上一周"
+                onClick={() => goWeek(-1)}
+              >
+                <AppIcon name="chevron" size={20} className="mtoday-switch-chevron is-left" />
+              </button>
+              <strong>{weekRangeLabel}</strong>
+              <button
+                type="button"
+                className="mtoday-icon-btn"
+                aria-label="下一周"
+                onClick={() => goWeek(1)}
+              >
+                <AppIcon name="chevron" size={20} className="mtoday-switch-chevron is-right" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="top-controls weekly-checklist-nav scope-nav">
+            <strong>{weekRangeLabel}</strong>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => goWeek(-1)}
+            >
+              ‹ 上周
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => goWeek(0)}
+            >
+              本周
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => goWeek(1)}
+            >
+              下周 ›
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 与「今日」同款的暖色引导框。右侧承载本周完成进度 —— 引导块要么有数据，
@@ -531,7 +551,8 @@ export function WeeklyChecklistView() {
         )}
       </section>
 
-      {/* 回顾两块（自复盘页并入）：先看这一周完成了什么的去向，再看长期方向的推进。 */}
+      {/* 回顾（自复盘页并入）：这一周完成了什么的去向。
+          「当周目标推进」2026-10-30 退役——它只是账本的周窗复读，推进明细归目标页。 */}
       <div className="weekly-review">
         <section className="review-story-card review-breakdown">
           <div className="review-section-head">
@@ -580,48 +601,6 @@ export function WeeklyChecklistView() {
             {!breakdown.length ? (
               <p className="review-soft-empty">本周还没有完成的任务。</p>
             ) : null}
-          </div>
-        </section>
-
-        <section className="review-story-card review-goals">
-          <div className="review-section-head"><div><span>长期方向</span><h3>当周目标推进</h3></div><b>{activeGoals.length}</b></div>
-          <div className="review-goal-list">
-            {activeGoals.map((goal) => {
-              const weekEntries = goalEntries
-                .filter(
-                  (entry) =>
-                    entry.goal_id === goal.id &&
-                    entry.entry_date >= weekStart &&
-                    entry.entry_date <= weekEnd,
-                )
-                .sort((a, b) => a.entry_date.localeCompare(b.entry_date));
-              const value = weekEntries.reduce((sum, entry) => sum + Number(entry.value), 0);
-              const fromTask = weekEntries
-                .filter((entry) => entry.source_type === "task")
-                .reduce((sum, entry) => sum + Number(entry.value), 0);
-              const fromHabit = weekEntries
-                .filter((entry) => entry.source_type === "habit")
-                .reduce((sum, entry) => sum + Number(entry.value), 0);
-              const parts = [
-                fromTask ? `任务 +${Math.round(fromTask * 10) / 10}` : "",
-                fromHabit ? `打卡 +${Math.round(fromHabit * 10) / 10}` : "",
-              ].filter(Boolean);
-              return (
-                <div key={goal.id} className="review-goal-row">
-                  <i style={{ background: goal.color }} />
-                  <span>
-                    {goal.title}
-                    {parts.length ? (
-                      <em className="review-goal-source">{parts.join(" · ")}</em>
-                    ) : null}
-                  </span>
-                  <strong>
-                    +{Math.round(value * 10) / 10}{goal.unit}
-                  </strong>
-                </div>
-              );
-            })}
-            {!activeGoals.length ? <p className="review-soft-empty">暂无进行中的长期目标。</p> : null}
           </div>
         </section>
       </div>

@@ -361,7 +361,10 @@ export function LedgerEntrySheet({
           {error ? (
             <p className="mledger-error" role="alert">{error}</p>
           ) : null}
-
+        </div>
+        <footer className="mledger-sheet-foot">
+          {/* 编辑态：删除与保存同落底条两等宽列（2026-10-30），不再隔着
+              滚动区各占一条；主操作居右，危险钮红衬居左，同详情弹层脚族。 */}
           {editing ? (
             <button
               type="button"
@@ -372,14 +375,13 @@ export function LedgerEntrySheet({
               移入回收站
             </button>
           ) : null}
-        </div>
-        <footer className="mledger-sheet-foot">
           <button
             type="button"
             className="mledger-save"
             disabled={saving || !amount}
             onClick={() => void save()}
           >
+            <AppIcon name="check" size={16} />
             {saving ? "保存中…" : editing ? "保存修改" : "保存"}
           </button>
         </footer>

@@ -27,6 +27,14 @@ import { DatePicker } from "@/components/DatePicker";
 import type { Anniversary } from "@/types";
 import { useAppStore } from "@/store/app";
 
+/** 移动壳倒数小字：大字号已承载天数，小字只补单位或状态，不再复读数字
+    （桌面同款 JSX 是「6 ／ 还有 6 天」，数字说了两遍）。桌面仍用完整 label。 */
+function mobileCountCaption(head: { daysLeft: number | null; label: string }): string {
+  if (head.daysLeft === null) return head.label; // 单次已过（大字「—」）：「已过 X 天」本就不撞车
+  if (head.daysLeft === 0) return head.label === "就是今天" ? head.label : head.label.replace("今天 · ", "");
+  return "天后";
+}
+
 export function AnniversariesView() {
   const focusRequest = useAppStore((state) => state.focusRequest);
   const clearFocus = useAppStore((state) => state.clearFocus);
@@ -340,8 +348,10 @@ export function AnniversariesView() {
                     <p className="anni-meta">
                       {formatAnniversaryAnchor(item)}
                       {item.recur_yearly ? " · 每年" : " · 单次"}
-                      {item.calendar === "lunar" ? ` · 锚定公历 ${item.event_date}` : ""}
-                      {head.nextDate ? ` · 下次 ${head.nextDate}` : ""}
+                      {/* 移动壳 meta 瘦身：「锚定公历」是实现细节、「下次」与倒数
+                          读数重复，都砍进详情弹层（dl 里有日期/下一次行）。 */}
+                      {!isMobileShell() && item.calendar === "lunar" ? ` · 锚定公历 ${item.event_date}` : ""}
+                      {!isMobileShell() && head.nextDate ? ` · 下次 ${head.nextDate}` : ""}
                     </p>
                     {item.note ? <p className="anni-note">{item.note}</p> : null}
                   </div>
@@ -353,7 +363,7 @@ export function AnniversariesView() {
                           ? "今天"
                           : head.daysLeft}
                     </strong>
-                    <span>{head.label}</span>
+                    <span>{isMobileShell() ? mobileCountCaption(head) : head.label}</span>
                   </div>
                 </div>
               </article>
@@ -361,7 +371,7 @@ export function AnniversariesView() {
           })}
         </section>
       )}
-      {selected ? <div className="modal-backdrop" onMouseDown={() => setSelected(null)}><section className="anni-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-detail-title" onMouseDown={(event) => event.stopPropagation()}>{(() => { const head = anniversaryHeadline(selected, today); return <><header><div><h2 id="anni-detail-title">纪念日详情</h2></div><button type="button" aria-label="关闭" onClick={() => setSelected(null)}>×</button></header><h3 className="anni-detail-name">{selected.title}</h3><div className="anni-detail-count"><strong>{head.daysLeft === 0 ? "今天" : head.daysLeft === null ? "—" : head.daysLeft}</strong><span>{head.label}</span></div><dl><div><dt>日期</dt><dd>{formatAnniversaryAnchor(selected)}</dd></div><div><dt>提醒方式</dt><dd>{selected.recur_yearly ? "每年提醒" : "仅记录一次"}</dd></div>{head.nextDate ? <div><dt>下一次</dt><dd>{head.nextDate}</dd></div> : null}</dl><section><span>留下的话</span><p>{selected.note || "这个日子还没有备注。"}</p></section><footer><button type="button" className="item-action-btn item-action-edit" onClick={() => { void updateAnniversary(selected.id, { recur_yearly: selected.recur_yearly ? 0 : 1 }).then(async () => { await refresh(); setSelected({ ...selected, recur_yearly: selected.recur_yearly ? 0 : 1 }); }); }}>{selected.recur_yearly ? "改为单次" : "改为每年"}</button><button type="button" className="item-action-btn item-action-danger" onClick={() => { void confirmAction({ title: `删除纪念日「${selected.title}」？`, confirmText: "删除", danger: true }).then((ok) => { if (ok) void deleteAnniversary(selected.id).then(async () => { await refresh(); setSelected(null); }); }); }}><AppIcon name="trash" size={14} /><span>删除</span></button></footer></>; })()}</section></div> : null}
+      {selected ? <div className="modal-backdrop" onMouseDown={() => setSelected(null)}><section className="anni-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-detail-title" onMouseDown={(event) => event.stopPropagation()}>{(() => { const head = anniversaryHeadline(selected, today); return <><header><div><h2 id="anni-detail-title">纪念日详情</h2></div><button type="button" aria-label="关闭" onClick={() => setSelected(null)}>×</button></header><h3 className="anni-detail-name">{selected.title}</h3><div className="anni-detail-count"><strong>{head.daysLeft === 0 ? "今天" : head.daysLeft === null ? "—" : head.daysLeft}</strong><span>{isMobileShell() ? mobileCountCaption(head) : head.label}</span></div><dl><div><dt>日期</dt><dd>{formatAnniversaryAnchor(selected)}</dd></div><div><dt>提醒方式</dt><dd>{selected.recur_yearly ? "每年提醒" : "仅记录一次"}</dd></div>{head.nextDate ? <div><dt>下一次</dt><dd>{head.nextDate}</dd></div> : null}</dl><section><span>留下的话</span><p>{selected.note || "这个日子还没有备注。"}</p></section><footer><button type="button" className="item-action-btn item-action-edit" onClick={() => { void updateAnniversary(selected.id, { recur_yearly: selected.recur_yearly ? 0 : 1 }).then(async () => { await refresh(); setSelected({ ...selected, recur_yearly: selected.recur_yearly ? 0 : 1 }); }); }}>{selected.recur_yearly ? "改为单次" : "改为每年"}</button><button type="button" className="item-action-btn item-action-danger" onClick={() => { void confirmAction({ title: `删除纪念日「${selected.title}」？`, confirmText: "删除", danger: true }).then((ok) => { if (ok) void deleteAnniversary(selected.id).then(async () => { await refresh(); setSelected(null); }); }); }}><AppIcon name="trash" size={14} /><span>删除</span></button></footer></>; })()}</section></div> : null}
       </div>
     </main>
   );

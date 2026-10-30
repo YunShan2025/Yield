@@ -12,15 +12,20 @@ import {
   parseRepeatRule,
   stringifyRepeatRule,
   weeklyTargetFromRule,
+  WEEKDAY_OPTIONS,
+  weekdayFromDate,
 } from "@/lib/repeat";
 import { WeekdayPicker } from "@/components/WeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
+import { ExpandRow } from "@/components/ExpandRow";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import type { RepeatRule } from "@/types";
+
+const WEEKDAY_LABELS = new Map<number, string>(WEEKDAY_OPTIONS.map((d) => [d.value, d.label]));
 
 export function HabitsView() {
   const habits = useAppStore((s) => s.habits);
@@ -33,6 +38,8 @@ export function HabitsView() {
   const removeHabit = useAppStore((s) => s.removeHabit);
   const [creating, setCreating] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  // 桌面卡片化（同项目页 setActiveProjectId 口径）：一屏一张展开卡，收/放都落点明确。
+  const [activeHabitId, setActiveHabitId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [goalId, setGoalId] = useState("");
   const [goalContribution, setGoalContribution] = useState("1");
@@ -203,11 +210,46 @@ export function HabitsView() {
       confirmText: "移入回收站",
       danger: true,
     });
-    if (ok) void removeHabit(habit.id);
+    if (ok) {
+      setActiveHabitId((current) => (current === habit.id ? null : current));
+      void removeHabit(habit.id);
+    }
+  };
+
+  // 归档/恢复后卡片会换组，展开态跟着收起，免得焦点跟着行「跳组」。
+  const archiveWithCollapse = (habit: Habit) => {
+    setActiveHabitId((current) => (current === habit.id ? null : current));
+    void archiveHabit(habit.id);
   };
 
   // 桌面悬浮卡：新建/编辑习惯收进右上角，点外/Esc 收起（同「新建任务」）。
   useFloatingDismiss(creating || Boolean(editingHabit), closeEditor);
+
+  // 引导框读数与分段条：按「今天该不该做」分箱，与行头排期说明同口径。
+  const dueHabits = habits.filter((habit) =>
+    matchesRepeatRule(today, parseRepeatRule(habit.repeat_rule ?? null)),
+  );
+  const checkedTodayCount = dueHabits.filter((habit) =>
+    checksFor(habit.id).some((item) => item.check_date === today),
+  ).length;
+  const guideSegments = [
+    { label: "已打卡", value: checkedTodayCount, color: "var(--warning)" },
+    {
+      label: "今天要做",
+      value: dueHabits.length - checkedTodayCount,
+      color: "var(--accent-strong)",
+    },
+    {
+      label: "排期休息",
+      value: habits.length - dueHabits.length,
+      color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+    },
+    {
+      label: "未开始",
+      value: notStarted.length,
+      color: "color-mix(in srgb, var(--accent-strong) 45%, transparent)",
+    },
+  ].filter((segment) => segment.value > 0);
 
   return (
     <main className="main-workspace habits-view">
@@ -236,10 +278,34 @@ export function HabitsView() {
             hint={`已有打卡记录 ${inProgress.length} 个`}
           />
         ) : (
-          <section className="today-hero guide-hero">
-            <div className="today-hero-copy">
-              <p className="today-hero-note">每天打一次卡，连续天数会替你记得。</p>
+          <section className="today-hero guide-hero habits-guide">
+            <div className="projects-guide-top">
+              <p className="today-hero-note">按排期打卡，进度会替你记得；点行展开可补打本周任意一天。</p>
+              <span className="today-hero-meter-count">
+                <strong>{checkedTodayCount}/{dueHabits.length}</strong>
+                <span>今日已打卡</span>
+              </span>
             </div>
+            {guideSegments.length ? (
+              <div className="projects-hero-bar">
+                <div className="projects-hero-track" aria-hidden="true">
+                  {guideSegments.map((segment) => (
+                    <i
+                      key={segment.label}
+                      style={{ flexGrow: segment.value, background: segment.color }}
+                    />
+                  ))}
+                </div>
+                <div className="projects-hero-legend">
+                  {guideSegments.map((segment) => (
+                    <span key={segment.label}>
+                      <em style={{ background: segment.color }} aria-hidden="true" />
+                      {segment.label} {segment.value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </section>
         )}
 
@@ -249,18 +315,35 @@ export function HabitsView() {
             <span className="tags-filtered-count">{inProgress.length}</span>
           </div>
           <div className="habits-grid">
-            {inProgress.map((habit) => (
-              <HabitCard
-                key={habit.id}
-                habit={habit}
-                checks={checksFor(habit.id)}
-                today={today}
-                {...linkedGoalFor(habit)}
-                onEdit={() => openEdit(habit)}
-                onArchive={() => void archiveHabit(habit.id)}
-                onDelete={() => void removeHabitWithConfirm(habit)}
-              />
-            ))}
+            {inProgress.map((habit) =>
+              isMobileShell() ? (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  checks={checksFor(habit.id)}
+                  today={today}
+                  open={activeHabitId === habit.id}
+                  onToggle={() => setActiveHabitId((c) => (c === habit.id ? null : habit.id))}
+                  {...linkedGoalFor(habit)}
+                  onEdit={() => openEdit(habit)}
+                  onArchive={() => archiveWithCollapse(habit)}
+                  onDelete={() => void removeHabitWithConfirm(habit)}
+                />
+              ) : (
+                <HabitRow
+                  key={habit.id}
+                  habit={habit}
+                  checks={checksFor(habit.id)}
+                  today={today}
+                  open={activeHabitId === habit.id}
+                  onToggle={() => setActiveHabitId((c) => (c === habit.id ? null : habit.id))}
+                  {...linkedGoalFor(habit)}
+                  onEdit={() => openEdit(habit)}
+                  onArchive={() => archiveWithCollapse(habit)}
+                  onDelete={() => void removeHabitWithConfirm(habit)}
+                />
+              ),
+            )}
             {!inProgress.length ? (
               /* 与项目页同规：只有整页一条习惯都没有才引导创建；只是还没人
                  开打卡，说的是「还没开始」，不喊「创建第一个」。 */
@@ -279,18 +362,35 @@ export function HabitsView() {
               <span className="tags-filtered-count">{notStarted.length}</span>
             </div>
             <div className="habits-grid">
-              {notStarted.map((habit) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  checks={[]}
-                  today={today}
-                  {...linkedGoalFor(habit)}
-                  onEdit={() => openEdit(habit)}
-                  onArchive={() => void archiveHabit(habit.id)}
-                  onDelete={() => void removeHabitWithConfirm(habit)}
-                />
-              ))}
+              {notStarted.map((habit) =>
+                isMobileShell() ? (
+                  <HabitCard
+                    key={habit.id}
+                    habit={habit}
+                    checks={[]}
+                    today={today}
+                    open={activeHabitId === habit.id}
+                    onToggle={() => setActiveHabitId((c) => (c === habit.id ? null : habit.id))}
+                    {...linkedGoalFor(habit)}
+                    onEdit={() => openEdit(habit)}
+                    onArchive={() => archiveWithCollapse(habit)}
+                    onDelete={() => void removeHabitWithConfirm(habit)}
+                  />
+                ) : (
+                  <HabitRow
+                    key={habit.id}
+                    habit={habit}
+                    checks={[]}
+                    today={today}
+                    open={activeHabitId === habit.id}
+                    onToggle={() => setActiveHabitId((c) => (c === habit.id ? null : habit.id))}
+                    {...linkedGoalFor(habit)}
+                    onEdit={() => openEdit(habit)}
+                    onArchive={() => archiveWithCollapse(habit)}
+                    onDelete={() => void removeHabitWithConfirm(habit)}
+                  />
+                ),
+              )}
             </div>
           </section>
         ) : null}
@@ -302,19 +402,37 @@ export function HabitsView() {
               <span className="tags-filtered-count">{archivedHabits.length}</span>
             </div>
             <div className="habits-grid">
-              {archivedHabits.map((habit) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  checks={habitChecks.filter((item) => item.habit_id === habit.id)}
-                  today={today}
-                  archived
-                  {...linkedGoalFor(habit)}
-                  onEdit={() => openEdit(habit)}
-                  onRestore={() => void restoreHabit(habit.id)}
-                  onDelete={() => void removeHabitWithConfirm(habit)}
-                />
-              ))}
+              {archivedHabits.map((habit) =>
+                isMobileShell() ? (
+                  <HabitCard
+                    key={habit.id}
+                    habit={habit}
+                    checks={habitChecks.filter((item) => item.habit_id === habit.id)}
+                    today={today}
+                    open={activeHabitId === habit.id}
+                    onToggle={() => setActiveHabitId((c) => (c === habit.id ? null : habit.id))}
+                    archived
+                    {...linkedGoalFor(habit)}
+                    onEdit={() => openEdit(habit)}
+                    onRestore={() => void restoreHabit(habit.id)}
+                    onDelete={() => void removeHabitWithConfirm(habit)}
+                  />
+                ) : (
+                  <HabitRow
+                    key={habit.id}
+                    habit={habit}
+                    checks={habitChecks.filter((item) => item.habit_id === habit.id)}
+                    today={today}
+                    open={activeHabitId === habit.id}
+                    onToggle={() => setActiveHabitId((c) => (c === habit.id ? null : habit.id))}
+                    archived
+                    {...linkedGoalFor(habit)}
+                    onEdit={() => openEdit(habit)}
+                    onRestore={() => void restoreHabit(habit.id)}
+                    onDelete={() => void removeHabitWithConfirm(habit)}
+                  />
+                ),
+              )}
             </div>
           </section>
         ) : null}
@@ -491,10 +609,17 @@ export function HabitsView() {
   );
 }
 
-function HabitCard({
+/**
+ * 桌面习惯卡（项目页 B+ 同族）：收起＝今日金勾圈 + 名称 + 连续 chip + 排期说明 +
+ * 本周比率胶囊；展开＝描边框内「本周七枚日期圈」直接补卡 + 四项数据栏，
+ * 框底动作条与项目/标签页同一套。移动壳不走这里（HabitCard 维持已验收卡片流）。
+ */
+function HabitRow({
   habit,
   checks,
   today,
+  open,
+  onToggle,
   goal,
   goalTarget,
   archived = false,
@@ -506,6 +631,8 @@ function HabitCard({
   habit: Habit;
   checks: { check_date: string }[];
   today: string;
+  open: boolean;
+  onToggle: () => void;
   goal: Goal | null;
   goalTarget: GoalTarget | null;
   archived?: boolean;
@@ -514,6 +641,166 @@ function HabitCard({
   onRestore?: () => void;
   onDelete: () => void;
 }) {
+  const toggleHabitDay = useAppStore((s) => s.toggleHabitDay);
+  const checkedToday = checks.some((item) => item.check_date === today);
+  const weekDates = mondayWeekDates(today);
+  const checkSet = new Set(checks.map((item) => item.check_date));
+  const weekDone = weekDates.filter((date) => checkSet.has(date)).length;
+  // 固定排期的习惯，「每周几次」由排期推算；浮动模式才用习惯自己设的值。
+  const rule = parseRepeatRule(habit.repeat_rule ?? null);
+  const weekTarget = weeklyTargetFromRule(rule) ?? habit.target_per_week;
+  const scheduleText = describeHabitSchedule(rule);
+  const dueToday = matchesRepeatRule(today, rule);
+  const weekFull = weekDone >= weekTarget;
+  const streak = (() => {
+    let count = 0;
+    const cursor = new Date(`${today}T12:00:00`);
+    while (checkSet.has(toDateString(cursor))) {
+      count += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return count;
+  })();
+
+  return (
+    <ExpandRow
+      open={open}
+      onToggle={onToggle}
+      className={archived ? "is-archived" : undefined}
+      rowId={habit.id}
+      leading={
+        <button
+          type="button"
+          className={`proj-check habit-row-check${checkedToday ? " is-done" : ""}`}
+          aria-label={checkedToday ? `取消完成 ${habit.title}` : `完成 ${habit.title}`}
+          aria-pressed={checkedToday}
+          title={checkedToday ? "取消今天的打卡" : "今天打卡"}
+          onClick={() => void toggleHabitDay(habit.id, today)}
+        />
+      }
+      title={
+        <>
+          {habit.title}
+          {streak > 1 ? <span className="habit-streak-chip">连续 {streak} 天</span> : null}
+        </>
+      }
+      meta={<>{scheduleText}{rule && !dueToday ? " · 今天休息" : ""}</>}
+      trailing={
+        <span className={`ratio-chip${weekFull ? " is-clear" : ""}`}>
+          本周 {weekDone}/{weekTarget} 次
+        </span>
+      }
+      toggleTitle={open ? "收起本周打卡" : "查看本周打卡并补卡"}
+      foot={
+        open ? (
+          <div className="expand-row-foot">
+            <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
+              <AppIcon name="edit" size={14} />
+              <span>编辑</span>
+            </button>
+            {archived ? (
+              <button type="button" className="item-action-btn item-action-archive" onClick={onRestore}>
+                <AppIcon name="review" size={14} />
+                <span>恢复</span>
+              </button>
+            ) : (
+              <button type="button" className="item-action-btn item-action-archive" onClick={onArchive}>
+                <AppIcon name="archive" size={14} />
+                <span>归档</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="item-action-btn item-action-danger quiet-danger"
+              onClick={onDelete}
+            >
+              <AppIcon name="trash" size={14} />
+              <span>删除</span>
+            </button>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="habit-week-frame">
+        <h4>本周 · {weekDates[0].slice(5).replace("-", "/")} – {weekDates[6].slice(5).replace("-", "/")}</h4>
+        <div className="habit-week-strip">
+          {weekDates.map((date) => {
+            const done = checkSet.has(date);
+            const restDay = rule ? !matchesRepeatRule(date, rule) : false;
+            const isToday = date === today;
+            return (
+              <button
+                key={date}
+                type="button"
+                className={[
+                  "habit-day",
+                  done ? "is-done" : "",
+                  isToday ? "is-today" : "",
+                  restDay && !done ? "is-rest" : "",
+                ].filter(Boolean).join(" ")}
+                aria-label={`${date}${done ? " 已打卡" : restDay ? " 排期休息日" : " 未打卡"}`}
+                aria-pressed={done}
+                title={done ? "取消这一天打卡" : restDay ? "排期休息日，也可补卡" : "补打这一天"}
+                onClick={() => void toggleHabitDay(habit.id, date)}
+              >
+                <span className="habit-day-wd">{isToday ? "今" : WEEKDAY_LABELS.get(weekdayFromDate(date))}</span>
+                <span className={`proj-check habit-day-check${done ? " is-done" : ""}`} />
+                <span className="habit-day-num">{Number(date.slice(8, 10))}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="habit-stats-row">
+          <span><em>连续</em><b>{streak}</b><small>天</small></span>
+          <span><em>本周</em><b>{weekDone}</b><small>/{weekTarget} 次</small></span>
+          <span><em>累计打卡</em><b>{checks.length}</b><small>{habit.target_days ? `/${habit.target_days} 天` : " 天"}</small></span>
+          {goal ? (
+            <span>
+              <em>{goal.title}</em>
+              <b>{Math.round(goal.current_value * 100) / 100}</b>
+              <small>/{Math.round((goalTarget?.value ?? 0) * 100) / 100}{goalTarget?.unit ?? goal.unit}</small>
+            </span>
+          ) : (
+            <span><em>排期</em><b>{scheduleText}</b></span>
+          )}
+        </div>
+      </div>
+    </ExpandRow>
+  );
+}
+
+/**
+ * 移动壳习惯卡（2026-10-30 甲案，并入项目页移动卡族）：行即白卡、点卡展开；
+ * 折叠＝标题行（连续 chip + 右置今日勾圈，.mtoday-check 同款）＋子行（排期/本周
+ * 注记 + 七枚日期圈直接补卡）；展开＝四格数据栏 + 通栏动作条。
+ * 勾圈与日期圈都是 toggle 之外的独立动作（subline 空白处点按=展开）。
+ */
+function HabitCard({
+  habit,
+  checks,
+  today,
+  open,
+  onToggle,
+  archived = false,
+  onEdit,
+  onArchive,
+  onRestore,
+  onDelete,
+}: {
+  habit: Habit;
+  checks: { check_date: string }[];
+  today: string;
+  open: boolean;
+  onToggle: () => void;
+  goal: Goal | null;
+  goalTarget: GoalTarget | null;
+  archived?: boolean;
+  onEdit: () => void;
+  onArchive?: () => void;
+  onRestore?: () => void;
+  onDelete: () => void;
+}) {
+  const toggleHabitDay = useAppStore((s) => s.toggleHabitDay);
   const checkedToday = checks.some((item) => item.check_date === today);
   const weekDates = mondayWeekDates(today);
   const weekDone = checks.filter(
@@ -537,85 +824,103 @@ function HabitCard({
   })();
 
   return (
-    <section
-      className={`habits-card habit-card${checkedToday ? " is-checked" : ""}${archived ? " is-archived" : ""}`}
-    >
-      <div className="habit-card-main">
-        <div className="habits-card-head">
-          <strong className={streak > 0 ? "streak-pop" : ""}>{habit.title}</strong>
-        </div>
-        <p className="habits-card-meta">
-          {goal
-            ? `目标进度 ${Math.round(goal.current_value * 100) / 100}/${Math.round((goalTarget?.value ?? 0) * 100) / 100}${goalTarget?.unit ?? goal.unit}`
-            : habit.target_days
-              ? `已打卡 ${checks.length}/${habit.target_days} 天`
-              : `已打卡 ${checks.length} 天`}
-          <span> · 连续 {streak} 天</span>
-        </p>
-        <p className="habits-card-schedule">
-          {scheduleText}
-          {rule && !dueToday ? " · 今天不做" : ""}
-        </p>
-        <div
-          className={`habit-week-progress${weekFull ? " is-full" : ""}`}
-          aria-label={`本周已打卡 ${weekDone}/${weekTarget} 次`}
-        >
-          {/* 周一→周日每日一枚打卡点：打过=实色，今天补一圈光环，
-              周节奏一眼可见；次数计数靠右，与任务行注记同一档。 */}
-          <span className="habit-week-dots" aria-hidden="true">
+    <ExpandRow
+      open={open}
+      onToggle={onToggle}
+      className={archived ? "is-archived" : undefined}
+      rowId={habit.id}
+      leading={
+        <button
+          type="button"
+          className={`mtoday-check mhabit-row-check${checkedToday ? " is-done" : ""}`}
+          aria-label={checkedToday ? `取消打卡 ${habit.title}` : `打卡 ${habit.title}`}
+          aria-pressed={checkedToday}
+          title={checkedToday ? "取消今天的打卡" : "今天打卡"}
+          onClick={() => void toggleHabitDay(habit.id, today)}
+        />
+      }
+      title={
+        <>
+          {habit.title}
+          {streak > 1 ? <span className="habit-streak-chip">连续 {streak} 天</span> : null}
+        </>
+      }
+      toggleTitle={open ? "收起数据与操作" : "查看数据与操作"}
+      subline={
+        <div className="mhabit-sub" role="presentation" onClick={onToggle}>
+          <p className="mhabit-subrow">
+            <span className="mhabit-schedule">
+              {scheduleText}
+              {rule && !dueToday ? " · 今天不做" : ""}
+            </span>
+            <span className={`mhabit-weekcount${weekFull ? " is-full" : ""}`}>
+              本周 {weekDone}/{weekTarget} 次
+            </span>
+          </p>
+          {/* 周一→周日七列均分的日期圈：点圈直接补卡（与桌面周历同一读法），
+              实色=打过、accent 环=今天、虚线=排期外；独立于卡片的展开点按。 */}
+          <div className="mhabit-week">
             {weekDates.map((date) => {
               const done = checks.some((item) => item.check_date === date);
+              const restDay = rule ? !matchesRepeatRule(date, rule) : false;
+              const isToday = date === today;
               return (
-                <i
+                <button
                   key={date}
-                  className={`habit-week-dot${done ? " is-done" : ""}${date === today ? " is-today" : ""}`}
-                />
+                  type="button"
+                  className={[
+                    "mhabit-day",
+                    done ? "is-done" : "",
+                    isToday ? "is-today" : "",
+                    restDay && !done ? "is-rest" : "",
+                  ].filter(Boolean).join(" ")}
+                  aria-label={`${date}${done ? " 已打卡" : restDay ? " 排期休息日" : " 未打卡"}`}
+                  aria-pressed={done}
+                  title={done ? "取消这一天打卡" : restDay ? "排期休息日，也可补卡" : "补打这一天"}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void toggleHabitDay(habit.id, date);
+                  }}
+                >
+                  <span className="mhabit-day-dot" aria-hidden="true" />
+                  <span className="mhabit-day-wd">
+                    {isToday ? "今" : WEEKDAY_LABELS.get(weekdayFromDate(date))}
+                  </span>
+                </button>
               );
             })}
-          </span>
-          <em>
-            本周 {weekDone}/{weekTarget} 次
-          </em>
+          </div>
         </div>
-      </div>
-      {/* 动作钮与项目页 PanelFoot 同一套：共享 .item-action-* 类，两端同观感。 */}
-      <div className="habit-card-actions">
-        <button
-          type="button"
-          className="item-action-btn item-action-edit"
-          onClick={onEdit}
-        >
-          <AppIcon name="edit" size={14} />
-          <span>编辑</span>
-        </button>
-        {archived ? (
-          <button
-            type="button"
-            className="item-action-btn item-action-archive"
-            onClick={onRestore}
-          >
-            <AppIcon name="review" size={14} />
-            <span>恢复</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="item-action-btn item-action-archive"
-            onClick={onArchive}
-          >
-            <AppIcon name="archive" size={14} />
-            <span>归档</span>
-          </button>
-        )}
-        <button
-          type="button"
-          className="item-action-btn item-action-danger quiet-danger"
-          onClick={onDelete}
-        >
-          <AppIcon name="trash" size={14} />
-          <span>删除</span>
-        </button>
-      </div>
-    </section>
+      }
+      foot={
+        open ? (
+          <div className="expand-row-foot">
+            <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
+              <AppIcon name="edit" size={14} />
+              <span>编辑</span>
+            </button>
+            {archived ? (
+              <button type="button" className="item-action-btn item-action-archive" onClick={onRestore}>
+                <AppIcon name="review" size={14} />
+                <span>恢复</span>
+              </button>
+            ) : (
+              <button type="button" className="item-action-btn item-action-archive" onClick={onArchive}>
+                <AppIcon name="archive" size={14} />
+                <span>归档</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="item-action-btn item-action-danger quiet-danger"
+              onClick={onDelete}
+            >
+              <AppIcon name="trash" size={14} />
+              <span>删除</span>
+            </button>
+          </div>
+        ) : undefined
+      }
+    />
   );
 }

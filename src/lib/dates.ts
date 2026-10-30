@@ -228,6 +228,24 @@ export function formatDayStamp(date: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
+/** 移动壳密集 meta：时刻 → "10月20日 14:30"，当年不去年份（回收站「删除于」等）。 */
+export function formatStampBrief(date: string): string {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const year = d.getFullYear() === new Date().getFullYear() ? "" : `${d.getFullYear()}年`;
+  return `${year}${d.getMonth() + 1}月${d.getDate()}日 ${hh}:${mm}`;
+}
+
+/** 移动壳密集 meta：纯日期 → "10月20日"，当年不去年份（回收站原截止/账目日期）。 */
+export function formatDateBrief(date: string): string {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const year = d.getFullYear() === new Date().getFullYear() ? "" : `${d.getFullYear()}年`;
+  return `${year}${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
 export function weekDates(anchor: string): string[] {
   const start = startOfWeek(anchor);
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));

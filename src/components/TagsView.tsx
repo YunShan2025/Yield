@@ -189,7 +189,7 @@ export function TagsView() {
         <MobileGuideCard
           value={tags.length}
           unit="个"
-          label="标签在册"
+          label="标签"
           segments={tags
             .map((tag, index) => ({
               label: tag.name,
@@ -203,7 +203,7 @@ export function TagsView() {
       ) : (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <p className="today-hero-note">给项目与任务分类打标，本周页的任务分类色也按同名标签自动落位。</p>
+            <p className="today-hero-note">给项目与任务分类打标，周报页的任务分类色也按同名标签自动落位。</p>
           </div>
           <div className="today-hero-meter">
             <span className="today-hero-meter-count">
@@ -383,6 +383,10 @@ export function TagsView() {
                             </div>
                           </div>
                         ) : null}
+                        {/* 桌面描边框里项目/任务两节之间铺一条发丝线，与框内行分割同规格。 */}
+                        {detailProjects.length && detailTasks.length ? (
+                          <div className="tags-section-divider" aria-hidden="true" />
+                        ) : null}
                         {detailTasks.length ? (
                           <div className="tags-task-section">
                             <h4>任务</h4>
@@ -434,6 +438,12 @@ export function TagsView() {
                   </ExpandRow>
                 );
               })}
+            </div>
+          ) : isMobileShell() ? (
+            /* 移动壳页级空态：anni-empty 两行壳（与备忘/纪念日/回收站同族）。 */
+            <div className="empty-state anni-empty">
+              <strong>还没有标签</strong>
+              <p>在上方输入名称，创建第一个标签。</p>
             </div>
           ) : (
             <div className="empty-state">

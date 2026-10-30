@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDueDateBadge, formatIsoTime, formatStamp } from "@/lib/dates";
+import { formatDueDateBadge, formatIsoTime, formatDateBrief, formatStamp, formatStampBrief } from "@/lib/dates";
 
 describe("formatIsoTime", () => {
   it("formats local HH:mm from an ISO timestamp", () => {
@@ -26,6 +26,22 @@ describe("formatStamp", () => {
   it("returns empty for invalid values", () => {
     expect(formatStamp("")).toBe("");
     expect(formatStamp("not-a-date")).toBe("");
+  });
+});
+
+describe("formatStampBrief / formatDateBrief", () => {
+  it("当年省年份", () => {
+    const y = new Date().getFullYear();
+    expect(formatStampBrief(new Date(y, 9, 20, 1, 3).toISOString())).toBe("10月20日 01:03");
+    expect(formatDateBrief(`${y}-10-20`)).toBe("10月20日");
+  });
+
+  it("跨年带年份，非法值给空串", () => {
+    const last = new Date().getFullYear() - 1;
+    expect(formatStampBrief(new Date(last, 9, 20, 1, 3).toISOString())).toBe(`${last}年10月20日 01:03`);
+    expect(formatDateBrief(`${last}-10-20`)).toBe(`${last}年10月20日`);
+    expect(formatStampBrief("not-a-date")).toBe("");
+    expect(formatDateBrief("")).toBe("");
   });
 });
 

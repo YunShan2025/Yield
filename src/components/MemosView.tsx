@@ -19,7 +19,7 @@ function formatMemoTime(iso: string): string {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
-/** 搜索时仍按正文匹配；列表展示不再使用。 */
+/** 搜索时仍按正文匹配；移动壳列表的预览行也用这句口径（含 richtext 转纯文本）。 */
 function memoPreview(memo: Memo): string {
   const text = memo.format === "richtext" ? richTextToPlainText(memo.content) : memo.content.replace(/[#*_>`\[\]()-]/g, " ").replace(/\s+/g, " ").trim();
   return text.slice(0, 80) || "暂无内容";
@@ -30,7 +30,6 @@ export function MemosView() {
   const focusRequest = useAppStore((state) => state.focusRequest);
   const clearFocus = useAppStore((state) => state.clearFocus);
   const [memos, setMemos] = useState<Memo[]>([]);
-  const [keyword, setKeyword] = useState("");
   const [listMode, setListMode] = useState<"active" | "archived">("active");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -94,18 +93,16 @@ export function MemosView() {
     return () => editor.removeEventListener("paste", pastePlainText);
   }, [editing, selectedId]);
 
-  const visibleMemos = useMemo(() => {
-    const query = keyword.trim().toLowerCase();
-    return memos.filter((memo) => (listMode === "archived" ? memo.archived === 1 : memo.archived !== 1)).filter((memo) => !query || memo.title.toLowerCase().includes(query) || memoPreview(memo).toLowerCase().includes(query));
-  }, [memos, keyword, listMode]);
+  const visibleMemos = useMemo(
+    () => memos.filter((memo) => (listMode === "archived" ? memo.archived === 1 : memo.archived !== 1)),
+    [memos, listMode],
+  );
   const selected = memos.find((memo) => memo.id === selectedId) ?? null;
   const activeCount = memos.filter((memo) => memo.archived !== 1).length;
   const archivedCount = memos.length - activeCount;
-  // 引导卡：在册条目的格式分布分段条（与大读数同口径，不含归档），
-  // hint 再补一句最近更新 —— 都是页面已加载的真实数据。
+  // 引导卡：在册条目的格式分布分段条（与大读数同口径，不含归档）。
   const richtextCount = memos.filter((memo) => memo.archived !== 1 && memo.format === "richtext").length;
   const markdownCount = memos.filter((memo) => memo.archived !== 1 && memo.format === "markdown").length;
-  const latestUpdated = memos.reduce((max, memo) => (memo.updated_at > max ? memo.updated_at : max), "");
 
   const persistCurrent = async () => {
     if (!selected) return;
@@ -245,12 +242,8 @@ export function MemosView() {
       <MobileGuideCard
         value={activeCount}
         unit="条"
-        label="备忘在册"
-        hint={
-          latestUpdated
-            ? `已归档 ${archivedCount} 条 · 最近更新 ${formatMemoTime(latestUpdated)}`
-            : `已归档 ${archivedCount} 条`
-        }
+        label="备忘"
+        hint={`已归档 ${archivedCount} 条`}
         segments={[
           { label: "富文本", value: richtextCount, color: "var(--accent-strong)" },
           {
@@ -270,7 +263,6 @@ export function MemosView() {
 
     <div className="memo-body">
       <div className="memo-toolbar">
-        <div className="memo-search"><AppIcon name="search" size={16} /><input placeholder="搜索备忘录" value={keyword} onChange={(event) => setKeyword(event.target.value)} /></div>
         <div className="memo-list-tabs" aria-label="备忘录分类"><button type="button" className={listMode === "active" ? "active" : ""} onClick={() => switchList("active")}>全部 <span>{activeCount}</span></button><button type="button" className={listMode === "archived" ? "active" : ""} onClick={() => switchList("archived")}>已归档 <span>{archivedCount}</span></button></div>
       </div>
       <div className="memo-list">
@@ -286,15 +278,36 @@ export function MemosView() {
               {memo.title || "无标题备忘"}
             </span>
             <span className="memo-list-time">{formatMemoTime(memo.updated_at)}</span>
+            {/* 移动壳双行卡（2026-10-30）：第二行＝格式徽标（复用详情页
+                memo-document-format 原子）＋正文预览一行截断。桌面仍单行。 */}
+            {isMobileShell() ? (
+              <span className="memo-list-preview">
+                <em className={`memo-document-format is-${memo.format === "markdown" ? "markdown" : "richtext"}`}>
+                  {memo.format === "richtext" ? "富文本" : "Markdown"}
+                </em>
+                <span>{memoPreview(memo)}</span>
+              </span>
+            ) : null}
           </button>
         ))}
         {!visibleMemos.length ? (
-          <div className="memo-empty-list">
-            {keyword
-              ? "没有找到相关备忘录"
-              : listMode === "archived"
-                ? "还没有归档内容"
-                : "新建一条备忘录，记录需要长期保存的内容"}
+          /* 空态与项目/目标同法（两端共享）：真没有备忘时给三件套带创建入口
+              （直建富文本进编辑）；归档落空只两句、不给按钮。 */
+          <div className="empty-state anni-empty">
+            {listMode === "archived" ? (
+              <>
+                <strong>还没有归档内容</strong>
+                <p>归档过的备忘会收在这里。</p>
+              </>
+            ) : (
+              <>
+                <strong>这里还没有备忘录</strong>
+                <p>随手记下想法与灵感，需要时找得回来。</p>
+                <button className="btn-primary" type="button" onClick={() => void createNew("richtext")}>
+                  创建第一个备忘
+                </button>
+              </>
+            )}
           </div>
         ) : null}
       </div>
@@ -322,7 +335,9 @@ export function MemosView() {
           <article className="memo-reading-surface">{content.trim() ? format === "richtext" ? <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(content) }} /> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ children, ...props }) => <a {...props} target="_blank" rel="noreferrer">{children}</a> }}>{content}</ReactMarkdown> : <div className="memo-reading-empty"><AppIcon name="memo" size={30} /><strong>这条备忘录还没有内容</strong><button type="button" onClick={startEditing}>开始编辑</button></div>}</article>
         </>}
       </div>
-      <div className="detail-footer">
+      {/* 移动壳按态排布动作条：阅读态 2×2，编辑态「保存｜取消 ＋ 删除通栏」
+          （memo-foot-editing 类只给 CSS 区分，桌面不读它）。 */}
+      <div className={`detail-footer${editing ? " memo-foot-editing" : ""}`}>
         {editing ? (
           <>
             <button type="button" className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>保存并返回</button>

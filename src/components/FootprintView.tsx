@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { Goal, Task } from "@/types";
 import { fetchGoals } from "@/lib/db";
 import { useAppStore } from "@/store/app";
@@ -71,6 +71,14 @@ export function FootprintView() {
   }, []);
 
   const days = useMemo(dayRange, []);
+  // 移动壳热力图是横向滚动容器，新容器的 scrollLeft 从 0 起步——默认看见的是
+  // 半年前那几周，今天被甩在视口外。挂载时（layout 阶段，首帧前）把视口钉到
+  // 最右，让今天落在右缘；桌面容器不横滚，置位无副作用。
+  const heatRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = heatRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
   // 完成的任务点亮热力图：按任务自身的日期（截止日）落位，而非完成时刻——
   // 补记/延后完成的任务应算在它所属的那一天。无日期的任务回退到完成时刻。
   const completedTasksByDate = useMemo(() => {
@@ -224,7 +232,7 @@ export function FootprintView() {
         </section>
       )}
 
-      {/* 读数条：与本周页同族的横向一条（inline-flex + 竖发丝线），窄窗折行、
+      {/* 读数条：与周报页同族的横向一条（inline-flex + 竖发丝线），窄窗折行、
           移动壳两列网格——不再用四格高卡把首屏吃满。 */}
       <section className="footprint-stats" aria-label="半年概览">
         <div className="weekly-stat-track">
@@ -285,7 +293,7 @@ export function FootprintView() {
             <span key={mark.col} style={{ gridColumnStart: mark.col + 1 }}>{mark.label}</span>
           ))}
         </div>
-        <div className="growth-heatmap" aria-label="足迹热点图">
+        <div className="growth-heatmap" ref={heatRef} aria-label="足迹热点图">
           {days.map((date) => {
             const key = toDateKey(date);
             const value = valueByDate.get(key) ?? 0;
@@ -314,8 +322,8 @@ export function FootprintView() {
               <h4>完成任务 <span>{dayTasks.length}</span></h4>
               {dayTasks.length ? (
                 isMobileShell() ? (
-                  /* 移动壳：与本周当周日历 day 列同一套行件 MobileTaskLine——行首分类色点、
-                     归属胶囊、目标徽标、完成金圆钮全同源；点开详情、长按操作面板同本周。 */
+                  /* 移动壳：与周报当周日历 day 列同一套行件 MobileTaskLine——行首分类色点、
+                     归属胶囊、目标徽标、完成金圆钮全同源；点开详情、长按操作面板同周报。 */
                   <ul className="mrow-list">
                     {dayTasks.map((task) => (
                       <MobileTaskLine
@@ -335,7 +343,7 @@ export function FootprintView() {
                     ))}
                   </ul>
                 ) : (
-                  /* 桌面：行照本周「脉搏详情」的原子——成就金行底、分类色点、归属胶囊 /
+                  /* 桌面：行照周报「脉搏详情」的原子——成就金行底、分类色点、归属胶囊 /
                      目标徽标 / 完成时刻 done-chip、右侧勾选钮同一族；点行开任务详情。 */
                   <ul className="weekly-pulse-list">
                     {dayTasks.map((task) => {

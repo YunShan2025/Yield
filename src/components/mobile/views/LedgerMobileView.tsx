@@ -140,7 +140,10 @@ export function LedgerMobileView() {
             aria-label="上个月"
             onClick={() => setMonth(moveMonth(month, -1))}
           >
-            <span aria-hidden="true">‹</span>
+            {/* SVG chevron 旋转替代 ‹/› 字符（2026-10-30）：guillemet 字符的墨迹
+                中心随字体回落漂移（Segoe/PingFang 各偏各），margin-top 硬补不住；
+                SVG 的几何中心 = 线框中心，grid 居中即与月份标签同心。 */}
+            <AppIcon name="chevron" size={20} className="mtoday-switch-chevron is-left" />
           </button>
           <strong>
             {yearNum === new Date().getFullYear()
@@ -154,7 +157,7 @@ export function LedgerMobileView() {
             disabled={isCurrentMonth}
             onClick={() => setMonth(moveMonth(month, 1))}
           >
-            <span aria-hidden="true">›</span>
+            <AppIcon name="chevron" size={20} className="mtoday-switch-chevron is-right" />
           </button>
         </div>
       </header>

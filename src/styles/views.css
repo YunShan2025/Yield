@@ -963,7 +963,7 @@ html[data-shell="mobile"] .app-body {
 
 .mobile-nav-item.active {
   color: var(--accent-strong);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .mobile-nav-icon {
@@ -1177,7 +1177,7 @@ html[data-shell="mobile"] .expand-task-row {
   overflow: hidden;
   color: var(--text-heading);
   font-size: var(--font-size-body);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.4;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1285,7 +1285,7 @@ html[data-shell="mobile"] .expand-task-row {
 .action-sheet-priority-button.active {
   background: var(--accent-soft);
   color: var(--accent-strong);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .action-sheet-grid.is-short .action-sheet-custom {
@@ -1639,23 +1639,6 @@ html[data-shell="mobile"] .day-agenda .expand-task-row > .item-action-edit > spa
   display: none;
 }
 
-/* 习惯卡片动作区：两列换行会把「删除」甩到第二行，改成三钮等分一行。
-   外观（灰底/32px/删除淡红）走 mobile.css 与面板底部动作条的共享规则。 */
-html[data-shell="mobile"] .habit-card-actions {
-  display: flex;
-  grid-template-columns: none;
-  flex-wrap: nowrap;
-  gap: 6px;
-  width: 100%;
-}
-
-html[data-shell="mobile"] .habit-card-actions .item-action-btn {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  white-space: nowrap;
-}
-
 /* 应用内通知卡叠层：窄屏锚定在底部导航上方——顶部悬浮会盖住
    日/周/月切换器与「新建任务」按钮（实测发现）。 */
 html[data-shell="mobile"] .desktop-notification-stack {
@@ -1682,10 +1665,6 @@ html[data-shell="mobile"] .version-update-notice {
     flex-wrap: wrap;
     gap: 8px;
     padding: 14px 16px 8px;
-  }
-
-  .workspace-top h2 {
-    font-size: var(--font-size-h2);
   }
 
   .top-controls {
@@ -2147,7 +2126,7 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .create-tas
 /* 页头标题对齐 action-sheet-title（body/650），去掉桌面弹窗的大标题感 */
 html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) .modal-head h3 {
   font-size: var(--font-size-body);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: normal;
 }
 
@@ -2430,12 +2409,6 @@ html[data-shell="mobile"] .memo-list {
 
 html[data-shell="mobile"] .memo-list-item {
   min-height: 60px;
-}
-
-/* 习惯卡片周进度：窄屏下进度条与「本周 x/y 次」分两行，不再横向压缩。 */
-html[data-shell="mobile"] .habit-week-progress {
-  flex-wrap: wrap;
-  row-gap: 4px;
 }
 
 /* 提醒计时卡片：单列（minmax(300px) 在手机上自然成一列），触控内距微调。 */

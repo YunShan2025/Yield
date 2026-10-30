@@ -1562,6 +1562,19 @@ ALTER TABLE goals DROP COLUMN manual_completion;
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 30,
+            description: "goal_entries_ledger_only",
+            // 本周页「当周目标推进」下线（2026-10-30），手动记录的最后出口随之
+            // 关闭：v29 清过一次的非事件行（manual 及历史 focus/milestone），
+            // 混窗期仍可能从旧端同步进来，发布时点再清一遍，把账本收口为纯
+            // 计量事件行。进度口径不变（只认 task/habit），旧端再送来的行依旧
+            // 由复算口径天然忽略。
+            sql: r#"
+DELETE FROM goal_entries WHERE source_type NOT IN ('task','habit');
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

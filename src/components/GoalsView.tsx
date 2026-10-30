@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { Goal } from "@/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Goal, Habit, Task } from "@/types";
 import {
   createGoal,
   fetchGoals,
@@ -12,6 +12,8 @@ import { AppIcon } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
+import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { ExpandRow } from "@/components/ExpandRow";
 import { confirmAction } from "@/components/AppConfirm";
 import {
   calculateGoalProgress,
@@ -20,11 +22,6 @@ import {
 } from "@/lib/growth";
 
 const COLORS = ["#2F6FED", "#6F83D6", "#3E9B78", "#D7864D", "#C35D77", "#7367A8"];
-const GOAL_STATUS_LABEL: Record<Goal["status"], string> = {
-  active: "进行中",
-  paused: "已暂停",
-  completed: "已完成",
-};
 
 /** 两个自然日之间相差几天（按本地日历天算，不受时区影响）。 */
 function daysBetween(from: string, to: string): number {
@@ -38,13 +35,7 @@ function fmtContribution(value: number) {
   return Math.round(value * 100) / 100;
 }
 
-/** 目标详情标题下的一行摘要：动机输入框已下线，这里改用目标自身的进度语义。 */
-function goalHeroSummary(goal: Goal) {
-  const target = resolveGoalTarget(goal);
-  return `累计 ${fmtContribution(goal.current_value)}${goal.unit} / ${fmtContribution(target.value)}${goal.unit}`;
-}
-
-/** 截止读数：目标卡、桌面顶卡、移动壳顶卡共用同一句口径（无截止日 = 长期目标）。 */
+/** 截止读数：行头截止 chip、子行读数共用同一句口径（无截止日 = 长期目标）。 */
 function goalDeadlineText(info: { daysLeft: number; behind: boolean } | null): string {
   if (!info) return "长期目标";
   const left = info.daysLeft > 0 ? `剩 ${info.daysLeft} 天` : "已到目标日";
@@ -52,9 +43,9 @@ function goalDeadlineText(info: { daysLeft: number; behind: boolean } | null): s
 }
 
 /**
- * 「目标」独立顶级页（有恒 · 长期方向侧）。承袭原成长页的 goals 页签：
- * 卡片清单 + 详情同屏工作台，改一个目标的进度时仍看得见别的目标在什么位置。
- * 只讲目标本身；日常投入与热力图归「足迹」页。
+ * 「目标」独立顶级页（有恒 · 长期方向侧）。两端同构的展开卡流（2026-10-30 乙案）：
+ * 行即白卡、点卡就地展开「正在推进」与动作条，与项目/标签/习惯同卡族；
+ * 卡片清单 + 详情工作台已退役。只讲目标本身；日常投入与热力图归「足迹」页。
  */
 export function GoalsView() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -67,6 +58,8 @@ export function GoalsView() {
   const [goalUnit, setGoalUnit] = useState("次");
   const [targetValue, setTargetValue] = useState("21");
   const [color, setColor] = useState(COLORS[0]);
+  // 命令面板「定位」置标记，展开行渲染到位后把它滚进视口一次。
+  const pendingFocusScrollRef = useRef(false);
 
   const today = todayDateString();
   const allTasks = useAppStore((state) => state.tasks);
@@ -90,9 +83,10 @@ export function GoalsView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 命令面板选中目标后：打开该目标详情（含已归档）。
+  // 命令面板选中目标后：展开该行并滚进视口（两端同构，含已归档）。
   useEffect(() => {
     if (focusRequest?.kind !== "goal") return;
+    pendingFocusScrollRef.current = true;
     setSelectedGoalId(focusRequest.id);
     clearFocus();
     // 归档目标默认不在列表里；补拉一次并合并，保证详情页能正常渲染。
@@ -109,9 +103,15 @@ export function GoalsView() {
   }, [focusRequest, clearFocus]);
 
   const selectedGoal = goals.find((goal) => goal.id === selectedGoalId) ?? null;
-  /* 移动壳详情顶卡：进度条收进卡内、截止与卡/桌面顶卡同口径，进度这里只算一次。 */
-  const mobileHeroProgress = selectedGoal ? calculateGoalProgress(selectedGoal) : 0;
-  const mobileHeroDeadline = selectedGoal ? goalDeadlineInfo(selectedGoal, today) : null;
+
+  // 定位展开的行渲染到位后滚进视口一次（与项目页同一套路）。
+  useEffect(() => {
+    if (!selectedGoal || !pendingFocusScrollRef.current) return;
+    pendingFocusScrollRef.current = false;
+    document
+      .querySelector(`[data-expand-row="${selectedGoal.id}"]`)
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [selectedGoal]);
 
   const submitGoal = async () => {
     const title = goalTitle.trim();
@@ -181,6 +181,30 @@ export function GoalsView() {
     [goals],
   );
 
+  /* 移动壳引导卡三段（2026-10-30 甲案）：与项目页 heroSegments 同构同色阶。
+     读数与「进行中」分区计数同源（active+paused），已完成单列一段；
+     落后读数与目标卡截止胶囊同一个真源（goalDeadlineInfo），只数在跑的。 */
+  const guideSegments = [
+    {
+      label: "进行中",
+      value: goals.filter((goal) => goal.status === "active").length,
+      color: "var(--accent-strong)",
+    },
+    {
+      label: "已暂停",
+      value: goals.filter((goal) => goal.status === "paused").length,
+      color: "color-mix(in srgb, var(--accent-strong) 45%, transparent)",
+    },
+    {
+      label: "已完成",
+      value: finishedGoals.length,
+      color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+    },
+  ];
+  const behindCount = goals.filter(
+    (goal) => goal.status === "active" && goalDeadlineInfo(goal, today)?.behind,
+  ).length;
+
   /** 删除目标 = 移入回收站，可恢复。 */
   const deleteGoalWithConfirm = async (goal: Goal) => {
     const ok = await confirmAction({
@@ -196,15 +220,21 @@ export function GoalsView() {
   };
 
   // 正在推进这个目标的任务与习惯（服务关系：它们让目标往前走，但不一定计数）。
-  const pushingTasks = selectedGoal
-    ? allTasks.filter(
-        (task) =>
-          task.goal_id === selectedGoal.id && !task.parent_id && !task.deleted_at,
-      )
-    : [];
-  const pushingHabits = selectedGoal
-    ? habits.filter((habit) => habit.goal_id === selectedGoal.id && !habit.deleted_at)
-    : [];
+  // 展开卡按行取，两端同一个 helper。
+  const tasksPushingFor = (goalId: string) =>
+    allTasks.filter((task) => task.goal_id === goalId && !task.parent_id && !task.deleted_at);
+  const habitsPushingFor = (goalId: string) =>
+    habits.filter((habit) => habit.goal_id === goalId && !habit.deleted_at);
+
+  /** 计量切换与状态流转：展开卡上的行内动作，两端共用。 */
+  const toggleTaskMeasure = (task: Task) =>
+    void saveTask(task.id, { goal_contribution: task.goal_contribution > 0 ? 0 : 1 }).then(
+      () => refresh(),
+    );
+  const toggleHabitMeasure = (habit: Habit) =>
+    void setHabitMeasurement(habit.id, habit.goal_contribution > 0 ? 0 : 1).then(() => refresh());
+  const setGoalStatus = (goal: Goal, status: Goal["status"]) =>
+    void updateGoal(goal.id, { status }).then(() => refresh());
 
   return (
     <div className="growth-page">
@@ -223,178 +253,128 @@ export function GoalsView() {
         </div>
       </div>
 
-      {/* 目标工作台：清单与详情同屏，改一个目标的进度时还看得见别的目标在什么位置，
-          不必再「点进去 → 返回列表」来回跳。移动壳仍是钻入（CSS 用 has-detail 切两栏）。
-          DOM 是详情在前、清单在后，桌面用 grid-column 把清单摆回左边。 */}
-      <section className={`goal-workbench${selectedGoal ? " has-detail" : ""}`}>
-        <div className="goal-workbench-detail">
-          {selectedGoal ? (
-            <section className="goal-detail">
-              <button className="text-btn" onClick={() => setSelectedGoalId(null)}>← 返回目标列表</button>
-              {/* 详情顶卡两端信息集统一（状态 / 截止 / 标题 / 摘要 / 进度条带 %，截止读数
-                  与目标卡同源一个真源），版式各随各壳：移动壳淡蓝顶卡横排读数，桌面工作台
-                  竖排大字。进度条两端都收在卡内。 */}
-              {isMobileShell() ? (
-                <div className="goal-detail-hero" style={{ "--goal-color": selectedGoal.color } as CSSProperties}>
-                  <div>
-                    <span>{GOAL_STATUS_LABEL[selectedGoal.status]}</span>
-                    <em className={`goal-hero-deadline${mobileHeroDeadline?.behind ? " is-behind" : ""}`}>· {goalDeadlineText(mobileHeroDeadline)}</em>
-                    <h2>{selectedGoal.title}</h2>
-                    <p>{selectedGoal.motivation || goalHeroSummary(selectedGoal)}</p>
-                  </div>
-                  <strong>{Math.round(mobileHeroProgress)}%</strong>
-                  <div className="goal-progress-track"><i style={{ width: `${mobileHeroProgress}%`, background: selectedGoal.color }} /></div>
-                </div>
-              ) : (
-                <GoalDetailHero goal={selectedGoal} />
+      {/* 顶卡双端同族各穿各壳（乙案，2026-10-30）：移动壳是数据型引导卡
+          （空页让位给页内 empty-state）；桌面借项目/习惯页的 guide-hero 壳——
+          说明 + 衬线读数 → 三段条 + 图例，guideSegments 一份数据双端共用。 */}
+      {isMobileShell() ? (
+        goals.length ? (
+          <MobileGuideCard
+            value={activeGoals.length}
+            unit="个"
+            label="进行中的目标"
+            hint={behindCount ? `进度落后 ${behindCount} 个` : undefined}
+            segments={guideSegments}
+          />
+        ) : null
+      ) : (
+        <section className="today-hero guide-hero goals-guide">
+          <div className="projects-guide-top">
+            <p className="today-hero-note">{goalGuide}</p>
+            <span className="today-hero-meter-count">
+              <strong>{goals.length}</strong>
+              <span>个 · 目标</span>
+            </span>
+          </div>
+          <div className="projects-hero-bar">
+            <div className="projects-hero-track" aria-hidden="true">
+              {guideSegments.map(
+                (segment) =>
+                  segment.value > 0 && (
+                    <i
+                      key={segment.label}
+                      style={{ flexGrow: segment.value, background: segment.color }}
+                    />
+                  ),
               )}
-              {/* 正在推进：关联的任务与习惯。 */}
-              <section className="goal-pushing">
-                <div className="goal-section-head">
-                  <span>正在推进</span>
-                  <b>{pushingTasks.length + pushingHabits.length}</b>
-                </div>
-                {pushingTasks.length || pushingHabits.length ? (
-                  <ul className="goal-push-list">
-                    {pushingTasks.map((task) => (
-                      <li key={task.id}>
-                        <span className="goal-push-kind">
-                          <i style={{ background: selectedGoal.color }} />
-                          任务
-                        </span>
-                        <span className="goal-push-title">{task.title}</span>
-                        <em
-                          className={
-                            task.status === "completed"
-                              ? "is-done"
-                              : task.due_date && task.due_date < today
-                                ? "is-overdue"
-                                : undefined
-                          }
-                        >
-                          {task.status === "completed"
-                            ? "已完成"
-                            : task.due_date
-                              ? task.due_date < today
-                                ? `逾期 ${daysBetween(task.due_date, today)} 天`
-                                : task.due_date
-                              : "无截止日"}
-                        </em>
-                        <button
-                          type="button"
-                          className={`goal-push-measure${task.goal_contribution > 0 ? " is-on" : ""}`}
-                          title="切换这项是否给目标计数"
-                          onClick={() =>
-                            void saveTask(task.id, {
-                              goal_contribution: task.goal_contribution > 0 ? 0 : 1,
-                            }).then(() => refresh())
-                          }
-                        >
-                          {task.goal_contribution > 0 ? (
-                            <>
-                              <AppIcon name="check" size={11} />
-                              计入
-                            </>
-                          ) : (
-                            "只关联"
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                    {pushingHabits.map((habit) => (
-                      <li key={habit.id}>
-                        <span className="goal-push-kind">
-                          <i />
-                          习惯
-                        </span>
-                        <span className="goal-push-title">{habit.title}</span>
-                        <em>{habit.archived ? "已归档" : "每周进行"}</em>
-                        <button
-                          type="button"
-                          className={`goal-push-measure${habit.goal_contribution > 0 ? " is-on" : ""}`}
-                          title="切换这次打卡是否给目标计数"
-                          onClick={() =>
-                            void setHabitMeasurement(
-                              habit.id,
-                              habit.goal_contribution > 0 ? 0 : 1,
-                            ).then(() => refresh())
-                          }
-                        >
-                          {habit.goal_contribution > 0 ? (
-                            <>
-                              <AppIcon name="check" size={11} />
-                              计入
-                            </>
-                          ) : (
-                            "只关联"
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="goal-empty">
-                    还没有任务或习惯在推进这个目标。把日常动作关联上来，进度会自己长。
-                  </p>
-                )}
-              </section>
+            </div>
+            <div className="projects-hero-legend">
+              {guideSegments.map((segment) => (
+                <span key={segment.label}>
+                  <em style={{ background: segment.color }} aria-hidden="true" />
+                  {segment.label} {segment.value}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-              {/* 动作分级：状态管理靠左成组（编辑 → 暂停），完成=应用内蓝主钮
-                  （item-action-primary）与删除一起靠右、隔开；删除仍钉行尾警示
-                  ——桌面 danger ghost。移动壳分两排（见 mobile.css，manage-group
-                  display:contents 让按钮各自落行，DOM 顺序不变）：上排日常状态，
-                  底排「完成=蓝主钮 + 删除=红衬」。已达成只剩编辑与删除。 */}
-              <div className="goal-detail-actions">
-                <div className="goal-manage-group">
-                  <button className="item-action-btn" onClick={() => openGoalEditor(selectedGoal)}>编辑</button>
-                  {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn" onClick={() => void updateGoal(selectedGoal.id, { status: selectedGoal.status === "paused" ? "active" : "paused" }).then(() => refresh())}>{selectedGoal.status === "paused" ? "继续目标" : "暂停"}</button> : null}
-                </div>
-                {["active", "paused"].includes(selectedGoal.status) ? <button className="item-action-btn item-action-primary goal-act-done" onClick={() => void updateGoal(selectedGoal.id, { status: "completed" }).then(() => refresh())}>完成</button> : null}
-                <button className="item-action-btn goal-action-remove" onClick={() => void deleteGoalWithConfirm(selectedGoal)}>
-                  {isMobileShell() ? "删除" : "删除目标"}
-                </button>
-              </div>
-            </section>
+      {/* 目标清单（两端同构，乙案 2026-10-30）：行即白卡 + 点卡就地展开，手风琴
+          单展开；桌面皮肤同项目/标签/习惯卡族（components.css），移动壳档见 mobile.css。 */}
+      <div className="goals-list">
+        <section aria-label="进行中的目标">
+          <div className="section-title-row">
+            <h3>进行中</h3>
+            <span className="tags-filtered-count">{activeGoals.length}</span>
+          </div>
+          {activeGoals.length ? (
+            <div className="goals-rows">
+              {activeGoals.map((goal) => (
+                <GoalRow
+                  key={goal.id}
+                  goal={goal}
+                  today={today}
+                  open={selectedGoalId === goal.id}
+                  onToggle={() =>
+                    setSelectedGoalId(selectedGoalId === goal.id ? null : goal.id)
+                  }
+                  pushingTasks={tasksPushingFor(goal.id)}
+                  pushingHabits={habitsPushingFor(goal.id)}
+                  onEdit={() => openGoalEditor(goal)}
+                  onToggleStatus={() =>
+                    setGoalStatus(goal, goal.status === "paused" ? "active" : "paused")
+                  }
+                  onComplete={() => setGoalStatus(goal, "completed")}
+                  onDelete={() => void deleteGoalWithConfirm(goal)}
+                  onTaskMeasure={toggleTaskMeasure}
+                  onHabitMeasure={toggleHabitMeasure}
+                />
+              ))}
+            </div>
           ) : (
-            <div className="goal-workbench-empty">
-              <strong>左边选一个目标</strong>
-              <p>推进它的任务与习惯、计入与否，都在这一栏里改。</p>
-              <button className="item-action-btn" type="button" onClick={openCreateGoal}>新建目标</button>
+            /* 空态不套白卡：与项目/纪念日页同款，直接落在画布上。 */
+            <div className="empty-state anni-empty">
+              <strong>这里还没有目标</strong>
+              <p>把想达成的结果立起来，日常的任务与打卡会自动汇成进度。</p>
+              <button className="btn-primary" type="button" onClick={openCreateGoal}>
+                创建第一个目标
+              </button>
             </div>
           )}
-        </div>
-        <div className="goal-workbench-list">
-          <section aria-label="进行中的目标">
+        </section>
+        {finishedGoals.length ? (
+          <section aria-label="已完成的目标">
             <div className="section-title-row">
-              <h3>进行中</h3>
-              <span className="tags-filtered-count">{activeGoals.length}</span>
+              <h3>已完成</h3>
+              <span className="tags-filtered-count">{finishedGoals.length}</span>
             </div>
-            <div className="goal-grid">
-              {activeGoals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
+            <div className="goals-rows">
+              {finishedGoals.map((goal) => (
+                <GoalRow
+                  key={goal.id}
+                  goal={goal}
+                  today={today}
+                  finished
+                  open={selectedGoalId === goal.id}
+                  onToggle={() =>
+                    setSelectedGoalId(selectedGoalId === goal.id ? null : goal.id)
+                  }
+                  pushingTasks={tasksPushingFor(goal.id)}
+                  pushingHabits={habitsPushingFor(goal.id)}
+                  onEdit={() => openGoalEditor(goal)}
+                  onToggleStatus={() =>
+                    setGoalStatus(goal, goal.status === "paused" ? "active" : "paused")
+                  }
+                  onComplete={() => setGoalStatus(goal, "completed")}
+                  onDelete={() => void deleteGoalWithConfirm(goal)}
+                  onTaskMeasure={toggleTaskMeasure}
+                  onHabitMeasure={toggleHabitMeasure}
+                />
               ))}
-              {!activeGoals.length ? (
-                <div className="empty-state">
-                  创建第一个长期目标，让每天的任务有更清晰的方向。
-                </div>
-              ) : null}
             </div>
           </section>
-          {finishedGoals.length ? (
-            <section aria-label="已完成的目标">
-              <div className="section-title-row">
-                <h3>已完成</h3>
-                <span className="tags-filtered-count">{finishedGoals.length}</span>
-              </div>
-              <div className="goal-grid">
-                {finishedGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} selected={selectedGoalId === goal.id} onOpen={() => setSelectedGoalId(goal.id)} />
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </div>
-      </section>
+        ) : null}
+      </div>
 
       {showCreate ? (
         <div className="modal-backdrop floating-backdrop" onMouseDown={() => setShowCreate(false)}>
@@ -434,84 +414,218 @@ export function GoalsView() {
   );
 }
 
-function GoalCard({
+/* 目标展开卡（2026-10-30 乙案，两端共用）：行即白卡 + 点卡就地展开，与项目/标签/
+   习惯同卡族。折叠＝标题行（色点 / 名称 / 状态 chip / 读数）＋子行——桌面只留
+   一条细进度条、移动壳保留进度条 + 累计与截止读数；展开＝正在推进清单
+   （计量就地切换）＋动作条。进度与今日页目标条同一真源。 */
+function GoalRow({
   goal,
-  onOpen,
-  selected = false,
+  today,
+  open,
+  onToggle,
+  pushingTasks,
+  pushingHabits,
+  onEdit,
+  onToggleStatus,
+  onComplete,
+  onDelete,
+  onTaskMeasure,
+  onHabitMeasure,
+  finished = false,
 }: {
   goal: Goal;
-  onOpen: () => void;
-  /** 工作台的清单里标出「右边详情正在看哪个目标」；其它地方不传，行为不变。 */
-  selected?: boolean;
+  today: string;
+  open: boolean;
+  onToggle: () => void;
+  pushingTasks: Task[];
+  pushingHabits: Habit[];
+  onEdit: () => void;
+  onToggleStatus: () => void;
+  onComplete: () => void;
+  onDelete: () => void;
+  onTaskMeasure: (task: Task) => void;
+  onHabitMeasure: (habit: Habit) => void;
+  /** 已完成分区传入：桌面整行淡出（hover/展开回全显），同归档行观感。 */
+  finished?: boolean;
 }) {
-  // 分母与进度走 growth 的唯一真源：目标卡、今日目标条、目标页显示同一组数字。
+  const mobile = isMobileShell();
   const target = resolveGoalTarget(goal);
   const progress = calculateGoalProgress(goal);
-  const deadline = goalDeadlineInfo(goal, todayDateString());
-  const finished = goal.status === "completed";
-  return (
-    <button
-      className={`goal-card${finished ? " is-finished" : ""}${selected ? " is-sel" : ""}`}
-      aria-pressed={selected}
-      onClick={onOpen}
-    >
-      {/* 卡片待在哪个分区就说哪个状态：只有「已暂停」需要额外一个字——
-          它混在进行中列表里，不标就看不出来。 */}
-      {goal.status === "paused" ? (
-        <div className="goal-card-head">
-          <span className="goal-card-chip" style={{ "--goal-color": goal.color } as CSSProperties}>
-            <i style={{ background: goal.color }} />
-            {GOAL_STATUS_LABEL[goal.status]}
-          </span>
-        </div>
-      ) : null}
-      <h3>{goal.title}</h3>
-      <p>
-        <b>{fmtContribution(goal.current_value)}{target.unit}</b> / {fmtContribution(target.value)}{target.unit}
-      </p>
-      <div className="goal-card-progress">
-        <div className="goal-progress-track"><i style={{ width: `${progress}%`, background: goal.color }} /></div>
-        <b>{Math.round(progress)}%</b>
-      </div>
-      <footer>
-        <span className={deadline?.behind ? "is-behind" : undefined}>{goalDeadlineText(deadline)}</span>
-      </footer>
-    </button>
-  );
-}
-
-/* 桌面工作台的详情顶卡：状态点 + 截止 → 标题 + 当前/目标大字 → 进度条带 %。
-   移动壳走旧结构（同文件上面的 isMobileShell 分支），这里只在桌面渲染。
-   大字用 --font-display 与读数条同族——衬线 --font-num-display 一屏最多一处，留给顶卡。 */
-function GoalDetailHero({ goal }: { goal: Goal }) {
-  const target = resolveGoalTarget(goal);
-  const progress = calculateGoalProgress(goal);
-  const deadline = goalDeadlineInfo(goal, todayDateString());
-  return (
-    <div className="goal-detail-hero is-workbench" style={{ "--goal-color": goal.color } as CSSProperties}>
-      <div className="goal-hero-top">
-        <span className="goal-hero-status">
-          <i style={{ background: goal.color }} />
-          {GOAL_STATUS_LABEL[goal.status]}
-        </span>
-        <span className={`goal-hero-deadline${deadline?.behind ? " is-behind" : ""}`}>{goalDeadlineText(deadline)}</span>
-      </div>
-      <div className="goal-hero-main">
-        <h2>{goal.title}</h2>
-        <div className="goal-hero-count">
-          <strong>{fmtContribution(goal.current_value)}</strong>
-          <span>
-            / {fmtContribution(target.value)} {target.unit}
-          </span>
-        </div>
-      </div>
-      {goal.motivation ? <p className="goal-hero-motivation">{goal.motivation}</p> : null}
-      <div className="goal-hero-progress">
-        <div className="goal-progress-track">
-          <i style={{ width: `${progress}%`, background: goal.color }} />
-        </div>
-        <b>{Math.round(progress)}%</b>
-      </div>
+  const deadline = goalDeadlineInfo(goal, today);
+  const running = goal.status === "active" || goal.status === "paused";
+  const pushingCount = pushingTasks.length + pushingHabits.length;
+  /* 桌面行尾比率（同项目页 ratio-chip）：n/m 灰底，全达成暖金、零进度描边。 */
+  const ratioTone =
+    finished || goal.current_value >= target.value
+      ? " is-clear"
+      : goal.current_value <= 0
+        ? " is-idle"
+        : "";
+  const bar = (
+    <div className="goal-progress-track">
+      <i style={{ width: `${progress}%`, background: goal.color }} />
     </div>
+  );
+  const meta = (
+    <>
+      {goal.status === "paused" ? <span className="goal-paused-chip">已暂停</span> : null}
+      {/* 桌面截止胶囊：色阶同任务页 due-chip（落后=overdue 红、正常=soon 蓝）。 */}
+      {!mobile ? (
+        <span
+          className={`due-chip ${!deadline ? "is-none" : deadline.behind ? "is-overdue" : "is-soon"}`}
+        >
+          {goalDeadlineText(deadline)}
+        </span>
+      ) : null}
+    </>
+  );
+  return (
+    <ExpandRow
+      open={open}
+      onToggle={onToggle}
+      accent={goal.color}
+      rowId={goal.id}
+      dot={<span className="tag-card-dot" style={{ background: goal.color }} aria-hidden />}
+      title={goal.title}
+      className={finished ? "is-finished" : undefined}
+      meta={meta}
+      trailing={
+        mobile ? (
+          <span className="goal-row-pct">{Math.round(progress)}%</span>
+        ) : (
+          <span className={`ratio-chip${ratioTone}`}>
+            {fmtContribution(goal.current_value)}/{fmtContribution(target.value)}
+          </span>
+        )
+      }
+      toggleTitle={open ? "收起该目标" : "查看正在推进该目标的任务与习惯"}
+      subline={
+        /* 子行＝卡片第二层常驻内容，空白处点按=展开（同习惯卡规约，内部无交互件）。
+           桌面（乙案）只留一条细进度条，读数全在行头；移动壳保留进度条+读数行。 */
+        <div className={`mgoal-sub${mobile ? "" : " is-plain"}`} role="presentation" onClick={onToggle}>
+          {bar}
+          {mobile ? (
+            <div className="mgoal-nums">
+              <b>{fmtContribution(goal.current_value)}{target.unit}</b>
+              <span>/ {fmtContribution(target.value)}{target.unit}</span>
+              <em className={deadline?.behind ? "is-behind" : undefined}>{goalDeadlineText(deadline)}</em>
+            </div>
+          ) : null}
+        </div>
+      }
+      foot={
+        open ? (
+          /* 动作条两端各穿各壳：移动壳两格一排的网格（上排编辑·暂停，底排完成·删除）；
+             桌面同 PanelFoot 右对齐一行。颜色语义两端一致：完成=蓝主钮、删除=红衬示警。 */
+          <div className="expand-row-foot goal-foot">
+            <button type="button" className="item-action-btn item-action-edit" onClick={onEdit}>
+              <AppIcon name="edit" size={14} />
+              <span>编辑</span>
+            </button>
+            {running ? (
+              <button type="button" className="item-action-btn" onClick={onToggleStatus}>
+                {goal.status === "paused" ? "继续目标" : "暂停"}
+              </button>
+            ) : null}
+            {running ? (
+              <button
+                type="button"
+                className="item-action-btn goal-act-done"
+                onClick={onComplete}
+              >
+                完成
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="item-action-btn item-action-danger quiet-danger"
+              onClick={onDelete}
+            >
+              <AppIcon name="trash" size={14} />
+              <span>删除</span>
+            </button>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="goal-section-head">
+        <span>正在推进</span>
+        <b>{pushingCount}</b>
+      </div>
+      {pushingCount ? (
+        <ul className="goal-push-list">
+          {pushingTasks.map((task) => (
+            <li key={task.id}>
+              <span className="goal-push-kind">
+                <i style={{ background: goal.color }} />
+                任务
+              </span>
+              <span className="goal-push-title">{task.title}</span>
+              <em
+                className={
+                  task.status === "completed"
+                    ? "is-done"
+                    : task.due_date && task.due_date < today
+                      ? "is-overdue"
+                      : undefined
+                }
+              >
+                {task.status === "completed"
+                  ? "已完成"
+                  : task.due_date
+                    ? task.due_date < today
+                      ? `逾期 ${daysBetween(task.due_date, today)} 天`
+                      : task.due_date
+                    : "无截止日"}
+              </em>
+              <button
+                type="button"
+                className={`goal-push-measure${task.goal_contribution > 0 ? " is-on" : ""}`}
+                title="切换这项是否给目标计数"
+                onClick={() => onTaskMeasure(task)}
+              >
+                {task.goal_contribution > 0 ? (
+                  <>
+                    <AppIcon name="check" size={11} />
+                    计入
+                  </>
+                ) : (
+                  "只关联"
+                )}
+              </button>
+            </li>
+          ))}
+          {pushingHabits.map((habit) => (
+            <li key={habit.id}>
+              <span className="goal-push-kind">
+                <i />
+                习惯
+              </span>
+              <span className="goal-push-title">{habit.title}</span>
+              <em>{habit.archived ? "已归档" : "每周进行"}</em>
+              <button
+                type="button"
+                className={`goal-push-measure${habit.goal_contribution > 0 ? " is-on" : ""}`}
+                title="切换这次打卡是否给目标计数"
+                onClick={() => onHabitMeasure(habit)}
+              >
+                {habit.goal_contribution > 0 ? (
+                  <>
+                    <AppIcon name="check" size={11} />
+                    计入
+                  </>
+                ) : (
+                  "只关联"
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="goal-empty">
+          还没有任务或习惯在推进这个目标。把日常动作关联上来，进度会自己长。
+        </p>
+      )}
+    </ExpandRow>
   );
 }
