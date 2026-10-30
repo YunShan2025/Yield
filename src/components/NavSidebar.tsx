@@ -45,7 +45,7 @@ export function NavSidebar({
       items: [
         { id: "today", label: "今日", icon: "today", count: counts.today },
         { id: "inbox", label: "待办箱", count: counts.inbox, icon: "inbox" },
-        { id: "week", label: "本周", icon: "checklist" },
+        { id: "week", label: "周报", icon: "checklist" },
       ],
     },
     {

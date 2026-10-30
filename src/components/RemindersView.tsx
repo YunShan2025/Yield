@@ -76,7 +76,7 @@ export function RemindersView() {
   const runningCount = visibleTimers.filter((timer) => timer.running).length;
   const finishedCount = visibleTimers.filter((timer) => !timer.running && liveRemaining(timer) === 0).length;
   // 第二格统计：倒计时页数「已结束」，循环页数「已保存」。为 0 时整格不出现 ——
-  // 状态条要么有数据，要么只剩一句话（与本周引导块同一原则）。
+  // 状态条要么有数据，要么只剩一句话（与周报引导块同一原则）。
   const settledCount = tab === "countdown" ? finishedCount : visibleTimers.length;
   // 引导卡分段色条口径：全部排程（两页合计）的运行 / 休息，与大读数一致，
   // 不随 tab 变 —— tab 内的运行数下方状态条自己会说。
