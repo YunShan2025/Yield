@@ -2,7 +2,7 @@
 
 本文件是「有秋（Yield）」的**版本记录**（面向使用者的版本历史，发布 Release 时同步维护）。
 
-- **当前版本**：v1.3.0（`package.json` / `src-tauri/tauri.conf.json`）；**v1.4.0 开发中**（migration v22–v26 与同步 schema v10 已在 main 落库，发布前版本号文件尚未抬升）
+- **当前版本**：v2.0.0（`package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`）
 - **相关文档**：`README.md`（产品说明）、`docs/ARCHITECTURE.md`（架构与技术栈）、`docs/GIT_CONVENTIONS.md`（推送与发布惯例）
 
 ## 记录约定
@@ -15,7 +15,7 @@
 
 ## 版本记录
 
-#### v1.4.0 目标 · 习惯 · 事项打通（开发中，未发布）
+#### v2.0.0 目标 · 习惯 · 事项打通与双端视觉定稿
 
 > **迁移元信息**：migration v22–v26 已落库；同步日志升 schema v10，**两端需同批升级**。
 > 目标定位：**目标是里程碑式的长期最终结果；重复性归习惯；任务是一次性行动**。完整评估与方案见 `docs/GOAL-HABIT-TODAY-LINKAGE.md`（已删除，git 史可查）。

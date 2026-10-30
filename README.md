@@ -132,7 +132,7 @@ npm run tauri android build -- --debug --apk --target aarch64   # 真机 arm64
 
 ## 下载与安装
 
-当前版本 **v1.3.0**（见 `package.json` / `src-tauri/tauri.conf.json`）；main 分支上的 **v1.4.0 开发中**（migration v22–v26、同步 schema v10 已落库，条目见 `docs/CHANGES.md`）。本项目以本地构建分发为主：
+当前版本 **v2.0.0**（见 `package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`；migration v22–v26 与同步 schema v10 随本版落地，**桌面与 Android 需同批升级**，条目见 `docs/CHANGES.md`）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build

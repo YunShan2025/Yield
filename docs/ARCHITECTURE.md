@@ -108,7 +108,7 @@ src-tauri/
 - **模型**：无服务器同步。两端各自写本地库，同时追加操作日志到用户自己的飞书云盘（JSONL，`src/lib/sync/log.ts`）；HLC（混合逻辑时钟）定序，`merge.ts` 按列级 LWW + 删除墓碑合并（`src/lib/sync/tables.ts` 维护 FK 顺序、`columns.ts` 维护列白名单，新增同步表/列三处一致：tables.ts + columns.ts + migration 触发器）。
 - **触发**：应用启动、回前台、手动触发；离线优先，无实时推送。
 - **凭据**：飞书 app_id/app_secret 只在应用设置页输入，存本地 settings（`sync_` 前缀键），不进代码、不进备份文件。
-- **纪律**：新增同步表/列必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。当前同步日志格式为 **schema v10**（开发中的 v1.4.0：任务的重复相关列与目标的周口径列下线，习惯新增排期规则；旧端读到 v10 条目会被 header 闸门整体拒收并提示升级）。
+- **纪律**：新增同步表/列必须同步维护 `src/lib/sync/tables.ts`（FK 顺序）+ `columns.ts`（列白名单）+ migration 触发器，三处一致。当前同步日志格式为 **schema v10**（自 v2.0.0 起：任务的重复相关列与目标的周口径列下线，习惯新增排期规则；旧端读到 v10 条目会被 header 闸门整体拒收并提示升级）。
 
 ## 8. 关键横切机制
 
