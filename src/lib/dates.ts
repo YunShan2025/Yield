@@ -221,13 +221,6 @@ export function formatStamp(date: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${hh}:${mm}`;
 }
 
-/** ISO 时间戳 → "2026年9月12日"（只到日），用于任务完成日期展示。 */
-export function formatDayStamp(date: string): string {
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return "";
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-}
-
 /** 移动壳密集 meta：时刻 → "10月20日 14:30"，当年不去年份（回收站「删除于」等）。 */
 export function formatStampBrief(date: string): string {
   const d = new Date(date);

@@ -13,24 +13,14 @@
    ============================================================ */
 /* @theme-independent:start */
 :root {
-  /* 字体角色：display / body / label 三档（中文用系统字体，见 DESIGN.md §Typography） */
+  /* 字体角色：display / body 两档（中文用系统字体，见 DESIGN.md §Typography） */
   /* 拉丁先行 + 中文系统栈：拉丁栈必须在前，Noto Sans SC 自带的拉丁字形才会让位
      给 Inter / Segoe 的几何感。详见 DESIGN.md §Typography。 */
   --font-display: "Inter", "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
   --font-body: "Inter", "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
-  --font-label: "Inter", "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Noto Sans SC", "HarmonyOS Sans SC", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei UI", "Heiti SC", "Hiragino Sans GB", sans-serif;
   /* 展示型数字：只给主视觉大数用。等宽数字 + Didone 衬线，与无衬线正文拉开气质。
      生产建议自托管 Playfair Display（OFL，数字子集约 30KB），三端一致。 */
   --font-num-display: "Bodoni MT", "Bodoni 72", "Playfair Display", Didot, "Times New Roman", Georgia, "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
-
-  /* 间距刻度 */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 24px;
-  --space-xxl: 32px;
-  --space-xxxl: 48px;
 
   /* 字号刻度：8 个文字角色，唯一真相源（全应用禁手写档位）。
      R1 数字·大 hero 44（衬线数字家族）· R2 页标题 24 · R3 区块标题 16
@@ -38,7 +28,7 @@
      R5 正文 13 · R6 批注 12（计数/时间戳，tabular-nums）· R7 微标识 11（徽章角标）
      R8 控件文字 13（按钮/输入/分段，与 R5 同档不同字重）
      --font-size-num-lg：数字·大「桌面密度档」20（账目金额/英雄读数/计时读数，衬线）。
-     旧档位名保留为角色别名，历史引用自动归档：display/h2 → 并入 24/16。 */
+     旧档位名保留为角色别名，历史引用自动归档；零引用的旧别名（display/h2 等）已清退。 */
   --font-size-hero: 44px;
   --font-size-num-lg: 20px;
   --font-size-page-title: 24px;
@@ -49,9 +39,7 @@
   --font-size-chip: 11px;
   --font-size-control: 13px;
   /* legacy 别名（勿在新代码中使用，直接引用上面的角色令牌） */
-  --font-size-display: var(--font-size-page-title);
   --font-size-h1: var(--font-size-page-title);
-  --font-size-h2: var(--font-size-section-title);
   --font-size-h3: var(--font-size-section-title);
   --font-size-body: var(--font-size-entity);
   --font-size-label: var(--font-size-copy);
@@ -67,23 +55,16 @@
      移动壳 .mtoday-wheat 是 DOM span，规则里各自内联，不引用此 token。 */
   --wheat-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 17.4V6.9'/%3E%3Cpath d='M10 15.3c-2.3.2-3.6-.8-4-2.9 2.3-.1 3.6.9 4 2.9Z' fill='%23000000' stroke='none'/%3E%3Cellipse cx='7.6' cy='12.1' rx='2.35' ry='1.2' transform='rotate(53 7.6 12.1)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='12.4' cy='12.1' rx='2.35' ry='1.2' transform='rotate(-53 12.4 12.1)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='7.9' cy='8.9' rx='2.1' ry='1.1' transform='rotate(53 7.9 8.9)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='12.1' cy='8.9' rx='2.1' ry='1.1' transform='rotate(-53 12.1 8.9)' fill='%23000000' stroke='none'/%3E%3Cellipse cx='10' cy='5.2' rx='1.15' ry='1.9' fill='%23000000' stroke='none'/%3E%3C/svg%3E");
 
-  /* 动效：时长与缓动分开，便于成对使用。
-     时长统一乘 --motion-scale，减弱动效时由 :root 把它压到 0，
+  /* 动效：时长统一乘 --motion-scale，减弱动效时由 :root 把它压到 0，
      因此不需要用强制优先级兜底。 */
   --motion-scale: 1;
   --motion-iterations: infinite;
   --motion-fast: calc(160ms * var(--motion-scale));
-  --motion-base: calc(240ms * var(--motion-scale));
-  --motion-slow: calc(320ms * var(--motion-scale));
-  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
 
-  /* 布局：主区栏宽 */
-  --layout-rail-w: 0px;
+  /* 布局：侧栏宽 */
   --layout-side-w: 232px;
   /* 窄窗图标条列宽。宽度判定在 MainApp.tsx(NAV_RAIL_BREAKPOINT),这里只管列宽。 */
   --layout-side-rail: 64px;
-  --layout-timeline-w: 300px;
 }
 /* @theme-independent:end */
 
@@ -125,20 +106,16 @@
   --white-90: rgba(255, 255, 255, 0.9);
   --steel-200: #8397d8;
   --paper-950-b: #eaecf2;
-  --steel-450: #7187c9;
   --mist-400: #dce2f2;
   --steel-100: #cbd4e8;
   --ink-950-a-8: rgba(31, 42, 55, 0.08);
   --gold-150: #fffbeb;
   --amber-400: #fdf0d2;
   --amber-900-28: rgba(217, 119, 6, 0.28);
-  --amber-900-12: rgba(217, 119, 6, 0.12);
-  --amber-950-a: #b45309;
   --amber-700: #fbbf24;
   --amber-900: #d97706;
   --amber-750-14: rgba(245, 158, 11, 0.14);
   --amber-750-40: rgba(245, 158, 11, 0.4);
-  --amber-750: #f59e0b;
   --amber-750-16: rgba(245, 158, 11, 0.16);
   --rose-500: #ef4444;
   --rose-100: #fff1f2;
@@ -163,26 +140,15 @@
   --azure-700: #5b9af5;
   --azure-950: #2f6fed;
   --mist-250-14: rgba(220, 232, 250, 0.14);
-  --amber-550: #f3b85b;
-  --amber-550-14: rgba(243, 184, 91, 0.14);
-  --gold-200: #fff1c9;
   --amber-950-c: #9a5b00;
   --amber-900-32: rgba(217, 119, 6, 0.32);
   --amber-850: #ea8a06;
   --gold-250: #fcd34d;
-  --amber-900-38: rgba(217, 119, 6, 0.38);
-  --amber-450: #fce9b8;
-  --amber-950-b: #a16207;
   --amber-650-14: rgba(244, 185, 66, 0.14);
   --amber-650-4: rgba(244, 185, 66, 0.04);
   --ink-950-o-35: rgba(15, 18, 23, 0.35);
   --ink-750-22: rgba(20, 35, 70, 0.22);
   --ink-750-24: rgba(20, 35, 70, 0.24);
-  --ink-950-g: #1f2328;
-  --paper-850: #f2f3f5;
-  --green-100: #86efac;
-  --green-250: #16a34a;
-  --magenta-150: #c35d77;
   --slate-150-45: rgba(98, 99, 168, 0.45);
   --warm-600: #bd6b3d;
   --ink-850-24: rgba(28, 39, 61, 0.24);
@@ -352,7 +318,6 @@
   --warning: #a96622;
   --danger: #bd4a54;
   --success-solid: #2c8561;
-  --warning-solid: #a96622;
   --danger-solid: #c3505a;
 
   --border: rgba(34, 55, 91, 0.09);
@@ -411,7 +376,6 @@
   --warning: #c77828;
   --danger: #e26671;
   --success-solid: #2c8561;
-  --warning-solid: #a96622;
   --danger-solid: #c3505a;
 
   --border: rgba(220, 232, 250, 0.1);
@@ -464,7 +428,6 @@
   --warning: #aa612b;
   --danger: #b8404f;
   --success-solid: #247c68;
-  --warning-solid: #ae642e;
   --danger-solid: #c84b5e;
 
   --border: rgba(54, 82, 129, 0.12);
@@ -513,7 +476,6 @@
   --warning: #f0b35a;
   --danger: #f0888d;
   --success-solid: #2c8561;
-  --warning-solid: #a96622;
   --danger-solid: #b03a48;
 
   --border: rgba(255, 255, 255, 0.14);
@@ -557,7 +519,6 @@
     --danger: #e05c67;
     --danger-solid: #c3505a;
     --success-solid: #2c8561;
-    --warning-solid: #a96622;
     --accent-solid: #245fd2;
     --border: rgba(220, 232, 250, 0.1);
     --border-strong: rgba(220, 232, 250, 0.18);

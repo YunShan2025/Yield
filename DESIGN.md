@@ -27,7 +27,6 @@ colors:
   danger: "#bd4a54"
   danger-solid: "#c3505a"
   success-solid: "#2c8561"
-  warning-solid: "#a96622"
   accent-solid: "#2f6fed"
   border: "rgba(34, 55, 91, 0.09)"
   border-strong: "rgba(34, 55, 91, 0.16)"
@@ -252,7 +251,6 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 |---|---|---|---|---|
 | `--danger-solid` | `#c3505a` (4.55) | `#c3505a` (4.55) | `#c84b5e` (4.54) | `#b03a48` (5.92) |
 | `--success-solid` | `#2c8561` (4.53) | `#2c8561` (4.53) | `#247c68` (5.05) | `#2c8561` (4.53) |
-| `--warning-solid` | `#a96622` (4.55) | `#a96622` (4.55) | `#ae642e` (4.50) | `#a96622` (4.55) |
 
 **「强调色作文字」不走 `--accent`**（阶段 3 新增）：
 
@@ -277,7 +275,6 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 
 - `--danger-solid` `#c3505a`（白字 4.55:1）/ 静夜 `#c3505a` / 晨曦 `#c84b5e` / 璃幕 `#b03a48`
 - `--success-solid` `#2c8561`（白字 4.53:1）
-- `--warning-solid` `#a96622`（白字 4.55:1）
 - `--accent-solid` = `--accent`（清昼 `#2f6fed`，白字 4.55:1 已达标）
 
 ### Material color roles 映射（Android 端）
@@ -365,17 +362,9 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 
 ## Layout
 
-### 刻度
+### 间距规则
 
-| token | 值 | 用途 |
-|---|---|---|
-| `--space-xs` | 4px | 图标与文字的最小间隙 |
-| `--space-sm` | 8px | 同组元素 |
-| `--space-md` | 12px | 组件内边距 |
-| `--space-lg` | 16px | 卡片内边距 |
-| `--space-xl` | 24px | 区块之间 |
-| `--space-xxl` | 32px | 页面分节 |
-| `--space-xxxl` | 48px | 空状态、大留白 |
+> 旧间距刻度 token（`--space-xs…xxxl`）从未被引用，2026-10 清理时已从 tokens.css 删除；间距直接写 px。
 
 **规则**：标题上方间距 > 标题下方间距（比 1:1 更大）。同组元素靠得紧，异组元素拉开。
 
@@ -618,6 +607,8 @@ P1 金 `#f0a92e` / P2 珊瑚 `#d9693f` / P3 蓝 `#5b7fb0` / P4 灰蓝 `#93a0b3`�
 ```
 
 > **注 · 材质层已移除**：上表「材质层」六项在阶段 2 后随玻璃落地收敛为具体规则，因无 `var()` 消费方，2026-10 死代码清理时已从 tokens.css 删除。
+>
+> **注 · 零引用 token 清退（2026-10-31）**：上表清单中 `--warning-solid`、`--space-*` 全部七档、`--font-size-display/h2`、`--font-label`、`--motion-base/slow` 与 `--motion-ease-in/out`、`--layout-rail-w` 与 `--layout-timeline-w` 均无 `var()` 消费方，已同步从 tokens.css 删除；间距直接写 px。
 
 > **注 1 · 侧栏单列 `--surface-rail`**：本表原写 `--bg-rail` 合并进 `--surface-sunken`。但 `--bg-rail`
 > 同时承担两种角色 —— 侧栏底色（`polish-03-solid-shells.css`）与进度条凹槽（`g06` / `g08`）。
