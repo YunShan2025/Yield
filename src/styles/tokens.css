@@ -28,9 +28,13 @@
      R5 正文 13 · R6 批注 12（计数/时间戳，tabular-nums）· R7 微标识 11（徽章角标）
      R8 控件文字 13（按钮/输入/分段，与 R5 同档不同字重）
      --font-size-num-lg：数字·大「桌面密度档」20（账目金额/英雄读数/计时读数，衬线）。
+     --font-size-num-xl：数字·特大「桌面顶卡档」28（引导顶卡右端衬线大读数，一屏一处）。
      旧档位名保留为角色别名，历史引用自动归档；零引用的旧别名（display/h2 等）已清退。 */
   --font-size-hero: 44px;
   --font-size-num-lg: 20px;
+  --font-size-num-xl: 28px;
+  /* 数字·今日主读数 36（今日/待办箱 hero，2026-10-31 用户定；其余顶卡仍 num-xl）。 */
+  --font-size-num-2xl: 36px;
   --font-size-page-title: 24px;
   --font-size-section-title: 16px;
   --font-size-entity: 14px;
@@ -80,27 +84,17 @@
   --azure-650: #6f93e8;
   --azure-950-a: #3f6fd6;
   --navy-200-22: rgba(55, 95, 180, 0.22);
-  --steel-150: #82a0df;
-  --slate-150-20: rgba(98, 99, 168, 0.2);
-  --slate-100: #8586c8;
-  --slate-150-26: rgba(98, 99, 168, 0.26);
   --slate-150-17: rgba(98, 99, 168, 0.17);
-  --slate-150-36: rgba(98, 99, 168, 0.36);
+  --gold-100-52: rgba(255, 254, 250, 0.52);
   --gold-100-52: rgba(255, 254, 250, 0.52);
   --slate-150-4: rgba(98, 99, 168, 0.04);
   --slate-200-11: rgba(45, 43, 67, 0.11);
-  --azure-800-20: rgba(75, 104, 245, 0.2);
-  --azure-800-25: rgba(75, 104, 245, 0.25);
   --azure-800-16: rgba(75, 104, 245, 0.16);
   --paper-450: #eef1ff;
   --azure-200-13: rgba(128, 151, 255, 0.13);
   --white-88: rgba(255, 255, 255, 0.88);
   --mist-200: #e7eaf1;
   --paper-100: #fbfcfe;
-  --steel-300: #7b91d8;
-  --steel-350-16: rgba(113, 136, 212, 0.16);
-  --steel-400: #6d84cd;
-  --steel-350-20: rgba(113, 136, 212, 0.2);
   --ink-200: #303747;
   --mist-150: #e7eaf2;
   --white-90: rgba(255, 255, 255, 0.9);
@@ -109,13 +103,9 @@
   --mist-400: #dce2f2;
   --steel-100: #cbd4e8;
   --ink-950-a-8: rgba(31, 42, 55, 0.08);
-  --gold-150: #fffbeb;
   --amber-400: #fdf0d2;
-  --amber-900-28: rgba(217, 119, 6, 0.28);
   --amber-700: #fbbf24;
   --amber-900: #d97706;
-  --amber-750-14: rgba(245, 158, 11, 0.14);
-  --amber-750-40: rgba(245, 158, 11, 0.4);
   --amber-750-16: rgba(245, 158, 11, 0.16);
   --rose-500: #ef4444;
   --rose-100: #fff1f2;
@@ -123,9 +113,6 @@
   --amber-150: #fff7ed;
   --amber-800: #ea580c;
   --slate-150-25: rgba(98, 99, 168, 0.25);
-  --amber-900-6: rgba(217, 119, 6, 0.06);
-  --amber-750-8: rgba(245, 158, 11, 0.08);
-  --amber-750-25: rgba(245, 158, 11, 0.25);
   --azure-950-18: rgba(47, 111, 237, 0.18);
   --white-98: rgba(255, 255, 255, 0.98);
   --ink-950-a-20: rgba(31, 42, 55, 0.2);
@@ -141,9 +128,6 @@
   --azure-950: #2f6fed;
   --mist-250-14: rgba(220, 232, 250, 0.14);
   --amber-950-c: #9a5b00;
-  --amber-900-32: rgba(217, 119, 6, 0.32);
-  --amber-850: #ea8a06;
-  --gold-250: #fcd34d;
   --amber-650-14: rgba(244, 185, 66, 0.14);
   --amber-650-4: rgba(244, 185, 66, 0.04);
   --ink-950-o-35: rgba(15, 18, 23, 0.35);
@@ -155,15 +139,12 @@
   --ink-950-b-28: rgba(26, 37, 58, 0.28);
   --amber-500: #f0a26d;
   --azure-300: #7ca5ff;
-  --slate-150-19: rgba(98, 99, 168, 0.19);
-  --ink-950-m-18: rgba(15, 23, 42, 0.18);
   --azure-500: #78a1ee;
   --ink-900: #1e293b;
   --black-22: rgba(0, 0, 0, 0.22);
   --azure-100: #a9c5ff;
   --ink-950-m-38: rgba(15, 23, 42, 0.38);
   --ink-950-m-24: rgba(15, 23, 42, 0.24);
-  --rose-600: #c0392b;
   --warm-700: #9a5b2c;
   --warm-300: #e0b089;
   --mist-300: #e2e6ef;
@@ -255,13 +236,45 @@
   --black-24: rgba(0, 0, 0, 0.24);
   --mist-700: #b8d4ff;
   --white-45: rgba(255, 255, 255, 0.45);
-  --white-6: rgba(255, 255, 255, 0.06);
   --azure-250-28: rgba(126, 176, 255, 0.28);
   --ink-950-d: #1a2230;
   --ink-350: #2a3448;
   --ink-950-l-72: rgba(20, 26, 38, 0.72);
   --white-58: rgba(255, 255, 255, 0.58);
-  --amber-900-55: rgba(217, 119, 6, 0.55);
+}
+
+/* ============================================================
+   控件层 —— 按钮 / 勾选圈原子尺寸档
+   随「壳」换挡，不随主题换挡：--control-radius / --icon-btn-size
+   在 html[data-shell="mobile"] 下切到移动档。契约见 DESIGN.md。
+   ============================================================ */
+:root {
+  /* 控件高度 5 档：桌面 3 档（xs 吸收 24/25/26/27/28/30，sm 为行内基线
+     —— item-action-btn 现值不动，md 吸收 36/38）；移动 2 档（lg 吸收
+     38/40/42，xl 吸收 44/48，xl 只给弹层脚/通栏钮/批量动作）。 */
+  --control-h-xs: 28px;
+  --control-h-sm: 34px;
+  --control-h-md: 38px;
+  --control-h-lg: 40px;
+  --control-h-xl: 48px;
+  /* 图标按钮原子方边（桌面 32 / 移动壳 44） */
+  --icon-btn-size: 32px;
+  /* 控件圆角双档：桌面 8（--radius-sm）/ 移动 12（--radius-md）；pill 只留分段/chips */
+  --control-radius: var(--radius-sm);
+  /* 按钮字号统一走「控件文字」角色（废弃按钮上的 label/caption/meta 混用，
+     微操作密度容器可再降一档，但必须显式声明） */
+  --btn-font-size: var(--font-size-control);
+  /* 危险·轻：危险字色 + 10% 衬底（危险·重 danger-solid 实底在按钮域退役） */
+  --danger-tint: color-mix(in srgb, var(--danger) 10%, transparent);
+  /* 勾选圈内圈（桌面 .task-check / 移动壳 .mtoday-check 同一组变量） */
+  --check-ring-size: 22px;
+  --check-ring-border: 1.6px;
+}
+
+/* 移动壳换挡：圆角 12、图标钮 44。写在 tokens 层，控件原子自动跟随。 */
+html[data-shell="mobile"] {
+  --control-radius: var(--radius-md);
+  --icon-btn-size: 44px;
 }
 
 /* 减弱动效：把动效时长整体压到 0、循环次数收到 1。
@@ -318,7 +331,6 @@
   --warning: #a96622;
   --danger: #bd4a54;
   --success-solid: #2c8561;
-  --danger-solid: #c3505a;
 
   --border: rgba(34, 55, 91, 0.09);
   --border-strong: rgba(34, 55, 91, 0.16);
@@ -376,7 +388,6 @@
   --warning: #c77828;
   --danger: #e26671;
   --success-solid: #2c8561;
-  --danger-solid: #c3505a;
 
   --border: rgba(220, 232, 250, 0.1);
   --border-strong: rgba(220, 232, 250, 0.18);
@@ -428,7 +439,6 @@
   --warning: #aa612b;
   --danger: #b8404f;
   --success-solid: #247c68;
-  --danger-solid: #c84b5e;
 
   --border: rgba(54, 82, 129, 0.12);
   --border-strong: rgba(54, 82, 129, 0.2);
@@ -476,7 +486,6 @@
   --warning: #f0b35a;
   --danger: #f0888d;
   --success-solid: #2c8561;
-  --danger-solid: #b03a48;
 
   --border: rgba(255, 255, 255, 0.14);
   --border-strong: rgba(255, 255, 255, 0.24);
@@ -517,7 +526,6 @@
     --success: #32986e;
     --warning: #c77828;
     --danger: #e05c67;
-    --danger-solid: #c3505a;
     --success-solid: #2c8561;
     --accent-solid: #245fd2;
     --border: rgba(220, 232, 250, 0.1);

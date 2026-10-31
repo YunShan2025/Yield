@@ -81,27 +81,11 @@ select:focus {
   align-content: start;
 }
 
-.memo-list-tabs {
-  display: inline-flex;
-  gap: 4px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--surface-panel);
-}
-
 .memo-list-tabs button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 30px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  color: var(--text-secondary);
-  background: transparent;
-  cursor: pointer;
 }
 
 .memo-list-tabs button.active {
@@ -265,7 +249,7 @@ select:focus {
 }
 
 /* v1.6 备忘录:与「今日」同构的页头 + 单列列表,详情改为右侧抽屉。 */
-.memo-page .guide-hero { margin: 0 28px 14px; }
+/* 备忘录引导框已升淡蓝数据顶卡（.guide-stat-card，基段槽位 0 28px 14px）。 */
 
 .memo-body {
   flex: 1;
@@ -297,8 +281,8 @@ select:focus {
   background: var(--surface-panel);
   box-shadow: var(--shadow-2, 0 16px 42px var(--ink-950-h-18));
 }
-.memo-create-menu button { display: grid; width: 100%; gap: 2px; padding: 10px 11px; border: 0; border-radius: var(--radius-sm); color: var(--text-primary); background: transparent; text-align: left; cursor: pointer; }
-.memo-create-menu button:hover { background: var(--surface-hover); }
+.memo-create-menu .memo-menu-item { display: grid; width: 100%; gap: 2px; padding: 10px 11px; border: 0; border-radius: var(--radius-sm); color: var(--text-primary); background: transparent; text-align: left; cursor: pointer; }
+.memo-create-menu .memo-menu-item:hover { background: var(--surface-hover); }
 .memo-create-menu strong { font-size: var(--font-size-label); }
 .memo-create-menu span { color: var(--text-muted); font-size: var(--font-size-caption); }
 .memo-list { margin-inline: -4px; padding-inline: 4px; }
@@ -309,7 +293,19 @@ select:focus {
 .memo-list-item.active::before { background: var(--accent); }
 .memo-list-title-copy { min-width: 0; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; }
 .memo-list-time { flex: 0 0 auto; color: var(--text-muted); font-size: var(--font-size-caption); font-variant-numeric: tabular-nums; }
-.memo-document-format { flex: 0 0 auto; padding: 2px 5px; border-radius: var(--radius-sm); font-size: var(--font-size-chip); font-weight: 600; line-height: 1.2; letter-spacing: .03em; }
+/* 正文预览（两端同 DOM，2026-10-31）：移动壳排第二行（§memo 段给 flex-basis
+   与排序），桌面单行流紧跟标题截断（桌面档见 components.css「备忘录顶卡」段）。
+   预览是「正文」走 13px secondary 一档，与右上角 12px muted 的日期（元信息）
+   拉开层级。rail 随卡高拉伸，与单行同一墨。 */
+.memo-list-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-label);
+}
+.memo-list-preview > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.memo-document-format { flex: 0 0 auto; padding: 2px 5px; border-radius: var(--radius-sm); font-size: var(--font-size-chip); font-weight: 600; line-height: 1.2; letter-spacing: .03em; }
 .memo-document-format.is-richtext { color: var(--accent); background: var(--accent-soft); }
 .memo-document-format.is-markdown { color: var(--text-secondary); background: var(--surface-rail); }
 
@@ -379,7 +375,7 @@ select:focus {
 .memo-reading-surface pre { overflow: auto; padding: 14px; border-radius: var(--radius-md); background: var(--surface-base); }
 .memo-reading-empty { display: grid; place-items: center; align-content: center; gap: 8px; min-height: 320px; color: var(--text-muted); text-align: center; }
 .memo-reading-empty strong { color: var(--text-secondary); }
-.memo-reading-empty button { min-height: 34px; margin-top: 5px; padding: 0 12px; border: 0; border-radius: var(--radius-md); color: var(--accent); background: var(--accent-soft); cursor: pointer; }
+.memo-reading-empty .memo-empty-cta { min-height: var(--control-h-sm); margin-top: 5px; padding: 0 12px; border: 0; border-radius: var(--control-radius); color: var(--accent); background: var(--accent-soft); cursor: pointer; }
 
 .memo-rich-toolbar {
   display: flex;
@@ -393,8 +389,8 @@ select:focus {
   flex: 0 0 auto;
 }
 .memo-drawer-body .memo-rich-toolbar { padding-inline: 26px; }
-.memo-rich-toolbar button { min-height: 30px; padding: 0 8px; border: 0; border-radius: var(--radius-sm); color: var(--text-secondary); background: transparent; cursor: pointer; }
-.memo-rich-toolbar button:hover { color: var(--accent); background: var(--accent-soft); }
+.memo-rich-toolbar .memo-tool-btn { min-height: var(--control-h-xs); padding: 0 8px; border: 0; border-radius: var(--radius-sm); color: var(--text-secondary); background: transparent; cursor: pointer; }
+.memo-rich-toolbar .memo-tool-btn:hover { color: var(--accent); background: var(--accent-soft); }
 .memo-rich-toolbar i { width: 1px; height: 19px; margin-inline: 4px; background: var(--border); }
 .memo-rich-editor {
   flex: 1;
@@ -497,21 +493,36 @@ button:active:not(:disabled) {
   transform: scale(0.98);
 }
 
+/* ---- 图标按钮原子（三合一原子体系的修饰档）----
+   32/44 两档方钮：尺寸吃 --icon-btn-size，随壳自动换挡（桌面 32 / 移动壳 44）。
+   只做尺寸与命中区，不写底色——透明底是基线，容器要软底/圆圈的自己补
+   （.command-search-clear、记账月份切换等嵌入式控件不吃本原子）。 */
+.icon-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--control-radius);
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
 /* 侧栏与品牌的基础样式已收口到 components.css「桌面工作台 · 侧栏/品牌」一处。
    旧此处的整段重复定义（.nav-side / .nav-side-scroll / .brand-* / .nav-section-label /
    .nav-item / .nav-item.active）逐属性都被 components 后段或 views 各主题重设，
    属级联死代码，已删除。仅保留仍在级联中生效的按钮与计数： */
 
-.btn-primary {
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--steel-150), var(--accent));
-  box-shadow: 0 8px 20px var(--slate-150-20);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, var(--slate-100), var(--accent-hover));
-  box-shadow: 0 10px 24px var(--slate-150-26);
-}
+/* .btn-primary 渐变版为级联死代码（后被 structural/final-theme 段整属性覆盖），已删除。
+   按钮原子与 .btn-primary/.btn-ghost 别名统一收口在 components.css「按钮原子（三合一）」一处。 */
 
 /* 导航计数徽章：中性表面色（原 --green-300-5 固定绿不随四主题变，且给导航项添了装饰色）。
    字号/字色在 components「桌面工作台 · 侧栏/品牌」一处定义。 */
@@ -541,19 +552,6 @@ button:active:not(:disabled) {
   letter-spacing: -0.035em;
 }
 
-.seg {
-  padding: 4px;
-  border-color: var(--border);
-}
-
-.seg button {
-  min-width: 38px;
-}
-
-.seg button.active {
-  background: var(--accent);
-}
-
 .scope-board {
   gap: 14px;
   padding: 0 28px 28px;
@@ -580,9 +578,31 @@ button:active:not(:disabled) {
   border-color: var(--slate-150-17);
 }
 
+/* 勾选圈原子（桌面档）：内圈尺寸/描边吃 --check-ring-* 变量组，
+   移动壳 .mtoday-check 内圈共用同一组。圆形定死 50%——历史上
+   components 384 段曾用 radius-sm 覆盖、3975 段又改回 50%，两处重复
+   已删，圆形在本原子一处定死。描边收口到语义 token --border-strong
+   （与移动壳勾选圈同值；原遗留色 --slate-150-36 退场）。 */
 .task-check {
+  position: relative;
+  width: var(--check-ring-size);
+  height: var(--check-ring-size);
+  flex: 0 0 var(--check-ring-size);
+  /* 覆盖 UA 对 button 的默认 padding(1px 6px),避免 ✓ 字形被挤出圆形。 */
+  padding: 0;
+  border: var(--check-ring-border) solid var(--border-strong);
   border-radius: 50%;
-  border-color: var(--slate-150-36);
+  display: grid;
+  place-items: center;
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+/* 透明小控件要自己扩热区（桌面 24px 命中底线：22 + 上下各 8 的不可见外扩）。 */
+.task-check::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 .expand-task.is-done .task-check,
@@ -635,16 +655,8 @@ body {
 
 /* .brand-mark 圆形/渐变版为级联死代码（最终由 views「polish-09」统一裸图标轮廓），已删除。 */
 
-.btn-primary {
-  color: var(--text-on-accent);
-  background: var(--accent);
-  box-shadow: 0 8px 20px var(--azure-800-20);
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 10px 24px var(--azure-800-25);
-}
+/* .btn-primary 实心版（含 hover）为级联死代码（最终生效在 components final-theme 段），已删除。
+   唯一原子定义见 components.css「按钮原子（三合一）」。 */
 
 /* .nav-item.active 渐变/inset 版为级联死代码（最终生效在 components final-theme 段 + views 各主题），已删除。 */
 
@@ -705,13 +717,18 @@ body {
 
 .today-hero {
   position: relative;
+  /* 两行观感（2026-10-31 用户定）：整卡顶对齐——说明行与读数行盒同贴上内衬，
+     完成度大条绝对定位贴卡底（见 .today-hero-meter-track，底距随 --th-pad-y
+     与上留白相等）；卡高 74 = 10 + 行盒 43 + 行距 3(同 90 档) + 条 8 + 10。 */
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
+  --th-pad-x: 22px;
+  --th-pad-y: 10px;
   flex-shrink: 0;
-  min-height: 0;
-  padding: 12px 22px;
+  min-height: 74px;
+  padding: var(--th-pad-y) var(--th-pad-x);
   overflow: hidden;
   color: var(--text-primary);
   /* 视觉基准 = 移动壳淡蓝顶卡族（mtoday-hero / guide-stat）：无边框、16px 圆角、
@@ -720,6 +737,12 @@ body {
   border-radius: 16px;
   background: var(--accent-faint);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(18, 32, 60, 0.05), 0 18px 30px -24px rgba(18, 32, 60, 0.5);
+}
+
+/* 待办箱变体（2026-10-31 用户定）：无完成度大条这第二行，顶对齐会让内容吊在
+   卡顶——整卡改回垂直居中，文字与计数在卡内上下留白一致（(74-43)/2≈15.5）。 */
+.today-hero.is-inbox {
+  align-items: center;
 }
 
 /* 麦穗水印：与移动壳顶卡 .mtoday-wheat 同一张 SVG 角标（::after 承担，不动内容）。
@@ -1067,10 +1090,7 @@ body {
 }
 
 .date-picker-head button {
-  width: 30px;
-  height: 28px;
   border: 0;
-  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-secondary);
   font-size: var(--font-size-h3);
@@ -1135,9 +1155,9 @@ body {
 }
 
 .date-picker-actions .btn-ghost {
-  min-height: 30px;
+  min-height: var(--control-h-xs);
   padding: 4px 10px;
-  font-size: var(--font-size-caption);
+  font-size: var(--btn-font-size);
 }
 
 /* 老 WebView（Chrome 83）无 gap 的 flex 兜底由各 grid 天然兼容，无需垫片。 */

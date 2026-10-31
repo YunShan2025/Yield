@@ -115,8 +115,8 @@ html[data-shell="mobile"] .mt-title-ch {
 
 html[data-shell="mobile"] .mtoday-icon-btn {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
   display: grid;
   place-items: center;
   border: 0;
@@ -698,10 +698,10 @@ html[data-shell="mobile"] .mtoday-check {
 
 html[data-shell="mobile"] .mtoday-check::before {
   content: "";
-  width: 22px;
-  height: 22px;
+  width: var(--check-ring-size);
+  height: var(--check-ring-size);
   border-radius: 50%;
-  border: 1.6px solid var(--border-strong);
+  border: var(--check-ring-border) solid var(--border-strong);
   background: transparent;
   box-sizing: border-box;
 }
@@ -1279,10 +1279,10 @@ html[data-shell="mobile"] .minbox-batchbar-actions {
 }
 
 html[data-shell="mobile"] .minbox-batchbar-actions button {
-  min-height: 42px;
+  min-height: var(--control-h-lg);
   padding: 8px 6px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--control-radius);
   background: var(--surface-base);
   color: var(--text-primary);
   font-family: inherit;
@@ -1305,7 +1305,8 @@ html[data-shell="mobile"] .minbox-batchbar-actions button.is-active {
 }
 
 html[data-shell="mobile"] .minbox-batchbar-actions button.danger {
-  color: var(--text-overdue);
+  color: var(--danger);
+  background: var(--danger-tint);
 }
 
 html[data-shell="mobile"] .minbox-batch-date {
@@ -1367,15 +1368,15 @@ html[data-shell="mobile"] .minbox-empty p {
 }
 
 html[data-shell="mobile"] .minbox-empty-cta {
-  min-height: 44px;
+  min-height: var(--control-h-xl);
   margin-top: 14px;
   padding: 0 20px;
   border: 0;
-  border-radius: 22px;
+  border-radius: var(--control-radius);
   background: var(--accent);
   color: var(--text-on-accent);
   font-family: inherit;
-  font-size: var(--font-size-copy);
+  font-size: var(--btn-font-size);
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -2189,8 +2190,9 @@ html[data-shell="mobile"] .detail-panel .panel-head h3 {
 /* 抽屉头 ✕＝弹层头 ✕ 同一原子（44×44 · radius-md · 透明底，同 .modal-head > button）：
    MemosView 的 ✕ 历史上挂着 btn-ghost，在移动壳被渲染成灰底文字钮，这里压回图标钮档。 */
 html[data-shell="mobile"] .detail-panel .panel-head button {
-  width: 44px;
-  height: 44px;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  min-width: 0;
   display: grid;
   place-items: center;
   padding: 0;
@@ -2213,7 +2215,7 @@ html[data-shell="mobile"] .detail-footer {
 
 html[data-shell="mobile"] .detail-footer > button {
   flex: 1 1 calc(50% - 5px);
-  min-height: 48px;
+  min-height: var(--control-h-xl);
   border-radius: var(--radius-md);
 }
 
@@ -2223,7 +2225,6 @@ html[data-shell="mobile"] .detail-footer .btn-primary {
 }
 
 html[data-shell="mobile"] .detail-footer .btn-ghost {
-  border: 0;
   background: var(--surface-sunken);
   color: var(--text-secondary);
   /* 两列等宽布局里「编辑」与「完成」是平级动作，字重跟 btn-primary（600）
@@ -2233,9 +2234,8 @@ html[data-shell="mobile"] .detail-footer .btn-ghost {
 
 html[data-shell="mobile"] .detail-footer .btn-ghost.danger {
   flex: 1 1 100%;
-  border: 0;
-  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
-  color: var(--text-overdue);
+  background: var(--danger-tint);
+  color: var(--danger);
   font-weight: 600;
 }
 
@@ -2411,10 +2411,10 @@ html[data-shell="mobile"] .today-hero-meter-track > i {
 /* 页头按钮 → 灰底小药丸（minbox-shead-actions 同款），主按钮 accent 填充。
    38dp 辅助档（2026-10-30 触键阶梯统一：辅助 38 / 卡底 40 / 弹层 48）。 */
 html[data-shell="mobile"] .workspace-top .btn-ghost {
-  min-height: 38px;
+  min-height: var(--control-h-lg);
   padding: 0 12px;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--control-radius);
   background: var(--surface-sunken);
   color: var(--text-secondary);
   font-size: var(--font-size-meta);
@@ -2427,14 +2427,14 @@ html[data-shell="mobile"] .workspace-top .btn-ghost:active {
 }
 
 html[data-shell="mobile"] .workspace-top .btn-ghost.danger {
-  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
-  color: var(--text-overdue);
+  background: var(--danger-tint);
+  color: var(--danger);
 }
 
 html[data-shell="mobile"] .workspace-top .btn-primary {
-  min-height: 38px;
+  min-height: var(--control-h-lg);
   padding: 0 14px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--control-radius);
   background: var(--accent);
   box-shadow: none;
   font-size: var(--font-size-meta);
@@ -2458,7 +2458,7 @@ html[data-shell="mobile"] .timer-tabs button,
 html[data-shell="mobile"] .review-dimension-tabs button,
 html[data-shell="mobile"] .memo-list-tabs button,
 html[data-shell="mobile"] .countdown-mode-switch button {
-  min-height: 38px;
+  min-height: var(--control-h-lg);
   padding: 0 14px;
   border-radius: var(--radius-pill);
   color: var(--text-secondary);
@@ -2631,13 +2631,13 @@ html[data-shell="mobile"] .anni-detail-dialog > header h2 {
   margin: 0;
 }
 
+/* 尺寸交给 icon-btn 原子（44×44 随壳），这里只留呈现修正。 */
 html[data-shell="mobile"] .modal-head > button,
 html[data-shell="mobile"] .anni-composer-dialog > header > button,
 html[data-shell="mobile"] .anni-detail-dialog > header > button {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
+  min-width: 0;
   background: transparent;
+  font-size: var(--font-size-h1);
 }
 
 /* 控件语言：白底描边 → sunken 无边框（与「待办 ···」面板灰底按钮同调）。
@@ -3279,12 +3279,12 @@ html[data-shell="mobile"] .trash-item-actions .item-action-btn,
 html[data-shell="mobile"] .settings-card .item-action-btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 40px;
+  min-height: var(--control-h-lg);
   padding: 0 12px;
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--control-radius);
   background: var(--surface-sunken);
-  font-size: var(--font-size-control);
+  font-size: var(--btn-font-size);
   white-space: nowrap;
 }
 
@@ -3301,8 +3301,8 @@ html[data-shell="mobile"] .expand-row-foot {
    抽屉脚）不会自带 border:0，必须在这里断干净（2026-10-30 实测红描边残留）。 */
 html[data-shell="mobile"] .item-action-btn.item-action-danger {
   border-color: transparent;
-  background: color-mix(in srgb, var(--text-overdue) 10%, transparent);
-  color: var(--text-overdue);
+  background: var(--danger-tint);
+  color: var(--danger);
   box-shadow: none;
 }
 
@@ -3336,6 +3336,11 @@ html[data-shell="mobile"] .item-action-btn.item-action-primary {
   background: var(--accent);
   color: var(--text-on-accent);
   border-color: transparent;
+  box-shadow: none;
+}
+
+/* 移动壳所有 primary 实心钮一律不带桌面一档投影（含裸 .btn-primary 用法）。 */
+html[data-shell="mobile"] .btn-primary {
   box-shadow: none;
 }
 
@@ -3419,10 +3424,12 @@ html[data-shell="mobile"] .memo-list-item {
 }
 
 /* 双行列卡（2026-10-30 乙案）：第二行通栏＝格式徽标（复用详情页
-   memo-document-format 原子）＋正文预览一行截断；预览行只在移动壳
-   进 DOM（JSX 按壳分派），桌面单行原样。预览是「正文」走 13px secondary
-   一档，与右上角 12px muted 的日期（元信息）拉开层级，不再同款式。 */
+   memo-document-format 原子）＋正文预览一行截断；预览是「正文」走 13px secondary
+   一档，与右上角 12px muted 的日期（元信息）拉开层级，不再同款式。
+   2026-10-31 DOM 改序（桌面单行流要求预览排时间之前）：移动靠 order 保持
+   时间在右上、预览第二行的既有视觉，其余数值一字未动。 */
 html[data-shell="mobile"] .memo-list-preview {
+  order: 3;
   flex: 1 1 100%;
   display: flex;
   align-items: center;
@@ -3508,18 +3515,18 @@ html[data-shell="mobile"] .memo-detail-panel .detail-footer.memo-foot-editing .i
   flex: 1 1 100%;
 }
 
-/* 格式工具条触键：桌面 30px 在手机上是全家最小的触摸目标，抬到 38；
+/* 格式工具条触键：桌面小目标在手机上调到 lg 档；
    工具条本就允许换行，九枚按钮自然落两排。 */
-html[data-shell="mobile"] .memo-rich-toolbar button {
-  min-height: 38px;
+html[data-shell="mobile"] .memo-rich-toolbar .memo-tool-btn {
+  min-height: var(--control-h-lg);
 }
 
 html[data-shell="mobile"] .memo-create-menu {
   min-width: 220px;
 }
 
-html[data-shell="mobile"] .memo-create-menu button {
-  min-height: 48px;
+html[data-shell="mobile"] .memo-create-menu .memo-menu-item {
+  min-height: var(--control-h-xl);
 }
 
 /* ---------- 10) 纪念日：列表卡与倒数读数 ---------- */
@@ -3567,12 +3574,12 @@ html[data-shell="mobile"] .anni-empty strong {
   font-size: var(--font-size-section-title);
 }
 
-/* 空态 CTA 统一档：与待办箱 .minbox-empty-cta 同尺寸同字号同无投影（44 胶囊 · accent）。 */
+/* 空态 CTA 统一档：与待办箱 .minbox-empty-cta 同尺寸同字号同无投影（xl · accent）。 */
 html[data-shell="mobile"] .anni-empty .btn-primary {
-  min-height: 44px;
+  min-height: var(--control-h-xl);
   padding: 0 20px;
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-copy);
+  border-radius: var(--control-radius);
+  font-size: var(--btn-font-size);
   box-shadow: none;
 }
 
@@ -3811,12 +3818,15 @@ html[data-shell="mobile"] .data-health-panel {
   box-shadow: none;
 }
 
-/* 习惯页头「新建习惯」输入行：字段跟药丸按钮同走 38 辅助档（本周页头
+/* 习惯页头「新建习惯」输入行：字段 md 档、按钮 lg 档（本周页头
    ‹上周/本周/下周› 切换钮同阶梯，基座无 min-height 在这里补齐）。 */
-html[data-shell="mobile"] .top-controls .field,
+html[data-shell="mobile"] .top-controls .field {
+  min-height: var(--control-h-md);
+}
+
 html[data-shell="mobile"] .top-controls .btn-ghost,
 html[data-shell="mobile"] .top-controls .btn-primary {
-  min-height: 38px;
+  min-height: var(--control-h-lg);
 }
 
 html[data-shell="mobile"] .top-controls .field {
@@ -3878,6 +3888,19 @@ html[data-shell="mobile"] .weekly-day-col header span {
   order: 3;
   font-size: var(--font-size-meta);
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 移动壳全屏：桌面整窗外壳的圆角裁切整体下线 ---------- */
+
+/* views.css「整窗外壳」段给 #root 挂了 border-radius + clip-path（桌面裁
+   WebView 四角溢色用），移动壳一并继承：四角与边缘露出一圈窗口背景，系统深色
+   模式下像整个应用浮在黑底上（实机反馈：顶部割裂观感的帮凶，主犯是窗口底色
+   与应用主题脱钩，见 windowChrome.syncAndroidSystemBar）。.app-root 的归零在
+   views.css「根滚动页」段已做，这里补上 #root；挂文件末尾压过主题段
+   :root[data-theme] #root 的同特异性规则。 */
+html[data-shell="mobile"] #root {
+  border-radius: 0;
+  clip-path: none;
 }
 
 html[data-shell="mobile"] .weekly-day-meta {

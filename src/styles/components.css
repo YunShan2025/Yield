@@ -17,16 +17,8 @@ select {
   background: var(--paper-100);
 }
 
-.btn-primary {
-  color: var(--white);
-  background: var(--steel-300);
-  box-shadow: 0 7px 16px var(--steel-350-16);
-}
-
-.btn-primary:hover {
-  background: var(--steel-400);
-  box-shadow: 0 8px 18px var(--steel-350-20);
-}
+/* 本段原 airy-light 的 .btn-primary 实底/悬停为级联死代码（被后段逐属性覆盖），已删除；
+   按钮外观唯一真相源见下方「按钮原子（三合一）」。 */
 
 /* 本段原 airy-light 的 .nav-item.active 及其 ::before 为级联死代码，已删除。
    最终生效在下方「桌面工作台 · 侧栏/品牌」final-theme 段与 views 各主题。 */
@@ -57,9 +49,8 @@ select {
   border-color: var(--mist-400);
 }
 
-.task-check {
-  border-color: var(--steel-100);
-}
+/* 本段原 airy-light 的 .task-check 描边覆盖为级联死代码（后被同文件 border 简写
+   与后段覆盖），勾选圈原子已收口 primitives.css「勾选圈原子」一处。 */
 
 /* 空态＝「此刻恰好没有」，不是「未填写的框」：dashed 描边像待办占位，
    统一换成安静的内凹面（--surface-sunken 随四主题取色）+ 实线细边。 */
@@ -166,7 +157,7 @@ select {
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  height: 88px;
+  height: 56px;
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   border-right: none;
   box-shadow: -2px 0 8px var(--ink-950-a-8);
@@ -201,13 +192,44 @@ select {
   width: 100%;
 }
 
-.btn-primary {
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--text-on-accent);
+/* ============================================================
+   按钮原子（三合一）—— 全应用按钮唯一基线
+   .item-action-btn 是唯一原子类；.btn-primary / .btn-ghost 为旧类名别名
+   （TSX 不改名，样式全部转发到本体系）：
+     .btn-ghost   ≡ .item-action-btn（次操作默认态：sunken 底 + 主墨字）
+     .btn-primary ≡ .item-action-btn.item-action-primary（修饰段见下）
+   高度/圆角/字号/padding 全走 token；修饰（primary/danger/icon-btn）只改颜色。
+   全局 button:active 缩放与 focus-visible 环在 primitives 现位不动。
+   ============================================================ */
+.item-action-btn,
+.btn-primary,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  min-height: var(--control-h-sm);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--control-radius);
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+  font-size: var(--btn-font-size);
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.item-action-btn:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.item-action-btn:disabled,
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .time-range {
@@ -273,25 +295,8 @@ select {
   transition: transform var(--motion-fast);
 }
 
-.btn-primary:hover {
-  background: var(--accent-hover);
-}
-
-.btn-primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-}
-
-.btn-ghost:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
+/* .btn-primary:hover / :disabled 与 .btn-ghost 基础段已并入上方「按钮原子（三合一）」；
+   ghost ≡ 原子默认态（sunken 底 + 主墨字 + hover surface-hover）。 */
 
 .nav-section-label {
   margin: 8px 4px 4px;
@@ -356,20 +361,6 @@ select {
   align-items: center;
 }
 
-.seg {
-  display: flex;
-  background: var(--surface-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 3px;
-}
-
-.seg button {
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  color: var(--text-secondary);
-}
-
 .seg button.active {
   background: var(--accent);
   color: var(--text-on-accent);
@@ -381,25 +372,8 @@ select {
   padding: 0 22px 24px;
 }
 
-.task-check {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
-  /* 覆盖 UA 对 button 的默认 padding(1px 6px),避免 ✓ 字形被挤出圆形。 */
-  padding: 0;
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  display: grid;
-  place-items: center;
-  font-size: var(--font-size-caption);
-  cursor: pointer;
-}
-.task-check::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
-}
+/* .task-check 尺寸/圆形/热区为级联死代码重复（完成态在 primitives「勾选圈原子」、
+   圆形最终又被本文件后段 50% 覆盖），原子一处定死，此处删除。 */
 
 /* 可点击「事项名」字样族:字重 560 + 收紧 -0.012em 字距 + heading 墨色。
    今日/待办箱/标签/回收站/备忘/记账明细/周清单共用,密度只差字号。 */
@@ -637,23 +611,23 @@ select {
   box-shadow: 0 0 0 2px var(--slate-150-25);
 }
 
-/* 完成事项的「成就式」呈现:金色认可——✓ 金章、暖金底、完成时刻标识。
-   不置灰、不划线、不降透明:完成是成就感,不是退场。 */
+/* 完成事项呈现（2026-10-31 金退场，同勾圈一档）：蓝色认可——✓ 蓝章、蓝软底、
+   完成时刻标识。不置灰、不划线、不降透明：完成是成就感，不是退场。 */
 .timeline-h-event.is-done {
-  background: color-mix(in srgb, var(--amber-700) 16%, var(--surface-panel));
-  border-color: color-mix(in srgb, var(--amber-800) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-panel));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
 }
 
 .timeline-h-event.is-done::before {
-  background: var(--amber-950-c);
+  background: var(--accent-strong);
 }
 
 .timeline-h-event.is-done:hover {
-  border-color: var(--amber-900);
+  border-color: var(--accent-strong);
 }
 
 .timeline-h-event.is-done .timeline-h-event-time {
-  background: color-mix(in srgb, var(--amber-800) 16%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--text-label);
 }
 
@@ -667,59 +641,26 @@ select {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--amber-950-c);
-  color: var(--gold-150);
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .timeline-h-allday-chip.is-done {
-  background: color-mix(in srgb, var(--amber-700) 22%, var(--surface-panel));
-  border-color: color-mix(in srgb, var(--amber-800) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-panel));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   color: var(--text-secondary);
 }
 
 .timeline-h-allday-chip.is-done svg {
   margin-right: 4px;
   vertical-align: -2px;
-  color: var(--amber-900);
+  color: var(--accent);
 }
 
-/* 今日/当日事项行:同一套成就式完成态。作用于 .day-agenda 作用域,
-   周历等其余列表的完成态不受影响。金色用覆盖层渐显,与按钮落金同步;
-   悬停时行内背景不再整块盖掉金色。 */
-.day-agenda .expand-task {
-  position: relative;
-  isolation: isolate;
-  transition: border-color calc(260ms * var(--motion-scale)) ease;
-}
-
-.day-agenda .expand-task::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity calc(260ms * var(--motion-scale)) ease;
-}
-
-.day-agenda .expand-task > * {
-  position: relative;
-  z-index: 1;
-}
-
-.day-agenda .expand-task.is-done::before {
-  opacity: 1;
-}
-
-.day-agenda .expand-task.is-done {
-  border-color: var(--amber-900-28);
-}
-
-.day-agenda .expand-task.is-done .expand-task-row:hover {
-  background: var(--amber-900-6);
-}
-
+/* 今日/当日事项行完成态收敛（2026-10-31）：金底覆盖层、金描边、金悬停整组退场——
+   完成只由「完成→已完成」按钮与「完成于 xx:xx」徽章表示，卡片不变样、不沉底。
+   只留防删除线一条：压掉基础规则（.expand-task.is-done .task-title）的行删除线，
+   任务与习惯行同规则（习惯分区同口径：打卡只变按钮）。周历等其余列表不受影响。 */
 .day-agenda .expand-task.is-done .task-title {
   color: var(--text-primary);
   text-decoration: none;
@@ -739,18 +680,6 @@ select {
   white-space: nowrap;
 }
 
-:root[data-theme="dark"] .day-agenda .expand-task::before {
-  background: var(--amber-750-8);
-}
-
-:root[data-theme="dark"] .day-agenda .expand-task.is-done {
-  border-color: var(--amber-750-25);
-}
-
-:root[data-theme="dark"] .day-agenda .expand-task.is-done .expand-task-row:hover {
-  background: var(--amber-750-8);
-}
-
 :root[data-theme="dark"] .day-agenda .expand-task.is-done .task-title {
   color: var(--text-primary);
 }
@@ -760,23 +689,48 @@ select {
   color: var(--amber-700);
 }
 
-/* 璃幕也是暗色主题：静夜这套「成就式金色」版式要一并跟过来。
-   否则璃幕的今日页会留着浅色金层，配上璃幕的浅色文字等于隐形（实测 1.79:1）。 */
-:root[data-theme="glass"] .day-agenda .expand-task::before {
-  background: var(--amber-750-8);
-}
-:root[data-theme="glass"] .day-agenda .expand-task.is-done {
-  border-color: var(--amber-750-25);
-}
-:root[data-theme="glass"] .day-agenda .expand-task.is-done .expand-task-row:hover {
-  background: var(--amber-750-8);
-}
+/* 璃幕也是暗色主题：完成时刻徽章的暗色口径一并跟过来（金底版式已随浅色段退场）。 */
 :root[data-theme="glass"] .day-agenda .expand-task.is-done .task-title {
   color: var(--text-primary);
 }
 :root[data-theme="glass"] .done-at-chip {
   background: var(--amber-750-16);
   color: var(--amber-700);
+}
+
+/* 今日/待办行侧钮：悬浮态即常态（同习惯页动作条口径，悬停零跳变）。
+   状态钮同谱（2026-10-31 金退场，打卡镜像完成）：未完成/未打卡＝灰底主墨字
+   （空圈图标），已完成/已打卡＝蓝软底蓝字（勾选圈）——钮随状态换色；
+   修改完成时间＝中性灰软底辅助钮；删除＝删除同款红软底。只在 .day-agenda
+   作用域，看板等其余 ExpandableTaskItem 使用处不受牵连。 */
+html:not([data-shell="mobile"]) .day-agenda .task-state-btn,
+html:not([data-shell="mobile"]) .day-agenda .item-action-primary,
+html:not([data-shell="mobile"]) .day-agenda .item-action-edit.flat-ghost {
+  min-width: 78px;
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+html:not([data-shell="mobile"]) .day-agenda .task-state-btn:hover:not(:disabled),
+html:not([data-shell="mobile"]) .day-agenda .item-action-primary:hover:not(:disabled),
+html:not([data-shell="mobile"]) .day-agenda .item-action-edit.flat-ghost:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+}
+html:not([data-shell="mobile"]) .day-agenda .task-state-btn.is-done,
+html:not([data-shell="mobile"]) .day-agenda .item-action-primary.is-done,
+html:not([data-shell="mobile"]) .day-agenda .task-state-btn.is-done:hover:not(:disabled),
+html:not([data-shell="mobile"]) .day-agenda .item-action-primary.is-done:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+html:not([data-shell="mobile"]) .day-agenda .expand-delete.quiet-danger {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface-panel));
+}
+html:not([data-shell="mobile"]) .day-agenda .expand-delete.quiet-danger:hover:not(:disabled) {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface-panel));
 }
 
 .timeline-h-event-title {
@@ -1071,29 +1025,16 @@ select {
   flex: 1.3 1 0;
 }
 
-.detail-footer .btn-ghost {
-  border: 1px solid var(--border);
-  background: var(--surface-sunken);
-  color: var(--text-primary);
-}
-
-.detail-footer .btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
-  background: var(--surface-hover);
-}
-
-/* 「删除任务」降权：破坏性动作不该是抽屉里最响的一块。点击还有二次确认，
-   红色留给悬停。 */
+/* 抽屉脚幽灵＝次操作底：原子基线已给 sunken + 主墨字，白底/描边特例退役。
+   「删除任务」降权：危险·轻（danger 字 + --danger-tint 衬底），点击还有二次确认。 */
 .detail-footer .btn-ghost.danger {
-  border: 1px solid var(--border);
-  background: var(--surface-sunken);
   color: var(--danger);
+  background: var(--danger-tint);
 }
 
 .detail-footer .btn-ghost.danger:hover {
-  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
-  background: color-mix(in srgb, var(--danger) 8%, var(--surface-sunken));
   color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
 }
 
 .detail-head-actions {
@@ -1133,16 +1074,17 @@ select {
    .growth-page 已统一提供水平内边距,避免标题行相对引导框双重缩进。
    提高特异性以稳定压过 global-10 的等特异性覆盖。 */
 .growth-page .workspace-top.growth-top { padding: 25px 0 13px; }
-.growth-top .btn-primary { flex: 0 0 auto; width: auto; }
-/* 足迹页引导框:复用「今日」同款 .today-hero(配色/排版随主题自动同步)。
-   guide-hero 修饰类由 足迹/习惯/提醒/项目 共用;下间距仅足迹页需要,
-   其余页面交由容器自身的 gap 控制节奏。 */
-.growth-page .guide-hero { margin-bottom: 14px; }
+.growth-top .btn-primary { flex: 0 0 auto; }
+/* 足迹/目标引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）。 */
+/* 设置页是根滚动页（与 .habits-view 同款「根即滚动条」；移动壳 sticky 页头
+   的根滚动模型也依赖这条，见 views.css 状态栏让位策略）。e8f80ab 把 main 的
+   内联样式改挂类时把 overflow:auto 一并丢了，两端内容被 .app-body 裁死。 */
+.settings-page { overflow: auto; }
 /* 设置页页头与其余页同构：桌面引导框与卡片流同用 22px 横留白。 */
 .settings-page .guide-hero {
   margin: 0 22px;
 }
-.tags-view .guide-hero { margin: 0 28px 6px; }
+/* 标签引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）。 */
 
 .growth-panel { min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); }
 .growth-panel h3 { margin: 0 0 14px; }
@@ -1244,10 +1186,10 @@ html:not([data-shell="mobile"]) .heat-months {
 html:not([data-shell="mobile"]) .heat-months span { min-width: 0; overflow: hidden; white-space: nowrap; }
 /* 今天只标位置不给亮度——今天未必有投入，环比颜色诚实。 */
 html:not([data-shell="mobile"]) .heat-cell.is-today { box-shadow: 0 0 0 1.5px var(--text-secondary); }
-/* 正被下方当日面板看着的那一格描金环（成就金，与「整天清空」同一认可语气）；
+/* 正被下方当日面板看着的那格描蓝环（2026-10-31 与「整天清空」同谱转蓝）；
    写在 is-today 之后：今天恰是选中日时，金环盖过灰环，位置信息不丢。 */
-.heat-cell.is-sel { box-shadow: 0 0 0 2px var(--amber-700); }
-html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--amber-700), 0 0 0 3.5px var(--surface-panel); }
+.heat-cell.is-sel { box-shadow: 0 0 0 2px var(--accent); }
+html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--accent), 0 0 0 3.5px var(--surface-panel); }
 
 /* ── 足迹页读数条 + 当日明细 ─────────────────────────────────────────────
    统计不再用四格高卡：与本周页同族的横向一条（.weekly-stat-track 原子复用），
@@ -1272,11 +1214,7 @@ html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--
   .footprint-day-cols { grid-template-columns: 1fr; }
 }
 
-/* 窄桌（≤960）引导框有 138px 的最低高度——那是给「标语 + 一句说明」那种顶卡留的。
-   足迹页顶卡是「一句今天 + 一个读数」，撑到 138 就又变回一块空：按内容收高。 */
-@media (max-width: 960px) {
-  html:not([data-shell="mobile"]) .growth-page .guide-hero { min-height: 0; }
-}
+/* 窄桌引导框收高规则随足迹顶卡升卡退役（guide-stat 卡按内容自然收高）。 */
 
 /* ── 目标页桌面卡片化（2026-10-30 乙案，项目页 B+ 同族）：工作台/详情双栏退役，
    两端共用 GoalRow 展开卡流。行件规则并入下方卡族选择器组，本页专属见习惯块后。 */
@@ -1375,8 +1313,7 @@ html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--
 .settings-toggle strong { color: var(--text-heading); font-size: var(--font-size-label); }
 .settings-toggle small { color: var(--text-muted); font-size: var(--font-size-caption); }
 
-/* 设置页内 .btn-primary 默认整行宽,操作类按钮收成随内容宽度。 */
-.settings-card .btn-primary { width: auto; }
+/* 「.btn-primary 默认整行宽」已随旧基线退役（原子 width:auto），设置页 width 例外删除。 */
 
 /* 习惯页:与「今日」同构的页头 + 统一 28px 内容边距。 */
 .habits-view { overflow: auto; }
@@ -1396,96 +1333,33 @@ html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--
   justify-content: flex-end;
   gap: 7px;
 }
+/* 基线全部在「按钮原子（三合一）」；这里只留行内动作原子的附加档：
+   行内最小占宽 + 主操作最小占宽。 */
 .item-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  width: auto;
   min-width: 60px;
-  min-height: 34px;
-  padding: 7px 11px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  background: var(--surface-panel);
-  font-size: var(--font-size-label);
-  font-weight: 600;
-  transition: transform var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast), box-shadow var(--motion-fast);
 }
 .item-action-cluster .item-action-btn { flex: none; }
-.item-action-btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
+.item-action-primary { min-width: 78px; }
+/* 完成态 = 次操作中性态（勾选圈已表达完成，按钮不再抢戏）。金渐变「完成」层
+   （primary::after + is-done 金覆盖整段）已删——完成态 = task-check 勾选圈 +
+   中性「已完成」按钮。 */
+.item-action-primary.is-done,
+.item-action-btn.item-action-primary.is-done {
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+.item-action-primary.is-done:hover:not(:disabled) {
   color: var(--text-primary);
   background: var(--surface-hover);
 }
-.item-action-btn:active:not(:disabled) { transform: translateY(0); }
-.item-action-btn:disabled { opacity: .42; cursor: not-allowed; }
-.item-action-primary,
-.item-action-btn.item-action-primary {
-  position: relative;
-  isolation: isolate;
-  min-width: 78px;
-  border-color: transparent;
-  color: var(--text-on-accent);
-  background: var(--accent);
-  box-shadow: 0 2px 7px color-mix(in srgb, var(--accent) 28%, transparent);
-}
-.item-action-primary:hover:not(:disabled) {
-  border-color: transparent;
-  color: var(--text-on-accent);
-  background: var(--accent-hover);
-}
-.item-action-primary:active:not(:disabled) {
-  transform: translateY(0) scale(.97);
-}
-/* 金色完成态用覆盖层渐显:渐变之间无法补间,叠加层 opacity 才能把
-   「完成/打卡」的落金过程连成一段动画;悬停也不会被主色 hover 顶掉。 */
-.item-action-primary::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--amber-950), var(--amber-950-c));
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity calc(260ms * var(--motion-scale)) ease;
-}
-
-.item-action-primary.is-done,
-.item-action-btn.item-action-primary.is-done {
-  color: var(--white);
-}
-.item-action-primary > * {
-  position: relative;
-  z-index: 1;
-}
-/* 边框要和金色覆盖层同色:透明边框会露出底下的主色,形成一圈蓝边。 */
-.item-action-primary.is-done {
-  border-color: var(--amber-900);
-  color: var(--white);
-  background: var(--accent);
-  box-shadow: 0 2px 9px var(--amber-900-32);
-}
-.item-action-primary.is-done:hover:not(:disabled) {
-  border-color: var(--amber-850);
-  color: var(--white);
-  background: var(--accent);
-  box-shadow: 0 2px 9px var(--amber-900-32);
-}
-.item-action-primary.is-done::after,
-.item-action-primary.is-done:hover:not(:disabled)::after {
-  opacity: 1;
-}
-.item-action-primary.is-done:hover:not(:disabled)::after {
-  background: linear-gradient(135deg, var(--gold-250), var(--amber-850));
-}
-/* 只在用户刚完成的那一次渲染播放落金动效,进场时不重播。 */
-.item-action-primary.is-flash {
+/* 只在用户刚完成的那一次渲染播放弹跳确认动效,进场时不重播。 */
+.item-action-primary.is-flash,
+.task-state-btn.is-flash {
   animation: task-action-confirm calc(380ms * var(--motion-scale)) cubic-bezier(.2, .8, .2, 1);
 }
-.item-action-primary.is-flash > svg {
+.item-action-primary.is-flash > svg,
+.task-state-btn.is-flash > svg {
   animation: task-action-icon-pop calc(420ms * var(--motion-scale)) cubic-bezier(.2, .8, .2, 1) both;
 }
 @keyframes task-action-confirm {
@@ -1500,132 +1374,59 @@ html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--
 }
 @media (prefers-reduced-motion: reduce) {
   .item-action-primary.is-flash,
-  .item-action-primary.is-flash > svg { animation: none; }
-  .item-action-primary::after { transition: none; }
+  .task-state-btn.is-flash,
+  .item-action-primary.is-flash > svg,
+  .task-state-btn.is-flash > svg { animation: none; }
 }
-/* 悬停配色：语义色只点亮描边与文字。 */
+/* 悬停配色：语义色只点亮文字与同色浅底（描边已随基线退场）。 */
 .item-action-edit:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   color: var(--accent);
   background: var(--accent-soft);
 }
 .item-action-archive:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--brand-gold) 38%, var(--border));
   color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
   background: color-mix(in srgb, var(--brand-gold) 10%, var(--surface-panel));
 }
-.item-action-danger {
-  border-color: color-mix(in srgb, var(--danger) 24%, var(--border));
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
-}
-/* 「删除」降权：列表里每行都摆一颗红按钮，一屏就是一片红点。
-   动作本身还在（点开有二次确认），红色只在悬停时出现。 */
-.quiet-danger {
-  border-color: var(--border);
-  color: var(--text-secondary);
-  background: var(--surface-panel);
-}
-
-.quiet-danger:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 5%, var(--surface-panel));
-}
-
-.item-action-danger:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
-  color: var(--text-on-solid);
-  background: var(--danger-solid);
-}
-/* 桌面两端动作条（项目/标签/目标）：常态＝白底 + 有色字体——语义色只落在文字、图标
-   与描边上，底保持面板白（不再常态铺蓝软底/金底/红实心）；悬停加一档同色浅底。
-   删除与编辑/归档同档，红色只写字与描边。 */
+/* 危险态与「删除降权」整组搬到本文件后段「危险·轻统一」（.quiet-danger 之前）：
+   必须排在 primary 别名修饰段之后、且 danger 在 quiet 之前（同特异度后发胜出），
+   否则 AppConfirm 危险钮会被 .btn-primary 的 accent 底顶掉。 */
+/* 桌面两端动作条（项目/标签/目标/习惯）：悬浮态上浮为常态——语义色文字配同色软底
+   （编辑=蓝软底、归档=金软底、删除=红软底），悬停不再另加一档，无跳变。
+   删除与编辑/归档同档，红色只写字。（描边已随基线退场，同色描边写法一并清退。） */
 html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-edit,
 html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-edit,
-html:not([data-shell="mobile"]) .goals-list .expand-row-foot .item-action-edit {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+html:not([data-shell="mobile"]) .goals-list .expand-row-foot .item-action-edit,
+html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-edit {
   color: var(--accent);
-  background: var(--surface-panel);
-}
-html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-edit:hover:not(:disabled),
-html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-edit:hover:not(:disabled),
-html:not([data-shell="mobile"]) .goals-list .expand-row-foot .item-action-edit:hover:not(:disabled) {
   background: var(--accent-soft);
 }
 html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-archive,
-html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-archive {
-  border-color: color-mix(in srgb, var(--brand-gold) 38%, var(--border));
+html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-archive,
+html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-archive {
   color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
-  background: var(--surface-panel);
-}
-html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-archive:hover:not(:disabled),
-html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-archive:hover:not(:disabled) {
   background: color-mix(in srgb, var(--brand-gold) 10%, var(--surface-panel));
 }
 html:not([data-shell="mobile"]) .projects-view .expand-row-foot .quiet-danger,
 html:not([data-shell="mobile"]) .tags-view .expand-row-foot .quiet-danger,
-html:not([data-shell="mobile"]) .goals-list .expand-row-foot .quiet-danger {
-  border-color: color-mix(in srgb, var(--danger) 24%, var(--border));
-  color: var(--danger);
-  background: var(--surface-panel);
-}
-html:not([data-shell="mobile"]) .projects-view .expand-row-foot .quiet-danger:hover:not(:disabled),
-html:not([data-shell="mobile"]) .tags-view .expand-row-foot .quiet-danger:hover:not(:disabled),
-html:not([data-shell="mobile"]) .goals-list .expand-row-foot .quiet-danger:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
-  background: color-mix(in srgb, var(--danger) 8%, var(--surface-panel));
-}
-/* 习惯页动作条并入同组：习惯卡的动作钮与项目/标签同款白底语义描边。 */
-html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-edit {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
-  color: var(--accent);
-  background: var(--surface-panel);
-}
-html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-edit:hover:not(:disabled) {
-  background: var(--accent-soft);
-}
-html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-archive {
-  border-color: color-mix(in srgb, var(--brand-gold) 38%, var(--border));
-  color: color-mix(in srgb, var(--brand-gold) 72%, var(--text-primary));
-  background: var(--surface-panel);
-}
-html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-archive:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--brand-gold) 10%, var(--surface-panel));
-}
+html:not([data-shell="mobile"]) .goals-list .expand-row-foot .quiet-danger,
 html:not([data-shell="mobile"]) .habits-view .expand-row-foot .quiet-danger {
-  border-color: color-mix(in srgb, var(--danger) 24%, var(--border));
   color: var(--danger);
-  background: var(--surface-panel);
-}
-html:not([data-shell="mobile"]) .habits-view .expand-row-foot .quiet-danger:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--danger) 42%, var(--border));
   background: color-mix(in srgb, var(--danger) 8%, var(--surface-panel));
 }
-.item-action-primary.danger,
-.item-action-primary.danger:hover:not(:disabled) {
-  border-color: transparent;
-  color: var(--text-on-solid);
-  background: var(--danger-solid);
+/* 目标暂停/继续与已完成回退：中性钮同理上浮为原 hover 灰底；
+   完成保持实心蓝主钮（goal-act-done 段）。 */
+html:not([data-shell="mobile"]) .goals-list .goal-foot .item-action-pause,
+html:not([data-shell="mobile"]) .goals-list .goal-foot .item-action-reopen {
+  background: var(--surface-hover);
 }
-/* 备忘录详情底部沿用列表动作观感；抽屉较窄，等分列会在 420px 下挤出文字，
-   改为内容自适应 + 换行。 */
-.memo-detail-panel .detail-footer {
-  flex-wrap: wrap;
-}
-.memo-detail-panel .detail-footer .item-action-btn {
-  flex: 1 1 auto;
-}
-/* 二级弹窗底部动作区沿用列表动作按钮的观感：统一按钮高度与内边距，
+/* 二级弹窗底部动作区沿用列表动作按钮的观感：统一按钮高度（弹层脚/页头档），
    列表动作组仍由 .item-action-cluster 单独收紧尺寸。 */
 .create-task-actions .item-action-btn,
 .completed-time-actions .item-action-btn,
 .project-edit-actions .item-action-btn,
 .ledger-drawer-footer .item-action-btn,
 .goal-create-actions .item-action-btn {
-  min-height: 38px;
-  padding: 9px 13px;
-  font-size: var(--font-size-label);
+  min-height: var(--control-h-md);
 }
 @media (max-width: 700px) {
   .memo-detail-panel .detail-footer .item-action-btn {
@@ -1681,8 +1482,6 @@ html:not([data-shell="mobile"]) .habits-view .expand-row-foot .quiet-danger:hove
 .review-section-head > b { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--accent-strong); background: var(--accent-soft); font-size: var(--font-size-caption); }
 .review-soft-empty { color: var(--text-muted); font-size: var(--font-size-caption); }
 /* 当周精力投向：目标/项目/标签三视角聚合。 */
-.review-dimension-tabs { display: inline-flex; flex: 0 0 auto; gap: 3px; padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-rail); }
-.review-dimension-tabs button { min-height: 28px; padding: 0 10px; border: 0; border-radius: var(--radius-sm); color: var(--text-secondary); background: transparent; font-size: var(--font-size-caption); font-weight: 600; cursor: pointer; }
 .review-dimension-tabs button.is-active { color: var(--accent-strong); background: var(--surface-panel); box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 10%, transparent); }
 .review-breakdown-list { display: grid; gap: 4px; margin-top: 16px; }
 .review-breakdown-row { display: grid; grid-template-columns: minmax(96px, 170px) minmax(80px, 1fr) minmax(48px, auto); gap: 12px; align-items: center; padding: 9px 2px; border-top: 1px solid var(--border); }
@@ -1729,19 +1528,11 @@ html:not([data-shell="mobile"]) .habits-view .expand-row-foot .quiet-danger:hove
 
 .modal-head > button {
   flex: none;
-  width: 30px;
-  height: 30px;
   display: grid;
   place-items: center;
-  border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: var(--font-size-section-title);
   line-height: 1;
-}
-
-.modal-head > button:hover {
-  background: var(--surface-sunken);
-  color: var(--text-primary);
 }
 
 .project-edit-modal {
@@ -1832,7 +1623,7 @@ html:not([data-shell="mobile"]) .habits-view .expand-row-foot .quiet-danger:hove
 .create-task-schedule { display: grid; grid-template-columns: 152px minmax(0, 1fr); gap: 13px; align-items: start; }
 .create-task-schedule .time-range { gap: 8px; }
 .create-task-actions { display: flex; justify-content: flex-end; gap: 10px; }
-.create-task-actions .btn-primary, .create-task-actions .btn-ghost { width: auto; min-width: 112px; }
+.create-task-actions .btn-primary, .create-task-actions .btn-ghost { min-width: 112px; }
 @media (max-width: 620px) { .create-task-grid { grid-template-columns: 1fr; } .create-task-schedule { grid-template-columns: 1fr; } .create-task-time-head { flex-wrap: wrap; } }
 
 /* 桌面「悬浮卡」二级弹窗形态（同「记一笔」抽屉定稿，2026-10-28）。
@@ -1955,7 +1746,6 @@ html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) .crea
 
 .project-edit-actions .btn-primary,
 .project-edit-actions .btn-ghost {
-  width: auto;
   min-width: 108px;
 }
 
@@ -2186,72 +1976,10 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 
 /* ---------- 项目页桌面升级（B+）：顶卡数据条 / 行头胶囊 / 面板行件 ---------- */
 
-/* 顶卡：外壳沿用 .today-hero 主题底与麦穗水印。引导框不限制高度、不挤一行——
-   第一行恢复说明文案 + 衬线数字读数（复用今日页 today-hero-meter 原子），
-   第二行整幅三段实数据条 + 图例，色段与移动壳 MobileGuideCard.segments 同源
-   （heroSegments 一份数据双端共用）。 */
-.projects-view .today-hero.projects-guide {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 15px;
-  padding: 18px 22px 15px;
-}
+/* 顶卡已升淡蓝数据顶卡 DesktopGuideCard（guide-stat-* 族，见「桌面数据顶卡族」段）。 */
 
-/* 引导框读数沿用 meter 原子的衬线显示体与字重（2026-10-30 验收口径：各页引导框
-   数字统一，撤销项目页此前的主字体特例；「一屏一处衬线数字」按屏计，不跨页）。 */
-
-.projects-guide-top {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px 20px;
-  flex-wrap: wrap;
-}
-
-.projects-hero-bar {
-  flex: 1;
-  min-width: 0;
-}
-
-.projects-hero-track {
-  display: flex;
-  gap: 3px;
-  height: 8px;
-}
-
-.projects-hero-track i {
-  display: block;
-  height: 100%;
-  min-width: 8px;
-  border-radius: var(--radius-pill);
-}
-
-.projects-hero-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  margin-top: 7px;
-  color: var(--text-secondary);
-  font-size: var(--font-size-caption);
-  font-variant-numeric: tabular-nums;
-}
-
-.projects-hero-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.projects-hero-legend em {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-
-/* 行头比率胶囊：done/total 一句话取代「n 项任务 · 已完成 x」；全完成暖金读数
-   （light 用 --warning、dark/glass 用 --brand-gold，同周脉搏 .wp-xcount.is-clear 档）；
+/* 行头比率胶囊：done/total 一句话取代「n 项任务 · 已完成 x」；全完成读数
+   （2026-10-31 暖金退场，同周脉搏 .wp-xcount.is-clear 一并转蓝）；
    零任务描边「未启动」（同 due-chip.is-none 手法）。 */
 .ratio-chip {
   display: inline-flex;
@@ -2267,15 +1995,9 @@ html:not([data-shell="mobile"]) .habit-edit-modal .habit-unlimited-toggle {
 }
 
 .ratio-chip.is-clear {
-  color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   font-weight: 700;
-}
-
-:root[data-theme="dark"] .ratio-chip.is-clear,
-:root[data-theme="glass"] .ratio-chip.is-clear {
-  color: var(--brand-gold);
-  background: color-mix(in srgb, var(--brand-gold) 14%, transparent);
 }
 
 .ratio-chip.is-idle {
@@ -2412,14 +2134,7 @@ html:not([data-shell="mobile"]) .tags-view .tags-section-divider {
 
 /* ---------- 习惯页桌面卡片化（2026-10-30，项目页 B+ 同族） ---------- */
 
-/* 引导框：沿用项目页 B+ 顶卡骨架（说明 + 衬线读数 → 整幅分段条 + 图例），
-   projects-guide-* 原子跨页复用，本页只借壳不复制样式。 */
-html:not([data-shell="mobile"]) .habits-view .today-hero.habits-guide {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 15px;
-  padding: 18px 22px 15px;
-}
+/* 引导框：已升淡蓝数据顶卡 DesktopGuideCard（guide-stat-* 族，见「桌面数据顶卡族」段）。 */
 
 /* 行首今日勾圈：与 toggle 平级的独立动作（proj-check 成就金原子），
    左侧留一口气，勾圈不贴着卡片描边。 */
@@ -2541,14 +2256,7 @@ html:not([data-shell="mobile"]) .habits-view .today-hero.habits-guide {
    短条/描边展开框/foot 无横线），动作条语义（编辑描边·删除红描边）也并入语义组；
    本块只放目标页专属：借壳顶卡、细条子行、chip 节奏、已完成淡出、蓝主钮。 */
 
-/* 引导框：沿用项目/习惯页顶卡借壳法（说明 + 衬线读数 → 三段条 + 图例），
-   projects-guide-* 原子跨页复用，本页只借壳不复制样式。 */
-html:not([data-shell="mobile"]) .growth-page .today-hero.goals-guide {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 15px;
-  padding: 18px 22px 15px;
-}
+/* 引导框：已升淡蓝数据顶卡 DesktopGuideCard（guide-stat-* 族，见「桌面数据顶卡族」段）。 */
 
 /* 行列：卡纵堆（10px 间距）；与分区题签的间距和 section-title-row 的
    margin-bottom 折叠成一档 12px。分区之间留一节呼吸。 */
@@ -2743,14 +2451,14 @@ html:not([data-shell="mobile"]) .goals-list .goal-foot button.goal-act-done:hove
   box-shadow: inset 0 0 0 1.6px var(--accent);
 }
 
-/* 完成勾圈＝桌面统一「成就金」档（与周清单 .weekly-day-check、今日/待办
-   .task-check.is-completed 同一族：深金实心 + 白勾，钮自己就是完成态，
-   hover 不再描 accent 环——环会撞未完成 hover 的语义）。移动壳保持 accent 档。
-   铺色用 --amber-900 纯色实心（修法乙）：渐变（135° 或 radial）总有一片亮金
-   在白底上读作「没铺满」，纯色整圈同深，一眼就是铺满了。 */
+/* 完成勾圈＝桌面统一「蓝底白勾」（2026-10-31 成就金退场，同周清单
+   .weekly-day-check、勾选圈原子 .task-check 一档：accent 实心 + 白勾，
+   钮自己就是完成态，hover 不再描 accent 环——环会撞未完成 hover 的语义）。
+   习惯页七日宫格（.proj-check.habit-day-check）与项目面板共用本原子；
+   移动壳历来就是 accent 档，两端自此同色。 */
 .proj-check.is-done {
   box-shadow: none;
-  background: var(--amber-900);
+  background: var(--accent);
 }
 
 .proj-check.is-done:hover {
@@ -2841,9 +2549,7 @@ html:not([data-shell="mobile"]) .goals-list .goal-foot button.goal-act-done:hove
   font-size: var(--font-size-caption);
 }
 
-.trash-summary .btn-ghost {
-  white-space: nowrap;
-}
+/* 「清空」钮 nowrap 特例已删（原子基线统一 nowrap）。 */
 
 .trash-list {
   display: grid;
@@ -3011,15 +2717,7 @@ html:not([data-shell="mobile"]) .goals-list .goal-foot button.goal-act-done:hove
   font-weight: 700;
 }
 
-.today-goal-strip-head button {
-  min-height: 24px;
-  padding: 0 4px;
-  border: 0;
-  background: transparent;
-  color: var(--accent-strong);
-  font-size: var(--font-size-caption);
-  cursor: pointer;
-}
+/* 「目标页」平坦幽灵样式与「批量管理」同组，见下方 .scope-section-head 组规则。 */
 
 .today-goal-rows {
   display: grid;
@@ -3168,7 +2866,7 @@ html:not([data-shell="mobile"]) .goal-push-title {
   min-height: 0;
 }
 
-.reminders-view .guide-hero { margin: 0 28px 18px; }
+/* 提醒引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）。 */
 
 .reminders-body {
   flex: 1;
@@ -3208,22 +2906,30 @@ html:not([data-shell="mobile"]) .goal-push-title {
   font-variant-numeric: tabular-nums;
 }
 
+/* 分段控件共享骨架：五类共用「pill 容器 + 32px 段钮」，各自只留颜色与激活态
+   （ledger-kind-tabs 是网格表单形态，另立）。 */
+.seg,
 .timer-tabs,
-.countdown-mode-switch {
+.countdown-mode-switch,
+.memo-list-tabs,
+.review-dimension-tabs {
   display: inline-flex;
   gap: 3px;
   padding: 3px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   background: var(--surface-panel);
 }
 
+.seg button,
 .timer-tabs button,
-.countdown-mode-switch button {
+.countdown-mode-switch button,
+.memo-list-tabs button,
+.review-dimension-tabs button {
   min-height: 32px;
   padding: 0 12px;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   color: var(--text-secondary);
   background: transparent;
   cursor: pointer;
@@ -3537,8 +3243,7 @@ html:not([data-shell="mobile"]) .goal-push-title {
 /* 内容统一 28px 边距,与「今日」一致。 */
 .moments-body { padding: 0 28px 28px; }
 
-/* 引导框与 workspace-top / 内容区同宽对齐(28px)。 */
-.moments-page .guide-hero { margin: 0 28px 18px; }
+/* 纪念日引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）。 */
 
 .anni-composer {
   display: flex;
@@ -3590,7 +3295,6 @@ html:not([data-shell="mobile"]) .goal-push-title {
 
 .anni-composer-foot .btn-primary,
 .anni-composer-foot .btn-ghost {
-  width: auto;
   min-width: 96px;
 }
 
@@ -3682,7 +3386,7 @@ html:not([data-shell="mobile"]) .goal-push-title {
 .anni-empty { min-height: 300px; display: grid; place-items: center; align-content: center; gap: 9px; text-align: center; }
 .anni-empty strong { font-size: var(--font-size-section-title); font-weight: 700; line-height: 1.3; }
 .anni-empty p { margin: 0 0 8px; color: var(--text-muted); }
-.anni-empty .btn-primary { width: auto; }
+/* .anni-empty .btn-primary 的 width:auto 例外随旧 width:100% 基线一同退役。 */
 
 .anni-detail-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; padding: 25px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-panel); box-shadow: 0 30px 90px var(--ink-950-b-28); }
 .anni-detail-count { display: grid; justify-items: center; gap: 5px; margin: 6px 0 22px; padding: 26px; border: 1px solid color-mix(in srgb, var(--moment-warm) 22%, var(--border)); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--moment-warm) 8%, var(--surface-panel)); }
@@ -3728,18 +3432,27 @@ html:not([data-shell="mobile"]) .goal-push-title {
 }
 
 .nav-side-scroll {
-  padding: 20px 16px;
-  gap: 9px;
+  padding: 18px 16px 14px;
+  gap: 6px;
 }
 
 /* 分区容器:标签 + 其下的导航项,行距比全局 gap 更紧凑。 */
 .nav-section {
   display: grid;
-  gap: 5px;
+  gap: 3px;
 }
 
 .nav-section-label {
   margin: 2px 4px 0;
+}
+
+/* 「更多」工具组沉底（方案A 2026-10-31）：纪念日/设置/回收站不占导航流。
+   margin-top:auto 只在内容不满栏高时吃掉底部空白；窗口变矮、内容溢出时
+   auto margin 归零，分组自然回到滚动流里，无需 JS。 */
+.nav-side-scroll .nav-section.util {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
 /* 侧栏与主区的可拖拽边界。 */
@@ -3834,7 +3547,8 @@ body.nav-resizing {
 }
 
 .nav-item {
-  min-height: 34px;
+  min-height: 29px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
 }
 
@@ -3880,6 +3594,13 @@ html[data-nav="railed"] .brand-lockup > div {
 
 html[data-nav="railed"] .nav-section {
   width: 100%;
+}
+
+/* rail 下组标题本身就是 1px 分隔线，util 的 border-top 会叠成双线，撤掉；
+   margin-top:auto 保留——设置/回收站依旧钉在图标列底部。 */
+html[data-nav="railed"] .nav-side-scroll .nav-section.util {
+  border-top: 0;
+  padding-top: 0;
 }
 
 /* 分组标题退化为 1px 分隔线,分组关系靠留白与分隔线保住。 */
@@ -3932,10 +3653,8 @@ html[data-nav="railed"] .nav-edge-collapse {
   height: 48px;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--steel-150), var(--accent));
-  box-shadow: 0 8px 20px var(--slate-150-19);
-}
+/* .btn-primary 渐变版（final-theme 段）为级联死代码，已删除；主操作定稿为实心 accent，
+   见本文件「按钮原子」的 primary 修饰段（原 4085 位置）。 */
 
 /* .main-workspace 页角洗色已并入 primitives 基础规则（azure 家族），此处暖色重复覆盖删除。 */
 
@@ -3968,10 +3687,8 @@ html[data-nav="railed"] .nav-edge-collapse {
   border-color: var(--slate-150-17);
 }
 
-.task-check {
-  border-radius: 50%;
-  border-color: var(--slate-150-36);
-}
+/* .task-check 圆形/描边第三处重复（50% + 遗留色 slate-150-36）——勾选圈原子
+   已在 primitives.css 一处定死（50% + --border-strong），此处删除。 */
 
 .detail-panel {
   background:
@@ -4010,15 +3727,17 @@ html[data-nav="railed"] .nav-edge-collapse {
    （底色 --accent-faint 随四主题取值），不再用暖色渐变洗底与同心环装饰。
    截止/提醒的紧迫感交给 .plan-warning 胶囊与文案承担，符合「颜色服务数据」。 */
 
-/* 今日引导块右侧的完成度：数字 + 细进度条。
-   不用圆环——圆环是「拿装饰冒充内容」的高发位，数字加细条更准也更省地方。 */
+/* 今日引导块右侧的完成度读数（大条已升卡尾通栏，见下方 .today-hero-meter-track）。
+   不用圆环——圆环是「拿装饰冒充内容」的高发位，数字加条更准也更省地方。 */
 .today-hero-meter {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: auto auto;
-  align-items: baseline;
+  /* 组内取 center 而非 baseline：36px 大字与 13px「已完成」基线对齐会让小字
+     明显沉低；「n/x」自身的粘连由 count 内部 baseline 保住。 */
+  align-items: center;
   gap: 2px 10px;
   min-width: 132px;
   color: var(--text-primary);
@@ -4032,12 +3751,16 @@ html[data-nav="railed"] .nav-edge-collapse {
 
 /* 今日顶卡读数：衬线显示体（--font-num-display，随主题无关层），移植移动端
    顶卡大数字同款——原生字重 400 免合成假粗、紧字距、accent-strong 强调。
+   2026-10-31 用户定：升 num-2xl 36 档（今日/待办箱共用）——「3/8」分数串在
+   num-xl 28 下被小尾巴 /8 拉弱，主数字再提一档才压得住卡面。
    DESIGN：--font-num-display 一屏最多一处，故只此处与计时倒计时用衬线。 */
 .today-hero-meter-count strong {
   font-family: var(--font-num-display);
-  font-size: var(--font-size-num-lg);
+  font-size: var(--font-size-num-2xl);
   font-weight: 400;
-  line-height: 1;
+  /* line-height 取 normal 而非 1：line-height:1 会让衬线大字贴死行盒顶，
+     normal 下字形光心落行盒正中——行盒即读数行，与文字行/大条的间距才匀。 */
+  line-height: normal;
   color: var(--accent-strong);
   letter-spacing: -0.005em;
   font-variant-numeric: lining-nums tabular-nums;
@@ -4046,22 +3769,29 @@ html[data-nav="railed"] .nav-edge-collapse {
 .today-hero-meter-count span {
   font-family: var(--font-num-display);
   color: var(--text-label);
-  font-size: var(--font-size-label);
+  /* 「/8」「件」随主数字同比提档（label 13 → num-lg 20），分数串整体成势。 */
+  font-size: var(--font-size-num-lg);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
 .today-hero-meter-label {
   color: var(--text-label);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-label);
 }
 
+/* 完成度大条：绝对定位贴卡底（left/right 跟随卡水平内距），不参与读数居中；
+   形制向其余顶卡 guide-stat-seg 靠齐——8px 高、胶囊圆角；轨面取同族单值条
+   goal-progress-track 的内凹底，填充实心 accent。 */
 .today-hero-meter-track {
-  grid-column: 1 / -1;
+  position: absolute;
+  left: var(--th-pad-x);
+  right: var(--th-pad-x);
+  /* 底距=上内衬，卡内上下留白相等（窄档 --th-pad-y 覆写回 12 保防夹缝）。 */
+  bottom: var(--th-pad-y);
   display: block;
-  height: 4px;
-  margin-top: 7px;
+  height: 8px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--text-primary) 12%, transparent);
+  background: var(--surface-sunken);
   overflow: hidden;
 }
 
@@ -4078,13 +3808,21 @@ html[data-nav="railed"] .nav-edge-collapse {
   background: var(--surface-panel);
 }
 
+/* 主操作修饰段（原子修饰·只改颜色）：.btn-primary ≡ .item-action-btn.item-action-primary，
+   双壳均实心 accent；投影只留桌面一档，移动壳在 mobile.css 断掉。
+   放在全文件后段：别名与行内语义件的悬停靠这条后发+双类稳压。 */
+.item-action-primary,
+.item-action-btn.item-action-primary,
 .btn-primary {
   color: var(--text-on-accent);
   background: var(--accent);
-  box-shadow: 0 8px 20px var(--azure-950-18);
+  box-shadow: 0 2px 7px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
-.btn-primary:hover {
+.item-action-primary:hover:not(:disabled),
+.item-action-btn.item-action-primary:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  color: var(--text-on-accent);
   background: var(--accent-hover);
 }
 
@@ -4097,8 +3835,12 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-family: var(--font-display);
 }
 
+/* .scope-nav .btn-ghost 的次级墨色覆盖已删：幽灵即次操作，吃原子基线主墨字。 */
+/* ‹ › 与日期文字同档（同字号/字重/display 字体），箭头不被页名压淡。 */
 .scope-nav .btn-ghost {
-  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-h3);
+  font-weight: 700;
 }
 
 .today-timeline {
@@ -4183,15 +3925,13 @@ html[data-nav="railed"] .nav-edge-collapse {
 .desktop-notification-content { min-width: 0; padding: 15px 16px 14px; }
 .desktop-notification-content > header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .desktop-notification-content > header span { color: var(--accent); font-size: var(--font-size-caption); font-weight: 700; letter-spacing: .1em; }
-.desktop-notification-content > header button { width: 27px; height: 27px; padding: 0; border: 0; border-radius: 50%; color: var(--text-muted); background: transparent; }
-.desktop-notification-content > header button:hover { color: var(--text-primary); background: var(--surface-sunken); }
 .desktop-notification-copy { width: 100%; display: grid; gap: 5px; padding: 2px 0 11px; border: 0; color: inherit; background: transparent; text-align: left; }
 .desktop-notification-copy strong { overflow: hidden; font-size: var(--font-size-section-title); font-weight: 700; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .desktop-notification-copy p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.55; }
 .desktop-notification-content > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 11px; border-top: 1px solid var(--border); }
 .desktop-notification-content > footer time { color: var(--text-muted); font-size: var(--font-size-caption); font-variant-numeric: tabular-nums; }
 .desktop-notification-content > footer div { display: flex; gap: 6px; }
-.desktop-notification-content > footer button { min-height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); background: var(--surface-sunken); font-size: var(--font-size-caption); }
+.desktop-notification-content > footer button { min-height: var(--control-h-xs); padding: 0 10px; border: 1px solid var(--border); border-radius: var(--control-radius); color: var(--text-secondary); background: var(--surface-sunken); font-size: var(--btn-font-size); }
 .desktop-notification-content > footer button.is-primary { border-color: transparent; color: var(--text-on-accent); background: var(--accent); }
 @keyframes desktop-notification-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .desktop-notification-card { animation: none; } }
@@ -4202,7 +3942,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 .version-update-copy h3 { margin: 3px 0 6px; font-size: var(--font-size-section-title); font-weight: 700; line-height: 1.25; }
 .version-update-copy p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .version-update-copy small { display: block; margin-top: 7px; color: var(--text-muted); font-size: var(--font-size-caption); }
-.version-update-close { width: 28px; height: 28px; border: 0; border-radius: var(--radius-sm); color: var(--text-muted); background: transparent; cursor: pointer; }
+.version-update-close { width: var(--icon-btn-size); height: var(--icon-btn-size); border: 0; border-radius: var(--control-radius); color: var(--text-muted); background: transparent; cursor: pointer; }
 .version-update-close:hover { color: var(--text-primary); background: var(--surface-hover); }
 .version-update-actions { grid-column: 2 / -1; display: flex; justify-content: flex-end; gap: 7px; margin-top: 2px; }
 .version-update-actions button { min-height: 32px; padding: 0 12px; border: 0; border-radius: var(--radius-md); color: var(--text-secondary); background: var(--surface-hover); cursor: pointer; }
@@ -4280,10 +4020,9 @@ html[data-nav="railed"] .nav-edge-collapse {
   background: var(--rose-150);
 }
 
-/* 页头右上角的主按钮按内容收窄,不随全局 width:100% 拉通。 */
+/* 页头右上角的主按钮：旧全局 width:100% 遗孤已删，原子天然随内容宽，只保留不吃 flex 拉伸。 */
 .workspace-top .btn-primary {
   flex: 0 0 auto;
-  width: auto;
 }
 
 .workspace-subtitle {
@@ -4564,7 +4303,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 
 .task-quick-actions .btn-ghost {
   padding: 5px 7px;
-  font-size: var(--font-size-caption);
+  font-size: var(--btn-font-size);
   white-space: nowrap;
 }
 
@@ -4718,7 +4457,6 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .onboarding-card footer .btn-primary {
-  width: auto;
   min-width: 148px;
 }
 
@@ -4742,8 +4480,44 @@ html[data-nav="railed"] .nav-edge-collapse {
   gap: 10px;
   margin-top: 18px;
 }
+/* ---- 危险·轻统一（按钮域）----
+   危险·重（danger-solid 实底）在按钮域退役：常态＝danger 字 + 10% 衬底
+   （--danger-tint），悬停加深一档；--danger-solid 只留确认弹窗正文等非按钮域。
+   本组必须整体排在「按钮原子」primary 别名修饰段之后（同特异度后发胜出），
+   quiet-danger 又必须排在 danger 之后（「删除降权」：行内红色只在悬停出现）。 */
+.item-action-danger {
+  color: var(--danger);
+  background: var(--danger-tint);
+}
+
+.item-action-danger:hover:not(:disabled) {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+/* 「删除」降权：列表里每行都摆一颗红按钮，一屏就是一片红点。
+   动作本身还在（点开有二次确认），红色只在悬停时出现。 */
+.quiet-danger {
+  color: var(--text-secondary);
+}
+
+.quiet-danger:hover:not(:disabled) {
+  color: var(--danger);
+  background: var(--danger-tint);
+}
+
+/* 主操作形态的危险钮（AppConfirm「覆盖并恢复备份」等确认动作）：同样落到危险·轻。 */
+.item-action-primary.danger,
 .btn-primary.danger {
-  background: var(--text-overdue, var(--rose-600));
+  color: var(--danger);
+  background: var(--danger-tint);
+  box-shadow: none;
+}
+
+.item-action-primary.danger:hover:not(:disabled),
+.btn-primary.danger:hover:not(:disabled) {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
 }
 
 /* 按钮文字一律横排:按钮在窄容器里被压缩时,禁止逐字竖排换行(如记账抽屉「取消」、习惯页「添加」)。 */
@@ -4794,6 +4568,34 @@ html[data-nav="railed"] .nav-edge-collapse {
   flex: 0 0 auto;
 }
 
+/* 「批量管理」「目标页」与页头「今日」同款平坦幽灵：透明底纯文字，hover 才给底。
+   批量态（.active）保留 accent 衬底当状态灯。 */
+.scope-section-head .btn-ghost,
+.today-goal-strip-head .goal-strip-more {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.scope-section-head .btn-ghost:hover:not(:disabled),
+.today-goal-strip-head .goal-strip-more:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+/* 行侧辅助钮（今日事项「删除」「修改完成时间」）同族平坦幽灵：透明底、次要字，
+   悬停由各自语义修饰给底（edit=accent-soft 蓝字、quiet-danger=红字红衬底）——
+   行内实心主钮（完成/打卡）之外的一切都不抢戏。 */
+.flat-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.scope-section-head .btn-ghost.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 /* ── 原 polish-07-weekly.css ────────────────────────────────────────── */
 /* Weekly checklist */
 .weekly-checklist {
@@ -4806,10 +4608,7 @@ html[data-nav="railed"] .nav-edge-collapse {
   gap: 12px;
 }
 
-/* 引导框与 workspace-top / 各板块同宽对齐(28px)。 */
-.weekly-checklist .guide-hero {
-  margin: 0 28px;
-}
+/* 本周引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）。 */
 
 .weekly-checklist-nav {
   display: flex;
@@ -4985,14 +4784,14 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 @media (hover: hover) {
-  .weekly-day-task:not(.is-done):hover {
+  .weekly-day-task:hover {
     background: var(--surface-hover);
   }
 }
 
 @supports (background: color-mix(in srgb, red 10%, blue)) {
   @media (hover: hover) {
-    .weekly-day-task:not(.is-done):hover {
+    .weekly-day-task:hover {
       background: color-mix(in srgb, var(--accent) 7%, var(--surface-panel));
     }
   }
@@ -5038,7 +4837,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 /* 完成钮:24px 命中区 / 22px 可见环(桌面 24px 底线),未完成态与移动
-   .mtoday-check 同一形制。完成态走桌面统一的成就金(见下),勾用双边框画
+   .mtoday-check 同一形制。完成态＝accent 实心圆 + 白勾(见下),勾用双边框画
    而非 data-URI SVG,描边吃 --text-on-solid(压在实色底上的白)。 */
 .weekly-day-check {
   position: relative;
@@ -5073,7 +4872,7 @@ html[data-nav="railed"] .nav-edge-collapse {
     box-shadow: inset 0 0 0 1.6px var(--accent);
   }
 
-  /* 成就金钮不再描 accent 环——钮自己就是完成态,环会撞未完成 hover 的语义。 */
+  /* 完成态实心钮不再描 accent 环——钮自己就是完成态,环会撞未完成 hover 的语义。 */
   .weekly-day-task.is-done .weekly-day-check:hover::before {
     box-shadow: none;
   }
@@ -5083,32 +4882,13 @@ html[data-nav="railed"] .nav-edge-collapse {
   transform: scale(0.9);
 }
 
-/* 完成态:桌面统一「成就金」认可(与同页本周任务、时间轴、当日事项同一族)——
-   行染金、不划线不置灰,完成圆钮是深金实心圆 + 白勾(钮本身就是圈,不套双环)。
-   整天清空额外给计数暖金读数(见 is-clear)。
-   移动壳不走这套:那边单条只留 accent 环(§16.5),整组才给金读数。 */
-.weekly-day-task.is-done {
-  background: linear-gradient(135deg, var(--gold-150) 0%, var(--amber-400) 100%);
-  box-shadow: inset 0 0 0 1px var(--amber-900-28);
-}
-
-@media (hover: hover) {
-  .weekly-day-task.is-done:hover {
-    box-shadow: inset 0 0 0 1px var(--amber-900-55);
-  }
-}
-
-:root[data-theme="dark"] .weekly-day-task.is-done,
-:root[data-theme="glass"] .weekly-day-task.is-done {
-  background: var(--amber-750-14);
-  box-shadow: inset 0 0 0 1px var(--amber-750-40);
-}
-
-/* 与 .proj-check.is-done 同族同法（2026-10-30 修法甲+乙）：inset 环退场、
-   --amber-900 纯色实心，不再靠透明 border 透出渐变。 */
+/* 完成态收敛（2026-10-31，同今日页口径）：行不再染金——完成只由勾圈表示；
+   勾圈＝accent 实心圆 + 白勾（钮本身就是圈，不套双环）。完成时刻仍由 done-chip
+   徽章承担（同今日页「完成于」徽章同款）。整天清空额外给计数暖金读数（见 is-clear）。
+   移动壳不走这套：那边单条只留 accent 环(§16.5)，整组才给金读数。 */
 .weekly-day-task.is-done .weekly-day-check::before {
   box-shadow: none;
-  background: var(--amber-900);
+  background: var(--accent);
 }
 
 .weekly-day-task.is-done .weekly-day-check::after {
@@ -5174,10 +4954,11 @@ html[data-nav="railed"] .nav-edge-collapse {
   fill-opacity: 0.1;
 }
 
-/* 金面积用 fill-opacity 而非 color-mix:旧内核整色整透都降级得干净。 */
+/* 「已完成」序列转蓝（2026-10-31 金退场）：折线吃 --accent-strong 深一档，
+   与 --accent「任务量」线区分；面积仍走 fill-opacity（旧内核整色整透都降级得干净）。 */
 .wp-area-done {
-  fill: var(--brand-gold);
-  fill-opacity: 0.3;
+  fill: var(--accent);
+  fill-opacity: 0.16;
 }
 
 .wp-line {
@@ -5192,12 +4973,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .wp-line-done {
-  stroke: var(--warning);
-}
-
-:root[data-theme="dark"] .wp-line-done,
-:root[data-theme="glass"] .wp-line-done {
-  stroke: var(--brand-gold);
+  stroke: var(--accent-strong);
 }
 
 .wp-peak {
@@ -5251,7 +5027,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .wp-dot.is-clear {
-  background: var(--brand-gold);
+  background: var(--accent-strong);
 }
 
 @media (hover: hover) {
@@ -5274,7 +5050,7 @@ html[data-nav="railed"] .nav-edge-collapse {
   .wp-dot.is-clear {
     box-shadow:
       0 0 0 2px var(--surface-panel),
-      0 0 0 4px color-mix(in srgb, var(--warning) 38%, transparent);
+      0 0 0 4px color-mix(in srgb, var(--accent) 38%, transparent);
   }
 
   /* 选中日的表态(2026-10-27 定):不铺竖带底色,只靠圆点描环——
@@ -5319,15 +5095,10 @@ html[data-nav="railed"] .nav-edge-collapse {
   color: var(--text-muted);
 }
 
-/* 整天清空的暖金读数:从旧列头计数迁到脉搏图横轴(桌面口径不变)。 */
+/* 整天清空的读数:从旧列头计数迁到脉搏图横轴（桌面口径不变；2026-10-31 暖金转蓝）。 */
 .wp-xcount.is-clear {
-  color: var(--warning);
+  color: var(--accent);
   font-weight: 700;
-}
-
-:root[data-theme="dark"] .wp-xcount.is-clear,
-:root[data-theme="glass"] .wp-xcount.is-clear {
-  color: var(--brand-gold);
 }
 
 .wp-legend {
@@ -5357,12 +5128,7 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .wp-key-done {
-  background: var(--warning);
-}
-
-:root[data-theme="dark"] .wp-key-done,
-:root[data-theme="glass"] .wp-key-done {
-  background: var(--brand-gold);
+  background: var(--accent-strong);
 }
 
 .wp-legend-hint {
@@ -5399,15 +5165,11 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-weight: 600;
 }
 
+/* 峰值日 chip：实心蓝胶囊（2026-10-31 金退场）——与「今天」的 .wp-chip
+   软底胶囊区分：实心＝本周之最。类名沿用 wp-chip-gold，色制已转蓝。 */
 .wp-chip-gold {
-  background: var(--gold-150);
-  color: var(--warning);
-}
-
-:root[data-theme="dark"] .wp-chip-gold,
-:root[data-theme="glass"] .wp-chip-gold {
-  background: var(--amber-750-14);
-  color: var(--brand-gold);
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .wp-d-count {
@@ -5418,13 +5180,8 @@ html[data-nav="railed"] .nav-edge-collapse {
 }
 
 .wp-d-count.is-clear {
-  color: var(--warning);
+  color: var(--accent);
   font-weight: 700;
-}
-
-:root[data-theme="dark"] .wp-d-count.is-clear,
-:root[data-theme="glass"] .wp-d-count.is-clear {
-  color: var(--brand-gold);
 }
 
 /* 详情列表:行件复用 .weekly-day-task 一族,只是从窄列搬进全宽卡。 */
@@ -5514,12 +5271,7 @@ html:not([data-shell="mobile"]) .weekly-stat-value {
 }
 
 .weekly-stat-item.is-gold .weekly-stat-num {
-  color: var(--warning);
-}
-
-:root[data-theme="dark"] .weekly-stat-item.is-gold .weekly-stat-num,
-:root[data-theme="glass"] .weekly-stat-item.is-gold .weekly-stat-num {
-  color: var(--brand-gold);
+  color: var(--accent);
 }
 
 /* 当周日历列数跟随容器宽度:≥780 七列单行,≥480 两列,更窄单列 */
@@ -5564,158 +5316,50 @@ html:not([data-shell="mobile"]) .weekly-stat-value {
 
 /* 页头(workspace-top)在上,内容统一 28px 边距。 */
 .ledger-body { padding: 0 28px 28px; }
-/* 引导框与内容同宽,承接 18px 下间距节奏。 */
-.ledger-view .guide-hero {
-  margin: 0 28px 18px;
-}
+/* 收支顶卡 guide-stat-card（2026-10-31 四卡合一）：槽位沿用族基 0 28px 14px。 */
 /* 右上角控件组:月份切换、隐藏金额与「记一笔」。 */
 .ledger-view .top-controls {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
-/* 头部主按钮不随全局 width:100% 拉通,按内容收窄。 */
+/* 头部主按钮：按内容收窄（宽度规则已随原子基线退役），高度走弹层脚/页头档。 */
 .ledger-view .top-controls .btn-primary {
-  width: auto;
-  min-height: 38px;
-  padding: 8px 12px;
+  min-height: var(--control-h-md);
 }
-.ledger-month-switcher {
-  height: 38px;
-  display: flex;
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
-  overflow: hidden;
-}
-/* 箭头是手画几何角标(与完成勾同一个画法):「‹」字形的 optical center 随字体漂移,
-   与月份文字永远差半字。原字形 font-size:0 退役,读屏走 aria-label。
-   定位不用 grid place-items——实测那会让 6px 角标整块上浮 ~8px(auto 行没被撑开,
-   居中只在 6px 行内起作用);改绝对定位 + 负半宽高硬定几何中心,DPR4 像素扫描
-   确认角标墨迹中心与月份文字墨迹重合。列宽 34→28、文字列 112→84:总宽 -40px。 */
-.ledger-month-switcher button {
-  position: relative;
-  border: 0;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 0;
-  width: 28px;
-  height: 100%;
-  padding: 0; /* 吃掉 UA 默认 1px 6px */
-  cursor: pointer;
-  transition: background calc(140ms * var(--motion-scale)) ease;
-}
-.ledger-month-switcher button::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px; /* 负半宽高=几何居中;像素扫描实测此处墨迹中心与月份文字重合 */
-  border-top: 1.5px solid currentColor;
-  border-right: 1.5px solid currentColor;
-  border-top-right-radius: 1.5px;
-}
-.ledger-month-switcher button:first-child::before {
-  transform: rotate(-135deg);
-}
-.ledger-month-switcher button:last-child::before {
-  transform: rotate(45deg);
-}
-@media (hover: hover) {
-  .ledger-month-switcher button:hover {
-    background: var(--surface-hover);
-  }
-}
+/* 月份切换并入 scope-nav 后与「今日」页同款（‹ › 沉底幽灵 + 页名级日期）。
+   这里只补月份文案防换月抖动：定宽 + 等宽数字。 */
 .ledger-month-switcher strong {
-  min-width: 84px;
-  padding: 0 4px;
+  min-width: 100px; /* h3 档双位数月份实测 ~100px，单双位月切换不推箭头 */
   text-align: center;
   white-space: nowrap;
-  font-size: var(--font-size-label);
-  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-.ledger-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.ledger-stat-grid article,
-.ledger-card {
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-.ledger-stat-grid article {
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  min-height: 118px;
-}
-.ledger-stat-grid span,
-.ledger-stat-grid small { color: var(--text-muted); font-size: var(--font-size-caption); }
-.ledger-stat-grid strong {
-  font-family: var(--font-num-display);
-  font-size: var(--font-size-page-title);
-  font-weight: 400;
-  /* 固定行高:line-height:normal 下 CJK 回退字体的行盒比拉丁高 ~3px,
-     预算卡「未设置」↔「80%」一切换整行统计卡就抖(2026-10-27 实测 138↔141)。 */
-  line-height: 32px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-}
-.ledger-stat-grid strong.expense { color: var(--ledger-expense); }
+/* ledger-stat-grid 四张统计卡退役（2026-10-31 收支顶卡四卡合一）：读数并入
+   guide-stat-card，预算行样式拆出复用如下。 */
 .ledger-stat-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
-.ledger-budget-set {
-  min-height: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 2px 9px;
+/* 预算行（收支顶卡卡尾，2026-10-31 四卡合一）：发丝上边分栏 + 题行/进度条/
+   小注三拍常驻。编辑走右侧抽屉（同日 C 案，复用「记一笔」ledger-drawer
+   皮肤），卡内不再展开表单，卡高恒定。 */
+.guide-stat-budget {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.guide-stat-budget .ledger-stat-head {
   color: var(--text-secondary);
-  background: var(--surface-panel);
-  font-size: var(--font-size-caption);
-  font-weight: 700;
-  cursor: pointer;
+  font-size: var(--font-size-meta);
+  font-weight: 600;
 }
-.ledger-budget-set:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
-/* 预算编辑器做成卡片上的浮层:字体与控件整体缩小,展开时不撑高统计卡与整行。 */
-.ledger-stat-grid article { position: relative; }
-.ledger-budget-editor {
-  position: absolute;
-  top: 46px;
-  left: 12px;
-  right: 12px;
-  z-index: 6;
-  display: grid;
-  gap: 5px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
-  box-shadow: 0 16px 36px var(--ink-950-m-18);
-  font-size: var(--font-size-caption);
-}
-.ledger-budget-editor .ledger-checkbox { margin: 0; font-size: var(--font-size-caption); gap: 6px; }
-.ledger-budget-editor .ledger-checkbox input { width: 13px; height: 13px; }
-.ledger-budget-editor-actions { display: flex; justify-content: flex-end; gap: 6px; }
-.ledger-budget-editor-actions .btn-primary,
-.ledger-budget-editor-actions .btn-ghost { width: auto; min-height: 25px; padding: 2px 9px; font-size: var(--font-size-caption); }
-.ledger-budget-input.compact { min-height: 34px; margin: 0; }
-.ledger-budget-input.compact span { font-size: var(--font-size-label); padding-left: 9px; }
-.ledger-budget-input.compact input { min-height: 32px; padding: 3px 8px; font-size: var(--font-size-body); }
-.ledger-budget-editor small { color: var(--text-muted); font-size: var(--font-size-caption); }
-.ledger-budget-editor .ledger-error { margin: 0; }
+.guide-stat-budget small { color: var(--text-secondary); font-size: var(--font-size-meta); }
 .ledger-progress {
   height: 6px;
   border-radius: var(--radius-pill);
@@ -6054,15 +5698,15 @@ html:not([data-shell="mobile"]) .weekly-stat-value {
 .ledger-row:hover .ledger-row-actions,
 .ledger-row:focus-within .ledger-row-actions { opacity: 1; }
 .ledger-row-actions button { padding: 5px 9px; font-size: var(--font-size-caption); }
-/* 明细行的编辑/删除：桌面 hover 才显形,收成 26px 纯图标一枚一个(≥24px 契约),
+/* 明细行的编辑/删除：桌面 hover 才显形,收成图标原子一枚一个,
    在 52px 行里正好一排两个不带换行;名字靠 aria-label,文字标签移动壳才保留
    (触摸屏常显按钮要自明,见 views.css 覆盖)。 */
 html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn {
-  width: 26px;
-  min-width: 26px;
-  min-height: 26px;
-  padding: 4px;
-  border-radius: var(--radius-sm);
+  width: var(--icon-btn-size);
+  min-width: 0;
+  min-height: var(--icon-btn-size);
+  padding: 0;
+  border-radius: var(--control-radius);
 }
 html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn span {
   display: none;
@@ -6139,7 +5783,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   gap: 8px;
 }
 .ledger-drawer-actions .btn-primary,
-.ledger-drawer-actions .btn-ghost { width: auto; min-height: 36px; }
+.ledger-drawer-actions .btn-ghost { min-height: var(--control-h-md); }
 /* 编辑态「删除」靠左，与右侧取消/保存分intent两区。 */
 .ledger-drawer-delete { margin-right: auto; }
 /* 预算影响预览：保存前预演本月支出与预算进度；金额隐藏模式整条不出。 */
@@ -6174,15 +5818,15 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 .ledger-impact.is-over .ledger-impact-pct { color: var(--ledger-expense); }
 .ledger-close {
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
   display: grid;
   place-items: center;
   border: 0;
   background: none;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: var(--control-radius);
   transition: background calc(140ms * var(--motion-scale)) ease, color calc(140ms * var(--motion-scale)) ease;
 }
 .ledger-close:hover { background: var(--surface-hover); color: var(--text-primary); }
@@ -6193,7 +5837,7 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   gap: 8px;
 }
 .ledger-kind-tabs button {
-  min-height: 36px;
+  min-height: var(--control-h-sm);
   border: 1px solid var(--border);
   background: var(--surface-input);
   border-radius: var(--radius-md);
@@ -6389,6 +6033,10 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   border: 0;
   margin: 0;
   padding: 8px 12px;
+  /* 数字与 ¥ 符及全站金额（顶卡读数、记一笔 hero）同用展示衬线字，
+     等宽数字对齐（2026-10-31 用户指出sans与正常字体不一致）。 */
+  font-family: var(--font-num-display);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-size-h1);
   color: var(--text-primary);
   background: transparent;
@@ -6412,6 +6060,10 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   flex: none;
   accent-color: var(--accent);
 }
+/* 预算抽屉里的勾选行（2026-10-31 C 案）：.ledger-drawer label/input 的泛字段
+   皮肤（块级小注字 + 38px 全宽输入框）会破 .ledger-checkbox 形制，scoped 复位。 */
+.ledger-drawer .ledger-checkbox { display: flex; margin: 4px 0 14px; font-size: var(--font-size-body); font-weight: 500; color: var(--text-secondary); }
+.ledger-drawer .ledger-checkbox input { width: 16px; height: 16px; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 
 @keyframes ledger-in {
   from { transform: translateX(35px); opacity: 0.65; }
@@ -6419,13 +6071,10 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
 }
 
 @media (max-width: 1050px) {
-  .ledger-stat-grid { grid-template-columns: repeat(2, 1fr); }
   .ledger-insight-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
   .ledger-body { padding: 0 18px 18px; }
-  .ledger-view .guide-hero { margin-inline: 18px; }
-  .ledger-stat-grid { grid-template-columns: 1fr; }
   .ledger-row { grid-template-columns: 38px 1fr auto; }
   /* 行内编辑/删除只在桌面窄窗隐藏（移动壳要常显，见 global-14-mobile）。 */
   html:not([data-shell="mobile"]) .ledger-row-actions { display: none; }
@@ -6441,8 +6090,9 @@ html:not([data-shell="mobile"]) .ledger-row-actions .item-action-btn svg {
   .task-title,
   .weekly-day-title,
   .memo-list-title-copy,
+  .memo-list-preview,
   .memo-reading-surface,
-  .ledger-stat-grid strong,
+  .guide-stat-card .guide-stat-total,
   .ledger-row-main,
   .ledger-row > strong
 ) {
@@ -6465,8 +6115,8 @@ html:not([data-shell="mobile"]) .anni-card,
 html:not([data-shell="mobile"]) .trash-item,
 html:not([data-shell="mobile"]) .weekly-day-col,
 html:not([data-shell="mobile"]) .weekly-stat-strip,
-html:not([data-shell="mobile"]) .ledger-stat-grid article,
 html:not([data-shell="mobile"]) .footprint-stats,
+html:not([data-shell="mobile"]) .guide-stat-card,
 html:not([data-shell="mobile"]) .timer-status-rail {
   border: 0;
   border-radius: 16px; /* §Shapes：卡片圆角不超过 16px，与移动壳同档 */
@@ -6494,8 +6144,7 @@ html:not([data-shell="mobile"]) .growth-day-fuse {
 }
 html:not([data-shell="mobile"]) .weekly-days { padding: 20px; }
 
-/* 账本统计读数与账本卡的卡面从 raised 归位 panel（raised 只留给控件与浮层）。 */
-html:not([data-shell="mobile"]) .ledger-stat-grid article,
+/* 账本卡的卡面从 raised 归位 panel（raised 只留给控件与浮层）。 */
 html:not([data-shell="mobile"]) .ledger-card {
   background: var(--surface-panel);
 }
@@ -6505,7 +6154,8 @@ html:not([data-shell="mobile"]) .expand-task {
   margin-bottom: 10px;
 }
 
-/* hover = 阴影加深一档（不给位移，列表页不跳版）。 */
+/* hover = 阴影加深一档（不给位移，列表页不跳版）。顶卡 guide-stat-card 非可点
+   卡，不进本组——hover 加深只属于有动作的行卡。 */
 html:not([data-shell="mobile"]) .expand-task:hover,
 html:not([data-shell="mobile"]) .memo-list-item:hover,
 html:not([data-shell="mobile"]) .timer-card:hover,
@@ -6530,6 +6180,247 @@ html:not([data-shell="mobile"]) .anni-card.is-today {
    （移动壳仍走它自带的字面投影，不受这里影响）。 */
 html:not([data-shell="mobile"]) .trash-summary {
   box-shadow: var(--shadow-card);
+}
+
+/* ── 桌面数据顶卡族 guide-stat-card（2026-10-31 桌面引导框升卡）──────────────
+   淡蓝顶卡族桌面档（DesktopGuideCard，与移动壳 MobileGuideCard 同 props 同
+   guide-stat-* DOM）：accent-faint 底 + 衬线大读数 + 速览 hint + 概览（分段色条
+   /七日小柱）+ 可选说明行。桌面档只在此落一次；移动壳走 mobile.css §14.1，
+   本段不越界。槽位默认页面级卡 0 28px 14px；容器自带水平留白的页面按移动同规
+   「归零避免双份」（habits-body / projects-scroll / growth-page 覆写在下方）。 */
+html:not([data-shell="mobile"]) .guide-stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  /* 桌面各页多把根容器当 flex 列滚动容器（.main-workspace / reminders-view /
+     habits-body…）；卡带 overflow:hidden → flex 项自动最小尺寸归零，会被兄弟
+     内容压成一条 padding。与退役的 .today-hero 同规锁死不缩。 */
+  flex-shrink: 0;
+  margin: 0 28px 14px;
+  padding: 14px 18px 13px;
+  border-radius: 16px;
+  background: var(--accent-faint);
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-total {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--text-primary);
+}
+
+/* 大读数与移动 guide-stat 同字族同墨（衬线 + accent-strong）；桌面取
+   num-xl 28 档（2026-10-31 用户定：数字加大突出），仍低于移动 hero 44 一档
+   的页面密度。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-total b {
+  font-family: var(--font-num-display);
+  font-size: var(--font-size-num-xl);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.005em;
+  color: var(--accent-strong);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-total span {
+  margin-left: 3px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+}
+
+/* label 起右组（label+读数贴右成词，2026-10-31 用户定），hint 留左。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-label {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+}
+
+/* hint 速览跟在 label 后（左组）；右端归大读数，长句收窄出省略号不挤数字。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-hint {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+  font-weight: 600;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-seg {
+  display: flex;
+  gap: 3px;
+  height: 8px;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-seg > i {
+  min-width: 10px;
+  border-radius: var(--radius-pill);
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: var(--font-size-meta);
+  letter-spacing: 0.01em;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-legend b {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* hint 下沉档（2026-10-31 用户定）：有图例的卡速览落图例行右端，
+   margin-left:auto 钉右；墨色字号吃 .guide-stat-hint 基段（specificity 高
+   于 .guide-stat-legend span，字重 600 生效）。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-legend .guide-stat-hint {
+  margin-left: auto;
+  text-align: right;
+}
+
+/* 七日小柱（本周页）：数值与移动 §14.1 同源——34px 中性灰轨道、55% accent
+   垫色、今日描环加实色（与今日顶卡进度轨道同族，避免 accent-faint 底上同色）。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-bars {
+  display: flex;
+  gap: 6px;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 34px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--border-strong) 42%, transparent);
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-track > i {
+  width: 100%;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-col.is-today .guide-stat-track {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-col.is-today .guide-stat-track > i {
+  background: var(--accent);
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-col em {
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+  font-style: normal;
+  font-weight: 600;
+}
+
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-col.is-today em {
+  color: var(--accent);
+}
+
+/* 说明行：移动 trash-note 说明档同规（整行 12px secondary 常规字重），
+   有引导价值才出行——数据速览走 hint，不在此重复。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-meta);
+}
+
+/* 麦穗水印：淡蓝顶卡族的身份记号，与移动 .mtoday-wheat 同图（--wheat-mask
+   共用 token，底色吃 --accent 随主题四档走）。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-wheat {
+  position: absolute;
+  right: -26px;
+  bottom: -34px;
+  width: 104px;
+  height: 104px;
+  background: var(--accent);
+  -webkit-mask: var(--wheat-mask) no-repeat center / contain;
+  mask: var(--wheat-mask) no-repeat center / contain;
+  opacity: 0.1;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+
+/* 槽位覆写（容器自带 28px 水平留白 → 水平归零；竖向节奏交容器 gap / 原值）：
+   habits-body 与 projects-scroll 有 gap，卡不带 margin；growth-page（足迹/目标
+   共壳）是块流容器，保留引导框原有的 14px 下间距。 */
+html:not([data-shell="mobile"]) .habits-body .guide-stat-card,
+html:not([data-shell="mobile"]) .projects-scroll .guide-stat-card {
+  margin: 0;
+}
+
+html:not([data-shell="mobile"]) .growth-page .guide-stat-card {
+  margin: 0 0 14px;
+}
+
+/* 顶卡与列表行同吃桌面卡片规格（--shadow-card 已并入上方全族组）。
+   桌面行＝两行制（2026-10-31 用户定）：grid 双列——标题占首行左列、时间钉
+   首行右端（与标题同基线，不再悬空），预览第二行与标题左缘对齐。DOM 与
+   移动壳共用，grid-area 纯桌面档指派；徽标仍让位（详情头部与顶卡 legend 已表达）。 */
+html:not([data-shell="mobile"]) .memo-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title time"
+    "prev  prev";
+  align-items: baseline;
+}
+
+html:not([data-shell="mobile"]) .memo-list-title-copy {
+  grid-area: title;
+}
+
+html:not([data-shell="mobile"]) .memo-list-time {
+  grid-area: time;
+}
+
+html:not([data-shell="mobile"]) .memo-list-preview {
+  grid-area: prev;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+html:not([data-shell="mobile"]) .memo-list-preview .memo-document-format {
+  display: none;
+}
+
+/* 置顶 chip＝due-chip 同族加一枚身份墨。原子基段没带 font-size（历史上都坐在
+   13px 语境里），备忘标题行是 14px 实体名档，这里按 R6 批注档补齐；
+   移动壳同值生效，两端同一尺寸。 */
+.memo-list-item .due-chip.is-today {
+  font-size: var(--font-size-meta);
 }
 
 /* ══ 桌面卡内嵌套规则（2026-10-30 定）══════════════════════════════════════

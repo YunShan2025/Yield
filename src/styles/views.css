@@ -326,16 +326,10 @@ html:not([data-desktop-widget]) #root {
   box-shadow: inset 0 1px var(--white-95);
 }
 
-:root[data-theme="dawn"] .btn-primary,
 :root[data-theme="dawn"] .seg button.active {
   color: var(--text-on-accent);
   background: linear-gradient(135deg, var(--azure-750), var(--azure-900));
   box-shadow: inset 0 1px var(--white-28);
-}
-
-:root[data-theme="dawn"] .btn-ghost {
-  border-color: var(--white-55);
-  background: var(--white-28);
 }
 
 @media (max-width: 900px) {
@@ -565,17 +559,10 @@ html:not([data-desktop-widget]) #root {
   opacity: 1;
 }
 
-:root[data-theme="glass"] .btn-primary,
 :root[data-theme="glass"] .seg button.active {
   color: var(--text-on-accent);
   background: linear-gradient(135deg, var(--mist-700), var(--azure-250));
   box-shadow: inset 0 1px var(--white-45);
-}
-
-:root[data-theme="glass"] .btn-ghost {
-  color: var(--text-secondary);
-  border-color: var(--white-14);
-  background: var(--white-6);
 }
 
 .theme-preview-glass .theme-preview-canvas {
@@ -743,7 +730,6 @@ html:not([data-desktop-widget]) #root {
   -webkit-font-smoothing: antialiased;
 }
 
-:root[data-theme="dark"] .btn-ghost,
 :root[data-theme="dark"] .nav-item,
 :root[data-theme="dark"] .task-meta,
 :root[data-theme="dark"] .brand-caption,
@@ -870,12 +856,7 @@ html[data-shell="mobile"] [role="button"] {
   left: 28px;
 }
 
-.task-check::before {
-  top: -8px;
-  right: -8px;
-  bottom: -8px;
-  left: -8px;
-}
+/* .task-check::before 热区第四处重复——已并入 primitives「勾选圈原子」的 ::before。 */
 
 /* aspect-ratio 是 Chrome 88+；圆环宽度固定，直接补高度。 */
 .ledger-donut {
@@ -892,10 +873,6 @@ html[data-shell="mobile"] .create-task-modal {
    成长页回落到 28px 桌面内边距、记账引导框丢失窄屏内收，补长手等价。 */
 @media (max-width: 560px) {
   .growth-page { padding-left: 12px; padding-right: 12px; }
-}
-
-@media (max-width: 720px) {
-  .ledger-view .guide-hero { margin-left: 18px; margin-right: 18px; }
 }
 
 html[data-shell="mobile"] {
@@ -989,12 +966,13 @@ html[data-shell="mobile"] .app-body {
 
 /* 触控目标：主要按钮垫到 44px 上下，避免误触。 */
 html[data-shell="mobile"] .btn-ghost,
-html[data-shell="mobile"] .btn-primary {
-  min-height: 40px;
+html[data-shell="mobile"] .btn-primary,
+html[data-shell="mobile"] .item-action-btn {
+  min-height: var(--control-h-lg);
 }
 
 html[data-shell="mobile"] .seg button {
-  min-height: 38px;
+  min-height: var(--control-h-lg);
 }
 
 html[data-shell="mobile"] .task-check {
@@ -1334,8 +1312,8 @@ html[data-shell="mobile"] .expand-task-row {
   padding: 10px 12px;
   border: 0;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--text-overdue) 9%, transparent);
-  color: var(--text-overdue);
+  background: var(--danger-tint);
+  color: var(--danger);
   font: inherit;
   font-size: var(--font-size-label);
   font-weight: 600;
@@ -1590,7 +1568,16 @@ html[data-shell="mobile"] .version-update-notice {
 
   .today-hero {
     min-height: 0;
-    padding: 16px 18px;
+    --th-pad-x: 18px;
+    /* 大条底距维持 12（宽档 10）：底 26 = 大条 bottom 12 + 条高 8 + 防夹缝 6，
+       窄窗文案折行也不碰条。 */
+    --th-pad-y: 12px;
+    padding: 16px var(--th-pad-x) 26px;
+  }
+
+  /* 待办箱无大条，底衬不为条让位，回落与顶衬一致（上下留白一致）。 */
+  .today-hero.is-inbox {
+    padding-bottom: 16px;
   }
 
   .today-hero-copy {
@@ -2087,13 +2074,6 @@ html[data-shell="mobile"] .create-task-modal:not(.app-confirm-modal) > * + * {
   margin-top: 12px;
 }
 
-/* 关闭按钮从 30px 垫到 40px 触控目标。 */
-html[data-shell="mobile"] .modal-head > button {
-  width: 40px;
-  height: 40px;
-  font-size: var(--font-size-h1);
-}
-
 /* 动作条钉底（两种情形都盖住）：内容不足一屏时 margin-top:auto 把它推到
    弹窗底部；内容溢出时 auto 归零、动作条随内容流走，由 sticky bottom
    钉在可视区底（负偏移抵消弹窗 20px padding，负 margin 拉通全屏宽）。
@@ -2121,13 +2101,6 @@ html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
   padding: 12px 20px env(safe-area-inset-bottom, 0px);
   background: var(--surface-panel);
   border-top: 1px solid var(--border);
-}
-
-html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-action-btn {
-  width: calc(100% + 40px);
-  min-height: 52px;
-  padding: 12px 20px env(safe-area-inset-bottom, 0px);
-  border-radius: 0;
 }
 
 /* 动作条改双等宽列：桌面 min-width:112px 靠右的两个按钮在手机上偏小。
@@ -2168,13 +2141,11 @@ html[data-shell="mobile"] .completed-time-actions .btn-ghost,
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions .btn-ghost,
 html[data-shell="mobile"] .app-confirm-actions .btn-ghost,
 html[data-shell="mobile"] .anni-detail-dialog > footer .btn-ghost {
-  border: 0;
   background: var(--surface-sunken);
   color: var(--text-secondary);
 }
 
-/* 目标弹窗也变成「取消 + 保存」两动作：同样改双等宽列，并覆盖上面那条单按钮满宽
-   贴边直角的旧规（92dvh 弹层家族＝圆角 + 48dp，与其余弹窗脚完全同尺寸）。 */
+/* 目标弹窗是「取消 + 保存」双等宽列：92dvh 弹层家族＝48dp 圆角，与其余弹窗脚同尺寸。 */
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2183,9 +2154,9 @@ html[data-shell="mobile"] .goal-create-modal > .goal-create-actions {
 
 html[data-shell="mobile"] .goal-create-modal > .goal-create-actions > .item-action-btn {
   width: auto;
-  min-height: 48px;
+  min-height: var(--control-h-xl);
   padding: 9px 13px;
-  border-radius: var(--radius-md);
+  border-radius: var(--control-radius);
 }
 
 /* AppConfirm 确认/输入框：居中迷你卡是「确认」的位置特征，可以与其他弹层不同形，
@@ -2199,16 +2170,16 @@ html[data-shell="mobile"] .app-confirm-actions {
 html[data-shell="mobile"] .app-confirm-actions .item-action-btn {
   width: auto;
   min-width: 0;
-  min-height: 48px;
+  min-height: var(--control-h-xl);
   padding: 9px 13px;
-  border-radius: var(--radius-md);
+  border-radius: var(--control-radius);
 }
 
 html[data-shell="mobile"] .app-confirm-input {
-  min-height: 48px;
+  min-height: var(--control-h-xl);
   padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--control-radius);
   background: var(--surface-sunken);
   color: var(--text-primary);
   font-weight: 500;
@@ -2258,13 +2229,6 @@ html[data-shell="mobile"] .anni-detail-dialog > header {
   padding: 14px 20px 10px;
   background: var(--surface-panel);
   border-bottom: 1px solid var(--border);
-}
-
-html[data-shell="mobile"] .anni-composer-dialog > header > button,
-html[data-shell="mobile"] .anni-detail-dialog > header > button {
-  width: 40px;
-  height: 40px;
-  font-size: var(--font-size-h1);
 }
 
 html[data-shell="mobile"] .anni-composer input,
@@ -2317,17 +2281,12 @@ html[data-shell="mobile"] .countdown-custom-time input {
 
 /* 触控地板补齐（2026-10-30 按钮分层统一）：日期选择器 ‹›/日格、palette 清除钮、
    toast「撤销」仍是桌面小尺寸——弹层里点日期与撤销误触率最高的三处。 */
-html[data-shell="mobile"] .date-picker-head button {
-  width: 40px;
-  height: 40px;
-}
-
 html[data-shell="mobile"] .date-cell {
   min-height: 40px;
 }
 
 html[data-shell="mobile"] .date-picker-actions .btn-ghost {
-  min-height: 36px;
+  min-height: var(--control-h-lg);
   padding: 0 12px;
   font-size: var(--font-size-meta);
 }
