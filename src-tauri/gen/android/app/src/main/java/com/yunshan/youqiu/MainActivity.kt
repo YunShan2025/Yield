@@ -15,6 +15,10 @@ class MainActivity : TauriActivity() {
       WebView.setWebContentsDebuggingEnabled(true)
     }
     super.onCreate(savedInstanceState)
+    // 首帧前把窗口背景/系统栏图标恢复成上次的应用内主题观感：主题的 DayNight
+    // 资源只跟系统深浅色，应用内主题独立选择，不预恢复会在「系统底色 → 前端
+    // applyTheme 贴色」之间闪一条异色带（WindowAppearance.kt）。
+    WindowAppearance.restore(this)
   }
 
   override fun onContentChanged() {

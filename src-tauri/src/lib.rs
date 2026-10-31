@@ -245,6 +245,59 @@ fn read_content_uri_with_jni(
     Ok(text.to_string_lossy().into_owned())
 }
 
+/// 状态栏带与在应用主题同源：原生 DayNight 资源只认系统深浅色，应用内主题是
+/// 独立选择的——系统深色 + 应用清昼时，状态栏一带露出深色窗口底色，与浅色应用
+/// 割裂成一条黑带（真机反馈）。前端把解析后的 --surface-base 与明暗档传来，
+/// Kotlin 助手（WindowAppearance）贴窗口背景并翻系统栏图标色。
+#[tauri::command]
+fn set_window_appearance(color: String, light_background: bool) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        use std::sync::mpsc;
+
+        let (tx, rx) = mpsc::channel::<Result<(), String>>();
+        wry::prelude::dispatch(move |env, activity, _webview| {
+            let _ = tx.send(apply_window_appearance(env, activity, &color, light_background));
+        });
+        return rx.recv().map_err(|_| "JNI 通道不可用".to_string())?;
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = (color, light_background);
+        Ok(())
+    }
+}
+
+#[cfg(target_os = "android")]
+fn apply_window_appearance(
+    env: &mut jni::JNIEnv,
+    activity: &jni::objects::JObject<'_>,
+    color: &str,
+    light_background: bool,
+) -> Result<(), String> {
+    use jni::objects::JValue;
+
+    let class = wry::prelude::find_class(
+        env,
+        activity,
+        "com.yunshan.youqiu.WindowAppearance".to_string(),
+    )
+    .map_err(|error| error.to_string())?;
+    let jcolor = env.new_string(color).map_err(|error| error.to_string())?;
+    env.call_static_method(
+        &class,
+        "apply",
+        "(Landroid/app/Activity;Ljava/lang/String;Z)V",
+        &[
+            JValue::Object(activity),
+            JValue::Object(&jcolor),
+            JValue::Bool(light_background as u8),
+        ],
+    )
+    .map(|_| ())
+    .map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 fn open_data_directory(app: AppHandle) -> Result<(), String> {
     let dir = app.path().app_data_dir().map_err(|error| error.to_string())?;
@@ -1834,6 +1887,7 @@ pub fn run() {
             read_backup_file,
             open_notification_settings,
             open_data_directory,
+            set_window_appearance,
             restart_app
         ])
         .setup(|app| {

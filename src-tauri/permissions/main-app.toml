@@ -12,5 +12,6 @@ commands.allow = [
   "read_backup_file",
   "open_notification_settings",
   "open_data_directory",
+  "set_window_appearance",
   "restart_app",
 ]
