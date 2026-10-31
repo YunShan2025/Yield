@@ -38,7 +38,7 @@ export function NavSidebar({
     [tasks],
   );
 
-  const sections: { label: string; note?: string; items: NavEntry[] }[] = [
+  const sections: { label: string; note?: string; util?: boolean; items: NavEntry[] }[] = [
     {
       label: "积微",
       note: "积微 —— 《荀子·强国》：「积微，月不胜日。」每天的小积累，胜过攒着一起做。",
@@ -74,6 +74,7 @@ export function NavSidebar({
     },
     {
       label: "更多",
+      util: true,
       items: [
         { id: "anniversaries", label: "纪念日", icon: "gift" },
         { id: "settings", label: "设置", icon: "settings" },
@@ -103,7 +104,7 @@ export function NavSidebar({
       {sections.map((section) => (
         <div
           key={section.label}
-          className="nav-section"
+          className={`nav-section${section.util ? " util" : ""}`}
           title={railed ? [section.label, section.note].filter(Boolean).join(" —— ") : undefined}
         >
           <div className="nav-section-label" title={section.note}>{section.label}</div>
