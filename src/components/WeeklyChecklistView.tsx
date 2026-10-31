@@ -21,6 +21,7 @@ import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
 import { AppIcon } from "@/components/AppIcon";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { getMobileTaskPills } from "@/components/mobile/MobileTaskPills";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
@@ -79,6 +80,12 @@ export function WeeklyChecklistView() {
   );
 
   const donePct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+  // 顶卡七日小柱（两端共用，2026-10-31 桌面引导框升卡从移动 JSX 抽出）。
+  const weeklyBars = days.map((day) => ({
+    label: weekdayShort(day.date),
+    ratio: day.total ? day.done / day.total : 0,
+    isToday: day.date === today,
+  }));
   // 任务完成去向的「按目标」视角要读目标名册（自复盘页并入），同步拉回对端
   // 写入后要重载。
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -223,36 +230,25 @@ export function WeeklyChecklistView() {
         )}
       </div>
 
-      {/* 与「今日」同款的暖色引导框。右侧承载本周完成进度 —— 引导块要么有数据，
-          要么不出现。移动壳换数据型顶卡：大读数 + 七日周条概览（与待办顶卡同语言）。 */}
+      {/* 与「今日」同款的暖色引导框已升淡蓝数据顶卡（2026-10-31）：大读数 +
+          完成率速览 + 七日小柱概览（与待办顶卡同语言），一份柱数据双端共用。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={stats.done}
           unit={stats.total ? `/${stats.total}` : undefined}
           label="本周已完成"
           hint={stats.total ? `完成率 ${donePct}%` : "本周暂无任务"}
-          bars={days.map((day) => ({
-            label: weekdayShort(day.date),
-            ratio: day.total ? day.done / day.total : 0,
-            isToday: day.date === today,
-          }))}
+          bars={weeklyBars}
         />
       ) : (
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <p className="today-hero-note">给这一周定下目标，完成一件划掉一件。</p>
-        </div>
-        <div className="today-hero-meter">
-          <span className="today-hero-meter-count">
-            <strong>{stats.done}</strong>
-            <span>/{stats.total}</span>
-          </span>
-          <span className="today-hero-meter-label">已完成</span>
-          <span className="today-hero-meter-track">
-            <i style={{ "--progress": `${donePct}%` } as CSSProperties} />
-          </span>
-        </div>
-      </section>
+        <DesktopGuideCard
+          value={stats.done}
+          unit={stats.total ? `/${stats.total}` : undefined}
+          label="本周已完成"
+          hint={stats.total ? `完成率 ${donePct}%` : "本周暂无任务"}
+          bars={weeklyBars}
+          note="给这一周定下目标，完成一件划掉一件。"
+        />
       )}
 
       {/* 当周概览放在列表之前：这几项是这一周的节奏（打卡、连续、峰值、满勤），

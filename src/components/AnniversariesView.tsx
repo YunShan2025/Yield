@@ -18,6 +18,7 @@ import {
 import { todayDateString } from "@/lib/dates";
 import { SelectMenu } from "@/components/SelectMenu";
 import { AppIcon } from "@/components/AppIcon";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
@@ -100,6 +101,17 @@ export function AnniversariesView() {
 
   const sorted = useMemo(() => sortAnniversaries(items, today), [items, today]);
 
+  // 顶卡速览（两端共用，2026-10-31 桌面引导框升卡从移动 hint 抽出）：
+  // 已排序，第一条即最近；就是今天 / 还有 N 天 / 无倒计时三态。
+  const anniversaryHint = useMemo(() => {
+    if (!sorted.length) return "还没有收藏的日子";
+    const head = anniversaryHeadline(sorted[0], today);
+    if (head.daysLeft === null) return sorted[0].title;
+    return head.daysLeft === 0
+      ? `${sorted[0].title} · 就是今天`
+      : `下一个 ${sorted[0].title} · 还有 ${head.daysLeft} 天`;
+  }, [sorted, today]);
+
   const submit = async () => {
     if (!title.trim() || busy) return;
     let solarDate = eventDate;
@@ -171,30 +183,17 @@ export function AnniversariesView() {
         </div>
       </div>
 
-      {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡：读数 + 下一个纪念日。 */}
+      {/* 与「今日」同款的暖色引导框已升为淡蓝数据顶卡（2026-10-31）：读数 +
+          「下一个 · 还有 N 天」速览，原一句说明退役（读数即答案）。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={sorted.length}
           unit="个"
           label="纪念日"
-          hint={
-            sorted.length
-              ? (() => {
-                  const head = anniversaryHeadline(sorted[0], today);
-                  if (head.daysLeft === null) return sorted[0].title;
-                  return head.daysLeft === 0
-                    ? `${sorted[0].title} · 就是今天`
-                    : `下一个 ${sorted[0].title} · 还有 ${head.daysLeft} 天`;
-                })()
-              : "还没有收藏的日子"
-          }
+          hint={anniversaryHint}
         />
       ) : (
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <p className="today-hero-note">重要的日子都在这里，离现在最近的先被看见。</p>
-          </div>
-        </section>
+        <DesktopGuideCard value={sorted.length} unit="个" label="纪念日" hint={anniversaryHint} />
       )}
 
       <div className="moments-body">
@@ -316,7 +315,6 @@ export function AnniversariesView() {
           <button
             type="button"
             className="btn-primary"
-            style={{ width: "auto" }}
             disabled={busy || !canSubmit}
             onClick={() => void submit()}
           >
@@ -371,7 +369,7 @@ export function AnniversariesView() {
           })}
         </section>
       )}
-      {selected ? <div className="modal-backdrop" onMouseDown={() => setSelected(null)}><section className="anni-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-detail-title" onMouseDown={(event) => event.stopPropagation()}>{(() => { const head = anniversaryHeadline(selected, today); return <><header><div><h2 id="anni-detail-title">纪念日详情</h2></div><button type="button" aria-label="关闭" onClick={() => setSelected(null)}>×</button></header><h3 className="anni-detail-name">{selected.title}</h3><div className="anni-detail-count"><strong>{head.daysLeft === 0 ? "今天" : head.daysLeft === null ? "—" : head.daysLeft}</strong><span>{isMobileShell() ? mobileCountCaption(head) : head.label}</span></div><dl><div><dt>日期</dt><dd>{formatAnniversaryAnchor(selected)}</dd></div><div><dt>提醒方式</dt><dd>{selected.recur_yearly ? "每年提醒" : "仅记录一次"}</dd></div>{head.nextDate ? <div><dt>下一次</dt><dd>{head.nextDate}</dd></div> : null}</dl><section><span>留下的话</span><p>{selected.note || "这个日子还没有备注。"}</p></section><footer><button type="button" className="item-action-btn item-action-edit" onClick={() => { void updateAnniversary(selected.id, { recur_yearly: selected.recur_yearly ? 0 : 1 }).then(async () => { await refresh(); setSelected({ ...selected, recur_yearly: selected.recur_yearly ? 0 : 1 }); }); }}>{selected.recur_yearly ? "改为单次" : "改为每年"}</button><button type="button" className="item-action-btn item-action-danger" onClick={() => { void confirmAction({ title: `删除纪念日「${selected.title}」？`, confirmText: "删除", danger: true }).then((ok) => { if (ok) void deleteAnniversary(selected.id).then(async () => { await refresh(); setSelected(null); }); }); }}><span>删除</span></button></footer></>; })()}</section></div> : null}
+      {selected ? <div className="modal-backdrop" onMouseDown={() => setSelected(null)}><section className="anni-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="anni-detail-title" onMouseDown={(event) => event.stopPropagation()}>{(() => { const head = anniversaryHeadline(selected, today); return <><header><div><h2 id="anni-detail-title">纪念日详情</h2></div><button type="button" className="icon-btn" aria-label="关闭" onClick={() => setSelected(null)}>×</button></header><h3 className="anni-detail-name">{selected.title}</h3><div className="anni-detail-count"><strong>{head.daysLeft === 0 ? "今天" : head.daysLeft === null ? "—" : head.daysLeft}</strong><span>{isMobileShell() ? mobileCountCaption(head) : head.label}</span></div><dl><div><dt>日期</dt><dd>{formatAnniversaryAnchor(selected)}</dd></div><div><dt>提醒方式</dt><dd>{selected.recur_yearly ? "每年提醒" : "仅记录一次"}</dd></div>{head.nextDate ? <div><dt>下一次</dt><dd>{head.nextDate}</dd></div> : null}</dl><section><span>留下的话</span><p>{selected.note || "这个日子还没有备注。"}</p></section><footer><button type="button" className="item-action-btn item-action-edit" onClick={() => { void updateAnniversary(selected.id, { recur_yearly: selected.recur_yearly ? 0 : 1 }).then(async () => { await refresh(); setSelected({ ...selected, recur_yearly: selected.recur_yearly ? 0 : 1 }); }); }}>{selected.recur_yearly ? "改为单次" : "改为每年"}</button><button type="button" className="item-action-btn item-action-danger" onClick={() => { void confirmAction({ title: `删除纪念日「${selected.title}」？`, confirmText: "删除", danger: true }).then((ok) => { if (ok) void deleteAnniversary(selected.id).then(async () => { await refresh(); setSelected(null); }); }); }}><span>删除</span></button></footer></>; })()}</section></div> : null}
       </div>
     </main>
   );

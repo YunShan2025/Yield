@@ -19,6 +19,7 @@ import { WeekdayPicker } from "@/components/WeekdayPicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { ExpandRow } from "@/components/ExpandRow";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
@@ -287,37 +288,17 @@ export function HabitsView() {
             unit={`/${habits.length}`}
             label="今日已打卡"
             hint={`已有打卡记录 ${inProgress.length} 个`}
+            segments={guideSegments}
           />
         ) : (
-          <section className="today-hero guide-hero habits-guide">
-            <div className="projects-guide-top">
-              <p className="today-hero-note">按排期打卡，进度会替你记得；点行展开可补打本周任意一天。</p>
-              <span className="today-hero-meter-count">
-                <strong>{checkedTodayCount}/{dueHabits.length}</strong>
-                <span>今日已打卡</span>
-              </span>
-            </div>
-            {guideSegments.length ? (
-              <div className="projects-hero-bar">
-                <div className="projects-hero-track" aria-hidden="true">
-                  {guideSegments.map((segment) => (
-                    <i
-                      key={segment.label}
-                      style={{ flexGrow: segment.value, background: segment.color }}
-                    />
-                  ))}
-                </div>
-                <div className="projects-hero-legend">
-                  {guideSegments.map((segment) => (
-                    <span key={segment.label}>
-                      <em style={{ background: segment.color }} aria-hidden="true" />
-                      {segment.label} {segment.value}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </section>
+          <DesktopGuideCard
+            value={checkedTodayCount}
+            unit={`/${dueHabits.length}`}
+            label="今日已打卡"
+            hint={`已有打卡记录 ${inProgress.length} 个`}
+            segments={guideSegments}
+            note="按排期打卡，进度会替你记得；点行展开可补打本周任意一天。"
+          />
         )}
 
         <section>
@@ -465,7 +446,7 @@ export function HabitsView() {
               <div>
                 <h3>{editingHabit ? "编辑习惯" : "新建习惯"}</h3>
               </div>
-              <button type="button" onClick={closeEditor}>×</button>
+              <button type="button" className="icon-btn" onClick={closeEditor}>×</button>
             </div>
             <label className="field-full">
               习惯名称

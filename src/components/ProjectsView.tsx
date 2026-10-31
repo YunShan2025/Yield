@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { confirmAction } from "@/components/AppConfirm";
 import { AppIcon } from "@/components/AppIcon";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { MobileTaskLine, mobileDoneStamp } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
@@ -219,8 +220,9 @@ export function ProjectsView() {
       <div className="projects-scroll">
         {/* 与「今日/足迹」同款的暖色引导框。移动壳换数据型顶卡：三段实数据
             色条（进行中 / 未启动 / 已归档），原 hint 的信息全部升格进 legend。 */}
-        {/* 三段实数据（heroSegments）双端共用：移动壳是 MobileGuideCard，桌面沿用
-            .today-hero 主题壳（底色/麦穗水印不动），内容换成横向色条 + 图例。 */}
+        {/* 三段实数据（heroSegments）双端共用：移动壳是 MobileGuideCard，桌面是同
+            props 的 DesktopGuideCard（读数 + 横向色条 + 图例 + 一句说明），一份数据
+            双端各穿各壳。 */}
         {isMobileShell() ? (
           <MobileGuideCard
             value={projects.length}
@@ -229,36 +231,13 @@ export function ProjectsView() {
             segments={heroSegments}
           />
         ) : (
-          <section className="today-hero guide-hero projects-guide">
-            <div className="projects-guide-top">
-              <p className="today-hero-note">组织长期事项，聚合相关任务。</p>
-              <span className="today-hero-meter-count">
-                <strong>{projects.length}</strong>
-                <span>个 · 项目</span>
-              </span>
-            </div>
-            <div className="projects-hero-bar">
-              <div className="projects-hero-track" aria-hidden="true">
-                {heroSegments.map(
-                  (segment) =>
-                    segment.value > 0 && (
-                      <i
-                        key={segment.label}
-                        style={{ flexGrow: segment.value, background: segment.color }}
-                      />
-                    ),
-                )}
-              </div>
-              <div className="projects-hero-legend">
-                {heroSegments.map((segment) => (
-                  <span key={segment.label}>
-                    <em style={{ background: segment.color }} aria-hidden="true" />
-                    {segment.label} {segment.value}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </section>
+          <DesktopGuideCard
+            value={projects.length}
+            unit="个"
+            label="项目"
+            segments={heroSegments}
+            note="组织长期事项，聚合相关任务。"
+          />
         )}
         {/* 未开始：还没有任务的项目；进行中：已挂上任务的项目。 */}
         {(() => {
@@ -408,7 +387,7 @@ export function ProjectsView() {
               <div>
                 <h3>新建项目</h3>
               </div>
-              <button type="button" onClick={() => setCreating(false)}>×</button>
+              <button type="button" className="icon-btn" onClick={() => setCreating(false)}>×</button>
             </div>
             <label>
               项目名称
@@ -457,7 +436,7 @@ export function ProjectsView() {
               <div>
                 <h3>编辑项目</h3>
               </div>
-              <button type="button" onClick={() => setEditingProject(null)}>×</button>
+              <button type="button" className="icon-btn" onClick={() => setEditingProject(null)}>×</button>
             </div>
             <label>
               项目名称

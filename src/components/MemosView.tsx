@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AppIcon } from "@/components/AppIcon";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
@@ -19,10 +20,14 @@ function formatMemoTime(iso: string): string {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
-/** 搜索时仍按正文匹配；移动壳列表的预览行也用这句口径（含 richtext 转纯文本）。 */
+/** 搜索时仍按正文匹配；移动壳列表的预览行也用这句口径（含 richtext 转纯文本）。
+ *  截到 80 字时在数据侧就补省略号（命令面板 clipLine 同规）：CSS 的 text-overflow
+ *  只在「装不下」时现形，桌面宽行里 80 字排得下一整行，句尾会戛然而止、
+ *  被误读成全文。盒子先截时 CSS 自己的 … 在裁切位、串尾 … 已被裁掉，不会双份。 */
 function memoPreview(memo: Memo): string {
   const text = memo.format === "richtext" ? richTextToPlainText(memo.content) : memo.content.replace(/[#*_>`\[\]()-]/g, " ").replace(/\s+/g, " ").trim();
-  return text.slice(0, 80) || "暂无内容";
+  const clipped = text.slice(0, 80);
+  return `${clipped || "暂无内容"}${text.length > 80 ? "…" : ""}`;
 }
 
 export function MemosView() {
@@ -231,13 +236,15 @@ export function MemosView() {
       <div className="top-controls">
         <div className="memo-new-wrap">
           <button type="button" className="btn-primary" aria-expanded={showTypeChooser} onClick={() => setShowTypeChooser((value) => !value)}>新建备忘录</button>
-          {showTypeChooser ? <div className="memo-create-menu"><button type="button" onClick={() => void createNew("richtext")}><strong>富文本</strong><span>适合日常记录和排版</span></button><button type="button" onClick={() => void createNew("markdown")}><strong>Markdown</strong><span>适合技术笔记和纯文本</span></button></div> : null}
+          {showTypeChooser ? <div className="memo-create-menu"><button type="button" className="memo-menu-item" onClick={() => void createNew("richtext")}><strong>富文本</strong><span>适合日常记录和排版</span></button><button type="button" className="memo-menu-item" onClick={() => void createNew("markdown")}><strong>Markdown</strong><span>适合技术笔记和纯文本</span></button></div> : null}
         </div>
       </div>
     </div>
 
-    {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡：富文本 / Markdown
-        格式分布 + 最近更新一句。 */}
+    {/* 顶卡两端同一族「淡蓝数据卡」（2026-10-31 桌面引导框升卡）：移动走
+        MobileGuideCard 原样，桌面走同 props 的 DesktopGuideCard——在册条数
+        衬线大读数 + 已归档速览 + 富文本/Markdown 分布分段色条。段义＝分布：
+        全 0 没有分布不出条（移动同规）。 */}
     {isMobileShell() ? (
       <MobileGuideCard
         value={activeCount}
@@ -254,11 +261,20 @@ export function MemosView() {
         ]}
       />
     ) : (
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <p className="today-hero-note">随手记下的想法与灵感，都收在这里。</p>
-        </div>
-      </section>
+      <DesktopGuideCard
+        value={activeCount}
+        unit="条"
+        label="备忘"
+        hint={`已归档 ${archivedCount} 条`}
+        segments={[
+          { label: "富文本", value: richtextCount, color: "var(--accent-strong)" },
+          {
+            label: "Markdown",
+            value: markdownCount,
+            color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+          },
+        ]}
+      />
     )}
 
     <div className="memo-body">
@@ -274,20 +290,19 @@ export function MemosView() {
             onClick={() => void selectMemo(memo)}
           >
             <span className="memo-list-title-copy">
-              {memo.pinned ? <AppIcon name="pin" size={13} /> : null}
+              {memo.pinned ? <span className="due-chip is-today">置顶</span> : null}
               {memo.title || "无标题备忘"}
             </span>
+            {/* 正文预览（两端同 DOM）：移动壳排第二行（2026-10-30 乙案双行卡，
+                格式徽标在预览句首）；桌面单行流紧跟标题截断，徽标行内不出——
+                格式在详情头部与顶卡 legend 已表达，窄行的徽标价值桌面不重复占位。 */}
+            <span className="memo-list-preview">
+              <em className={`memo-document-format is-${memo.format === "markdown" ? "markdown" : "richtext"}`}>
+                {memo.format === "richtext" ? "富文本" : "Markdown"}
+              </em>
+              <span>{memoPreview(memo)}</span>
+            </span>
             <span className="memo-list-time">{formatMemoTime(memo.updated_at)}</span>
-            {/* 移动壳双行卡（2026-10-30）：第二行＝格式徽标（复用详情页
-                memo-document-format 原子）＋正文预览一行截断。桌面仍单行。 */}
-            {isMobileShell() ? (
-              <span className="memo-list-preview">
-                <em className={`memo-document-format is-${memo.format === "markdown" ? "markdown" : "richtext"}`}>
-                  {memo.format === "richtext" ? "富文本" : "Markdown"}
-                </em>
-                <span>{memoPreview(memo)}</span>
-              </span>
-            ) : null}
           </button>
         ))}
         {!visibleMemos.length ? (
@@ -324,15 +339,15 @@ export function MemosView() {
         {editing ? <>
           <input className="memo-title-input" value={title} onChange={(event) => { setTitle(event.target.value); setDirty(true); }} placeholder="备忘录标题" autoFocus />
           {format === "richtext" ? <>
-            <div className="memo-rich-toolbar" aria-label="富文本格式工具"><button type="button" title="正文" onClick={() => runCommand("formatBlock", "p")}>正文</button><button type="button" title="二级标题" onClick={() => runCommand("formatBlock", "h2")}>H2</button><button type="button" title="三级标题" onClick={() => runCommand("formatBlock", "h3")}>H3</button><i /><button type="button" title="粗体" onClick={() => runCommand("bold")}><b>B</b></button><button type="button" title="斜体" onClick={() => runCommand("italic")}><em>I</em></button><button type="button" title="引用" onClick={() => runCommand("formatBlock", "blockquote")}>❝</button><button type="button" title="无序列表" onClick={() => runCommand("insertUnorderedList")}>• 列表</button><button type="button" title="有序列表" onClick={() => runCommand("insertOrderedList")}>1. 列表</button><button type="button" title="添加链接" onClick={() => { void promptAction({ title: "添加链接", initial: "https://", placeholder: "链接地址", confirmText: "插入" }).then((url) => { if (url) runCommand("createLink", url); }); }}>链接</button></div>
+            <div className="memo-rich-toolbar" aria-label="富文本格式工具"><button type="button" className="memo-tool-btn" title="正文" onClick={() => runCommand("formatBlock", "p")}>正文</button><button type="button" className="memo-tool-btn" title="二级标题" onClick={() => runCommand("formatBlock", "h2")}>H2</button><button type="button" className="memo-tool-btn" title="三级标题" onClick={() => runCommand("formatBlock", "h3")}>H3</button><i /><button type="button" className="memo-tool-btn" title="粗体" onClick={() => runCommand("bold")}><b>B</b></button><button type="button" className="memo-tool-btn" title="斜体" onClick={() => runCommand("italic")}><em>I</em></button><button type="button" className="memo-tool-btn" title="引用" onClick={() => runCommand("formatBlock", "blockquote")}>❝</button><button type="button" className="memo-tool-btn" title="无序列表" onClick={() => runCommand("insertUnorderedList")}>• 列表</button><button type="button" className="memo-tool-btn" title="有序列表" onClick={() => runCommand("insertOrderedList")}>1. 列表</button><button type="button" className="memo-tool-btn" title="添加链接" onClick={() => { void promptAction({ title: "添加链接", initial: "https://", placeholder: "链接地址", confirmText: "插入" }).then((url) => { if (url) runCommand("createLink", url); }); }}>链接</button></div>
             <div ref={editorRef} className="memo-rich-editor" contentEditable suppressContentEditableWarning data-placeholder="从这里开始记录……" onInput={(event) => { setContent(event.currentTarget.innerHTML); setDirty(true); }} />
           </> : <>
-            <div className="memo-rich-toolbar memo-markdown-toolbar" aria-label="Markdown 快捷工具"><button type="button" onClick={() => insertMarkdown("## ", "", "标题")}>H2</button><button type="button" onClick={() => insertMarkdown("### ", "", "标题")}>H3</button><i /><button type="button" onClick={() => insertMarkdown("**", "**")}><b>B</b></button><button type="button" onClick={() => insertMarkdown("*", "*")}><em>I</em></button><button type="button" onClick={() => insertMarkdown("> ", "", "引用")}>❝</button><button type="button" onClick={() => insertMarkdown("- ", "", "列表项")}>• 列表</button><button type="button" onClick={() => insertMarkdown("- [ ] ", "", "待办")}>☐ 待办</button><button type="button" onClick={() => insertMarkdown("[", "](https://)", "链接文字")}>链接</button></div>
+            <div className="memo-rich-toolbar memo-markdown-toolbar" aria-label="Markdown 快捷工具"><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("## ", "", "标题")}>H2</button><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("### ", "", "标题")}>H3</button><i /><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("**", "**")}><b>B</b></button><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("*", "*")}><em>I</em></button><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("> ", "", "引用")}>❝</button><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("- ", "", "列表项")}>• 列表</button><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("- [ ] ", "", "待办")}>☐ 待办</button><button type="button" className="memo-tool-btn" onClick={() => insertMarkdown("[", "](https://)", "链接文字")}>链接</button></div>
             <textarea ref={markdownRef} className="memo-markdown-editor" value={content} onChange={(event) => { setContent(event.target.value); setDirty(true); }} placeholder="使用 Markdown 开始记录……" />
           </>}
         </> : <>
           <header className="memo-document-head"><div><span>{formatMemoTime(selected.updated_at)} <em className={`memo-document-format is-${format}`}>{format === "richtext" ? "富文本" : "Markdown"}</em></span><h1>{selected.title || "无标题备忘"}</h1></div></header>
-          <article className="memo-reading-surface">{content.trim() ? format === "richtext" ? <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(content) }} /> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ children, ...props }) => <a {...props} target="_blank" rel="noreferrer">{children}</a> }}>{content}</ReactMarkdown> : <div className="memo-reading-empty"><AppIcon name="memo" size={30} /><strong>这条备忘录还没有内容</strong><button type="button" onClick={startEditing}>开始编辑</button></div>}</article>
+          <article className="memo-reading-surface">{content.trim() ? format === "richtext" ? <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(content) }} /> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ children, ...props }) => <a {...props} target="_blank" rel="noreferrer">{children}</a> }}>{content}</ReactMarkdown> : <div className="memo-reading-empty"><AppIcon name="memo" size={30} /><strong>这条备忘录还没有内容</strong><button type="button" className="memo-empty-cta" onClick={startEditing}>开始编辑</button></div>}</article>
         </>}
       </div>
       {/* 移动壳按态排布动作条：阅读态 2×2，编辑态「保存｜取消 ＋ 删除通栏」

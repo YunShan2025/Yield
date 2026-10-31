@@ -3,6 +3,7 @@ import type { Goal, Task } from "@/types";
 import { fetchGoals } from "@/lib/db";
 import { useAppStore } from "@/store/app";
 import { formatIsoTime, todayDateString } from "@/lib/dates";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { getMobileTaskPills } from "@/components/mobile/MobileTaskPills";
 import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
@@ -206,8 +207,9 @@ export function FootprintView() {
           <p className="workspace-subtitle">每一步都算数。</p>
         </div>
       </div>
-      {/* 顶卡两端都在说「现在」：移动壳是数据型引导卡（连续足迹）；桌面顶卡报今天投入，
-          连续与累计归下面的读数条（横向一条与移动壳同口径），一个数只在一处当大字。 */}
+      {/* 顶卡两端都在说「现在」（2026-10-31 桌面升淡蓝数据顶卡）：移动壳读数＝
+          连续足迹；桌面读数＝今天投入（连续大字归下方读数条，一个数只在一处
+          当大字，hint 只做一句速览）。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={currentStreak}
@@ -216,20 +218,13 @@ export function FootprintView() {
           hint={`活跃 ${activeDateKeys.length} 天 · 最长 ${longestStreak} 天`}
         />
       ) : (
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <p className="today-hero-note">
-              {todayInvestment ? "今天动的每一项，都算进了下面这张图。" : "今天还没有投入——完成一件小事或打一次卡都算。"}
-            </p>
-          </div>
-          <div className="today-hero-meter">
-            <span className="today-hero-meter-count">
-              <strong>{todayInvestment}</strong>
-              <span>项</span>
-            </span>
-            <span className="today-hero-meter-label">今天已投入</span>
-          </div>
-        </section>
+        <DesktopGuideCard
+          value={todayInvestment}
+          unit="项"
+          label="今天已投入"
+          hint={currentStreak ? `连续 ${currentStreak} 天` : undefined}
+          note={todayInvestment ? undefined : "今天还没有投入——完成一件小事或打一次卡都算。"}
+        />
       )}
 
       {/* 读数条：与周报页同族的横向一条（inline-flex + 竖发丝线），窄窗折行、

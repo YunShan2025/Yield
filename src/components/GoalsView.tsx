@@ -12,6 +12,7 @@ import { AppIcon } from "@/components/AppIcon";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { ExpandRow } from "@/components/ExpandRow";
 import { confirmAction } from "@/components/AppConfirm";
@@ -253,9 +254,9 @@ export function GoalsView() {
         </div>
       </div>
 
-      {/* 顶卡双端同族各穿各壳（乙案，2026-10-30）：移动壳是数据型引导卡
-          （空页让位给页内 empty-state）；桌面借项目/习惯页的 guide-hero 壳——
-          说明 + 衬线读数 → 三段条 + 图例，guideSegments 一份数据双端共用。 */}
+      {/* 顶卡双端同族各穿各壳（2026-10-31 桌面升淡蓝数据顶卡）：空页让位给页内
+          empty-state；读数＝进行中目标 + 落后速览 + 三段 guideSegments，
+          guideGuide 一句说明落卡尾（note 档）。一份数据双端共用。 */}
       {isMobileShell() ? (
         goals.length ? (
           <MobileGuideCard
@@ -266,38 +267,16 @@ export function GoalsView() {
             segments={guideSegments}
           />
         ) : null
-      ) : (
-        <section className="today-hero guide-hero goals-guide">
-          <div className="projects-guide-top">
-            <p className="today-hero-note">{goalGuide}</p>
-            <span className="today-hero-meter-count">
-              <strong>{goals.length}</strong>
-              <span>个 · 目标</span>
-            </span>
-          </div>
-          <div className="projects-hero-bar">
-            <div className="projects-hero-track" aria-hidden="true">
-              {guideSegments.map(
-                (segment) =>
-                  segment.value > 0 && (
-                    <i
-                      key={segment.label}
-                      style={{ flexGrow: segment.value, background: segment.color }}
-                    />
-                  ),
-              )}
-            </div>
-            <div className="projects-hero-legend">
-              {guideSegments.map((segment) => (
-                <span key={segment.label}>
-                  <em style={{ background: segment.color }} aria-hidden="true" />
-                  {segment.label} {segment.value}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      ) : goals.length ? (
+        <DesktopGuideCard
+          value={activeGoals.length}
+          unit="个"
+          label="进行中的目标"
+          hint={behindCount ? `进度落后 ${behindCount} 个` : undefined}
+          segments={guideSegments}
+          note={goalGuide}
+        />
+      ) : null}
 
       {/* 目标清单（两端同构，乙案 2026-10-30）：行即白卡 + 点卡就地展开，手风琴
           单展开；桌面皮肤同项目/标签/习惯卡族（components.css），移动壳档见 mobile.css。 */}
@@ -366,6 +345,7 @@ export function GoalsView() {
                     setGoalStatus(goal, goal.status === "paused" ? "active" : "paused")
                   }
                   onComplete={() => setGoalStatus(goal, "completed")}
+                  onReopen={() => setGoalStatus(goal, "active")}
                   onDelete={() => void deleteGoalWithConfirm(goal)}
                   onTaskMeasure={toggleTaskMeasure}
                   onHabitMeasure={toggleHabitMeasure}
@@ -384,7 +364,7 @@ export function GoalsView() {
                 <h3>{editingGoalId ? "编辑目标" : "新建目标"}</h3>
                 <p className="goal-create-sub">任务和习惯会自动累计到这里，填三项就能开始。</p>
               </div>
-              <button type="button" aria-label="关闭" onClick={() => setShowCreate(false)}>×</button>
+              <button type="button" className="icon-btn" aria-label="关闭" onClick={() => setShowCreate(false)}>×</button>
             </div>
             <label>目标名称<input autoFocus value={goalTitle} placeholder="想达成什么结果？例如「读完 21 本书」" onChange={(event) => setGoalTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void submitGoal(); }} /></label>
             <div className="goal-form-grid">
@@ -428,6 +408,7 @@ function GoalRow({
   onEdit,
   onToggleStatus,
   onComplete,
+  onReopen,
   onDelete,
   onTaskMeasure,
   onHabitMeasure,
@@ -442,6 +423,8 @@ function GoalRow({
   onEdit: () => void;
   onToggleStatus: () => void;
   onComplete: () => void;
+  /** 已完成分区：回退＝completed → active，重新回到进行中。 */
+  onReopen?: () => void;
   onDelete: () => void;
   onTaskMeasure: (task: Task) => void;
   onHabitMeasure: (habit: Habit) => void;
@@ -523,7 +506,7 @@ function GoalRow({
               <span>编辑</span>
             </button>
             {running ? (
-              <button type="button" className="item-action-btn" onClick={onToggleStatus}>
+              <button type="button" className="item-action-btn item-action-pause" onClick={onToggleStatus}>
                 <AppIcon name={goal.status === "paused" ? "play" : "pause"} size={14} />
                 <span>{goal.status === "paused" ? "继续目标" : "暂停"}</span>
               </button>
@@ -536,6 +519,12 @@ function GoalRow({
               >
                 <AppIcon name="check" size={14} />
                 <span>完成</span>
+              </button>
+            ) : null}
+            {finished && onReopen ? (
+              <button type="button" className="item-action-btn item-action-reopen" onClick={onReopen}>
+                <AppIcon name="review" size={14} />
+                <span>回退</span>
               </button>
             ) : null}
             <button

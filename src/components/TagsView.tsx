@@ -4,6 +4,7 @@ import { confirmAction } from "@/components/AppConfirm";
 import { filterTasksByView } from "@/lib/tasks";
 import { formatDueDateBadge } from "@/lib/dates";
 import { AppIcon } from "@/components/AppIcon";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 import { MobileTaskLine, mobileDoneStamp } from "@/components/mobile/MobileTaskLine";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
@@ -102,6 +103,18 @@ export function TagsView() {
     return map;
   }, [projects, tasks, tagMap]);
 
+  // 顶卡使用分布（两端共用，2026-10-31 桌面引导框升卡从移动 JSX 抽出）：
+  // 使用度 = 项目数 + 无归属任务数，去零取 Top-4。
+  const tagSegments = tags
+    .map((tag, index) => ({
+      label: tag.name,
+      value: (counts[tag.id]?.projects ?? 0) + (counts[tag.id]?.tasks ?? 0),
+      color: tag.color || TAG_PALETTE[index % TAG_PALETTE.length],
+    }))
+    .filter((segment) => segment.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 4);
+
   // 每个标签下的项目与任务，展开哪一行就直接取哪一行。
   const tagDetails = useMemo(() => {
     const map = new Map<
@@ -184,35 +197,23 @@ export function TagsView() {
           </button>
         </div>
       </div>
-      {/* 与「今日」同款的暖色引导框。移动壳换数据型顶卡：读数 + 标签使用分布。 */}
+      {/* 与「今日」同款的暖色引导框已升淡蓝数据顶卡：读数 + 标签使用分布，
+          使用度 Top-4 一份数据双端共用。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={tags.length}
           unit="个"
           label="标签"
-          segments={tags
-            .map((tag, index) => ({
-              label: tag.name,
-              value: (counts[tag.id]?.projects ?? 0) + (counts[tag.id]?.tasks ?? 0),
-              color: tag.color || TAG_PALETTE[index % TAG_PALETTE.length],
-            }))
-            .filter((segment) => segment.value > 0)
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 4)}
+          segments={tagSegments}
         />
       ) : (
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <p className="today-hero-note">给项目与任务分类打标，周报页的任务分类色也按同名标签自动落位。</p>
-          </div>
-          <div className="today-hero-meter">
-            <span className="today-hero-meter-count">
-              <strong>{tags.length}</strong>
-              <span>个</span>
-            </span>
-            <span className="today-hero-meter-label">标签</span>
-          </div>
-        </section>
+        <DesktopGuideCard
+          value={tags.length}
+          unit="个"
+          label="标签"
+          segments={tagSegments}
+          note="给项目与任务分类打标，周报页的任务分类色也按同名标签自动落位。"
+        />
       )}
       <div className="tags-body">
         <section className="tags-manager" aria-label="标签管理">
@@ -470,7 +471,7 @@ export function TagsView() {
               <div>
                 <h3>新建标签</h3>
               </div>
-              <button type="button" onClick={() => setCreating(false)}>×</button>
+              <button type="button" className="icon-btn" onClick={() => setCreating(false)}>×</button>
             </div>
             <label>
               标签名称
@@ -520,7 +521,7 @@ export function TagsView() {
               <div>
                 <h3>修改标签</h3>
               </div>
-              <button type="button" onClick={() => setEditingTag(null)}>×</button>
+              <button type="button" className="icon-btn" onClick={() => setEditingTag(null)}>×</button>
             </div>
             <label>
               标签名称

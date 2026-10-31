@@ -8,6 +8,7 @@ import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { confirmAction } from "@/components/AppConfirm";
 import { TimeDropdown } from "@/components/TimePicker";
 import { AppIcon } from "@/components/AppIcon";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { MobileGuideCard } from "@/components/mobile/MobileGuideCard";
 
 /** 当前时刻起 sec 秒后的钟点（HH:MM），用于「预计几点提醒」预览。 */
@@ -82,6 +83,16 @@ export function RemindersView() {
   // 不随 tab 变 —— tab 内的运行数下方状态条自己会说。
   const scheduledTotal = countdowns.length + intervals.length;
   const runningTotal = timers.filter((timer) => timer.running).length;
+
+  // 顶卡运行/休息分段色条（两端共用，2026-10-31 桌面引导框升卡从移动 JSX 抽出）。
+  const reminderSegments = [
+    { label: "运行中", value: runningTotal, color: "var(--accent-strong)" },
+    {
+      label: "休息中",
+      value: scheduledTotal - runningTotal,
+      color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
+    },
+  ];
 
   const countdownSeconds = () => {
     if (timeMode === "duration") return Math.max(1, Math.floor(countdownMinutes)) * 60;
@@ -169,28 +180,23 @@ export function RemindersView() {
         </div>
       </div>
 
-      {/* 与「今日/足迹」同款的暖色引导框。移动壳换数据型顶卡：运行 / 休息
-          分段色条（legend 自带计数），原「N 个运行中」hint 与 legend 重复，撤掉。 */}
+      {/* 与「今日/足迹」同款的暖色引导框已升淡蓝数据顶卡：运行 / 休息
+          分段色条（legend 自带计数），一份数据双端共用。 */}
       {isMobileShell() ? (
         <MobileGuideCard
           value={scheduledTotal}
           unit="个"
           label="排程提醒"
-          segments={[
-            { label: "运行中", value: runningTotal, color: "var(--accent-strong)" },
-            {
-              label: "休息中",
-              value: scheduledTotal - runningTotal,
-              color: "color-mix(in srgb, var(--text-secondary) 38%, transparent)",
-            },
-          ]}
+          segments={reminderSegments}
         />
       ) : (
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <p className="today-hero-note">临时事项用倒计时，喝水、护眼等固定节奏用循环提醒；到期提醒由系统送达。</p>
-          </div>
-        </section>
+        <DesktopGuideCard
+          value={scheduledTotal}
+          unit="个"
+          label="排程提醒"
+          segments={reminderSegments}
+          note="临时事项用倒计时，喝水、护眼等固定节奏用循环提醒；到期提醒由系统送达。"
+        />
       )}
 
       <div className="reminders-body">
@@ -258,7 +264,7 @@ export function RemindersView() {
               <div>
                 <h3>新建倒计时</h3>
               </div>
-              <button type="button" onClick={closeCreate}>×</button>
+              <button type="button" className="icon-btn" onClick={closeCreate}>×</button>
             </div>
             <label>
               名称
@@ -362,7 +368,7 @@ export function RemindersView() {
               <div>
                 <h3>新建循环提醒</h3>
               </div>
-              <button type="button" onClick={closeCreate}>×</button>
+              <button type="button" className="icon-btn" onClick={closeCreate}>×</button>
             </div>
             <label>
               名称

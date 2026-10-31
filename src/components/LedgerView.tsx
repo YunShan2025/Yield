@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppIcon, type AppIconName } from "@/components/AppIcon";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { isMobileShell } from "@/lib/platform";
 import { attachSwipeRightToClose, pushBackHandler } from "@/lib/mobileBack";
 import {
@@ -162,6 +163,25 @@ export function LedgerView() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [drawer]);
+  // 预算抽屉（2026-10-31 C 案）：与记账抽屉同款「点外面 / Esc 收起」豁免规则。
+  useEffect(() => {
+    if (!budgetEditing) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      if (event.target.closest(".ledger-drawer")) return;
+      if (event.target.closest(".modal-backdrop, .select-menu, .date-picker-pop")) return;
+      setBudgetEditing(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setBudgetEditing(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [budgetEditing]);
 
   const activeCategories = categories.filter((item) => item.kind === draft.kind && item.is_enabled);
   const activeAccounts = accounts.filter((item) => item.is_enabled);
@@ -235,6 +255,7 @@ export function LedgerView() {
   async function toggleHidden() { const next = !hidden; setHidden(next); await setSetting("ledger_hide_amount", String(next)); }
 
   function startBudgetEdit() {
+    setDrawer(false); // 与「记一笔」抽屉互斥：同一时刻只飘一面
     setBudgetDraft(budget ? String(budget / 100) : "");
     setBudgetAsDefault(false);
     setBudgetError("");
@@ -285,50 +306,42 @@ export function LedgerView() {
           <p className="workspace-subtitle">观水有术，必观其澜。</p>
         </div>
         <div className="top-controls">
-          <div className="ledger-month-switcher" aria-label="选择月份"><button onClick={() => setMonth(moveMonth(month, -1))} aria-label="上个月">‹</button><strong>{monthLabel(month)}</strong><button onClick={() => setMonth(moveMonth(month, 1))} aria-label="下个月">›</button></div>
+          {/* 月份切换与「今日」页日期切换同款：scope-nav + btn-ghost 沉底箭头。 */}
+          <div className="scope-nav ledger-month-switcher" aria-label="选择月份">
+            <button type="button" className="btn-ghost" onClick={() => setMonth(moveMonth(month, -1))} aria-label="上个月">‹</button>
+            <strong>{monthLabel(month)}</strong>
+            <button type="button" className="btn-ghost" onClick={() => setMonth(moveMonth(month, 1))} aria-label="下个月">›</button>
+          </div>
+          {/* 预算入口（2026-10-31 用户定案）：与「隐藏金额」同款 btn-ghost 并排，
+              顶卡卡尾不再挂设置钮。 */}
+          <button className="btn-ghost" aria-expanded={budgetEditing} onClick={startBudgetEdit}>设置预算</button>
           <button className="btn-ghost" onClick={() => void toggleHidden()}>{hidden ? "显示金额" : "隐藏金额"}</button>
           <button className="btn-primary" onClick={() => openDrawer()}>记一笔</button>
         </div>
       </div>
 
-      {/* 与「今日」同款的暖色引导框。 */}
-      <section className="today-hero guide-hero">
-        <div className="today-hero-copy">
-          <p className="today-hero-note">看见钱的去向，不评判每一笔生活。</p>
-        </div>
-      </section>
+      {/* 顶卡归位（2026-10-31 用户定案，参考移动壳 mtoday-hero 同口径）：
+          读数右组＝本月支出，hint 左列＝收入·结余·笔数；预算进度常驻卡尾
+          footer——原 ledger-stat-grid 四张统计卡的读数全部并入此卡退役。
+          预算编辑走右侧抽屉（2026-10-31 C 案：复用「记一笔」ledger-drawer
+          皮肤），卡高恒定不撑版。 */}
+      <DesktopGuideCard
+        value={formatLedgerMoney(expense, hidden)}
+        label="本月支出"
+        hint={`收入 ${formatLedgerMoney(income, hidden)} · 结余 ${formatLedgerMoney(income - expense, hidden)} · ${transactions.length} 笔`}
+        footer={
+          <div className="guide-stat-budget">
+            <span className="ledger-stat-head">
+              预算进度{budget ? ` · 已用 ${Math.round(budgetRatio * 100)}%` : " · 未设置"}
+            </span>
+            <div className="ledger-progress"><i style={{ width: `${Math.min(100, budgetRatio * 100)}%` }} /></div>
+            <small>{budget === 0 ? "先定一个月度边界" : budgetRatio > 1 ? `已超支 ${formatLedgerMoney(expense - budget, hidden)}` : budgetRatio === 1 ? "本月预算已用完" : `还可用 ${formatLedgerMoney(budget - expense, hidden)}`}</small>
+          </div>
+        }
+      />
 
       <div className="ledger-body">
       <>
-        <section className="ledger-stat-grid" aria-label="本月收支摘要">
-          <article><span>本月支出</span><strong className="expense">{formatLedgerMoney(expense, hidden)}</strong><small>{transactions.filter((item) => item.type === "expense").length} 笔支出</small></article>
-          <article><span>本月收入</span><strong>{formatLedgerMoney(income, hidden)}</strong><small>{transactions.filter((item) => item.type === "income").length} 笔收入</small></article>
-          <article><span>本月结余</span><strong>{formatLedgerMoney(income - expense, hidden)}</strong><small>{income - expense >= 0 ? "保持从容" : "支出高于收入"}</small></article>
-          <article>
-            <span className="ledger-stat-head">预算进度
-              <button type="button" className="ledger-budget-set" onClick={() => (budgetEditing ? setBudgetEditing(false) : startBudgetEdit())}>{budgetEditing ? "收起" : "设置"}</button>
-            </span>
-            {/* 展示内容常驻,预算编辑器以浮层覆盖其上:展开/收起都不改变统计卡高度。 */}
-            <>
-              <strong>{budget ? `${Math.round(budgetRatio * 100)}%` : "未设置"}</strong>
-              <div className="ledger-progress"><i style={{ width: `${Math.min(100, budgetRatio * 100)}%` }} /></div>
-              <small>{budget === 0 ? "先定一个月度边界" : budgetRatio > 1 ? `已超支 ${formatLedgerMoney(expense - budget, hidden)}` : budgetRatio === 1 ? "本月预算已用完" : `还可用 ${formatLedgerMoney(budget - expense, hidden)}`}</small>
-            </>
-            {budgetEditing ? (
-              <div className="ledger-budget-editor">
-                <div className="ledger-budget-input compact"><span>¥</span><input inputMode="decimal" value={budgetDraft} placeholder="预算金额" onChange={(event) => { setBudgetDraft(event.target.value.replace(/[^\d.]/g, "")); setBudgetError(""); }} onKeyDown={(event) => { if (event.key === "Enter") void saveBudget(); }} /></div>
-                <label className="ledger-checkbox"><input type="checkbox" checked={budgetAsDefault} onChange={(event) => setBudgetAsDefault(event.target.checked)} />设为以后月份的默认预算</label>
-                {budgetError && <p className="ledger-error" role="alert">{budgetError}</p>}
-                <div className="ledger-budget-editor-actions">
-                  <button className="btn-ghost item-action-btn" onClick={() => setBudgetEditing(false)}>取消</button>
-                  <button className="btn-primary item-action-btn item-action-primary" onClick={() => void saveBudget()}>保存预算</button>
-                </div>
-                <small>当月预算优先于默认预算；填 0 可关闭当月预算。</small>
-              </div>
-            ) : null}
-          </article>
-        </section>
-
           <section className="ledger-insight-grid">
             <article className="ledger-card"><div className="ledger-card-title"><div><h3>支出去向</h3><p>本月分类构成</p></div></div><div className="ledger-donut-wrap"><div className="ledger-donut" style={{ background: composition }}><span>{hidden ? "••••" : `${summary.length} 类`}</span></div><div className="ledger-legend">{summary.slice(0, 6).map((item) => <div key={item.category_id}><i style={{ background: item.color }} /><span>{item.name}</span><strong>{expense ? Math.round(item.amount_cents / expense * 100) : 0}%</strong></div>)}{!summary.length && <p>记下第一笔支出后，这里会出现清晰的构成。</p>}</div></div></article>
             <article className="ledger-card"><div className="ledger-card-title"><div><h3>半年走向</h3><p>收入与支出的走势 · 点月份查看</p></div><div className="ledger-chart-key"><span>收入</span><span>支出</span></div></div>{trend.length ? <LedgerTrendPulse trend={trend} month={month} hidden={hidden} onPick={setMonth} /> : <p className="lt-empty">还没有趋势数据。</p>}</article>
@@ -358,12 +371,32 @@ export function LedgerView() {
       </>
       </div>
 
-      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3>{editing && <p className="ledger-drawer-sub">{editing.category_name} · {editing.account_name} · {editing.date} · 原 {formatLedgerMoney(editing.amount_cents, hidden)}</p>}</div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}><AppIcon name="close" size={16} /></button></header><div className="ledger-drawer-body"><label className="ledger-amount"><b aria-hidden>¥</b><input ref={amountRef} value={draft.amount} aria-label="金额" inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>类型</legend><div className="ledger-kind-tabs"><button type="button" className={draft.kind === "expense" ? "active is-expense" : ""} onClick={() => setKind("expense")}>支出</button><button type="button" className={draft.kind === "income" ? "active is-income" : ""} onClick={() => setKind("income")}>收入</button></div></fieldset><fieldset><legend>{draft.kind === "expense" ? "支出分类" : "收入分类"}</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><span className="ledger-choice-icon" style={{ color: item.color }}><AppIcon name={ICONS[item.icon] ?? "dots"} size={17} /></span>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({
+      {drawer && <aside ref={drawerRef} className="ledger-drawer" role="dialog" aria-labelledby="ledger-drawer-title"><header className="ledger-drawer-head"><div><h3 id="ledger-drawer-title">{editing ? "修改这一笔" : "记一笔"}</h3>{editing && <p className="ledger-drawer-sub">{editing.category_name} · {editing.account_name} · {editing.date} · 原 {formatLedgerMoney(editing.amount_cents, hidden)}</p>}</div><button type="button" className="ledger-close" aria-label="关闭记账面板" onClick={() => setDrawer(false)}><AppIcon name="close" size={16} /></button></header><div className="ledger-drawer-body"><label className="ledger-amount"><b aria-hidden>¥</b><input ref={amountRef} value={draft.amount} aria-label="金额" inputMode="decimal" autoComplete="off" placeholder="0.00" aria-describedby={error ? "ledger-error" : undefined} onChange={(event) => { const value = event.target.value.replace(/[^\d.]/g, ""); if (value.length <= 11) setDraft((current) => ({ ...current, amount: value })); }} onKeyDown={(event) => { if (event.key === "Enter") void save(); }} /></label><div className="ledger-quick-amounts">{[10, 20, 50, 100].map((value) => <button key={value} type="button" className="ledger-quick-amount" onClick={() => setDraft((current) => ({ ...current, amount: String(value) }))}>¥{value}</button>)}</div><fieldset><legend>类型</legend><div className="ledger-kind-tabs"><button type="button" className={draft.kind === "expense" ? "active is-expense" : ""} onClick={() => setKind("expense")}>支出</button><button type="button" className={draft.kind === "income" ? "active is-income" : ""} onClick={() => setKind("income")}>收入</button></div></fieldset><fieldset><legend>{draft.kind === "expense" ? "支出分类" : "收入分类"}</legend><div className="ledger-choice-grid">{activeCategories.map((item) => <button type="button" key={item.id} className={draft.categoryId === item.id ? "active" : ""} onClick={() => setDraft((value) => ({ ...value, categoryId: item.id }))}><span className="ledger-choice-icon" style={{ color: item.color }}><AppIcon name={ICONS[item.icon] ?? "dots"} size={17} /></span>{item.name}</button>)}</div></fieldset><div className="ledger-form-row"><label>日期<DatePicker value={draft.date} onChange={(date) => setDraft((value) => ({ ...value, date }))} ariaLabel="记账日期" /></label><label>账户<SelectMenu ariaLabel="账户" value={String(draft.accountId)} onChange={(accountId) => setDraft((current) => ({ ...current, accountId: Number(accountId) }))} options={activeAccounts.map((item) => ({
                     value: String(item.id),
                     label: item.name,
                     icon: <AppIcon name={ACCOUNT_ICONS[item.kind] ?? "wallet"} size={15} />,
                   }))} /></label></div><label>备注（可选）<input maxLength={60} value={draft.note} onChange={(event) => setDraft((value) => ({ ...value, note: event.target.value }))} /></label>{error && <p className="ledger-error" id="ledger-error" role="alert">{error}</p>}</div><footer className="ledger-drawer-footer">{!hidden && <div className={`ledger-impact${impactPctAfter !== null && impactPctAfter < (impactPctBefore ?? 0) ? " is-decrease" : ""}${budget && impactAfterExpense > budget ? " is-over" : ""}`}><span>保存后本月支出 <b>{formatLedgerMoney(impactAfterExpense)}</b></span>{impactPctBefore !== null && <span className="ledger-impact-pct">{impactPctAfter !== null && Math.round(impactPctBefore) !== Math.round(impactPctAfter) ? `预算 ${Math.round(impactPctBefore)}% → ${Math.round(impactPctAfter)}%` : `预算 ${Math.round(impactPctBefore)}%`}</span>}{impactPctBefore !== null && <span className="ledger-impact-track" aria-hidden><i style={{ width: `${impactBasePct}%` }} />{impactDeltaPct > 0 && <em style={{ left: `${impactBasePct}%`, width: `${impactDeltaPct}%` }} />}</span>}</div>}<div className="ledger-drawer-actions">{editing && <button type="button" className="btn-ghost item-action-btn item-action-danger ledger-drawer-delete" onClick={() => void remove(editing)}>删除</button>}<button className="btn-ghost item-action-btn" onClick={() => setDrawer(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void save()}>{saveLabel}</button></div></footer></aside>}
-      {notice && <div className="ledger-toast" role="status"><span>{notice.text}</span>{notice.undoId && <button onClick={() => void undoDelete(notice.undoId!)}>撤销</button>}</div>}
+      {/* 预算抽屉（2026-10-31 C 案）：复用「记一笔」ledger-drawer 皮肤与动效，
+          金额大字输入档（.ledger-budget-input 全档）在抽屉里正位。 */}
+      {budgetEditing ? (
+        <aside className="ledger-drawer" role="dialog" aria-labelledby="ledger-budget-drawer-title">
+          <header className="ledger-drawer-head">
+            <div>
+              <h3 id="ledger-budget-drawer-title">设置月度预算</h3>
+              <p className="ledger-drawer-sub">{monthLabel(month)} · 本月支出 {formatLedgerMoney(expense, hidden)}</p>
+            </div>
+            <button type="button" className="ledger-close" aria-label="关闭预算面板" onClick={() => setBudgetEditing(false)}><AppIcon name="close" size={16} /></button>
+          </header>
+          <div className="ledger-drawer-body">
+            <div className="ledger-budget-input"><span aria-hidden>¥</span><input autoFocus inputMode="decimal" value={budgetDraft} placeholder="预算金额" aria-label="月度预算金额" aria-describedby={budgetError ? "ledger-budget-error" : undefined} onChange={(event) => { setBudgetDraft(event.target.value.replace(/[^\d.]/g, "")); setBudgetError(""); }} onKeyDown={(event) => { if (event.key === "Enter") void saveBudget(); }} /></div>
+            <label className="ledger-checkbox"><input type="checkbox" checked={budgetAsDefault} onChange={(event) => setBudgetAsDefault(event.target.checked)} />设为以后月份的默认预算</label>
+            {budgetError ? <p className="ledger-error" id="ledger-budget-error" role="alert">{budgetError}</p> : null}
+            <p className="ledger-drawer-sub">当月预算优先于默认预算；填 0 可关闭当月预算。</p>
+          </div>
+          <footer className="ledger-drawer-footer"><div className="ledger-drawer-actions"><button className="btn-ghost item-action-btn" onClick={() => setBudgetEditing(false)}>取消</button><button className="btn-primary item-action-btn item-action-primary" onClick={() => void saveBudget()}>保存预算</button></div></footer>
+        </aside>
+      ) : null}
+      {notice && <div className="ledger-toast" role="status"><span>{notice.text}</span>{notice.undoId && <button type="button" className="ledger-undo-action" onClick={() => void undoDelete(notice.undoId!)}>撤销</button>}</div>}
     </main>
   );
 }
