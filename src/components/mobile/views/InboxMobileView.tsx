@@ -430,7 +430,7 @@ export function InboxMobileView() {
                 <span className="minbox-shead-actions">
                   <span className="mtoday-hint">{pending} 项</span>
                   {pending && !selecting ? (
-                    <button type="button" onClick={beginSelecting}>
+                    <button type="button" className="minbox-batch-entry" onClick={beginSelecting}>
                       整理
                     </button>
                   ) : null}
@@ -506,10 +506,10 @@ export function InboxMobileView() {
           <div className="minbox-batchbar-head">
             <b>已选 {selectedCount} 项</b>
             <span className="minbox-batchbar-head-actions">
-              <button type="button" onClick={selectAll}>
+              <button type="button" className="minbox-batch-select-all" onClick={selectAll}>
                 {allSelected ? "取消全选" : "全选"}
               </button>
-              <button type="button" onClick={endSelecting}>
+              <button type="button" className="minbox-batch-cancel" onClick={endSelecting}>
                 取消
               </button>
             </span>
@@ -517,6 +517,7 @@ export function InboxMobileView() {
           <div className="minbox-batchbar-actions">
             <button
               type="button"
+              className="minbox-batch-action"
               disabled={!selectedCount}
               onClick={() => void scheduleSelected(addDays(today, 1))}
             >
@@ -532,6 +533,7 @@ export function InboxMobileView() {
             </button>
             <button
               type="button"
+              className="minbox-batch-action"
               disabled={!selectedCount}
               onClick={() => void completeSelected()}
             >

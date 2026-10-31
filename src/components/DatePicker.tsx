@@ -142,11 +142,11 @@ export function DatePicker({
               style={{ left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom }}
             >
               <div className="date-picker-head">
-                <button type="button" aria-label="上个月" onClick={() => shiftMonth(-1)}>
+                <button type="button" className="icon-btn" aria-label="上个月" onClick={() => shiftMonth(-1)}>
                   ‹
                 </button>
                 <strong>{view.y} 年 {view.m} 月</strong>
-                <button type="button" aria-label="下个月" onClick={() => shiftMonth(1)}>
+                <button type="button" className="icon-btn" aria-label="下个月" onClick={() => shiftMonth(1)}>
                   ›
                 </button>
               </div>

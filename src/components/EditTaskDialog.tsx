@@ -178,7 +178,7 @@ export function EditTaskDialog() {
       >
         <div className="modal-head">
           <h3 id="edit-task-title">编辑任务</h3>
-          <button type="button" aria-label="关闭" onClick={close}>×</button>
+          <button type="button" className="icon-btn" aria-label="关闭" onClick={close}>×</button>
         </div>
         <div className="create-task-body">
         <label>任务名称<input ref={titleRef} value={title} placeholder="现在要完成什么？" onChange={(event) => setTitle(event.target.value)} /></label>

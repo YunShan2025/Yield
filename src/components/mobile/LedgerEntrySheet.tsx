@@ -241,6 +241,7 @@ export function LedgerEntrySheet({
               <button
                 key={value}
                 type="button"
+                className="mledger-quick-amount"
                 onClick={() => setAmount(String(value))}
               >
                 ¥{value}

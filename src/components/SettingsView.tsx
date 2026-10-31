@@ -392,7 +392,9 @@ export function SettingsView() {
               ? `成功 · ${new Date(settings.autoBackupLastOk).toLocaleString()}`
               : "尚未运行"}
         </p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {/* 动作行与上下同距：上接贴紧的备份状态 hint，下接数据健康面板
+            （margin-top:16px）；底部外边距与其折叠仍为 16，双端一致。 */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "16px 0" }}>
           <button type="button" className="btn-primary item-action-btn item-action-primary" onClick={() => void exportJson()}>
             导出 JSON
           </button>

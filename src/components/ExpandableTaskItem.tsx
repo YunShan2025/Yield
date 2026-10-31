@@ -59,7 +59,7 @@ function CompletedTimeEditor({
           <div>
             <h3>修改完成时间</h3>
           </div>
-          <button type="button" onClick={onClose}>×</button>
+          <button type="button" className="icon-btn" onClick={onClose}>×</button>
         </div>
         <div className="completed-time-fields">
           <label>
@@ -181,7 +181,7 @@ export function ExpandableTaskItem({
         {task.status === "completed" ? (
           <button
             type="button"
-            className="item-action-btn item-action-edit"
+            className="item-action-btn item-action-edit flat-ghost"
             title="修改完成时间"
             onClick={(e) => {
               e.stopPropagation();

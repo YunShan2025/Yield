@@ -76,10 +76,10 @@ function BootError({ message }: { message: string }) {
         {message}
       </pre>
       <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-        <button type="button" onClick={() => void restart()}>
+        <button type="button" className="crash-action" onClick={() => void restart()}>
           重启应用
         </button>
-        <button type="button" onClick={() => void openDataDirectory()}>
+        <button type="button" className="crash-action" onClick={() => void openDataDirectory()}>
           打开数据目录
         </button>
       </div>

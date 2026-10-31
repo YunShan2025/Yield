@@ -61,6 +61,7 @@ export function DesktopNotificationCards() {
               </span>
               <button
                 type="button"
+                className="icon-btn"
                 aria-label="关闭通知"
                 onClick={() =>
                   void setNotificationStatus(item.id, "dismissed").then(() => refresh())
@@ -85,7 +86,7 @@ export function DesktopNotificationCards() {
                 })}
               </time>
               <div>
-                <button type="button" onClick={() => void snoozeNotification(item.id, 10).then(() => refresh())}>
+                <button type="button" className="notification-snooze" onClick={() => void snoozeNotification(item.id, 10).then(() => refresh())}>
                   10 分钟后
                 </button>
                 <button type="button" className="is-primary" onClick={() => void acknowledge(item)}>

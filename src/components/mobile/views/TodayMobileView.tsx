@@ -256,7 +256,7 @@ export function TodayMobileView() {
           <section className="mtoday-card" aria-label="推进目标">
             <div className="mtoday-shead">
               <h3>推进目标</h3>
-              <button type="button" onClick={() => setNav("goals")}>
+              <button type="button" className="mtoday-shead-more" onClick={() => setNav("goals")}>
                 查看全部 ›
               </button>
             </div>

@@ -71,11 +71,12 @@ export function GlassTitlebar() {
       </button>
       {mac ? null : (
         <div className="glass-titlebar-controls">
-          <button type="button" aria-label="最小化" onClick={() => void run("minimize")}>
+          <button type="button" className="glass-titlebar-btn" aria-label="最小化" onClick={() => void run("minimize")}>
             ─
           </button>
           <button
             type="button"
+            className="glass-titlebar-btn"
             aria-label={maximized ? "还原" : "最大化"}
             onClick={() => void run("toggle")}
           >

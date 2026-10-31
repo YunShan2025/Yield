@@ -32,6 +32,7 @@ export type AppIconName =
   | "today"
   | "inbox"
   | "check"
+  | "circle"
   | "layers"
   | "search"
   | "sparkle"
@@ -102,6 +103,7 @@ const paths: Record<AppIconName, ReactNode> = {
   today: <><rect x="3.5" y="4.9" width="13" height="12" rx="2" /><path d="M6.5 3.15v3.5M13.5 3.15v3.5M3.5 8.4h13M7 11.4h2v2H7z" /></>,
   inbox: <><path d="M4 4h12l1.5 8.5v2A1.5 1.5 0 0 1 16 16H4a1.5 1.5 0 0 1-1.5-1.5v-2z" /><path d="M2.5 12.5h4l1 1.5h5l1-1.5h4" /></>,
   check: <><circle cx="10" cy="10" r="7" /><path d="m6.75 10 2.1 2.1 4.5-4.5" /></>,
+  circle: <circle cx="10" cy="10" r="7" />,
   layers: <><path d="m10 3 7 4-7 4-7-4z" /><path d="m4.25 10 5.75 3.25L15.75 10M4.25 13l5.75 3.25L15.75 13" /></>,
   search: <><circle cx="8.75" cy="8.75" r="5.25" /><path d="m12.75 12.75 3.75 3.75" /></>,
   sparkle: <><path d="M10 2.5c.35 3.2 1.8 5.1 5 5.5-3.2.4-4.65 2.3-5 5.5-.35-3.2-1.8-5.1-5-5.5 3.2-.4 4.65-2.3 5-5.5Z" /><path d="M15.5 12.5c.15 1.4.8 2.2 2.2 2.4-1.4.2-2.05 1-2.2 2.4-.15-1.4-.8-2.2-2.2-2.4 1.4-.2 2.05-1 2.2-2.4Z" /></>,

@@ -49,6 +49,6 @@ export function VersionUpdateNotice() {
     <div className="version-update-icon"><AppIcon name="sparkle" size={22} /></div>
     <div className="version-update-copy"><span>发现新版本</span><h3>有秋 v{update.latestVersion}</h3><p>{notes}</p><small>当前 v{update.currentVersion} · 来自 {update.source}</small></div>
     <button type="button" className="version-update-close" aria-label="稍后提醒" onClick={() => { localStorage.setItem(SNOOZE_KEY, JSON.stringify({ version: update.latestVersion, until: Date.now() + SNOOZE_MS })); setUpdate(null); }}>×</button>
-    <div className="version-update-actions"><button type="button" onClick={() => { localStorage.setItem(SNOOZE_KEY, JSON.stringify({ version: update.latestVersion, until: Date.now() + SNOOZE_MS })); setUpdate(null); }}>稍后提醒</button><button type="button" className="is-primary" onClick={() => void openUrl(update.releaseUrl)}>查看更新</button></div>
+    <div className="version-update-actions"><button type="button" className="version-update-action" onClick={() => { localStorage.setItem(SNOOZE_KEY, JSON.stringify({ version: update.latestVersion, until: Date.now() + SNOOZE_MS })); setUpdate(null); }}>稍后提醒</button><button type="button" className="is-primary" onClick={() => void openUrl(update.releaseUrl)}>查看更新</button></div>
   </aside>;
 }
