@@ -37,8 +37,10 @@ export function GoalStrip() {
     <section className="today-goal-strip" aria-label="本周目标">
       <div className="today-goal-strip-head">
         <span>本周目标</span>
+        {/* 桌面卡头动作：平坦幽灵，与「批量管理」共用同组规则。 */}
         <button
           type="button"
+          className="goal-strip-more btn-ghost"
           onClick={() => useAppStore.getState().setNav("goals")}
         >
           目标页

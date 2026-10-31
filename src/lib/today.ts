@@ -40,11 +40,13 @@ export function saveTodayOrder(cursor: string, ids: string[]): void {
  * wins, then earliest due date first (待办箱跨多天：逾期 < 未来 < 未安排；
  * 今日/日视图同一天,该层恒等不落刀), then timed tasks before untimed ones
  * (by start time), then priority, then sort_order. Completed tasks always
- * sink below the active run.
+ * sink below the active run — 除非 opts.sinkCompleted=false（今日/当日视图
+ * 新口径：完成不改位,只由按钮与完成时间徽章表示）。
  */
 export function orderTodayTasks(
   tasks: Task[],
   order: string[] | null = null,
+  opts: { sinkCompleted?: boolean } = {},
 ): Task[] {
   const rank = new Map((order ?? []).map((id, index) => [id, index]));
   const UNRANKED = Number.MAX_SAFE_INTEGER;
@@ -68,6 +70,7 @@ export function orderTodayTasks(
     if (a.priority !== b.priority) return a.priority - b.priority;
     return a.sort_order - b.sort_order;
   };
+  if (opts.sinkCompleted === false) return [...tasks].sort(compare);
   const active = tasks.filter(isActiveTask).sort(compare);
   const completed = tasks
     .filter((task) => task.status === "completed")

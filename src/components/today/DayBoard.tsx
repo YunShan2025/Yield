@@ -58,15 +58,16 @@ export function DayBoard() {
 
   // 今日事项把习惯一并列出（任务 + 习惯）。习惯有自己的排期：固定"每周几"
   // 的习惯只在该出现的日子出现；"每周 N 次"不指定日子的模式每天都出现，
-  // 但卡片会说明今天做不做都行。
+  // 但卡片会说明今天做不做都行。日视图翻看任意一天同口径按排期列出
+  // （排期命中 cursor 才进分区），非今日只展示当日打卡态、不提供补打卡（同移动壳）。
   const todayHabits = useMemo(
     () =>
-      isTodayView && cursor === today
+      isTodayView
         ? habits.filter((habit) =>
-            matchesRepeatRule(today, parseRepeatRule(habit.repeat_rule ?? null)),
+            matchesRepeatRule(cursor, parseRepeatRule(habit.repeat_rule ?? null)),
           )
         : [],
-    [habits, isTodayView, cursor, today],
+    [habits, isTodayView, cursor],
   );
 
   const pending = dayTasks.filter(isActiveTask).length;

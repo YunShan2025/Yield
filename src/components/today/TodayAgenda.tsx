@@ -76,7 +76,8 @@ function DayTaskRow({
   const justDone = useJustToggled(task.status === "completed");
   const sortable = useSortable({
     id: task.id,
-    disabled: selecting || task.status === "completed",
+    // 待办箱已完成沉底、不参与拖拽；今日/当日视图完成行原地不动，照常可拖。
+    disabled: selecting || (isInbox && task.status === "completed"),
   });
   const mobile = isMobileShell();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -225,7 +226,7 @@ function DayTaskRow({
           !selecting && isActiveTask(task) ? (
             <button
               type="button"
-              className="item-action-btn item-action-danger quiet-danger expand-delete"
+              className="item-action-btn quiet-danger expand-delete flat-ghost"
               title="移入回收站"
               onClick={(e) => {
                 e.stopPropagation();
@@ -241,7 +242,7 @@ function DayTaskRow({
           !selecting ? (
             <button
               type="button"
-              className={`item-action-btn item-action-primary${task.status === "completed" ? " is-done" : ""}${justDone ? " is-flash" : ""}`}
+              className={`item-action-btn task-state-btn${task.status === "completed" ? " is-done" : ""}${justDone ? " is-flash" : ""}`}
               title={task.status === "completed" ? "标为未完成" : "标为完成"}
               onClick={(e) => {
                 e.stopPropagation();
@@ -249,8 +250,8 @@ function DayTaskRow({
                 void toggleComplete(task.id);
               }}
             >
-              <AppIcon name="check" size={14} />
-              <span>{task.status === "completed" ? "已完成" : "完成"}</span>
+              <AppIcon name={task.status === "completed" ? "check" : "circle"} size={14} />
+              <span>{task.status === "completed" ? "已完成" : "未完成"}</span>
             </button>
           ) : null
         }
@@ -265,12 +266,15 @@ function DayTaskRow({
 function DayHabitRow({
   habit,
   date,
+  today,
   goal,
   checkedToday,
   weekDone,
 }: {
   habit: Habit;
+  /** 打卡落点日＝游标日（今日页即今天；日视图翻看哪天打哪天）。 */
   date: string;
+  today: string;
   goal: Goal | null;
   checkedToday: boolean;
   weekDone: number;
@@ -282,6 +286,8 @@ function DayHabitRow({
   const target = Math.max(1, weeklyTargetFromRule(rule) ?? habit.target_per_week);
   const weekFull = weekDone >= target;
   const flexible = !rule;
+  // 翻看非今日只展示当日打卡态、不提供补打卡（同移动壳 TodayMobileView）。
+  const viewToday = date === today;
 
   return (
     <div className={`expand-task habit-agenda-row${checkedToday ? " is-done" : ""}`}>
@@ -306,11 +312,18 @@ function DayHabitRow({
         <button
           type="button"
           className={`item-action-btn item-action-primary${checkedToday ? " is-done" : ""}${justChecked ? " is-flash" : ""}`}
-          title={checkedToday ? "取消今日打卡" : "今日打卡"}
+          disabled={!viewToday}
+          title={
+            viewToday
+              ? checkedToday
+                ? "取消打卡"
+                : "打卡"
+              : "仅展示当日打卡态，不提供补打卡"
+          }
           onClick={() => void toggleHabitDay(habit.id, date)}
         >
           <AppIcon name="check" size={14} />
-          <span>{checkedToday ? "已打卡" : "打卡"}</span>
+          <span>{checkedToday ? "已打卡" : viewToday ? "打卡" : "未打卡"}</span>
         </button>
       </div>
     </div>
@@ -318,8 +331,9 @@ function DayHabitRow({
 }
 
 /**
- * 今日页的两段清单：先「今日习惯」分区（打卡沉底），后「今日事项」分区
- * （任务，未完成在前、已完成沉底，可拖拽排序）。顶卡读数按任务 + 习惯合计，
+ * 今日页的两段清单：先「今日习惯」分区，后「今日事项」分区（均可拖拽排序）。
+ * 完成/打卡一律不改位、不变样——只由按钮（完成→已完成 / 打卡→已打卡）与完成
+ * 时间徽章表示；待办箱沿用旧口径（已完成沉底）。顶卡读数按任务 + 习惯合计，
  * 在 DayBoard 里算。
  */
 export function TodayAgenda({
@@ -398,32 +412,14 @@ export function TodayAgenda({
         ? "今日安排"
         : "当日安排";
 
-  const weekTargetOf = (habit: Habit) => {
-    const rule = parseRepeatRule(habit.repeat_rule ?? null);
-    return Math.max(1, weeklyTargetFromRule(rule) ?? habit.target_per_week);
-  };
+  // 今日习惯分区：完成不改位——打卡只变按钮（打卡→已打卡），顺序保持传入原序。
+  const habitRows = habits;
 
-  // 今日习惯分区：今天该做且没达标 → 本周已达标但没打卡 → 已打卡（沉底）。
-  const habitRows = [
-    ...habits.filter(
-      (habit) =>
-        !checkedHabitIds.has(habit.id) &&
-        (habitWeekDone.get(habit.id) ?? 0) < weekTargetOf(habit),
-    ),
-    ...habits.filter(
-      (habit) =>
-        !checkedHabitIds.has(habit.id) &&
-        (habitWeekDone.get(habit.id) ?? 0) >= weekTargetOf(habit),
-    ),
-    ...habits.filter((habit) => checkedHabitIds.has(habit.id)),
-  ];
-
-  // 今日事项分区：只有任务（习惯另起分区，不再混排）。未完成在前、已完成沉底，
-  // 手动拖拽排序优先；没出现在保存顺序里的任务按默认顺序补在后面。
-  const defaultTasks = [
-    ...orderTodayTasks(tasks, null).filter(isActiveTask),
-    ...tasks.filter((task) => task.status === "completed"),
-  ];
+  // 今日事项分区：只有任务（习惯另起分区，不再混排）。完成不改位（新口径）——
+  // 手动拖拽排序优先；待办箱仍保持「未完成在前、已完成沉底」。
+  const defaultTasks = isInbox
+    ? orderTodayTasks(tasks, null)
+    : orderTodayTasks(tasks, null, { sinkCompleted: false });
   const rank = new Map((order ?? []).map((id, index) => [id, index]));
   const defaultIndex = new Map(defaultTasks.map((task, index) => [task.id, index]));
   const taskRows = [...defaultTasks].sort((a, b) => {
@@ -458,7 +454,8 @@ export function TodayAgenda({
             <DayHabitRow
               key={habit.id}
               habit={habit}
-              date={today}
+              date={cursor}
+              today={today}
               goal={habit.goal_id ? goalById.get(habit.goal_id) ?? null : null}
               checkedToday={checkedHabitIds.has(habit.id)}
               weekDone={habitWeekDone.get(habit.id) ?? 0}

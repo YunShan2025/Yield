@@ -66,6 +66,14 @@ describe("orderTodayTasks", () => {
     ]);
   });
 
+  it("keeps completed tasks in place with sinkCompleted disabled (今日页新口径)", () => {
+    const done = makeTask({ id: "done", status: "completed", due_time: "08:00" });
+    const open = makeTask({ id: "open", due_time: "10:00" });
+    expect(
+      orderTodayTasks([done, open], null, { sinkCompleted: false }).map((t) => t.id),
+    ).toEqual(["done", "open"]);
+  });
+
   it("sorts by due date before time for multi-day lists (待办箱)", () => {
     // 回归：待办箱曾只按时间段排,「逾期 1 天 12:00」被排到「明天 09:00」之后。
     const overdue = makeTask({ id: "overdue", due_date: "2026-10-20", due_time: "12:00" });
