@@ -166,8 +166,8 @@ export function HabitsView() {
       return;
     }
     const rawTargetDays = Number(targetDays);
-    if (!goalId && !unlimitedDays && (!Number.isInteger(rawTargetDays) || rawTargetDays < 1)) {
-      useAppStore.getState().setToast("目标打卡日数至少为 1 天");
+    if (!unlimitedDays && (!Number.isInteger(rawTargetDays) || rawTargetDays < 1)) {
+      useAppStore.getState().setToast("期望打卡日数至少为 1 天");
       return;
     }
     // 「每周几次」在固定排期下是派生值：每天 = 7，指定星期 = 选中的天数。
@@ -201,7 +201,7 @@ export function HabitsView() {
         goal_id: goalId || null,
         goal_contribution: measuredContribution,
         target_per_week: rawTargetPerWeek,
-        target_days: goalId || unlimitedDays ? null : rawTargetDays,
+        target_days: unlimitedDays ? null : rawTargetDays,
         repeat_rule: stringifyRepeatRule(rule),
       };
       if (editingHabit) {
@@ -546,30 +546,29 @@ export function HabitsView() {
               </label>
             ) : null}
             <label>
-              目标打卡日数
+              期望打卡日数
               <input
                 type="number"
                 min={1}
                 step={1}
-                disabled={unlimitedDays || Boolean(goalId)}
+                disabled={unlimitedDays}
                 value={unlimitedDays ? "" : targetDays}
                 placeholder="无限"
                 onChange={(event) => setTargetDays(event.target.value)}
               />
-              {goalId ? (
-                <small className="project-field-hint">已关联目标，进度以目标为准。</small>
-              ) : null}
+              <small className="project-field-hint">
+                习惯进度只按自己的打卡日数计，不受关联目标影响。
+              </small>
             </label>
             <label className="settings-toggle habit-unlimited-toggle">
               <input
                 type="checkbox"
                 checked={unlimitedDays}
-                disabled={Boolean(goalId)}
                 onChange={(event) => setUnlimitedDays(event.target.checked)}
               />
               <span>
                 <strong>无限期打卡</strong>
-                <small>不设置目标打卡日数</small>
+                <small>不设置期望打卡日数</small>
               </span>
             </label>
             <div className="project-edit-actions">
@@ -652,6 +651,20 @@ function HabitRow({
       cursor.setDate(cursor.getDate() - 1);
     }
     return count;
+  })();
+  // 最长连续：统计格里放排期文字（每周一二三四五）与数字排不成一眼可读的一排，
+  // 换成与「连续（当前）」配对的经典习惯量；排期在收起行的 meta 里已有，不丢。
+  const longestStreak = (() => {
+    let best = 0;
+    let run = 0;
+    let prevMs = Number.NaN;
+    for (const date of [...checkSet].sort()) {
+      const ms = Date.parse(`${date}T12:00:00`);
+      run = Number.isFinite(prevMs) && Math.round((ms - prevMs) / 86_400_000) === 1 ? run + 1 : 1;
+      best = Math.max(best, run);
+      prevMs = ms;
+    }
+    return best;
   })();
 
   return (
@@ -753,7 +766,7 @@ function HabitRow({
               <small>/{Math.round((goalTarget?.value ?? 0) * 100) / 100}{goalTarget?.unit ?? goal.unit}</small>
             </span>
           ) : (
-            <span><em>排期</em><b>{scheduleText}</b></span>
+            <span><em>最长</em><b>{longestStreak}</b><small>天</small></span>
           )}
         </div>
       </div>
