@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -75,6 +75,48 @@ describe("database migration declarations", () => {
     expect(baseline).not.toContain("ALTER TABLE");
     expect(source).not.toContain("INSERT OR REPLACE INTO task_planning_metadata");
     expect(baseline).toContain("schedule_locked INTEGER NOT NULL DEFAULT 0");
+  });
+
+  it("提醒功能下线：migration v31 删通知表并清空循环提醒", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const v31 = source.slice(source.indexOf("version: 31"));
+    // 通知中心表整表删除；提前量设置与循环提醒计时行一并清理；
+    // timers 表保留，复用为专注（番茄钟）会话。
+    expect(v31).toContain("DROP TABLE IF EXISTS app_notifications");
+    expect(v31).toContain("DELETE FROM settings WHERE key = 'notify_ahead'");
+    expect(v31).toContain("DELETE FROM timers WHERE kind = 'interval'");
+    expect(source).toContain("CREATE TABLE IF NOT EXISTS timers");
+  });
+
+  it("专注任务三档关联：migration v32 给 timers 加关联三列", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const v32 = source.slice(source.indexOf("version: 32"));
+    expect(v32).toContain('description: "focus_task_link"');
+    expect(v32).toContain(
+      "ALTER TABLE timers ADD COLUMN task_mode TEXT NOT NULL DEFAULT 'none'",
+    );
+    expect(v32).toContain("ALTER TABLE timers ADD COLUMN task_ref_id TEXT");
+    expect(v32).toContain("ALTER TABLE timers ADD COLUMN task_draft TEXT");
+  });
+
+  it("专注完成流水：migration v33 建本地表 focus_logs", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(
+      /\r\n/g,
+      "\n",
+    );
+    const v33 = source.slice(source.indexOf("version: 33"));
+    expect(v33).toContain('description: "focus_logs"');
+    expect(v33).toContain("CREATE TABLE IF NOT EXISTS focus_logs");
+    expect(v33).toContain("idx_focus_logs_ended_at");
+    // 本地流水表：不进同步表注册（同步层无 focus_logs）。
+    const syncTables = readFileSync("src/lib/sync/tables.ts", "utf8");
+    expect(syncTables).not.toContain("focus_logs");
   });
 
   it("drops focus_sessions with its leftovers via migration v7", () => {

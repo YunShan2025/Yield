@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type {
   AppSettings,
+  FocusTaskDraft,
+  FocusTaskMode,
   Habit,
   HabitCheck,
   HabitDraft,
@@ -18,10 +20,7 @@ import type {
 } from "@/types";
 import * as db from "@/lib/db";
 import { nowIso, todayDateString } from "@/lib/dates";
-import {
-  EMPTY_REMINDER_SYNC,
-  type ReminderSyncStatus,
-} from "@/lib/nativeReminders";
+import { liveRemaining, parseFocusTaskDraft } from "@/lib/timers";
 import { syncWindowChrome } from "@/lib/windowChrome";
 import { errorMessage } from "@/lib/errors";
 
@@ -51,6 +50,8 @@ interface AppStore {
   habitChecks: HabitCheck[];
   archivedHabits: Habit[];
   timers: Timer[];
+  /** 今日完成的专注段数（focus_logs 流水按本地日聚合），随 refreshTimers 刷新。 */
+  focusTodayCount: number;
   projects: Project[];
   archivedProjects: Project[];
   settings: AppSettings;
@@ -66,7 +67,6 @@ interface AppStore {
   commandPaletteOpen: boolean;
   focusRequest: FocusRequest | null;
   activeTagId: string | null;
-  reminderSync: ReminderSyncStatus;
   toast: string | null;
   canUndo: boolean;
   _undoAction: (() => Promise<void>) | null;
@@ -123,14 +123,25 @@ interface AppStore {
   pauseTimer: (id: string) => Promise<void>;
   resetTimer: (id: string) => Promise<void>;
   extendTimer: (id: string, additionalSec: number) => Promise<void>;
+  /** 编辑一段专注：标题 / 时长 / 任务关联；时长调整保留已专注的时长。 */
+  editFocus: (
+    id: string,
+    patch: {
+      title: string;
+      interval_sec: number;
+      task_mode: FocusTaskMode;
+      task_ref_id: string | null;
+      task_draft: FocusTaskDraft | null;
+    },
+  ) => Promise<void>;
   removeTimer: (id: string) => Promise<void>;
   refreshTimers: () => Promise<void>;
   settleTimers: () => Promise<db.FiredTimer[]>;
+  /** 结束一段专注，按三档关联收尾：不关联＝只记这趟；已有＝勾掉关联任务；新建＝按预填建任务并完成。 */
+  completeFocus: (timer: Timer) => Promise<Task | null>;
 
   setTheme: (theme: ThemeMode) => Promise<void>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
-
-  setReminderSync: (status: ReminderSyncStatus) => void;
 }
 
 function applyTheme(theme: ThemeMode) {
@@ -166,11 +177,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   habitChecks: [],
   archivedHabits: [],
   timers: [],
+  focusTodayCount: 0,
   projects: [],
   archivedProjects: [],
   settings: {
     theme: "system",
-    notifyAhead: 30,
     autostart: false,
     privacyMode: false,
     autoBackup: true,
@@ -190,7 +201,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   commandPaletteOpen: false,
   focusRequest: null,
   activeTagId: null,
-  reminderSync: EMPTY_REMINDER_SYNC,
   toast: null,
   canUndo: false,
   _undoAction: null,
@@ -239,6 +249,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       settings,
       projects,
       archivedProjects,
+      focusTodayCount,
     ] = await Promise.all([
       db.fetchTasks(),
       db.fetchTrashTasks(),
@@ -251,6 +262,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       db.loadAppSettings(),
       db.fetchProjects(),
       db.fetchArchivedProjects(),
+      db.countFocusToday().catch(() => 0),
     ]);
     set((s) => ({
       tasks,
@@ -261,6 +273,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       habitChecks,
       archivedHabits,
       timers,
+      focusTodayCount,
       // Don't regress onboarding if a concurrent refresh raced ahead of persist.
       settings: {
         ...settings,
@@ -394,13 +407,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }));
     try {
       const task = await db.toggleTaskComplete(id);
-      if (task?.status === "completed" && task.id) {
-        // Finish notification cleanup before refreshing reminder state. A
-        // fire-and-forget cleanup could race with the reminder scan and make a
-        // just-completed task pop up again.
-        await db.setTaskNotificationsStatus(task.id, "dismissed").catch(() => undefined);
-        window.dispatchEvent(new Event("notifications:changed"));
-      }
       notifyDataChanged();
       set({
         toast: task?.status === "completed" ? "任务已完成" : "已恢复为待办",
@@ -466,11 +472,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (!toComplete.length) return;
     try {
       await db.batchSetTaskStatus(toComplete, "completed");
-      await Promise.all(
-        toComplete.map((taskId) => db.setTaskNotificationsStatus(taskId, "dismissed")),
-      )
-        .catch(() => undefined);
-      window.dispatchEvent(new Event("notifications:changed"));
       await get().refreshAll();
       set({
         toast: `已完成 ${toComplete.length} 项任务`,
@@ -607,8 +608,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   addTimer: async (draft) => {
     try {
-      // 倒计时单实例（真机第六轮反馈）：新建即启动的倒计时，先暂停
-      // 其余运行中的倒计时；循环提醒不受限。
+      // 专注单实例：新建即启动的专注，先暂停其余运行中的专注任务，
+      // 保证同一时间只有一个计时在跑。
       const pausedTitles =
         draft.kind === "task" && draft.start
           ? await db.pauseOtherRunningCountdowns("")
@@ -618,11 +619,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
       set({
         toast: draft.start
           ? startToast(timer.title, pausedTitles)
-          : "已创建提醒",
+          : "已创建专注",
       });
       return timer;
     } catch (e) {
-      set({ toast: e instanceof Error ? e.message : "创建提醒失败" });
+      set({ toast: e instanceof Error ? e.message : "开始专注失败" });
       return null;
     }
   },
@@ -630,7 +631,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   startTimer: async (id) => {
     const { timer, pausedTitles } = await db.startTimer(id);
     await get().refreshTimers();
-    set({ toast: timer ? startToast(timer.title, pausedTitles) : "提醒已开始" });
+    set({ toast: timer ? startToast(timer.title, pausedTitles) : "专注已开始" });
   },
 
   pauseTimer: async (id) => {
@@ -649,14 +650,29 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ toast: `已增加 ${Math.round(additionalSec / 60)} 分钟` });
   },
 
+  editFocus: async (id, patch) => {
+    try {
+      await db.editFocus(id, patch);
+      await get().refreshTimers();
+      set({ toast: "已更新专注" });
+    } catch (e) {
+      set({ toast: errorMessage(e, "更新专注失败") });
+    }
+  },
+
   removeTimer: async (id) => {
     await db.deleteTimer(id);
     await get().refreshTimers();
   },
 
   refreshTimers: async () => {
-    const timers = await db.fetchTimers();
-    set({ timers });
+    // 今日专注计数与专注列表同源刷新（完成流水写于 completeFocus，先写后刷）。
+    // 计数读失败不拖垮列表（如旧库尚无流水表），落 0 即可。
+    const [timers, focusTodayCount] = await Promise.all([
+      db.fetchTimers(),
+      db.countFocusToday().catch(() => 0),
+    ]);
+    set({ timers, focusTodayCount });
   },
 
   settleTimers: async () => {
@@ -665,6 +681,93 @@ export const useAppStore = create<AppStore>((set, get) => ({
       await get().refreshTimers();
     }
     return fired;
+  },
+
+  completeFocus: async (timer) => {
+    // 到点时刻：已结算读 last_fired_at；进行中提前完成取现在，区间只算实际已专注的时长。
+    let endMs: number;
+    let spanSec: number;
+    if (timer.running) {
+      endMs = Date.now();
+      spanSec = Math.max(60, timer.interval_sec - liveRemaining(timer));
+    } else {
+      const parsedEnd = timer.last_fired_at ? Date.parse(timer.last_fired_at) : NaN;
+      endMs = Number.isFinite(parsedEnd) ? parsedEnd : Date.now();
+      spanSec = Math.max(60, timer.interval_sec);
+    }
+    const startMs = endMs - spanSec * 1000;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const end = new Date(endMs);
+    const start = new Date(startMs);
+    const dueDate = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}`;
+    const window = {
+      due_time: `${pad(start.getHours())}:${pad(start.getMinutes())}`,
+      end_time: `${pad(end.getHours())}:${pad(end.getMinutes())}`,
+    };
+    try {
+      // 完成流水：三档都记，ended_at 用上面的到点时刻；写失败不拦落账主链。
+      const logFocus = async (mode: FocusTaskMode, taskId: string | null) => {
+        try {
+          await db.logFocusSession({
+            title: timer.title,
+            mode,
+            taskId,
+            endedAt: new Date(endMs).toISOString(),
+            durationSec: spanSec,
+          });
+        } catch {
+          /* 流水是旁路账，坏了只少一个计数 */
+        }
+      };
+      // 只专注不关联任务：记完即散，不落任务。
+      if (timer.task_mode === "none") {
+        await logFocus("none", null);
+        await db.deleteTimer(timer.id);
+        await get().refreshTimers();
+        set({ toast: `已完成一段专注「${timer.title}」` });
+        return null;
+      }
+      // 关联已有任务：完成即勾掉它（只改完成状态，不动任务原有的标题与安排）。
+      if (timer.task_mode === "existing" && timer.task_ref_id) {
+        const linked = get().tasks.find((t) => t.id === timer.task_ref_id) ?? null;
+        if (linked) {
+          if (linked.status !== "completed") {
+            await db.updateTask(linked.id, { status: "completed" });
+          }
+          await logFocus("existing", linked.id);
+          await db.deleteTimer(timer.id);
+          await get().refreshAll();
+          await get().refreshTimers();
+          set({ toast: `已完成一段专注，「${linked.title}」已打勾` });
+          return linked;
+        }
+        // 关联的任务已被删：降级为按专注新建一条，别把这段劳动记丢。
+      }
+      // 新建任务 / 关联失效降级：按预填信息建一条今天到期的已完成任务。
+      const draft = parseFocusTaskDraft(timer.task_draft);
+      const task = await db.createTask({
+        title: timer.title,
+        description: draft.description,
+        priority: draft.priority,
+        project_id: draft.projectId ?? null,
+        goal_id: draft.goalId ?? null,
+        goal_contribution: draft.goalContribution ?? 0,
+        due_date: dueDate,
+        due_time: window.due_time,
+        end_time: window.end_time,
+      });
+      if (draft.tagId) await db.setTaskTags(task.id, [draft.tagId]);
+      await db.toggleTaskComplete(task.id);
+      await logFocus("new", task.id);
+      await db.deleteTimer(timer.id);
+      await get().refreshAll();
+      await get().refreshTimers();
+      set({ toast: `已把「${timer.title}」记为已完成任务` });
+      return task;
+    } catch (e) {
+      set({ toast: errorMessage(e, "记为已完成任务失败") });
+      return null;
+    }
   },
 
   setTheme: async (theme) => {
@@ -678,9 +781,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const previous = get().settings;
     set((s) => ({ settings: { ...s.settings, ...patch } }));
     try {
-      if (patch.notifyAhead !== undefined) {
-        await db.setSetting("notify_ahead", String(patch.notifyAhead));
-      }
       if (patch.autostart !== undefined) {
         await db.setSetting("autostart", String(patch.autostart));
       }
@@ -711,7 +811,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
       });
     }
   },
-  setReminderSync: (reminderSync) => set({ reminderSync }),
 }));
 
 // 同步拉到对端新数据后即时重载全局数据：任务/标签/习惯/项目等

@@ -1,8 +1,7 @@
 [[permission]]
 identifier = "allow-main-app"
-description = "Custom commands for the main window (settings, backup, notifications)."
+description = "Custom commands for the main window (settings, backup)."
 commands.allow = [
-  "sync_native_notifications",
   "database_health",
   "list_database_backups",
   "create_database_backup",
@@ -10,7 +9,6 @@ commands.allow = [
   "cancel_database_restore",
   "write_backup_file",
   "read_backup_file",
-  "open_notification_settings",
   "open_data_directory",
   "set_window_appearance",
   "restart_app",

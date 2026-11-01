@@ -51,7 +51,6 @@ export const SYNC_TABLES: readonly SyncTableName[] = [
 /** settings 里参与同步的白名单键（键级 LWW）。设备相关键一律排除。 */
 export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
   "theme",
-  "notify_ahead",
   "privacy_mode",
   "auto_backup",
   "onboarding_complete",
@@ -95,8 +94,11 @@ export const SYNC_SETTINGS_KEYS: ReadonlySet<string> = new Set([
  * start_value / manual_completion 下线，goal_entries 只留 task/habit 来源。
  * 旧端条目的多余列经列白名单投影自然丢弃；旧端仍可能写来的手动校准记录
  * 由本端进度复算口径（求和只认 task/habit）忽略。
+ * v14：timers 新增 task_mode / task_ref_id / task_draft 三列（migration v32），
+ * 承载专注与任务的三档关联。旧端读到 v14 条目被 header 闸门拒收并提示升级；
+ * 旧端发来的 timers 条目没有这三列，本端按「不关联」默认值落库。
  */
-export const SYNC_SCHEMA_VERSION = 13;
+export const SYNC_SCHEMA_VERSION = 14;
 
 export function isSyncTable(name: string): name is SyncTableName {
   return (SYNC_TABLES as readonly string[]).includes(name);

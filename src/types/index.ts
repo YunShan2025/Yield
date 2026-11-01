@@ -19,7 +19,7 @@ export type NavId =
   | "calendar"
   | "tags"
   | "habits"
-  | "reminders"
+  | "focus"
   | "goals"
   | "footprint"
   | "anniversaries"
@@ -121,7 +121,23 @@ export interface Memo {
   updated_at: string;
 }
 
-type TimerKind = "interval" | "task";
+/** 计时记录类型：专注（番茄钟）会话。历史上的「循环提醒 interval」已下线。 */
+type TimerKind = "task";
+
+/** 专注与任务的关联方式：不关联 / 关联已有任务（完成即勾它）/ 预建新任务（完成即建并勾）。 */
+export type FocusTaskMode = "none" | "existing" | "new";
+
+/** 「新建任务」档在专注弹窗里预填的任务信息（与编辑任务同一套原子，钟点由专注区间推导）。 */
+export interface FocusTaskDraft {
+  description?: string;
+  priority?: TaskPriority;
+  projectId?: string | null;
+  tagId?: string | null;
+  /** 关联目标（与新建任务弹窗同原子：目标 + 计量档 + 自定义单位数）。 */
+  goalId?: string | null;
+  goalMeasure?: "none" | "one" | "custom";
+  goalContribution?: number;
+}
 
 export interface Timer {
   id: string;
@@ -133,6 +149,11 @@ export interface Timer {
   enabled: number;
   ends_at: string | null;
   last_fired_at: string | null;
+  task_mode: FocusTaskMode;
+  /** existing 档指向的已有任务 id。 */
+  task_ref_id: string | null;
+  /** new 档预填的任务信息（FocusTaskDraft 的 JSON 串）。 */
+  task_draft: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -143,6 +164,23 @@ export interface TimerDraft {
   interval_sec: number;
   /** If true, start running immediately. */
   start?: boolean;
+  taskMode?: FocusTaskMode;
+  taskRefId?: string | null;
+  taskDraft?: FocusTaskDraft | null;
+}
+
+/** 专注完成流水（本地表 focus_logs）：点一次「完成」记一行，三档关联都记。 */
+export interface FocusLog {
+  id: string;
+  title: string;
+  /** 完成那一刻的关联档（none / existing / new）。 */
+  mode: FocusTaskMode;
+  /** 落账到的任务 id（existing 勾的 / new 建的；none 档为 null）。 */
+  task_id: string | null;
+  /** 完成时刻（ISO）。按本地日期聚合出「今日已专注 x 次」。 */
+  ended_at: string;
+  duration_sec: number;
+  created_at: string;
 }
 
 export interface TaskDraft {
@@ -193,7 +231,6 @@ export interface TaskUpdate {
 
 export interface AppSettings {
   theme: ThemeMode;
-  notifyAhead: number;
   autostart: boolean;
   privacyMode: boolean;
   autoBackup: boolean;
@@ -295,18 +332,6 @@ export interface GoalEntry {
   updated_at: string;
 }
 
-export interface AppNotification {
-  id: string;
-  task_id: string | null;
-  kind: "reminder" | "missed" | "system";
-  title: string;
-  body: string;
-  scheduled_at: string | null;
-  status: "pending" | "delivered" | "read" | "dismissed";
-  snoozed_until: string | null;
-  created_at: string;
-}
-
 export interface BackupPayload {
   version: 1;
   exportedAt: string;
@@ -317,7 +342,6 @@ export interface BackupPayload {
   habitChecks: HabitCheck[];
   memos?: Memo[];
   projects?: Project[];
-  notifications?: AppNotification[];
   taskEvents?: TaskEvent[];
   goals?: Goal[];
   goalEntries?: GoalEntry[];

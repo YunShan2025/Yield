@@ -372,7 +372,7 @@ export async function updateHabit(
   const current = currentRows[0];
   if (!current) return;
 
-  // 未显式传入的字段保留原值：只改标题不该顺手把排期或目标打卡日数抹掉。
+  // 未显式传入的字段保留原值：只改标题不该顺手把排期或期望打卡日数抹掉。
   const rawTargetDays = Number(draft.target_days);
   const targetDays =
     draft.target_days === undefined

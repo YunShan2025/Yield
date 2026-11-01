@@ -481,9 +481,6 @@ export async function purgeTrash(): Promise<number> {
     await db.execute(
       `DELETE FROM goal_entries WHERE source_type = 'task' AND source_id IN (${trash})`,
     );
-    await db.execute(
-      `UPDATE app_notifications SET task_id = NULL WHERE task_id IN (${trash})`,
-    );
 
     await db.execute("DELETE FROM tasks WHERE deleted_at IS NOT NULL");
     for (const row of affectedGoals) await refreshGoalProgress(row.goal_id);
@@ -512,10 +509,6 @@ export async function purgeTask(id: string): Promise<void> {
     await db.execute(`DELETE FROM task_events WHERE task_id IN (${placeholders})`, ids);
     await db.execute(
       `DELETE FROM goal_entries WHERE source_type = 'task' AND source_id IN (${placeholders})`,
-      ids,
-    );
-    await db.execute(
-      `UPDATE app_notifications SET task_id = NULL WHERE task_id IN (${placeholders})`,
       ids,
     );
 

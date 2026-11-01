@@ -9,7 +9,6 @@ import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { themeMeta, type VisualTheme } from "@/lib/themes";
-import { OS_REMINDER_LIMIT } from "@/lib/nativeReminders";
 import { AppIcon } from "./AppIcon";
 import { confirmAction } from "@/components/AppConfirm";
 import { syncService, useSyncStore } from "@/lib/sync/service";
@@ -219,7 +218,7 @@ export function SettingsView() {
       {!isMobileShell() ? (
         <section className="today-hero guide-hero">
           <div className="today-hero-copy">
-            <p className="today-hero-note">界面外观、数据同步与备份、提醒与隐私，都在这里调整。</p>
+            <p className="today-hero-note">界面外观、数据同步与备份、隐私，都在这里调整。</p>
           </div>
         </section>
       ) : null}
@@ -299,20 +298,7 @@ export function SettingsView() {
       </section>
 
       <section className="settings-card" style={{ marginTop: 12 }}>
-        <h3>提醒与启动</h3>
-        <label className="field-label">默认提前提醒（分钟）</label>
-        <input
-          className="field"
-          type="number"
-          style={{ maxWidth: 160 }}
-          value={settings.notifyAhead}
-          onChange={(e) =>
-            void updateSettings({ notifyAhead: Number(e.target.value) || 30 })
-          }
-        />
-        <p className="settings-hint">
-          单个任务可在任务详情里单独设置提前量；不单独设置时使用这里的默认值。
-        </p>
+        <h3>启动</h3>
         {!isMobileShell() ? (
           <>
             <label className="settings-toggle">
@@ -330,12 +316,7 @@ export function SettingsView() {
               关闭主窗口会收到托盘，不会退出；彻底退出请用托盘「退出应用」。
             </p>
           </>
-        ) : (
-          <p className="settings-hint">
-            Android 端提醒由系统计划通知送达；把有秋加入电池优化白名单可避免提醒被延迟。
-          </p>
-        )}
-        <ReminderSyncStatusCard />
+        ) : null}
       </section>
 
       <section className="settings-card settings-version-card" style={{ marginTop: 12 }}>
@@ -356,7 +337,7 @@ export function SettingsView() {
           />
           <span>
             <strong>无痕模式</strong>
-            <small>通知只显示「有秋 / 你有一条提醒」，不展示任务标题与内容</small>
+            <small>打码任务、备忘与账目金额，避免被旁人窥屏</small>
           </span>
         </label>
       </section>
@@ -645,68 +626,3 @@ function SyncSettingsCard() {
   );
 }
 
-function ReminderSyncStatusCard() {
-  const sync = useAppStore((s) => s.reminderSync);
-  const setToast = useAppStore((s) => s.setToast);
-  const osLabel =
-    sync.osAvailable == null
-      ? "检测中…"
-      : sync.osAvailable
-        ? "可用"
-        : "不可用，已改用应用内调度";
-  const permLabel =
-    sync.permissionGranted == null
-      ? "检测中…"
-      : sync.permissionGranted
-        ? "已授权"
-        : "未授权";
-  const failed = Boolean(sync.lastError) && !sync.osAvailable;
-  return (
-    <div className="reminder-sync-card">
-      <div className="reminder-sync-status">
-        <strong>系统提醒</strong>
-        <span>状态：{osLabel}</span>
-        <span>通知权限：{permLabel}</span>
-        <span>
-          系统托管 {sync.scheduledCount} 条
-          {sync.totalUpcoming ? ` / 即将到期 ${sync.totalUpcoming} 条` : ""}
-          {sync.overflowCount ? ` · 另有 ${sync.overflowCount} 条待应用补发` : ""}
-        </span>
-      </div>
-      <p className="settings-hint">
-        {isMobileShell()
-          ? "Android 端由系统计划通知（闹钟）准时送达；未授予精确闹钟时可能延迟数分钟，被系统强停后需重新打开应用补发。"
-          : `完全退出后，最近 ${OS_REMINDER_LIMIT} 条、90 天内的提醒仍会由系统准时弹出，其余等应用再次运行时补发${sync.truncated ? "；当前已超出上限，队列每 6 小时自动补入" : ""}。`}
-      </p>
-      <p className="settings-hint">
-        最近一次同步：
-        {failed
-          ? `失败 · ${sync.lastError}`
-          : sync.lastOkAt
-            ? `成功 · ${new Date(sync.lastOkAt).toLocaleString()}`
-            : "尚未运行"}
-      </p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-        <button
-          type="button"
-          className="btn-primary item-action-btn item-action-primary"
-          onClick={() => {
-            window.dispatchEvent(new Event("reminders:resync"));
-            setToast("正在重新同步系统提醒…");
-          }}
-        >
-          立即重新同步
-        </button>
-        {sync.permissionGranted === false && !isMobileShell() ? (
-          <button
-            type="button"
-            className="btn-ghost item-action-btn"
-            onClick={() => void invoke("open_notification_settings")}
-          >
-            打开系统通知设置
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}

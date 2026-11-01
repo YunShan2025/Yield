@@ -77,7 +77,8 @@ export const TABLE_SPECS: Record<Exclude<SyncTableName, "settings">, TableSpec> 
     idColumns: ["id"],
     columns: [
       "kind", "title", "interval_sec", "remaining_sec", "running", "enabled",
-      "ends_at", "last_fired_at", "created_at", "updated_at",
+      "ends_at", "last_fired_at", "task_mode", "task_ref_id", "task_draft",
+      "created_at", "updated_at",
     ],
   },
   ledger_categories: {

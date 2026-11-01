@@ -32,12 +32,12 @@ const retiredFeatureWords = [
   "预计耗时",
   "实际耗时",
   "多次提醒",
+  "循环提醒",
+  "到期提醒",
+  "通知中心",
   "前置依赖",
   "精力等级",
   "灵活排程",
-  "专注会话",
-  "专注时间",
-  "专注计时",
   "附件",
 ];
 const readmeRetiredHits = retiredFeatureWords.filter((word) => readme.includes(word));

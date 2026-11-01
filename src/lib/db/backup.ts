@@ -1,5 +1,4 @@
 import type {
-  AppNotification,
   BackupPayload,
   Project,
   TaskEvent,
@@ -38,9 +37,6 @@ export async function exportBackup(): Promise<BackupPayload> {
   const habitChecks = await fetchHabitChecks();
   const memos = await fetchMemos({ archived: "all" });
   const projects = await db.select<Project[]>("SELECT * FROM projects");
-  const notifications = await db.select<AppNotification[]>(
-    "SELECT * FROM app_notifications",
-  );
   const taskEvents = await db.select<TaskEvent[]>("SELECT * FROM task_events");
   const goals = await fetchAllGoals();
   const goalEntries = await fetchGoalEntries();
@@ -67,7 +63,6 @@ export async function exportBackup(): Promise<BackupPayload> {
     habitChecks,
     memos,
     projects,
-    notifications,
     taskEvents,
     goals,
     goalEntries,
@@ -116,7 +111,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     await db.execute("DELETE FROM tags");
     await db.execute("DELETE FROM tasks");
     if (has("memos")) await db.execute("DELETE FROM memos");
-    if (has("notifications")) await db.execute("DELETE FROM app_notifications");
     if (has("projects")) await db.execute("DELETE FROM projects");
 
   for (const category of payload.ledgerCategories ?? []) {
@@ -234,24 +228,6 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
       ],
     );
   }
-  for (const notification of payload.notifications ?? []) {
-    await db.execute(
-      `INSERT INTO app_notifications
-       (id, task_id, kind, title, body, scheduled_at, status, snoozed_until, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [
-        notification.id,
-        notification.task_id,
-        notification.kind,
-        notification.title,
-        notification.body,
-        notification.scheduled_at,
-        notification.status,
-        notification.snoozed_until,
-        notification.created_at,
-      ],
-    );
-  }
   for (const event of payload.taskEvents ?? []) {
     await db.execute(
       `INSERT INTO task_events
@@ -294,12 +270,15 @@ export async function importBackup(raw: BackupPayload): Promise<void> {
     await db.execute(
       `INSERT INTO timers
        (id,kind,title,interval_sec,remaining_sec,running,enabled,ends_at,
-        last_fired_at,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        last_fired_at,task_mode,task_ref_id,task_draft,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [
         timer.id, timer.kind, timer.title, timer.interval_sec,
         timer.remaining_sec, timer.running, timer.enabled,
-        timer.ends_at, timer.last_fired_at, timer.created_at, timer.updated_at,
+        timer.ends_at, timer.last_fired_at,
+        // 旧备份没有关联三列：按「不关联」回填。
+        timer.task_mode ?? "none", timer.task_ref_id ?? null, timer.task_draft ?? null,
+        timer.created_at, timer.updated_at,
       ],
     );
   }

@@ -13,7 +13,7 @@
 │ WebView 前端（React 19 + TypeScript）                      │
 │  src/components/*  界面组件（31 个 + today/ 子模块五件 + mobile/ 移动壳 13 件）│
 │  src/app/MainApp.tsx  页面壳 + 全局副作用中枢                │
-│  src/store/app.ts   Zustand 全局状态（681 行，单 store）    │
+│  src/store/app.ts   Zustand 全局状态（748 行，单 store）    │
 │  src/lib/*          领域纯函数 + 业务规则（可单测）           │
 │  src/lib/db/*       SQLite 访问层（按域拆分）               │
 │  src/lib/sync/*     桌面 ↔ Android 数据同步引擎（可选）      │
@@ -21,8 +21,7 @@
 │ Tauri 2 桥（invoke / event / navigator.locks）             │
 ├──────────────────────────────────────────────────────────┤
 │ Rust 后端（src-tauri/src）                                 │
-│  lib.rs   入口 run()、migrations()、11 个 command、托盘     │
-│  os_reminders.rs  OS 级提醒调度（应用退出后仍生效）           │
+│  lib.rs   入口 run()、migrations()、10 个 command、托盘     │
 ├──────────────────────────────────────────────────────────┤
 │ SQLite（桌面 %APPDATA%\com.yunshan.yield\app.db，WAL；      │
 │         Android 为应用数据目录同名库）                       │
@@ -40,7 +39,7 @@
 | 状态 | Zustand | 5.0 | 单一全局 store（`src/store/app.ts`） |
 | 数据库 | SQLite（tauri-plugin-sql） | 2.4 | 本地持久化，前端直接发 SQL |
 | 构建 | Vite | 6.4 | 开发服务器 + 前端产物（Android 产物 target chrome83） |
-| 测试 | Vitest + happy-dom | 3.2 / 20 | 33 文件 / 246 用例（2026-10-31 口径） |
+| 测试 | Vitest + happy-dom | 3.2 / 20 | 32 文件 / 239 用例（2026-11-01 口径） |
 | 富文本 | react-markdown + remark-gfm | 10 | 备忘录 Markdown 渲染 |
 | 拖拽 | @dnd-kit | 6/10/3 | 任务排序 |
 | 农历 | lunar-typescript | 1.8 | 纪念日农历换算 |
@@ -52,18 +51,17 @@
 ```
 src/
   main.tsx            入口；BootError 启动失败兜底屏
-  app/MainApp.tsx     页面壳 + 全局副作用中枢（750 行）
-  store/app.ts        Zustand store：全部状态与 action（681 行）
+  app/MainApp.tsx     页面壳 + 全局副作用中枢（516 行）
+  store/app.ts        Zustand store：全部状态与 action（748 行）
   components/         31 个界面组件；today/ 为今日页子组件五件；mobile/ 移动壳组件 13 件（views/ 三个移动视图 + MobileNav / MobileMoreSheet + 共享行件 MobileTaskRow/MobileTaskLine/MobileTaskPills + 底部弹层 TaskActionSheet/LedgerEntrySheet + 引导卡 MobileGuideCard + MobilePageTitle 共享页头标题 + useLongPress 长按手势）
-  lib/                领域纯函数（today/repeat/planning/growth/…）27 个非测试模块
+  lib/                领域纯函数（today/repeat/planning/growth/…）26 个非测试模块
   lib/db/             SQLite 访问层，按域拆 10 个模块 + client.ts
   lib/sync/           同步引擎：HLC 时钟、飞书云盘传输、日志合并、outbox
   types/index.ts      全部 TS 类型（单一真源）
   styles/             index.css 级联入口 + tokens / primitives / components / views / mobile 五个层叠文件
 scripts/              release-check.mjs、图标/安装包资产生成脚本
 src-tauri/
-  src/lib.rs          应用入口、migrations、commands、托盘（1644 行）
-  src/os_reminders.rs OS 级提醒调度（249 行）
+  src/lib.rs          应用入口、migrations、commands、托盘（1658 行）
   capabilities/permissions/  最小权限白名单
   gen/android/        Android 工程（提交入库，含签名与权限定制）
 ```
@@ -71,7 +69,7 @@ src-tauri/
 ## 5. 前端架构
 
 - **状态**：单 store 模式。所有视图从 `useAppStore` 取状态、调 action；action 内部调用 `lib/` 纯函数与 `lib/db/` 完成 IO。没有跨 store、没有 Context 分发。
-- **副作用中枢**：`MainApp.tsx` 集中持有全局 effect——系统提醒同步（串行队列 `enqueueReminderPass`，全量/补发双定时器，补发周期 6h）、托盘事件（`tray:today`、`main:hidden-to-tray`）、自动备份（6h 周期 + `autoBackupRunningRef` 并发守卫）、数据同步触发（启动/回前台/手动）、toast 自毁计时。
+- **副作用中枢**：`MainApp.tsx` 集中持有全局 effect——专注计时结算（`nextRunningTimerDueAt` 定时唤醒，到点落终态待记入任务）、托盘事件（`tray:today`、`main:hidden-to-tray`）、自动备份（6h 周期 + `autoBackupRunningRef` 并发守卫）、数据同步触发（启动/回前台/手动）、toast 自毁计时。
 - **数据库访问**：`src/lib/db/client.ts` 统一连接；写操作经 `withDatabaseWrite` 用 `navigator.locks`（锁名 `youqiu:database-write`）串行化，嵌套调用在同一队列回合执行避免死锁。连接后设置 `PRAGMA foreign_keys=ON / journal_mode=WAL / synchronous=NORMAL / busy_timeout=5000`。
 - **移动壳**：同一组件树按 `lib/platform.ts` 的 shell 探测分支渲染——Android 为底部导航 + 竖屏布局（`data-shell="mobile"`），桌面为侧栏 + 命令面板 + 托盘；移动端专属交互（长按动作面板、侧滑关闭）在 `components/mobile/`。
 - **样式**：`src/styles/index.css` 为级联入口，顺序刻意勿重排：`tokens` → `primitives` → `components` → `views` → `mobile`。同特异性按加载顺序取胜；桌面样式层 `!important` 保持 0，全仓现存 1 处（`mobile.css` 压 TSX 内联样式的 margin-top，目标清零），由 `scripts/ui-css-audit.mjs` 把关；移动样式只进 `mobile.css`。
@@ -81,19 +79,18 @@ src-tauri/
 
 - **入口**：`main.rs` 仅关闭 release 控制台窗口并调用 `youqiu_lib::run()`。`run()` 注册插件、执行 `setup`（托盘 `setup_tray`：显示/今日/退出三菜单，`tray:today` 事件回前端）、注册 `invoke_handler`。
 - **启动失败兜底**：初始化异常时经 `YQ_STARTUP_ERROR` 环境变量调系统对话框展示（Windows 用 PowerShell MessageBox，macOS 用 osascript），随后可 `restart_app` 或打开数据目录。
-- **11 个 `#[tauri::command]`**：`sync_native_notifications`（提醒全量同步到 OS）、`database_health`、`list/create_database_backup`、`schedule/cancel_database_restore`（延迟恢复，应用重启生效）、`write/read_backup_file`（Android 分支经 wry JNI 读取 content:// URI）、`open_notification_settings`、`open_data_directory`、`restart_app`。
-- **OS 提醒**（`os_reminders.rs`）：以应用标识 `com.yunshan.yield`（Windows AUMID / macOS 标签前缀）调度系统通知，上限 `MAX_OS_REMINDERS=48` 条、展望 `MAX_AHEAD_MS=90` 天；应用完全退出后提醒仍由系统弹出，溢出/错过部分由前端补发兜底。Android 走 AlarmManager 精确闹钟 + 系统通知。
+- **10 个 `#[tauri::command]`**：`database_health`、`list/create_database_backup`、`schedule/cancel_database_restore`（延迟恢复，应用重启生效）、`write/read_backup_file`（Android 分支经 wry JNI 读取 content:// URI）、`open_data_directory`、`set_window_appearance`、`restart_app`。系统提醒调度（`sync_native_notifications` / `open_notification_settings` / `os_reminders.rs`）已随提醒功能下线（migration v31）。
 - **权限**：`capabilities/main.json` + `permissions/main-app.toml` 白名单式声明，按需授权插件能力。
 
 ## 7. 数据层
 
 - **存储位置**：桌面 `%APPDATA%\com.yunshan.yield\app.db`（SQLite 单库），WebView2 配置在 `%LOCALAPPDATA%\com.yunshan.yield`；Android 为应用私有数据目录。
-- **24 张表**＝20 张业务表 + 4 张同步引擎表，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 / v26 删除，不再列出）：
+- **23 张表**＝19 张业务表 + 4 张同步引擎表，按域分组（已下线功能的表随 migration v7 / v10 / v16 / v22 / v26 / v31 删除，不再列出）：
   - 任务域：`tasks`、`tags`、`task_tags`、`task_events`、`projects`；
   - 目标与成长：`goals`、`goal_milestones`、`goal_entries`、`achievements`、`habit_checks`、`habits`；
   - 收支（观流账本）：`ledger_accounts`、`ledger_categories`、`ledger_budgets`、`ledger_transactions`；
   - 回望：`memos`、`anniversaries`；
-  - 提醒与通知：`app_notifications`；计时：`timers`；系统：`settings`（含 `schema_contract='1'` 契约种子）；
+  - 专注计时：`timers`（记录绝对起止时刻）；系统：`settings`（含 `schema_contract='1'` 契约种子）；
   - 同步引擎：`sync_state`、`sync_outbox`、`sync_merge_seen`、`sync_tag_alias`。
 - **迁移契约**：`lib.rs::migrations()` 为单一 `youqiu_baseline` v1（`_sqlx_migrations` 驱动）；**只向前升级**——已发布迁移不可删改重排，只能追加更高版本。
 - **迁移的校验和不可变**：sqlx 对每条**已应用**的 migration 记 SHA-384 校验和，启动时逐一比对；对不上就报 `migration N was previously applied but has been modified` 并**拒绝启动**。所以已发布的 migration 的 SQL **一个字都不能再改**——新语句一律追加成更高版本（v22 与 v23 拆开就是这个原因）。
@@ -114,18 +111,18 @@ src-tauri/
 
 | 机制 | 位置 | 说明 |
 |---|---|---|
-| 系统提醒同步 | `MainApp.tsx` + `lib/nativeReminders.ts` + `os_reminders.rs` | 全量/补发双定时器，串行队列防并发；OS 队列上限 48 条/90 天，超出部分应用运行时补发 |
+| 专注计时 | `MainApp.tsx` 结算 effect + `lib/db/timers.ts` | `timers.ends_at` 存绝对结束时刻，无 OS 调度；到点由前端结算落终态，可一键记为已完成任务（`store.completeFocusAsTask`） |
 | 数据同步 | `lib/sync/*` | 飞书云盘 JSONL + HLC 列级合并；凭据只存本地 settings |
 | 软删除 | `tasks.status='trashed'` 等 | 回收站保留 30 天，恢复回原位 |
 | 主题 | `lib/themes.ts` + `tokens.css` | 清昼 light / 晨曦玻璃 dawn / 璃幕 glass / 静夜 dark 四套 + system 跟随系统 |
-| 隐私模式 | `lib/privacy.ts` | 隐藏金额/敏感内容 |
+| 隐私模式 | `lib/privacy.ts` + `data-privacy` 样式 | 界面上模糊任务标题、备忘内容与账目金额 |
 | 检查更新 | `lib/versionUpdate.ts` + `VersionUpdateNotice` | 启动 2.5s 后静默查一次 GitHub `releases/latest`，语义化比较；手动查失败有 toast。提示卡桌面与移动壳都挂载（移动浮在底部导航上方） |
 | 引导 | `OnboardingGuide` | 四步首启引导（第 4 步「目标/习惯/任务各司其职」，移动壳文案有分支），`settings.onboarding_complete` 控制 |
 | 托盘 | `lib.rs::setup_tray`（桌面） | 显示/今日/退出；关闭到托盘，事件回传前端 |
 
 ## 9. 测试与质量门禁
 
-- **单测**：`npm test` — 33 文件 / 246 用例（2026-10-31 口径），覆盖全部 `lib/` 纯函数与关键契约（`migration.test.ts` 守护 v1 基线与「遗留不得回流」，`backup.test.ts` 守备份版本/表覆盖，`capabilities.test.ts` 守权限，`lib/sync/` 五个测试文件守 HLC/日志/合并/传输契约）。
+- **单测**：`npm test` — 32 文件 / 239 用例（2026-11-01 口径），覆盖全部 `lib/` 纯函数与关键契约（`migration.test.ts` 守护 v1 基线与「遗留不得回流」，`backup.test.ts` 守备份版本/表覆盖，`capabilities.test.ts` 守权限，`lib/sync/` 五个测试文件守 HLC/日志/合并/传输契约）。
 - **门禁链**：`npm run build`（= `tsc -b` noUnusedLocals + `vite build`）→ `npm test` → `cargo check`（Rust 侧）→ `npm run release:check`（静态断言 README/Cargo/Tauri 版本一致 + 迁移/备份覆盖 + 上述全部）。UI 层另有 `node scripts/ui-css-audit.mjs` 审计（token 对齐 / !important / 硬编码色值 / 零引用 token），当前未接进发布链（待办）。
 - **实机验证**：桌面 `npm run tauri dev`；Android 用 debug APK + Chrome DevTools（`adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`，模拟器为 x86 架构时构建须 `--target i686`）。
 
@@ -142,7 +139,7 @@ src-tauri/
 
 - **本地优先**：常规使用零联网。网络请求仅两类，均可选且不传第三方：①「检查更新」对 `api.github.com` 的匿名 GET（经 `plugin-http`）；②数据同步对用户自己配置的飞书开放平台接口（凭据仅存本地 settings，`sync_` 前缀键）。
 - **数据边界**：桌面用户数据只在 `%APPDATA%\com.yunshan.yield`（数据库 + JSON 备份）与 `%LOCALAPPDATA%\com.yunshan.yield`（WebView2 缓存）；Android 全部在应用私有目录。卸载不自动清除。
-- **无遥测、无账号、无云托管**；Windows 通知通道标识为 `com.yunshan.yield`。
+- **无遥测、无账号、无云托管**；标识符 `com.yunshan.yield` 仅作应用/数据目录标识。
 
 ## 12. 审查附注（复杂度热点，后续演进参考）
 

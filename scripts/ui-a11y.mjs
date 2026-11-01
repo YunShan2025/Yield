@@ -47,7 +47,7 @@ const ALL_VIEWS = [
   ["today", "今日"], ["inbox", "待办箱"], ["weekly", "周清单"],
   ["ledger", "收支总览"],
   ["growth", "成长"], ["habits", "习惯"], ["review", "复盘"],
-  ["reminders", "提醒"], ["memos", "备忘录"], ["projects", "项目"], ["tags", "标签"],
+  ["focus", "专注"], ["memos", "备忘录"], ["projects", "项目"], ["tags", "标签"],
   ["anniversaries", "纪念日"], ["settings", "设置"], ["trash", "回收站"],
 ];
 const VIEWS = flags.views

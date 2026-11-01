@@ -48,7 +48,6 @@ export async function loadAppSettings(): Promise<AppSettings> {
   const s = await getAllSettings();
   return {
     theme: parseThemeMode(s.theme),
-    notifyAhead: Number(s.notify_ahead ?? 30),
     autostart: s.autostart === "true",
     privacyMode: isPrivacyModeEnabled(s.privacy_mode),
     autoBackup: s.auto_backup !== "false",

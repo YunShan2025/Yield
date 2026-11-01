@@ -56,9 +56,9 @@ const HabitsView = lazy(() =>
     default: module.HabitsView,
   })),
 );
-const RemindersView = lazy(() =>
-  import("@/components/RemindersView").then((module) => ({
-    default: module.RemindersView,
+const FocusView = lazy(() =>
+  import("@/components/FocusView").then((module) => ({
+    default: module.FocusView,
   })),
 );
 const TagsView = lazy(() =>
@@ -637,11 +637,11 @@ export function MainWorkspace() {
       </Suspense>
     );
   }
-  if (nav === "reminders") {
+  if (nav === "focus") {
     return (
       <main className="main-workspace reminders-host">
-        <Suspense fallback={<div className="empty-state">正在打开提醒…</div>}>
-          <RemindersView />
+        <Suspense fallback={<div className="empty-state">正在打开专注…</div>}>
+          <FocusView />
         </Suspense>
       </main>
     );

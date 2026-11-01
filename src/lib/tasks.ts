@@ -172,8 +172,8 @@ export function getEmptyMessage(view: string): string {
       return "还没有完成的任务。";
     case "habits":
       return "创建第一个习惯开始追踪。";
-    case "reminders":
-      return "还没有提醒，创建一个循环倒计时吧。";
+    case "focus":
+      return "还没有专注记录，开始一段专注吧。";
     case "week":
       return "本周还没有安排任务。";
     case "trash":
@@ -193,7 +193,7 @@ export function getViewTitle(view: string): string {
     calendar: "日历",
     tags: "标签",
     habits: "习惯",
-    reminders: "提醒",
+    focus: "专注",
     memos: "备忘录",
     goals: "目标",
     footprint: "足迹",

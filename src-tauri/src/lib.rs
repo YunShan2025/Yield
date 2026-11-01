@@ -1,18 +1,14 @@
-mod os_reminders;
-
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 #[cfg(desktop)]
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 #[cfg(desktop)]
 use tauri::menu::{Menu, MenuItem};
-use tauri_plugin_notification::NotificationExt;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::{
-    collections::HashMap,
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
-        {Arc, Condvar, Mutex},
+        Arc,
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -317,29 +313,6 @@ fn open_data_directory(app: AppHandle) -> Result<(), String> {
         .spawn()
         .map_err(|error| error.to_string())?;
     Ok(())
-}
-
-/// 从设置页直达系统通知权限页(通知被系统关闭时,提醒无法准点)。
-#[tauri::command]
-fn open_notification_settings() -> Result<(), String> {
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("explorer")
-            .arg("ms-settings:notifications")
-            .spawn()
-            .map_err(|error| error.to_string())?;
-        Ok(())
-    }
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg("x-apple.systempreferences:com.apple.preference.notifications")
-            .spawn()
-            .map_err(|error| error.to_string())?;
-        Ok(())
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-    Err("当前平台不支持打开系统通知设置".into())
 }
 
 #[tauri::command]
@@ -1628,158 +1601,53 @@ DELETE FROM goal_entries WHERE source_type NOT IN ('task','habit');
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 31,
+            description: "retire_reminders",
+            // 提醒功能下线（页面改版为番茄钟「专注」）：通知中心表整表删除；
+            // notify_ahead 设置项随系统提醒一起退役；既有循环提醒（interval）
+            // 计时行清空。timers 表保留，复用为专注会话记录。
+            sql: r#"
+DROP TABLE IF EXISTS app_notifications;
+DELETE FROM settings WHERE key = 'notify_ahead';
+DELETE FROM timers WHERE kind = 'interval';
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 32,
+            description: "focus_task_link",
+            // 专注与任务的三档关联落库：task_mode（none/existing/new）、
+            // task_ref_id（existing 档指向的已有任务）、task_draft（new 档
+            // 预填的任务信息 JSON）。历史行一律按「不关联」回填，与旧行为一致。
+            sql: r#"
+ALTER TABLE timers ADD COLUMN task_mode TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE timers ADD COLUMN task_ref_id TEXT;
+ALTER TABLE timers ADD COLUMN task_draft TEXT;
+"#,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 33,
+            description: "focus_logs",
+            // 专注完成流水：点「完成」落账时一行一段（三档关联都记），支撑
+            // 「今日已专注 x 次」。本机统计用，暂不进同步与备份（本地流水，
+            // 无跨端合并语义；同步层未注册该表，旧日志也无同名条目）。
+            sql: r#"
+CREATE TABLE IF NOT EXISTS focus_logs (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  mode TEXT NOT NULL,
+  task_id TEXT,
+  ended_at TEXT NOT NULL,
+  duration_sec INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_focus_logs_ended_at ON focus_logs (ended_at);
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
-}
-
-
-#[derive(Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct NativeReminder {
-    reminder_id: String,
-    task_id: String,
-    title: String,
-    body: String,
-    fire_at_ms: u64,
-}
-
-#[derive(Default)]
-struct ReminderScheduler {
-    reminders: Mutex<HashMap<String, NativeReminder>>,
-    changed: Condvar,
-}
-
-fn start_notification_scheduler(app: AppHandle, scheduler: Arc<ReminderScheduler>) {
-    std::thread::spawn(move || {
-        loop {
-            let reminder = {
-                let mut guard = scheduler.reminders.lock().unwrap_or_else(|e| e.into_inner());
-                loop {
-                    let next = guard
-                        .values()
-                        .min_by_key(|item| item.fire_at_ms)
-                        .cloned();
-                    let Some(next) = next else {
-                        guard = scheduler
-                            .changed
-                            .wait(guard)
-                            .unwrap_or_else(|e| e.into_inner());
-                        continue;
-                    };
-                    let now_ms = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_millis() as u64;
-                    if next.fire_at_ms > now_ms {
-                        let wait = Duration::from_millis(next.fire_at_ms - now_ms);
-                        let result = scheduler
-                            .changed
-                            .wait_timeout(guard, wait)
-                            .unwrap_or_else(|e| e.into_inner());
-                        guard = result.0;
-                        continue;
-                    }
-                    guard.remove(&next.reminder_id);
-                    break next;
-                }
-            };
-
-        let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
-        // After sleep, let the JS missed-reminder pass coalesce stale items
-        // instead of showing every overdue in-process reminder at once.
-        if now_ms.saturating_sub(reminder.fire_at_ms) > 2 * 60 * 1000 {
-            continue;
-        }
-        let _ = app
-            .notification()
-            .builder()
-            .title(&reminder.title)
-            .body(&reminder.body)
-            .show();
-        let _ = app.emit(
-            "native-reminder-fired",
-            serde_json::json!({
-                "id": reminder.reminder_id,
-                "taskId": reminder.task_id,
-                "title": reminder.title,
-                "body": reminder.body,
-                "firedAt": reminder.fire_at_ms
-            }),
-        );
-        }
-    });
-}
-
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct OsReminderSyncResult {
-    ok: bool,
-    scheduled_count: usize,
-    overflow_count: usize,
-    truncated: bool,
-    error: Option<String>,
-    hosted_ids: Vec<String>,
-}
-
-#[tauri::command]
-fn sync_native_notifications(
-    scheduled: tauri::State<'_, Arc<ReminderScheduler>>,
-    reminders: Vec<NativeReminder>,
-) -> Result<OsReminderSyncResult, String> {
-    let now_ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0);
-    let mapped: Vec<os_reminders::OsReminder> = reminders
-        .iter()
-        .map(|item| os_reminders::OsReminder {
-            id: item.reminder_id.clone(),
-            title: item.title.clone(),
-            body: item.body.clone(),
-            fire_at_ms: item.fire_at_ms,
-        })
-        .collect();
-    let window = os_reminders::select_window(&mapped, now_ms);
-    let os_error = os_reminders::sync(&window.windowed).err();
-    let os_ok = os_error.is_none();
-    let windowed_ids: std::collections::HashSet<String> =
-        window.windowed.iter().map(|item| item.id.clone()).collect();
-
-    let mut guard = scheduled.reminders.lock().map_err(|e| e.to_string())?;
-    guard.clear();
-    let in_process: Vec<NativeReminder> = if os_ok {
-        reminders
-            .into_iter()
-            .filter(|item| item.fire_at_ms > now_ms && !windowed_ids.contains(&item.reminder_id))
-            .collect()
-    } else {
-        reminders
-            .into_iter()
-            .filter(|item| item.fire_at_ms > now_ms)
-            .collect()
-    };
-    guard.extend(
-        in_process
-            .into_iter()
-            .map(|item| (item.reminder_id.clone(), item)),
-    );
-    drop(guard);
-    scheduled.changed.notify_all();
-    Ok(OsReminderSyncResult {
-        ok: os_ok,
-        scheduled_count: if os_ok { window.windowed.len() } else { 0 },
-        overflow_count: if os_ok {
-            window.overflow.len()
-        } else {
-            mapped.iter().filter(|item| item.fire_at_ms > now_ms).count()
-        },
-        truncated: os_ok && window.truncated,
-        error: os_error,
-        hosted_ids: if os_ok {
-            window.windowed.iter().map(|item| item.id.clone()).collect()
-        } else {
-            Vec::new()
-        },
-    })
 }
 
 #[cfg(desktop)]
@@ -1837,9 +1705,7 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
-        .manage(Arc::new(ReminderScheduler::default()))
-        .plugin(tauri_plugin_opener::init());
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
     #[cfg(desktop)]
     {
         builder = builder
@@ -1877,7 +1743,6 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
-            sync_native_notifications,
             database_health,
             list_database_backups,
             create_database_backup,
@@ -1885,14 +1750,11 @@ pub fn run() {
             cancel_database_restore,
             write_backup_file,
             read_backup_file,
-            open_notification_settings,
             open_data_directory,
             set_window_appearance,
             restart_app
         ])
         .setup(|app| {
-            let scheduler = Arc::clone(app.state::<Arc<ReminderScheduler>>().inner());
-            start_notification_scheduler(app.handle().clone(), scheduler);
             #[cfg(desktop)]
             setup_tray(app.handle())?;
             if let Some(main) = app.get_webview_window("main") {

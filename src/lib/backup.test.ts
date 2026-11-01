@@ -124,7 +124,7 @@ describe("backup pure helpers", () => {
         minimalPayload({
           habits: [{ ...legacyHabit, target_days: 0 }] as never,
         }),
-      ).errors.some((item) => item.includes("目标打卡日数无效")),
+      ).errors.some((item) => item.includes("期望打卡日数无效")),
     ).toBe(true);
   });
 
@@ -132,7 +132,7 @@ describe("backup pure helpers", () => {
     const summary = summarizeBackupRestore(minimalPayload());
     expect(summary).toContain("成长目标");
     expect(summary).toContain("纪念日");
-    expect(summary).toContain("循环提醒");
+    expect(summary).toContain("专注记录");
     expect(summary).toContain("将保留当前内容");
   });
 

@@ -29,7 +29,7 @@ const MORE_GROUPS: {
     name: "百工",
     gloss: "先利其器，再善其事",
     items: [
-      { id: "reminders", label: "提醒", icon: "timer" },
+      { id: "focus", label: "专注", icon: "timer" },
       { id: "memos", label: "备忘录", icon: "memo" },
       { id: "projects", label: "项目", icon: "layers" },
       { id: "tags", label: "标签", icon: "tag" },

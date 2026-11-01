@@ -1,4 +1,15 @@
-import type { Timer } from "@/types";
+import type { FocusTaskDraft, Timer } from "@/types";
+
+/** 解析专注行上预填的「新建任务」信息；坏数据一律当空处理（不炸卡片）。 */
+export function parseFocusTaskDraft(json: string | null): FocusTaskDraft {
+  if (!json) return {};
+  try {
+    const parsed: unknown = JSON.parse(json);
+    return parsed && typeof parsed === "object" ? (parsed as FocusTaskDraft) : {};
+  } catch {
+    return {};
+  }
+}
 
 export function formatCountdown(totalSec: number): string {
   const sec = Math.max(0, Math.floor(totalSec));
@@ -36,13 +47,4 @@ export function nextRunningTimerDueAt(
   }
   if (next == null) return null;
   return Math.max(nowMs, next) === next ? next : nowMs;
-}
-
-export function intervalLabel(sec: number): string {
-  if (sec < 60) return `${sec} 秒`;
-  if (sec % 3600 === 0) return `${sec / 3600} 小时`;
-  if (sec % 60 === 0) return `${sec / 60} 分钟`;
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m} 分 ${s} 秒`;
 }

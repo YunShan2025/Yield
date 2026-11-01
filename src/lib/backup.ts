@@ -83,13 +83,6 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
   const tagIds = collectIds(payload.tags, "标签", errors);
   const projectIds = collectIds(payload.projects, "项目", errors);
   const goalIds = collectIds(payload.goals, "成长目标", errors);
-  const notificationKeys = new Set<string>();
-  for (const item of payload.notifications ?? []) {
-    if (!item.task_id || !item.scheduled_at) continue;
-    const key = `${item.task_id}\u0000${item.kind}\u0000${item.scheduled_at}`;
-    if (notificationKeys.has(key)) errors.push(`通知备份存在重复投递记录：${item.task_id}`);
-    notificationKeys.add(key);
-  }
   const ledgerKeys = (["ledgerCategories", "ledgerAccounts", "ledgerTransactions", "ledgerBudgets"] as const)
     .filter((key) => backupPayloadHas(payload, key));
   if (ledgerKeys.length > 0 && ledgerKeys.length < 4) {
@@ -146,7 +139,7 @@ export function inspectBackupPayload(payload: BackupPayload): BackupIntegrityRep
 
   for (const habit of payload.habits ?? []) {
     if (habit.target_days != null && (!Number.isInteger(habit.target_days) || habit.target_days < 1)) {
-      errors.push(`习惯 ${habit.id} 的目标打卡日数无效`);
+      errors.push(`习惯 ${habit.id} 的期望打卡日数无效`);
     }
   }
 
@@ -179,9 +172,6 @@ export function sanitizeBackupPayload(payload: BackupPayload): BackupPayload {
       (link) => taskIds.has(link.task_id) && tagIds.has(link.tag_id),
     ),
     habitChecks: (payload.habitChecks ?? []).filter((item) => habitIds.has(item.habit_id)),
-    notifications: payload.notifications?.filter(
-      (item) => !item.task_id || taskIds.has(item.task_id),
-    ),
     taskEvents: payload.taskEvents?.filter((item) => taskIds.has(item.task_id)),
     timers: payload.timers,
     goalEntries: payload.goalEntries?.filter((item) => {
@@ -217,7 +207,7 @@ export function summarizeBackupRestore(payload: BackupPayload): string {
   if (!has("anniversaries")) {
     keep.push("纪念日");
   }
-  if (!has("timers")) keep.push("循环提醒");
+  if (!has("timers")) keep.push("专注记录");
   if (keep.length) {
     lines.push("", `以下数据备份中未包含，将保留当前内容：${keep.join("、")}`);
   }

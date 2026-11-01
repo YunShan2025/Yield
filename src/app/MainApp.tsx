@@ -1,14 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import {
-  cancel,
-  isPermissionGranted,
-  requestPermission,
-  Schedule,
-  sendNotification,
-} from "@tauri-apps/plugin-notification";
-import { DesktopNotificationCards } from "@/components/DesktopNotificationCards";
 import { NavSidebar } from "@/components/NavSidebar";
 import { MainWorkspace } from "@/components/MainWorkspace";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
@@ -24,24 +15,9 @@ import { isMobileShell } from "@/lib/platform";
 import { runBackHandlers } from "@/lib/mobileBack";
 import type { NavId } from "@/types";
 import { nextRunningTimerDueAt } from "@/lib/timers";
-import {
-  createNotificationRecord,
-  ensureReminderRecord,
-  fetchDueNotifications,
-  dismissMissedNotifications,
-  setNotificationStatus,
-} from "@/lib/db";
-import { privacySafeNotification } from "@/lib/privacy";
 import { useAppStore } from "@/store/app";
 import { syncService } from "@/lib/sync/service";
 import { todayDateString } from "@/lib/dates";
-import {
-  applyPrivacyToReminderPlans,
-  buildNativeReminderPlans,
-  OS_REMINDER_LIMIT,
-  selectOsReminderWindow,
-  type ReminderSyncStatus,
-} from "@/lib/nativeReminders";
 
 const NAV_COLLAPSE_KEY = "minimal.navCollapsed";
 const NAV_WIDTH_KEY = "minimal.navWidth";
@@ -54,7 +30,6 @@ const NAV_WIDTH_MAX = 440;
 // 窄窗图标条:窗口窄于此宽度时侧栏收成图标列,把宽度让给主区。
 // 判定放在 JS —— 窗口宽度是窗口属性,CSS 媒体查询拿不到这层语义。
 const NAV_RAIL_BREAKPOINT = 1330;
-const REMINDER_RESYNC_MS = 6 * 60 * 60 * 1000;
 
 // Android 返回键桥：MainActivity.onBackPressed 经 evaluateJavascript 调用此钩子，
 // 返回 "handled" 表示已由前端消费（返回「更多」/收起面板），否则原生层退后台。
@@ -63,22 +38,6 @@ declare global {
     __youqiuAndroidBack?: () => "handled" | "";
   }
 }
-
-type OsReminderSyncResult = {
-  ok: boolean;
-  scheduledCount: number;
-  overflowCount: number;
-  truncated: boolean;
-  error: string | null;
-  hostedIds?: string[];
-};
-
-type OsHostState = {
-  osOk: boolean;
-  hostedIds: Set<string>;
-};
-
-const EMPTY_OS_HOST: OsHostState = { osOk: false, hostedIds: new Set() };
 
 export function MainApp() {
   const bootstrap = useAppStore((s) => s.bootstrap);
@@ -92,7 +51,6 @@ export function MainApp() {
   const canUndo = useAppStore((s) => s.canUndo);
   const undo = useAppStore((s) => s.undo);
   const setNav = useAppStore((s) => s.setNav);
-  const tasks = useAppStore((s) => s.tasks);
   const settings = useAppStore((s) => s.settings);
   const timers = useAppStore((s) => s.timers);
   const settleTimers = useAppStore((s) => s.settleTimers);
@@ -243,125 +201,6 @@ export function MainApp() {
     document.body.classList.add("nav-resizing");
   };
 
-  const setReminderSync = useAppStore((s) => s.setReminderSync);
-  const lastOsHostRef = useRef<OsHostState>(EMPTY_OS_HOST);
-  const reminderPassRef = useRef(Promise.resolve());
-  const runFullReminderPassRef = useRef<() => Promise<void>>(async () => undefined);
-
-  const enqueueReminderPass = (fn: () => Promise<void>) => {
-    const run = reminderPassRef.current.then(fn, fn);
-    reminderPassRef.current = run.then(
-      () => undefined,
-      () => undefined,
-    );
-    return run;
-  };
-
-  const syncOsReminders = async (): Promise<OsHostState> => {
-    const status: ReminderSyncStatus = {
-      osAvailable: false,
-      permissionGranted: false,
-      scheduledCount: 0,
-      overflowCount: 0,
-      truncated: false,
-      totalUpcoming: 0,
-      lastOkAt: useAppStore.getState().reminderSync.lastOkAt,
-      lastError: null,
-    };
-    try {
-      let granted = await isPermissionGranted();
-      if (!granted) {
-        const perm = await requestPermission();
-        granted = perm === "granted";
-      }
-      status.permissionGranted = granted;
-      const snapshot = useAppStore.getState();
-      const scheduled = applyPrivacyToReminderPlans(
-        buildNativeReminderPlans(snapshot.tasks, snapshot.settings.notifyAhead),
-        snapshot.settings.privacyMode,
-      );
-      status.totalUpcoming = scheduled.length;
-      if (!granted) {
-        await invoke("sync_native_notifications", { reminders: [] });
-        status.lastError = "未授予通知权限";
-        lastOsHostRef.current = EMPTY_OS_HOST;
-        setReminderSync(status);
-        return EMPTY_OS_HOST;
-      }
-      if (isMobileShell()) {
-        // Android 替代实现：os_reminders.rs 仅支持 win/mac，这里把窗口内提醒
-        // 交给通知插件的计划通知（AlarmManager），杀进程后仍由系统送达。
-        // 每次全量同步先清空再重排，任务改动后自然收敛；不进 Rust 进程内调度器。
-        const osWindow = selectOsReminderWindow(scheduled);
-        // 插件 2.3.3 的 cancelAll() 在 Android 上以无参调用 cancel，Kotlin 侧
-        // CancelArgs.notifications 是 lateinit，无参解析直接抛异常；改为显式
-        // cancel 全量 id 槽位（schedule 同 id 自动覆盖旧闹钟，槽位清空保证
-        // 缩量后不残留过期提醒）。
-        await cancel(Array.from({ length: OS_REMINDER_LIMIT }, (_, index) => index + 1));
-        osWindow.windowed.forEach((plan, index) => {
-          sendNotification({
-            id: index + 1,
-            title: plan.title,
-            body: plan.body,
-            schedule: Schedule.at(new Date(plan.fireAtMs), false, true),
-          });
-        });
-        status.osAvailable = true;
-        status.scheduledCount = osWindow.windowed.length;
-        status.overflowCount = osWindow.overflow.length;
-        status.truncated = osWindow.truncated;
-        status.lastOkAt = Date.now();
-        status.lastError = osWindow.truncated
-          ? `系统计划通知按 ${OS_REMINDER_LIMIT} 条 / 90 天登记，其余在应用运行时补发`
-          : null;
-        const host: OsHostState = {
-          osOk: true,
-          hostedIds: new Set(osWindow.windowed.map((item) => item.reminderId)),
-        };
-        lastOsHostRef.current = host;
-        setReminderSync(status);
-        return host;
-      }
-      const result = await invoke<OsReminderSyncResult>("sync_native_notifications", {
-        reminders: scheduled,
-      });
-      const hostedIds = result.ok
-        ? new Set(
-            Array.isArray(result.hostedIds)
-              ? result.hostedIds
-              : selectOsReminderWindow(scheduled).windowed.map((item) => item.reminderId),
-          )
-        : new Set<string>();
-      const host: OsHostState = { osOk: result.ok, hostedIds };
-      lastOsHostRef.current = host;
-      status.osAvailable = result.ok;
-      status.scheduledCount = result.scheduledCount;
-      status.overflowCount = result.overflowCount;
-      status.truncated = result.truncated;
-      if (result.ok) {
-        status.lastOkAt = Date.now();
-        status.lastError = result.truncated
-          ? `系统队列上限 ${OS_REMINDER_LIMIT} 条 / 90 天，其余在应用运行时补发`
-          : null;
-      } else {
-        status.lastError = result.error || "系统提醒登记失败，已改用应用内调度";
-      }
-      setReminderSync(status);
-      return host;
-    } catch (error) {
-      lastOsHostRef.current = EMPTY_OS_HOST;
-      status.lastError = error instanceof Error ? error.message : "系统提醒同步失败";
-      setReminderSync(status);
-      return EMPTY_OS_HOST;
-    }
-  };
-
-  const runFullReminderPass = () =>
-    enqueueReminderPass(async () => {
-      await syncOsReminders();
-    });
-  runFullReminderPassRef.current = runFullReminderPass;
-
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
@@ -451,7 +290,7 @@ export function MainApp() {
       } catch {
         /* ignore */
       }
-      setToast("已放到托盘，提醒会继续。彻底退出请用托盘「退出应用」。");
+      setToast("已放到托盘，专注计时继续。彻底退出请用托盘「退出应用」。");
     }).then((fn) => {
       unlisten = fn;
     });
@@ -466,134 +305,22 @@ export function MainApp() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectTask]);
 
-  useEffect(() => {
-    if (!ready) return;
-    void dismissMissedNotifications().catch(() => undefined);
-    void runFullReminderPass().catch(() => undefined);
-    const fullTimer = window.setInterval(() => {
-      void runFullReminderPassRef.current().catch(() => undefined);
-    }, REMINDER_RESYNC_MS);
-    return () => {
-      window.clearInterval(fullTimer);
-    };
-  }, [ready, settings.notifyAhead, settings.privacyMode]);
-
-  useEffect(() => {
-    // 设置页「立即重新同步」:与定时全量同步走同一条队列,避免并发写系统队列。
-    const onResync = () => {
-      void runFullReminderPassRef.current().catch(() => undefined);
-    };
-    window.addEventListener("reminders:resync", onResync);
-    return () => window.removeEventListener("reminders:resync", onResync);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    const debounce = window.setTimeout(() => {
-      void runFullReminderPassRef.current().catch(() => undefined);
-    }, 1600);
-    return () => window.clearTimeout(debounce);
-  }, [ready, tasks]);
-
-  useEffect(() => {
-    let unlisten: (() => void) | undefined;
-    void listen<{
-      id: string;
-      taskId: string;
-      title: string;
-      body: string;
-      firedAt: number;
-    }>("native-reminder-fired", (event) => {
-      const item = event.payload;
-      void ensureReminderRecord({
-        taskId: item.taskId,
-        title: item.title,
-        body: item.body,
-        scheduledAt: new Date(item.firedAt).toISOString(),
-      }).then(() =>
-        window.dispatchEvent(new Event("notifications:changed")),
-      );
-      void (async () => {
-        await runFullReminderPassRef.current();
-      })().catch(() => undefined);
-    }).then((fn) => {
-      unlisten = fn;
-    });
-    return () => unlisten?.();
-  }, []);
-
-  useEffect(() => {
-    const settleSnoozed = async () => {
-      try {
-        const due = await fetchDueNotifications();
-        for (const item of due) {
-          sendNotification(
-            privacySafeNotification(
-              useAppStore.getState().settings.privacyMode,
-              item.title,
-              item.body,
-            ),
-          );
-          await setNotificationStatus(item.id, "delivered");
-        }
-        if (due.length) {
-          window.dispatchEvent(new Event("notifications:changed"));
-        }
-      } catch {
-        /* ignore notification-center polling errors */
-      }
-    };
-    const timer = window.setInterval(() => void settleSnoozed(), 30_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
+  // 专注到点：结算计时器落终态，专注页据此显示「完成 · 待记入任务」。
+  // 不发系统通知（番茄钟完成只在应用内提示）。
   useEffect(() => {
     const dueAt = nextRunningTimerDueAt(timers);
     if (dueAt == null) return;
     const delay = Math.max(0, dueAt - Date.now());
     const tick = window.setTimeout(async () => {
       try {
-        const fired = await settleTimers();
-        if (!fired.length) {
-          await refreshTimers();
-          return;
-        }
-
-        let granted = await isPermissionGranted();
-        if (!granted) {
-          const perm = await requestPermission();
-          granted = perm === "granted";
-        }
-
-        for (const item of fired) {
-          const body = item.looped
-            ? `「${item.timer.title}」到点了，已开始下一轮`
-            : `「${item.timer.title}」倒计时结束`;
-          if (granted) {
-            sendNotification(
-              privacySafeNotification(
-                useAppStore.getState().settings.privacyMode,
-                "定时提醒",
-                body,
-              ),
-            );
-          }
-          await createNotificationRecord({
-            title: "定时提醒",
-            body,
-            scheduledAt: new Date().toISOString(),
-            status: "delivered",
-            kind: "system",
-          });
-          setToast(body);
-        }
-        window.dispatchEvent(new Event("notifications:changed"));
+        await settleTimers();
+        await refreshTimers();
       } catch {
-        /* ignore */
+        /* ignore settle errors */
       }
     }, delay);
     return () => window.clearTimeout(tick);
-  }, [timers, settleTimers, refreshTimers, setToast]);
+  }, [timers, settleTimers, refreshTimers]);
 
   const autoBackupRunningRef = useRef(false);
   useEffect(() => {
@@ -743,7 +470,6 @@ export function MainApp() {
         {createTaskOpen ? <CreateTaskDialog /> : null}
         <AppConfirmHost />
         <OnboardingGuide />
-        <DesktopNotificationCards />
         <VersionUpdateNotice />
         {toastLayer}
         <span style={{ display: "none" }}>{todayDateString()}</span>
@@ -782,7 +508,6 @@ export function MainApp() {
       {createTaskOpen ? <CreateTaskDialog /> : null}
       <AppConfirmHost />
       <OnboardingGuide />
-      <DesktopNotificationCards />
       <VersionUpdateNotice />
       {toastLayer}
       <span style={{ display: "none" }}>{todayDateString()}</span>

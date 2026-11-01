@@ -31,7 +31,9 @@ describe("capability split", () => {
     expect(mainCommands).toContain('"cancel_database_restore"');
     expect(mainCommands).toContain('"write_backup_file"');
     expect(mainCommands).toContain('"read_backup_file"');
-    expect(mainCommands).toContain('"open_notification_settings"');
+    // 提醒功能下线：系统通知设置直达命令随 sync_native_notifications 一并移除。
+    expect(mainCommands).not.toContain('"open_notification_settings"');
+    expect(mainCommands).not.toContain('"sync_native_notifications"');
     const generatedAcl = readFileSync("src-tauri/gen/schemas/acl-manifests.json", "utf8");
     expect(generatedAcl).toContain("create_database_backup");
     expect(generatedAcl).toContain("cancel_database_restore");
