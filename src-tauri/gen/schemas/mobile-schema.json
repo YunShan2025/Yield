@@ -2307,10 +2307,10 @@
       "description": "Permission identifier",
       "oneOf": [
         {
-          "description": "Custom commands for the main window (settings, backup, notifications).",
+          "description": "Custom commands for the main window (settings, backup).",
           "type": "string",
           "const": "allow-main-app",
-          "markdownDescription": "Custom commands for the main window (settings, backup, notifications)."
+          "markdownDescription": "Custom commands for the main window (settings, backup)."
         },
         {
           "description": "Default core plugins set.\n#### This default permission set includes:\n\n- `core:path:default`\n- `core:event:default`\n- `core:window:default`\n- `core:webview:default`\n- `core:app:default`\n- `core:image:default`\n- `core:resources:default`\n- `core:menu:default`\n- `core:tray:default`",
