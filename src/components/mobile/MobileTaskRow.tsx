@@ -24,12 +24,14 @@ export function MobileTaskRow({
   disabled?: boolean;
   pressEnabled?: boolean;
   onActivate: () => void;
-  onLongPress: () => void;
+  onLongPress?: () => void;
   children: ReactNode;
 }) {
+  // 不传 onLongPress 即关闭长按（如「今日」行——已改由点按进编辑弹窗删除），
+  // 其余仍带长按的页（待办箱等）行为不变。
   const press = useLongPress({
-    onLongPress,
-    enabled: pressEnabled && !disabled,
+    onLongPress: onLongPress ?? (() => {}),
+    enabled: pressEnabled && !disabled && Boolean(onLongPress),
   });
   const isToggle = typeof selected === "boolean";
 

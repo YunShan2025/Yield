@@ -248,6 +248,7 @@ export function WeeklyChecklistView() {
           hint={stats.total ? `完成率 ${donePct}%` : "本周暂无任务"}
           bars={weeklyBars}
           note="给这一周定下目标，完成一件划掉一件。"
+          figureGroup
         />
       )}
 
@@ -276,7 +277,7 @@ export function WeeklyChecklistView() {
               <strong className="weekly-stat-num">
                 {stats.peakDay ? `周${weekdayShort(stats.peakDay)}` : "—"}
               </strong>
-              <span className="weekly-stat-note">
+              <span className={`weekly-stat-note${stats.peakDay ? " is-value" : ""}`}>
                 {stats.peakDay ? `${stats.peakDone}/${stats.peakTotal} 项` : "本周暂无安排"}
               </span>
             </div>

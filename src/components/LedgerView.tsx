@@ -329,6 +329,7 @@ export function LedgerView() {
         value={formatLedgerMoney(expense, hidden)}
         label="本月支出"
         hint={`收入 ${formatLedgerMoney(income, hidden)} · 结余 ${formatLedgerMoney(income - expense, hidden)} · ${transactions.length} 笔`}
+        figureGroup
         footer={
           <div className="guide-stat-budget">
             <span className="ledger-stat-head">

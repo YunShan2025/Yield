@@ -745,6 +745,42 @@ body {
   align-items: center;
 }
 
+/* 今日数据顶卡（2026-11-01 用户定：进度条太淡 / 文字与大条间距太大 / 大数字上下
+   边距与待办箱不一致）：顶对齐 + 大条绝对贴卡底会让「文字行—大条」裂成一大片空带、
+   大数字贴卡顶。凡带完成度大条的数据顶卡（仅此形态渲染 track；待办箱与 guide-hero 无
+   track 不受影响、移动壳走 mtoday-hero 不受影响）改两列两行网格：
+   左列第一行文字、第二行大条（紧挨文字，row-gap 定距），右列大数字跨两行居中——
+   其光心落到「文字+大条」整块中线，上下留白与待办箱一致，卡高仍是 min-height 74。 */
+html:not([data-shell="mobile"]) .today-hero:has(.today-hero-meter-track) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 9px;
+}
+
+html:not([data-shell="mobile"]) .today-hero:has(.today-hero-meter-track) .today-hero-copy {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html:not([data-shell="mobile"]) .today-hero:has(.today-hero-meter-track) .today-hero-meter {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+html:not([data-shell="mobile"]) .today-hero:has(.today-hero-meter-track) .today-hero-meter-track {
+  grid-column: 1;
+  grid-row: 2;
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+}
+
 /* 麦穗水印：与移动壳顶卡 .mtoday-wheat 同一张 SVG 角标（::after 承担，不动内容）。
    桌面卡更矮，图样按比例收小、外移量减半。 */
 .today-hero::after {

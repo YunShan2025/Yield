@@ -8,7 +8,6 @@ import {
 } from "@/components/mobile/MobileTaskPills";
 import { MobilePageTitle } from "@/components/mobile/MobilePageTitle";
 import { MobileTaskRow } from "@/components/mobile/MobileTaskRow";
-import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { calculateGoalProgress, resolveGoalTarget } from "@/lib/growth";
 import {
   addDays,
@@ -19,7 +18,7 @@ import { useTodayDate } from "@/lib/useTodayDate";
 import { useGoals } from "@/lib/useGoals";
 import { matchesRepeatRule, parseRepeatRule, weeklyTargetFromRule } from "@/lib/repeat";
 import { mondayWeekDates } from "@/lib/weeklyChecklist";
-import type { Habit, Task } from "@/types";
+import type { Habit } from "@/types";
 
 /** 一天的分钟数 —— 今日时段条按 0–24h 铺满。 */
 const DAY_MINUTES = 24 * 60;
@@ -81,7 +80,6 @@ export function TodayMobileView() {
   const today = useTodayDate();
   const { goals, goalById } = useGoals();
   const [now, setNow] = useState(() => new Date());
-  const [sheetTask, setSheetTask] = useState<Task | null>(null);
 
   // 页内查看日期（与记账页切月同手法）：默认今天，可往前翻看，未来不出；
   // 跨天时 useTodayDate 翻日，视角自动回到今天。
@@ -413,7 +411,6 @@ export function TodayMobileView() {
                     key={task.id}
                     className={`mtoday-row pr${task.priority}${done ? " is-done" : ""}`}
                     onActivate={() => selectTask(task.id)}
-                    onLongPress={() => setSheetTask(task)}
                   >
                     <span className="mtoday-time">
                       <b>{task.due_time ?? "全天"}</b>
@@ -463,14 +460,6 @@ export function TodayMobileView() {
         aria-label="新建任务"
         onClick={() => openCreateTask()}
       />
-
-      {sheetTask ? (
-        <TaskActionSheet
-          task={sheetTask}
-          cursor={today}
-          onClose={() => setSheetTask(null)}
-        />
-      ) : null}
     </div>
   );
 }

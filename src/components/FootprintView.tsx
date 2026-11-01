@@ -10,7 +10,7 @@ import { MobileTaskLine } from "@/components/mobile/MobileTaskLine";
 import { TaskActionSheet } from "@/components/mobile/TaskActionSheet";
 import { isMobileShell } from "@/lib/platform";
 import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
-import { categoryColor, resolveCategoryId } from "@/lib/weeklyChecklist";
+import { categoryColor, mondayWeekDates, resolveCategoryId } from "@/lib/weeklyChecklist";
 import {
   activityLevelFromValue,
   currentDateStreak,
@@ -185,6 +185,12 @@ export function FootprintView() {
   }, [days, valueByDate]);
   const weeklyPeak = Math.max(1, ...weeklyTotals.map((week) => week.value));
   const currentWeekKey = weeklyTotals[weeklyTotals.length - 1]?.key ?? "";
+  // 顶卡 hint 用本周口径（2026-11-01 用户定：「连续x天」与下方读数条重复，换掉）：
+  // 周一–周日与周报/习惯「本周」同界（热力图周柱是周首窗口，不能用末柱充本周）。
+  const thisWeekInvestment = mondayWeekDates(today).reduce(
+    (sum, date) => sum + (valueByDate.get(date) ?? 0),
+    0,
+  );
 
   // 当日面板常驻在热力图下方。默认看今天；今天没有足迹就看最近一个活跃日。
   const defaultDate = activeDateKeys.includes(today)
@@ -207,23 +213,23 @@ export function FootprintView() {
           <p className="workspace-subtitle">每一步都算数。</p>
         </div>
       </div>
-      {/* 顶卡两端都在说「现在」（2026-10-31 桌面升淡蓝数据顶卡）：移动壳读数＝
-          连续足迹；桌面读数＝今天投入（连续大字归下方读数条，一个数只在一处
-          当大字，hint 只做一句速览）。 */}
+      {/* 顶卡双端同数据（2026-11-01 用户定：大字统一「本周已投入」，周一–周日与
+          周报/习惯同界；连续/活跃/最长归下方读数条，一个数只在一处当大字）。
+          hint 桌面＝常驻引导句（卡上唯一说明位，note 槽退役）；移动无 note 槽，
+          hint 走今日速览，0 时换软提示。 */}
       {isMobileShell() ? (
         <MobileGuideCard
-          value={currentStreak}
-          unit="天"
-          label="连续足迹"
-          hint={`活跃 ${activeDateKeys.length} 天 · 最长 ${longestStreak} 天`}
+          value={thisWeekInvestment}
+          unit="项"
+          label="本周已投入"
+          hint={todayInvestment ? `今天已投入 ${todayInvestment} 项` : "今天还没有投入"}
         />
       ) : (
         <DesktopGuideCard
-          value={todayInvestment}
+          value={thisWeekInvestment}
           unit="项"
-          label="今天已投入"
-          hint={currentStreak ? `连续 ${currentStreak} 天` : undefined}
-          note={todayInvestment ? undefined : "今天还没有投入——完成一件小事或打一次卡都算。"}
+          label="本周已投入"
+          hint="完成任务或打卡，都会点亮热力图上的一格。"
         />
       )}
 

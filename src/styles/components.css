@@ -1623,7 +1623,23 @@ html:not([data-shell="mobile"]) .goals-list .goal-foot .item-action-reopen {
 .create-task-schedule { display: grid; grid-template-columns: 152px minmax(0, 1fr); gap: 13px; align-items: start; }
 .create-task-schedule .time-range { gap: 8px; }
 .create-task-actions { display: flex; justify-content: flex-end; gap: 10px; }
-.create-task-actions .btn-primary, .create-task-actions .btn-ghost { min-width: 112px; }
+.create-task-actions .btn-primary, .create-task-actions .btn-ghost, .create-task-actions .edit-task-delete { min-width: 112px; }
+/* 编辑任务弹窗：删除提到最左（危险操作离主操作远些，保存落最右），取消 / 保存靠右。
+   order 两端通用（移动三列网格按 order 落位：删除 取消 保存）；margin-right:auto
+   仅桌面 flex 有意义——网格里 auto 外边距会把钮压成内容宽，须留给 flex 段。 */
+.edit-task-delete {
+  order: -1;
+}
+html:not([data-shell="mobile"]) .edit-task-delete {
+  margin-right: auto;
+}
+/* 移动壳：编辑弹窗动作条改三列一行（取消 / 保存 / 删除）。用 :has(.edit-task-delete)
+   只命中编辑弹窗（新建无删除钮、仍是取消+保存两列，不受影响）。必须带 .create-task-modal
+   祖先把特异度提到高于 views.css 的两列基线（同特异度会被后发压回 1fr 1fr）；删除钮
+   红衬由 mobile.css 双类语义件给（已去 .btn-ghost，不再被弹层脚 ghost 的 sunken 灰底改写）。 */
+html[data-shell="mobile"] .create-task-modal .create-task-actions:has(.edit-task-delete) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 @media (max-width: 620px) { .create-task-grid { grid-template-columns: 1fr; } .create-task-schedule { grid-template-columns: 1fr; } .create-task-time-head { flex-wrap: wrap; } }
 
 /* 桌面「悬浮卡」二级弹窗形态（同「记一笔」抽屉定稿，2026-10-28）。
@@ -2228,7 +2244,8 @@ html:not([data-shell="mobile"]) .tags-view .tags-section-divider {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  color: var(--text-muted);
+  /* 与周报统计行标签同口径加深（muted→label→primary，2026-11-01 用户定）。 */
+  color: var(--text-primary);
   font-size: var(--font-size-caption);
   font-style: normal;
   white-space: nowrap;
@@ -2242,7 +2259,8 @@ html:not([data-shell="mobile"]) .tags-view .tags-section-divider {
   line-height: 1;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  color: var(--text-heading);
+  /* 读数统一品牌蓝衬线（与周报/足迹统计条同谱，2026-11-01 用户定）。 */
+  color: var(--accent);
 }
 .habit-stats-row small {
   flex: none;
@@ -3779,19 +3797,20 @@ html[data-nav="railed"] .nav-edge-collapse {
   font-size: var(--font-size-label);
 }
 
-/* 完成度大条：绝对定位贴卡底（left/right 跟随卡水平内距），不参与读数居中；
-   形制向其余顶卡 guide-stat-seg 靠齐——8px 高、胶囊圆角；轨面取同族单值条
-   goal-progress-track 的内凹底，填充实心 accent。 */
+/* 完成度大条：形制向其余顶卡 guide-stat-seg 靠齐——8px 高、胶囊圆角，填充实心 accent。
+   桌面端由 primitives.css「数据顶卡网格」改随文字成流（本规则的绝对定位仅作兜底，
+   移动壳走 mtoday-hero 不渲染此元素）。轨面不用 --surface-sunken：它（#f0f4fa）与卡底
+   --accent-faint（#edf4ff）几乎同值，无进度时大条会淡到看不见；改取 accent 20% 叠
+   accent-faint——随四主题都在蓝色族里下沉一档，空轨清晰又不压过实心进度。 */
 .today-hero-meter-track {
   position: absolute;
   left: var(--th-pad-x);
   right: var(--th-pad-x);
-  /* 底距=上内衬，卡内上下留白相等（窄档 --th-pad-y 覆写回 12 保防夹缝）。 */
   bottom: var(--th-pad-y);
   display: block;
   height: 8px;
   border-radius: var(--radius-pill);
-  background: var(--surface-sunken);
+  background: color-mix(in srgb, var(--accent) 20%, var(--accent-faint));
   overflow: hidden;
 }
 
@@ -5201,10 +5220,10 @@ html[data-nav="railed"] .nav-edge-collapse {
   min-height: 56px;
 }
 
-/* 当周概览：账目列 —— 等宽列一行排开，列内「小灰标签在上，数+单位右对齐在下」，
+/* 当周概览：账目列 —— 等宽列一行排开，列内「小标签在上，数+单位右对齐在下」，
    列间竖发丝线；数字右对齐是契约要求，窄窗折成两列 grid（见下方 720px）。仍是
-   白卡+发丝，全平。描金(is-gold)=成就数（连续/峰值/满勤），与 .wp-d-count.is-clear
-   同谱：静夜/璃幕换品牌金。数字不再撑成 21px 的「KPI 墙」——这三项是补充信息。 */
+   白卡+发丝，全平。读数（含足迹同族）统一品牌蓝衬线（见 .weekly-stat-num），
+   is-gold 标记只留语义不着色。数字不再撑成 21px 的「KPI 墙」——这三项是补充信息。 */
 .weekly-stat-strip {
   margin: 24px 28px 0;
   padding: 10px 18px;
@@ -5239,8 +5258,11 @@ html[data-nav="railed"] .nav-edge-collapse {
   padding-right: 18px;
 }
 
+/* 统计行标签加深（2026-11-01 用户定，两轮：muted→label→primary）：浅底上
+   muted 读作水印、label 仍嫌轻，落到 primary 档（#17233b）；数字留 heading
+   衬线大读数，层次靠字号与衬型拉开。周报 / 足迹共用。 */
 .weekly-stat-label {
-  color: var(--text-muted);
+  color: var(--text-primary);
   font-size: var(--font-size-caption);
 }
 
@@ -5255,6 +5277,9 @@ html:not([data-shell="mobile"]) .weekly-stat-value {
   justify-content: flex-end;
 }
 
+/* 统计读数统一品牌蓝衬线（2026-11-01 用户定）：此前只有描金项（连续/峰值/满勤）
+   走 accent、其余落 heading 黑，一排里蓝黑混杂；现整族基线即 accent，周报/足迹
+   共用。is-gold 修饰随基线变蓝而退役（TSX 里保留标记不再着色）。 */
 .weekly-stat-num {
   font-family: var(--font-num-display);
   font-size: var(--font-size-num-lg);
@@ -5262,15 +5287,17 @@ html:not([data-shell="mobile"]) .weekly-stat-value {
   line-height: 1;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  color: var(--text-heading);
+  color: var(--accent);
 }
 
+/* 读数性注解（如峰值日「2/7 项」）是数据本体不是单位，随读数走蓝；
+   纯单位（天/次）留 label 灰。无数据的占位句不带 is-value，保持灰。 */
 .weekly-stat-note {
   color: var(--text-label);
   font-size: var(--font-size-caption);
 }
 
-.weekly-stat-item.is-gold .weekly-stat-num {
+.weekly-stat-note.is-value {
   color: var(--accent);
 }
 
@@ -6242,6 +6269,15 @@ html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-label {
   font-size: var(--font-size-meta);
 }
 
+/* figureGroup 开启时（收支顶卡）「含义 label＋读数」包成整块，贴右成词，同顶行
+   基线；供顶卡网格把「数字组」与左列速览分成两块各落一列。仅桌面档。 */
+html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-figure {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
 /* hint 速览跟在 label 后（左组）；右端归大读数，长句收窄出省略号不挤数字。 */
 html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-hint {
   min-width: 0;
@@ -6349,12 +6385,23 @@ html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-col.is-today em {
   color: var(--accent);
 }
 
-/* 说明行：移动 trash-note 说明档同规（整行 12px secondary 常规字重），
+/* 说明行：移动 trash-note 说明档同规（整行 12px secondary）——2026-11-01 用户定：
+   字重吃 hint 同规格 600，各页引导字样与足迹顶行那句完全一致。
    有引导价值才出行——数据速览走 hint，不在此重复。 */
 html:not([data-shell="mobile"]) .guide-stat-card .guide-stat-note {
   margin: 0;
   color: var(--text-secondary);
   font-size: var(--font-size-meta);
+  font-weight: 600;
+}
+
+/* 紧凑卡说明并进顶行（DesktopGuideCard noteInRow）：吃左槽与 hint 同款收口，
+   长句省略号让位右侧读数，基线对齐由 .guide-stat-top 承担。 */
+html:not([data-shell="mobile"]) .guide-stat-card.is-compact .guide-stat-top .guide-stat-note {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* 麦穗水印：淡蓝顶卡族的身份记号，与移动 .mtoday-wheat 同图（--wheat-mask
@@ -6383,6 +6430,181 @@ html:not([data-shell="mobile"]) .projects-scroll .guide-stat-card {
 
 html:not([data-shell="mobile"]) .growth-page .guide-stat-card {
   margin: 0 0 14px;
+}
+
+/* 淡蓝数据顶卡「分段色条」族（2026-11-01 用户定：与今日顶卡同构；六页统一）——
+   读数组落右列纵向居中：label 是读数的含义，并入读数贴成一组（DOM 里 label 在 total
+   前，中文语义作前缀「今日已打卡 2/2」「进行中的目标 3 个」，同今日「2/7 已完成」把
+   含义贴读数、只是按语义取前后）；左列自上而下＝功能性说明 → 分段色条 → 图例：说明
+   升到色条正上方（占原 label 的位，label 已移去读数旁）。大条右端收在数字列之前。
+   DOM 不动：顶行（label＋读数）整体落右列，说明/色条/图例在左列按 grid-row 指派；
+   移动壳走 MobileGuideCard，本段仅桌面档。
+   作用域＝带分段色条的六页：习惯·目标·项目·标签·提醒·备忘录。growth-page 为足迹·目标
+   共壳，足迹卡无分段色条故不入列；周报是七日柱非色条；收支卡有色条外的预算 footer，
+   走下方专属段（此处 :is() 也不含 .ledger-view）。 */
+html:not([data-shell="mobile"])
+  :is(.habits-body, .projects-scroll, .growth-page, .tags-view, .reminders-view, .memo-page)
+  .guide-stat-card:has(.guide-stat-seg) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 9px;
+}
+
+/* 顶行＝「读数含义＋读数」一组，落右列跨三行纵向居中；沿用基段 display:flex +
+   align-items:baseline，label 与数字贴成「今日已打卡 2/2」一行。 */
+html:not([data-shell="mobile"])
+  :is(.habits-body, .projects-scroll, .growth-page, .tags-view, .reminders-view, .memo-page)
+  .guide-stat-card:has(.guide-stat-seg) .guide-stat-top {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  justify-self: end;
+}
+
+/* label 进右列读数行内，撤掉旧顶行的右推 margin（含义前缀贴读数，留基段 8px gap）。 */
+html:not([data-shell="mobile"])
+  :is(.habits-body, .projects-scroll, .growth-page, .tags-view, .reminders-view, .memo-page)
+  .guide-stat-card:has(.guide-stat-seg) .guide-stat-label {
+  margin-left: 0;
+}
+
+/* 左列：功能性说明升到色条正上方（顶掉原 label 的位），色条、图例依次而下。 */
+html:not([data-shell="mobile"])
+  :is(.habits-body, .projects-scroll, .growth-page, .tags-view, .reminders-view, .memo-page)
+  .guide-stat-card:has(.guide-stat-seg) .guide-stat-note {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html:not([data-shell="mobile"])
+  :is(.habits-body, .projects-scroll, .growth-page, .tags-view, .reminders-view, .memo-page)
+  .guide-stat-card:has(.guide-stat-seg) .guide-stat-seg {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+html:not([data-shell="mobile"])
+  :is(.habits-body, .projects-scroll, .growth-page, .tags-view, .reminders-view, .memo-page)
+  .guide-stat-card:has(.guide-stat-seg) .guide-stat-legend {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+/* 周报七日柱顶卡（2026-11-01 并入统一，2026-11-01 改纵向居中）：与分段色条卡同构——
+   左列自上而下＝功能说明 → 七日柱 → 完成率图例（hint 下沉柱下，同色条卡 hintInLegend），
+   右列＝「本周已完成 4/10」（figureGroup 包成 .guide-stat-figure）。整卡两列 flex、
+   align-items:center 让读数与左列（说明＋柱＋图例）整体纵向居中——七日柱较高，grid 跨行
+   align-self 居中不稳，改嵌套 flex 保证居中。柱／图例包进 .guide-stat-viz 同列成流，右端
+   收在数字列之前（gap 24px），不通栏压数字底下。仅带七日柱的卡命中（唯周报）。 */
+html:not([data-shell="mobile"])
+  .guide-stat-card:has(.guide-stat-bars) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+/* 左列＝.guide-stat-top（note＋柱图组纵向成流），占余宽并让位右列读数。 */
+html:not([data-shell="mobile"])
+  .guide-stat-card:has(.guide-stat-bars)
+  .guide-stat-top {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+}
+
+/* 柱图组：七日柱 + 完成率图例纵向成流。 */
+html:not([data-shell="mobile"])
+  .guide-stat-card:has(.guide-stat-bars)
+  .guide-stat-viz {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+html:not([data-shell="mobile"])
+  .guide-stat-card:has(.guide-stat-bars)
+  .guide-stat-figure {
+  flex: none;
+  margin-left: 0;
+}
+
+/* 收支总览数据顶卡（2026-11-01 用户定「完全同构」：与今日 / 四页顶卡同构）——
+   顶行用 display:contents 拆成「速览摘要 / 数字组」两块：收入·结余·N 笔落左列首行
+   （作下方预算进度条的描述文字），「本月支出 ¥X」含义＋读数（figureGroup 包成的
+   .guide-stat-figure）落右列跨两行纵向居中，与左列成流同中线；预算进度条落左列次行、
+   右端收在数字列之前（column-gap 24px），不再通栏压在数字底下。预算条自带题「预算
+   进度 · 已用 X%」去掉——其上方已是「收入·结余·N 笔」描述、条下「还可用 ¥Y」仍说明
+   预算状态，同信息不重复；预算编辑在抽屉，卡内不损。仅当带预算 footer 时命中（唯收支
+   卡有 guide-stat-budget），足迹 / 纪念日等紧凑卡不受影响；移动壳走 MobileGuideCard。 */
+html:not([data-shell="mobile"])
+  .ledger-view
+  .guide-stat-card:has(.guide-stat-budget) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: center;
+  justify-items: start;
+  column-gap: 24px;
+  row-gap: 0;
+}
+
+html:not([data-shell="mobile"])
+  .ledger-view
+  .guide-stat-card:has(.guide-stat-budget)
+  .guide-stat-top {
+  display: contents;
+}
+
+/* 左列首行：收入·结余·N 笔摘要（作进度条的描述文字）。 */
+html:not([data-shell="mobile"])
+  .ledger-view
+  .guide-stat-card:has(.guide-stat-budget)
+  .guide-stat-hint {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+
+/* 右列：数字组「本月支出 ¥X」贴右、跨两行纵向居中；撤掉 figure 的 margin-left:auto
+   （网格 justify-self:end 已贴右，免与网格间距叠加）。 */
+html:not([data-shell="mobile"])
+  .ledger-view
+  .guide-stat-card:has(.guide-stat-budget)
+  .guide-stat-figure {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin-left: 0;
+  align-self: center;
+  justify-self: end;
+}
+
+/* 左列次行：预算进度条整块（去发丝上边线——上隔线已退役、描述文字在上），
+   条下「还可用 ¥Y」小注常驻；自带题「预算进度·已用 X%」隐去（同信息见上方摘要＋
+   下方小注，避免重复）。 */
+html:not([data-shell="mobile"])
+  .ledger-view
+  .guide-stat-card:has(.guide-stat-budget)
+  .guide-stat-budget {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+  border-top: 0;
+}
+
+html:not([data-shell="mobile"])
+  .ledger-view
+  .guide-stat-card:has(.guide-stat-budget)
+  .guide-stat-budget
+  .ledger-stat-head {
+  display: none;
 }
 
 /* 顶卡与列表行同吃桌面卡片规格（--shadow-card 已并入上方全族组）。

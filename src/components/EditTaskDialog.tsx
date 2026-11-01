@@ -11,12 +11,14 @@ import { ensureEndAfterStart } from "@/lib/dates";
 import { isMobileShell } from "@/lib/platform";
 import { useFloatingDismiss } from "@/lib/floatingDialog";
 import { pushBackHandler } from "@/lib/mobileBack";
+import { confirmAction } from "@/components/AppConfirm";
 import { goalAcceptsSource } from "@/lib/growth";
 
 /**
  * 「编辑任务」二级弹窗：点任务行（原详情抽屉入口）打开。样式与内容沿用
- * 「新建任务」弹窗（create-task-modal 同族），值从任务预填；详情抽屉已移除，
- * 完成/删除仍留在行上，这里只管改。
+ * 「新建任务」弹窗（create-task-modal 同族），值从任务预填；详情抽屉已移除。
+ * 完成留在行上；删除自移动长按面板移入本弹窗（2026-11-01 用户定：删掉长按面板，
+ * 点按弹出的 取消 / 保存 之间加「删除」）。
  */
 export function EditTaskDialog() {
   const tasks = useAppStore((s) => s.tasks);
@@ -28,6 +30,7 @@ export function EditTaskDialog() {
   const setTaskTags = useAppStore((s) => s.setTaskTags);
   const setToast = useAppStore((s) => s.setToast);
   const selectTask = useAppStore((s) => s.selectTask);
+  const deleteTask = useAppStore((s) => s.deleteTask);
 
   const task = tasks.find((item) => item.id === selectedTaskId) ?? null;
 
@@ -163,6 +166,20 @@ export function EditTaskDialog() {
     }
   };
 
+  // 删除入口自长按面板移来此处（点按进本弹窗即可删）：先收起悬浮卡（避免确认框
+  // 在外、背景点击把弹窗连同本处一起收掉），二次确认后软删（deleteTask 自带
+  // 「已移入回收站」toast、清选中与撤销）。
+  const onDelete = async () => {
+    close();
+    const ok = await confirmAction({
+      title: "移入回收站？",
+      description: `将把「${task.title}」移入回收站。`,
+      confirmText: "删除",
+      danger: true,
+    });
+    if (ok) await deleteTask(task.id);
+  };
+
   return (
     <div className="modal-backdrop floating-backdrop" onMouseDown={close}>
       <form
@@ -266,6 +283,7 @@ export function EditTaskDialog() {
         <div className="create-task-actions">
           <button type="button" className="btn-ghost item-action-btn" onClick={close}>取消</button>
           <button type="submit" className="btn-primary item-action-btn item-action-primary" disabled={!title.trim() || saving}>{saving ? "保存中…" : "保存"}</button>
+          <button type="button" className="item-action-btn item-action-danger edit-task-delete" onClick={() => void onDelete()}>删除</button>
         </div>
       </form>
     </div>
