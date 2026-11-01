@@ -34,9 +34,9 @@ export function GoalStrip() {
   if (!activeGoals.length) return null;
 
   return (
-    <section className="today-goal-strip" aria-label="本周目标">
+    <section className="today-goal-strip" aria-label="推进目标">
       <div className="today-goal-strip-head">
-        <span>本周目标</span>
+        <span>推进目标</span>
         {/* 桌面卡头动作：平坦幽灵，与「批量管理」共用同组规则。 */}
         <button
           type="button"

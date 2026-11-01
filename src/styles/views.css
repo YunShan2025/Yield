@@ -424,30 +424,56 @@ html:not([data-desktop-widget]) #root {
   font-size: var(--font-size-caption);
 }
 
+/* 窗口控制三键（Win 壳专属，2026-11-01 优化）：直角整条底改为「圆角小胶囊」——
+   图标统一矢量描边居中，悬停只点亮胶囊不牵动标题栏；关闭悬停保留红底白字。
+   键间留 2px 缝，与标题栏 40 高之间上下留呼吸；主题配色仍由各主题段
+   `.glass-titlebar-controls button` / `…close:hover` 覆盖。 */
 .glass-titlebar-controls {
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  gap: 2px;
   height: 100%;
 }
 
 .glass-titlebar-controls button {
-  width: 44px;
-  height: 100%;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 28px;
   border: 0;
-  border-radius: 0;
+  border-radius: 7px;
   color: var(--paper-950-a-86);
   background: transparent;
-  font-size: var(--font-size-label);
-  line-height: 1;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 90ms ease;
+}
+
+.glass-titlebar-controls button svg {
+  display: block;
 }
 
 .glass-titlebar-controls button:hover {
-  background: var(--white-10);
+  background: var(--white-14);
+}
+
+.glass-titlebar-controls button:active {
+  transform: scale(0.88);
+}
+
+.glass-titlebar-controls button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .glass-titlebar-controls .glass-titlebar-close:hover {
   color: var(--white);
   background: var(--rose-650);
+}
+
+.glass-titlebar-controls .glass-titlebar-close:active {
+  background: color-mix(in srgb, var(--rose-650) 82%, var(--ink-950-n, #000));
 }
 
 /* macOS: leave room for traffic lights; hide Win-style buttons */
@@ -1513,17 +1539,9 @@ html[data-shell="mobile"] .command-empty {
    提前分派 TodayMobileView / InboxMobileView，整组在壳内永不命中（桌面另有自己的
    非移动作用域样式）。 */
 
-/* 应用内通知卡叠层：窄屏锚定在底部导航上方——顶部悬浮会盖住
-   日/周/月切换器与「新建任务」按钮（实测发现）。 */
-html[data-shell="mobile"] .desktop-notification-stack {
-  top: auto;
-  right: 12px;
-  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
-  left: 12px;
-}
-
-/* 版本更新提示卡与通知叠层同锚点（移动壳也挂载 VersionUpdateNotice，
-   设置页「检查更新」按钮才不是死按钮）。 */
+/* 版本更新提示卡：窄屏锚定在底部导航上方——顶部悬浮会盖住
+   日/周/月切换器与「新建任务」按钮（实测发现；移动壳也挂载
+   VersionUpdateNotice，设置页「检查更新」按钮才不是死按钮）。 */
 html[data-shell="mobile"] .version-update-notice {
   top: auto;
   right: 12px;
@@ -1632,18 +1650,6 @@ html[data-shell="mobile"] .version-update-notice {
   .weekly-day-col {
     min-height: 0;
   }
-
-  /* 提醒状态条：统计格按内容收缩，主文案吃满剩余宽度；
-     统计为 0 时整格不渲染，flex 下自动收拢，主文案不再被挤到只剩一个字。 */
-  .timer-status-rail {
-    gap: 12px;
-    padding: 12px 14px;
-  }
-
-  .timer-status-rail > div:not(.timer-status-primary) {
-    flex-basis: 72px;
-    padding-left: 12px;
-  }
 }
 
 /* ---------- 4) 验收修复（2026-09-15）：创建行自适应 / 页头操作区靠右 / 纪念日 CTA ---------- */
@@ -1704,12 +1710,6 @@ html[data-shell="mobile"] .task-meta {
 
 html[data-shell="mobile"] .done-at-chip {
   white-space: nowrap;
-}
-
-/* 提醒状态条主文案（空闲态 13 字）在 175px 列里末行只剩一个「时」，
-   13→12px 后 156px < 175px 单行放下；运行中的长标题仍允许自然两行。 */
-html[data-shell="mobile"] .timer-status-primary strong {
-  font-size: var(--font-size-caption);
 }
 
 /* 设置页外观胶囊同理：flex 收缩导致「氛围」断行；nowrap 后整行 321px < 349px。 */

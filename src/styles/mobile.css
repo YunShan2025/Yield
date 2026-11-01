@@ -2701,7 +2701,6 @@ html[data-shell="mobile"] .weekly-day-col,
 html[data-shell="mobile"] .weekly-stat-strip,
 html[data-shell="mobile"] .footprint-stats,
 html[data-shell="mobile"] .footprint-day,
-html[data-shell="mobile"] .timer-status-rail,
 html[data-shell="mobile"] .memo-list-item,
 html[data-shell="mobile"] .data-health-panel {
   border: 0;
@@ -2720,7 +2719,6 @@ html[data-theme="dark"][data-shell="mobile"] .weekly-day-col,
 html[data-theme="dark"][data-shell="mobile"] .weekly-stat-strip,
 html[data-theme="dark"][data-shell="mobile"] .footprint-stats,
 html[data-theme="dark"][data-shell="mobile"] .footprint-day,
-html[data-theme="dark"][data-shell="mobile"] .timer-status-rail,
 html[data-theme="dark"][data-shell="mobile"] .memo-list-item,
 html[data-theme="dark"][data-shell="mobile"] .data-health-panel,
 html[data-theme="glass"][data-shell="mobile"] .growth-panel,
@@ -2733,7 +2731,6 @@ html[data-theme="glass"][data-shell="mobile"] .weekly-day-col,
 html[data-theme="glass"][data-shell="mobile"] .weekly-stat-strip,
 html[data-theme="glass"][data-shell="mobile"] .footprint-stats,
 html[data-theme="glass"][data-shell="mobile"] .footprint-day,
-html[data-theme="glass"][data-shell="mobile"] .timer-status-rail,
 html[data-theme="glass"][data-shell="mobile"] .memo-list-item,
 html[data-theme="glass"][data-shell="mobile"] .data-health-panel {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
@@ -2748,7 +2745,6 @@ html[data-theme="glass"][data-shell="mobile"] .data-health-panel {
   html[data-theme="system"][data-shell="mobile"] .trash-item,
   html[data-theme="system"][data-shell="mobile"] .weekly-day-col,
   html[data-theme="system"][data-shell="mobile"] .weekly-stat-strip,
-  html[data-theme="system"][data-shell="mobile"] .timer-status-rail,
   html[data-theme="system"][data-shell="mobile"] .memo-list-item,
   html[data-theme="system"][data-shell="mobile"] .data-health-panel {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.26), 0 18px 30px -24px rgba(0, 0, 0, 0.85);
@@ -2757,7 +2753,6 @@ html[data-theme="glass"][data-shell="mobile"] .data-health-panel {
 
 /* 触摸屏没有 hover：桌面悬浮描边/位移动作收掉，按压反馈统一为轻压。 */
 html[data-shell="mobile"] .anni-card:hover,
-html[data-shell="mobile"] .timer-card:hover,
 html[data-shell="mobile"] .memo-list-item:hover {
   border-color: transparent;
   background: var(--surface-panel);
@@ -3183,7 +3178,8 @@ html[data-shell="mobile"] .tags-grid {
 html[data-shell="mobile"] .projects-view .expand-row,
 html[data-shell="mobile"] .tags-view .tags-grid .expand-row,
 html[data-shell="mobile"] .habits-view .expand-row,
-html[data-shell="mobile"] .goals-list .expand-row {
+html[data-shell="mobile"] .goals-list .expand-row,
+html[data-shell="mobile"] .reminders-view .expand-row {
   position: relative;
   overflow: hidden;
   padding: 2px 14px;
@@ -3197,10 +3193,12 @@ html[data-theme="dark"][data-shell="mobile"] .projects-view .expand-row,
 html[data-theme="dark"][data-shell="mobile"] .tags-view .tags-grid .expand-row,
 html[data-theme="dark"][data-shell="mobile"] .habits-view .expand-row,
 html[data-theme="dark"][data-shell="mobile"] .goals-list .expand-row,
+html[data-theme="dark"][data-shell="mobile"] .reminders-view .expand-row,
 html[data-theme="glass"][data-shell="mobile"] .projects-view .expand-row,
 html[data-theme="glass"][data-shell="mobile"] .tags-view .tags-grid .expand-row,
 html[data-theme="glass"][data-shell="mobile"] .habits-view .expand-row,
-html[data-theme="glass"][data-shell="mobile"] .goals-list .expand-row {
+html[data-theme="glass"][data-shell="mobile"] .goals-list .expand-row,
+html[data-theme="glass"][data-shell="mobile"] .reminders-view .expand-row {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.26), 0 16px 28px -20px rgba(0, 0, 0, 0.85);
 }
 
@@ -3208,7 +3206,8 @@ html[data-theme="glass"][data-shell="mobile"] .goals-list .expand-row {
   html[data-theme="system"][data-shell="mobile"] .projects-view .expand-row,
   html[data-theme="system"][data-shell="mobile"] .tags-view .tags-grid .expand-row,
   html[data-theme="system"][data-shell="mobile"] .habits-view .expand-row,
-  html[data-theme="system"][data-shell="mobile"] .goals-list .expand-row {
+  html[data-theme="system"][data-shell="mobile"] .goals-list .expand-row,
+  html[data-theme="system"][data-shell="mobile"] .reminders-view .expand-row {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.26), 0 16px 28px -20px rgba(0, 0, 0, 0.85);
   }
 }
@@ -3218,7 +3217,8 @@ html[data-theme="glass"][data-shell="mobile"] .goals-list .expand-row {
 html[data-shell="mobile"] .projects-view .expand-row.is-open::before,
 html[data-shell="mobile"] .tags-view .tags-grid .expand-row.is-open::before,
 html[data-shell="mobile"] .habits-view .expand-row.is-open::before,
-html[data-shell="mobile"] .goals-list .expand-row.is-open::before {
+html[data-shell="mobile"] .goals-list .expand-row.is-open::before,
+html[data-shell="mobile"] .reminders-view .expand-row.is-open::before {
   content: "";
   position: absolute;
   top: 0;
@@ -3233,7 +3233,8 @@ html[data-shell="mobile"] .goals-list .expand-row.is-open::before {
 html[data-shell="mobile"] .projects-view .expand-row.is-open .expand-row-caret,
 html[data-shell="mobile"] .tags-view .tags-grid .expand-row.is-open .expand-row-caret,
 html[data-shell="mobile"] .habits-view .expand-row.is-open .expand-row-caret,
-html[data-shell="mobile"] .goals-list .expand-row.is-open .expand-row-caret {
+html[data-shell="mobile"] .goals-list .expand-row.is-open .expand-row-caret,
+html[data-shell="mobile"] .reminders-view .expand-row.is-open .expand-row-caret {
   color: var(--accent);
 }
 
@@ -3291,6 +3292,31 @@ html[data-shell="mobile"] .settings-card .item-action-btn {
 /* 面板底部动作条：编辑/归档/删除等分通栏，比右侧堆叠更像移动动作栏。 */
 html[data-shell="mobile"] .expand-row-foot {
   justify-content: stretch;
+}
+
+/* 专注卡两行动作条（FocusView 移动壳）：原子选择器只罩 .expand-row-foot 直接子级，
+   分行包一层后在此续接同一组几何；放在语义件规则之前，完成（primary）/编辑/删除
+   的语义色照常由下面的全壳语义件覆盖，本段只给「等分、40dp、sunken」骨架。 */
+html[data-shell="mobile"] .focus-foot {
+  display: grid;
+  gap: 8px;
+}
+
+html[data-shell="mobile"] .focus-foot-row {
+  display: flex;
+  gap: 8px;
+}
+
+html[data-shell="mobile"] .focus-foot-row .item-action-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--control-radius);
+  background: var(--surface-sunken);
+  font-size: var(--btn-font-size);
+  white-space: nowrap;
 }
 
 /* 语义件（全壳统一，压过上面的原子靠双类特异度）：
@@ -3386,28 +3412,72 @@ html[data-shell="mobile"] .reminders-body {
   gap: 14px;
 }
 
-html[data-shell="mobile"] .timer-status-rail {
-  min-height: 0;
-  padding: 13px 15px;
+/* 专注卡（移动壳，2026-11-01 用户定）：桌面 timer-card 长条改用「行即卡片」ExpandRow
+   族（卡面白卡/展开 accent 短条走 §3 组内 .reminders-view 档）。收起＝标题＋状态＋
+   衬线倒计时读数＋关联小字，动作不常驻；展开＝进度条＋两行带字动作条。
+   读数右钉在 caret 前，运行中 accent 色沿用桌面语义。 */
+html[data-shell="mobile"] .reminders-view .expand-row-toggle {
+  min-height: 50px;
 }
 
-html[data-shell="mobile"] .timer-status-rail > div:not(.timer-status-primary) strong {
+html[data-shell="mobile"] .focus-countdown {
   font-family: var(--font-num-display);
   font-size: var(--font-size-num-lg);
   font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
-html[data-shell="mobile"] .timer-card {
-  padding: 14px 15px 13px;
+html[data-shell="mobile"] .focus-expand.is-running .focus-countdown {
+  color: var(--accent);
 }
 
-html[data-shell="mobile"] .timer-countdown {
-  font-family: var(--font-num-display);
-  font-size: var(--font-size-hero);
-  font-weight: 400;
+/* 运行中整卡 accent 内环（桌面 is-running 高亮的移动等价物）。 */
+html[data-shell="mobile"] .focus-expand.is-running {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), 0 1px 2px rgba(18, 32, 60, 0.05), 0 14px 24px -20px rgba(18, 32, 60, 0.45);
 }
 
-/* 计时器动作行的按钮外观走「卡底动作条原子」（40dp sunken 等分），此处不再另立。 */
+html[data-shell="mobile"] .focus-expand.is-finished {
+  opacity: 0.82;
+}
+
+/* 收起态第二行：关联落账说明（点按区与 ExpandRow 习惯卡 subline 同规）；
+   状态（进行中/已暂停/已结束）一律跟在标题旁 meta 里，不单起一行。 */
+html[data-shell="mobile"] .focus-sub {
+  display: grid;
+  gap: 4px;
+  padding: 0 2px 9px;
+}
+
+html[data-shell="mobile"] .focus-subrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* meta 里的运行呼吸点：accent 色，与标题同线（徽标样式移动壳不再挂）。
+   meta 是 span、点被排版成 display:inline（6px 宽高不生效、画不出来），
+   这里给 meta 开 inline-flex 并把点显式转成块，动画与桌面徽标同规。 */
+html[data-shell="mobile"] .focus-expand .expand-row-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+html[data-shell="mobile"] .focus-meta-dot {
+  display: block;
+  flex: none;
+  color: var(--accent);
+}
+
+/* 进行中状态跟旧徽标同为 accent 蓝（移动壳去胶囊底，只留字色＋呼吸点）。 */
+html[data-shell="mobile"] .focus-expand.is-running .expand-row-meta {
+  color: var(--accent);
+}
 
 /* ---------- 9) 备忘录：列表卡 + 抽屉落底 ---------- */
 

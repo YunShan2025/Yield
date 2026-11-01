@@ -1392,11 +1392,13 @@ html:not([data-shell="mobile"]) .heat-cell.is-sel { box-shadow: 0 0 0 2px var(--
    否则 AppConfirm 危险钮会被 .btn-primary 的 accent 底顶掉。 */
 /* 桌面两端动作条（项目/标签/目标/习惯）：悬浮态上浮为常态——语义色文字配同色软底
    （编辑=蓝软底、归档=金软底、删除=红软底），悬停不再另加一档，无跳变。
-   删除与编辑/归档同档，红色只写字。（描边已随基线退场，同色描边写法一并清退。） */
+   删除与编辑/归档同档，红色只写字。（描边已随基线退场，同色描边写法一并清退。）
+   专注卡的「编辑」同档：蓝软底蓝字，与暂停（灰底幽灵）/完成（蓝实底）/删除（红软底）成套。 */
 html:not([data-shell="mobile"]) .projects-view .expand-row-foot .item-action-edit,
 html:not([data-shell="mobile"]) .tags-view .expand-row-foot .item-action-edit,
 html:not([data-shell="mobile"]) .goals-list .expand-row-foot .item-action-edit,
-html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-edit {
+html:not([data-shell="mobile"]) .habits-view .expand-row-foot .item-action-edit,
+html:not([data-shell="mobile"]) .timer-actions .item-action-edit {
   color: var(--accent);
   background: var(--accent-soft);
 }
@@ -1745,6 +1747,16 @@ html:not([data-shell="mobile"]) .create-task-modal:not(.app-confirm-modal) .crea
   color: var(--text-primary);
   background: var(--surface-panel);
   font: inherit;
+}
+
+/* 桌面档控件同高一档（create-task-modal 同法）：input 靠 padding 自然高 ≈41、
+   select-btn 只有 min-height 36，两列并排（习惯弹窗的数字框挨着下拉最典型）
+   就露出高低差。统一 40 档；checkbox（无限期开关原子）豁免。
+   移动壳另有 48 触控档（mobile.css），与此互不干涉。 */
+html:not([data-shell="mobile"]) .project-edit-modal input:not([type="checkbox"]),
+html:not([data-shell="mobile"]) .project-edit-modal .select-btn,
+html:not([data-shell="mobile"]) .project-edit-modal .date-picker-trigger {
+  height: 40px;
 }
 
 .project-edit-actions {
@@ -2896,34 +2908,6 @@ html:not([data-shell="mobile"]) .goal-push-title {
   overflow: auto;
 }
 
-.timer-status-rail {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 68px;
-  padding: 12px 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: linear-gradient(100deg, var(--surface-panel), color-mix(in srgb, var(--accent-soft) 42%, var(--surface-panel)));
-}
-.timer-status-pulse { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--text-muted); box-shadow: 0 0 0 6px color-mix(in srgb, var(--text-muted) 9%, transparent); }
-.timer-status-rail.has-active .timer-status-pulse { background: var(--accent); box-shadow: 0 0 0 6px var(--accent-soft); }
-.timer-status-rail > div { display: grid; gap: 3px; }
-.timer-status-primary { flex: 1 1 auto; min-width: 0; }
-.timer-status-rail > div:not(.timer-status-primary) { flex: 0 0 90px; padding-left: 16px; border-left: 1px solid var(--border); text-align: center; }
-.timer-status-rail span { color: var(--text-muted); font-size: var(--font-size-caption); }
-.timer-status-rail strong { color: var(--text-primary); font-size: var(--font-size-label); }
-.timer-status-rail > div:not(.timer-status-primary) strong { font-family: var(--font-num-display); font-size: var(--font-size-num-lg); font-weight: 400; line-height: 1; }
-
-/* 状态栏「当前正在计时」附带的实时剩余时间 */
-.timer-status-remain {
-  margin-left: 10px;
-  color: var(--accent);
-  font-style: normal;
-  font-size: var(--font-size-caption);
-  font-variant-numeric: tabular-nums;
-}
-
 /* 分段控件共享骨架：五类共用「pill 容器 + 32px 段钮」，各自只留颜色与激活态
    （ledger-kind-tabs 是网格表单形态，另立）。 */
 .seg,
@@ -3102,13 +3086,15 @@ html:not([data-shell="mobile"]) .goal-push-title {
 
 .reminders-stack {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
-  align-items: stretch;
 }
 
 .timer-card {
-  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
   border-radius: var(--radius-sm);
   background: var(--surface-panel);
   border: 1px solid var(--border);
@@ -3131,28 +3117,33 @@ html:not([data-shell="mobile"]) .goal-push-title {
 
 .timer-card-top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
 }
 
 .timer-card-text {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .timer-card-text strong {
   font-size: var(--font-size-body);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .timer-badge {
   /* 药丸原子同档：--text-label 墨 + 500 字重；空闲态保持中性面，不抢色。 */
-  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex: none;
   font-size: var(--font-size-caption);
   font-weight: 500;
   color: var(--text-label);
@@ -3193,14 +3184,15 @@ html:not([data-shell="mobile"]) .goal-push-title {
 }
 
 .timer-countdown {
-  /* 唯一的大读数 → 衬线显示体，与今日顶卡同一「换字」原子。 */
+  /* 长条上的读数 → 数字·大档（衬线），与顶卡「换字」原子同族，只降不抢按钮行。 */
   font-family: var(--font-num-display);
-  font-size: var(--font-size-h1);
+  font-size: var(--font-size-num-lg);
   font-weight: 400;
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.005em;
   line-height: 1;
   color: var(--text-primary);
+  flex: none;
 }
 
 .timer-card.is-running .timer-countdown {
@@ -3208,7 +3200,6 @@ html:not([data-shell="mobile"]) .goal-push-title {
 }
 
 .timer-progress {
-  margin-top: 10px;
   height: 4px;
   border-radius: var(--radius-pill);
   background: var(--surface-rail);
@@ -3225,10 +3216,40 @@ html:not([data-shell="mobile"]) .goal-push-title {
 
 .timer-actions {
   display: flex;
-  gap: 7px;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  flex: none;
 }
+
+/* 专注弹窗的「与任务的关联」档：字段题头与本弹窗 label 同调，
+   三档切换直接借时长预设的 countdown-mode-switch 外观。 */
+.focus-link-block {
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-label);
+  font-weight: 700;
+}
+
+.focus-link-empty {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+}
+
+/* 卡片上的关联徽标：任务名可长，随文本收缩省略，不挤掉倒计时与按钮。 */
+.timer-badge.is-link {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 专注顶卡已升淡蓝数据顶卡（见「桌面数据顶卡族」段与移动 §14.1），
+   原 .focus-today-card 专属段退役。 */
 .timer-card:hover { border-color: var(--border-strong); box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 5%, transparent); }
 
 /* 新建弹窗（project-edit-modal）里的计时元素适配 */
@@ -3238,10 +3259,6 @@ html:not([data-shell="mobile"]) .goal-push-title {
 
 .project-edit-modal .countdown-mode-switch {
   justify-self: start;
-}
-
-@media (max-width: 900px) {
-  .timer-status-rail > div:not(.timer-status-primary) { flex-basis: 72px; }
 }
 
 /* ── 原 global-09-moments-workspace.css ────────────────────────────────────────── */
@@ -3937,25 +3954,10 @@ html[data-nav="railed"] .nav-edge-collapse {
   background: var(--white-20);
 }
 
-.desktop-notification-stack { position: fixed; z-index: 120; top: 54px; right: 24px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 11px; pointer-events: none; }
-.desktop-notification-card { position: relative; display: grid; grid-template-columns: 5px 1fr; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border)); border-radius: var(--radius-lg); color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 22px 60px var(--ink-650-20), inset 0 1px var(--white-42); backdrop-filter: blur(22px) saturate(135%); pointer-events: auto; animation: desktop-notification-enter calc(260ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1) both; }
-.desktop-notification-mark { background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 45%, var(--green-150))); }
-.desktop-notification-mark span { display: block; width: 5px; height: 32%; margin-top: 20px; background: var(--white-50); }
-.desktop-notification-content { min-width: 0; padding: 15px 16px 14px; }
-.desktop-notification-content > header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-.desktop-notification-content > header span { color: var(--accent); font-size: var(--font-size-caption); font-weight: 700; letter-spacing: .1em; }
-.desktop-notification-copy { width: 100%; display: grid; gap: 5px; padding: 2px 0 11px; border: 0; color: inherit; background: transparent; text-align: left; }
-.desktop-notification-copy strong { overflow: hidden; font-size: var(--font-size-section-title); font-weight: 700; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-.desktop-notification-copy p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); line-height: 1.55; }
-.desktop-notification-content > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 11px; border-top: 1px solid var(--border); }
-.desktop-notification-content > footer time { color: var(--text-muted); font-size: var(--font-size-caption); font-variant-numeric: tabular-nums; }
-.desktop-notification-content > footer div { display: flex; gap: 6px; }
-.desktop-notification-content > footer button { min-height: var(--control-h-xs); padding: 0 10px; border: 1px solid var(--border); border-radius: var(--control-radius); color: var(--text-secondary); background: var(--surface-sunken); font-size: var(--btn-font-size); }
-.desktop-notification-content > footer button.is-primary { border-color: transparent; color: var(--text-on-accent); background: var(--accent); }
-@keyframes desktop-notification-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .desktop-notification-card { animation: none; } }
+@keyframes overlay-card-enter { from { opacity: 0; transform: translate3d(18px,-8px,0) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .version-update-notice { animation: none; } }
 
-.version-update-notice { position: fixed; z-index: 80; right: 24px; top: 54px; width: min(390px, calc(100vw - 32px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 17px; border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius: var(--radius-lg); color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 24px 70px var(--ink-800-24); backdrop-filter: blur(24px) saturate(140%); animation: desktop-notification-enter calc(260ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1) both; }
+.version-update-notice { position: fixed; z-index: 80; right: 24px; top: 54px; width: min(390px, calc(100vw - 32px)); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 17px; border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); border-radius: var(--radius-lg); color: var(--text-primary); background: color-mix(in srgb, var(--surface-panel) 94%, transparent); box-shadow: 0 24px 70px var(--ink-800-24); backdrop-filter: blur(24px) saturate(140%); animation: overlay-card-enter calc(260ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1) both; }
 .version-update-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: var(--radius-md); color: var(--accent); background: var(--accent-soft); }
 .version-update-copy > span { color: var(--accent); font-size: var(--font-size-caption); font-weight: 700; letter-spacing: .08em; }
 .version-update-copy h3 { margin: 3px 0 6px; font-size: var(--font-size-section-title); font-weight: 700; line-height: 1.25; }
@@ -3972,7 +3974,6 @@ html[data-nav="railed"] .nav-edge-collapse {
 .settings-version-card h3 { margin: 4px 0; }
 .settings-version-card p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: 600; font-variant-numeric: tabular-nums; }
 .settings-version-card > button { flex: 0 0 auto; }
-@media (max-width: 640px) { .desktop-notification-stack { top: 44px; right: 16px; } }
 
 .batch-toolbar {
   display: flex;
@@ -6143,14 +6144,13 @@ html:not([data-shell="mobile"]) .trash-item,
 html:not([data-shell="mobile"]) .weekly-day-col,
 html:not([data-shell="mobile"]) .weekly-stat-strip,
 html:not([data-shell="mobile"]) .footprint-stats,
-html:not([data-shell="mobile"]) .guide-stat-card,
-html:not([data-shell="mobile"]) .timer-status-rail {
+html:not([data-shell="mobile"]) .guide-stat-card {
   border: 0;
   border-radius: 16px; /* §Shapes：卡片圆角不超过 16px，与移动壳同档 */
   box-shadow: var(--shadow-card);
 }
 
-/* 内容展示类卡（题在卡内）：外层容器接手卡面——本周目标 / 今日时间轴 /
+/* 内容展示类卡（题在卡内）：外层容器接手卡面——推进目标 / 今日时间轴 /
    当周日历 / 任务完成去向 / 半年走向·支出去向·明细 / 设置页 / 足迹半年融合卡。 */
 html:not([data-shell="mobile"]) .today-goal-strip,
 html:not([data-shell="mobile"]) .today-timeline,
