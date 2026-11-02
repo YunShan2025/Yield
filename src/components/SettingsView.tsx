@@ -287,7 +287,7 @@ export function SettingsView() {
                 <i /><i /><i /><b />
               </span>
               <span className="theme-preview-copy"><strong>{meta.name}</strong><small>{meta.mood}</small><em>{meta.description}</em></span>
-              <span className="theme-preview-check" aria-hidden>{settings.theme === t ? "✓" : ""}</span>
+              {settings.theme === t ? <span className="theme-preview-check" aria-hidden /> : null}
             </button>
           ))}
         </div>

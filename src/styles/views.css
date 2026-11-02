@@ -720,8 +720,24 @@ html:not([data-desktop-widget]) #root {
 .theme-preview-copy strong { color: var(--text-heading); font-size: var(--font-size-body); }
 .theme-preview-copy small { color: var(--accent-strong); font-weight: 700; }
 .theme-preview-copy em { margin-top: 3px; color: var(--text-secondary); font-size: var(--font-size-caption); font-style: normal; line-height: 1.5; }
-.theme-preview-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: var(--text-on-accent); background: var(--accent); font-size: var(--font-size-caption); }
-.theme-preview-check:empty { display: none; }
+/* 选中标记＝accent 实心圆 + 白勾，勾的几何与周清单 .weekly-day-check::after 同一套
+   （双边框画勾，描边吃 --text-on-solid）。原来的文字 ✓ 有两个毛病：字形随字体族
+   漂移（WebView 换字体就变粗变位），且吃的是 --text-on-accent——璃幕 / 晨曦 / 静夜
+   下那是深墨色，等于在实心圆里压了个黑勾。 */
+.theme-preview-check { position: absolute; top: 8px; right: 8px; width: 21px; height: 21px; border-radius: 50%; background: var(--accent); }
+.theme-preview-check::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11px;
+  height: 6px;
+  margin: -4px 0 0 -6px;
+  border-left: 2px solid var(--text-on-solid);
+  border-bottom: 2px solid var(--text-on-solid);
+  border-bottom-left-radius: 2px;
+  transform: rotate(-45deg);
+}
 
 .theme-system-toggle {
   display: flex;

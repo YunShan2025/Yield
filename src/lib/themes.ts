@@ -19,7 +19,7 @@ export const themeMeta: Record<VisualTheme, {
     surface: "#ffffff",
   },
   dawn: {
-    name: "晨曦玻璃",
+    name: "晨曦",
     mood: "通透 · 有光",
     description: "浅色磨砂整窗外壳，透出壁纸，蓝粉晨光点缀。",
     preview: ["#cfe0fb", "#f6d9e3", "#3478ee"],
