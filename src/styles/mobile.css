@@ -22,6 +22,30 @@ html[data-theme="glass"][data-shell="mobile"] {
   }
 }
 
+/* 璃幕在桌面把 --surface-base 留成 transparent，靠透明整窗透出壁纸；安卓壳的
+   WebView 底下没有壁纸，透出来的只有下一层页面，于是所有「拿页底当遮挡物」的
+   层一起失效（真机反馈 2026-11-02）：
+     · sticky 页头（views.css 状态栏让位 v3 约定「不透明底色把滚动内容挡在身后」）
+       透成玻璃，设置页滚到「命名缘起」时卡片直接压在「设置」标题上；
+     · 「更多」面板（.mobile-more 铺满 app-body）压不住身后仍挂载的页面，
+       从记账进「更多」就是两页文字互叠。
+   移动壳没有可透之物，页底落成与静夜同值的实底：sticky 页头、更多面板、
+   各页根底一并跟随。顺带让状态栏一带取到真实页底——windowChrome.syncAndroidSystemBar
+   只认 #rrggbb，transparent 时只能回退到硬编码的 #101722/#f6f8fc，
+   WindowAppearance 那边解析不出实色就干脆不动原生窗口底色。 */
+html[data-theme="glass"][data-shell="mobile"] {
+  --surface-base: #101722;
+}
+
+/* 整窗外壳跟着落平：桌面那层 92%/90% 的对角渐变在移动壳只剩下导航卡四周的
+   露出带，与实底页底接缝可见，统一收成同一实色；底实了就没有可糊的东西，
+   整窗 backdrop-filter 一并关掉（Chrome 83 档设备上是白付的全屏合成开销）。 */
+html[data-theme="glass"][data-shell="mobile"] .app-root {
+  background: var(--surface-base);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* ---------- 今日页骨架 ---------- */
 
 html[data-shell="mobile"] .mtoday {
