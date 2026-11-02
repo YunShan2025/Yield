@@ -114,7 +114,7 @@ src-tauri/
 | 专注计时 | `MainApp.tsx` 结算 effect + `lib/db/timers.ts` | `timers.ends_at` 存绝对结束时刻，无 OS 调度；到点由前端结算落终态，可一键记为已完成任务（`store.completeFocusAsTask`） |
 | 数据同步 | `lib/sync/*` | 飞书云盘 JSONL + HLC 列级合并；凭据只存本地 settings |
 | 软删除 | `tasks.status='trashed'` 等 | 回收站保留 30 天，恢复回原位 |
-| 主题 | `lib/themes.ts` + `tokens.css` | 清昼 light / 晨曦玻璃 dawn / 璃幕 glass / 静夜 dark 四套 + system 跟随系统 |
+| 主题 | `lib/themes.ts` + `tokens.css` | 清昼 light / 晨曦 dawn / 璃幕 glass / 静夜 dark 四套 + system 跟随系统 |
 | 隐私模式 | `lib/privacy.ts` + `data-privacy` 样式 | 界面上模糊任务标题、备忘内容与账目金额 |
 | 检查更新 | `lib/versionUpdate.ts` + `VersionUpdateNotice` | 启动 2.5s 后静默查一次 GitHub `releases/latest`，语义化比较；手动查失败有 toast。提示卡桌面与移动壳都挂载（移动浮在底部导航上方） |
 | 引导 | `OnboardingGuide` | 四步首启引导（第 4 步「目标/习惯/任务各司其职」，移动壳文案有分支），`settings.onboarding_complete` 控制 |
