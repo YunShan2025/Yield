@@ -37,6 +37,10 @@ export function SettingsView() {
   const [databaseBackups, setDatabaseBackups] = useState<DatabaseBackupInfo[]>([]);
   const [checkingData, setCheckingData] = useState(false);
   const [appVersion, setAppVersion] = useState("…");
+  // 跟随系统当前落到的具体主题（与 store applyTheme 同一判据），供外观画廊高亮。
+  const [systemTheme] = useState<VisualTheme>(() =>
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+  );
 
   const refreshDataHealth = async () => {
     setCheckingData(true);
@@ -275,25 +279,30 @@ export function SettingsView() {
           <span>清晰，也要有氛围</span>
         </div>
         <div className="theme-gallery">
-          {(Object.entries(themeMeta) as [VisualTheme, (typeof themeMeta)[VisualTheme]][]).map(([t, meta]) => (
+          {(Object.entries(themeMeta) as [VisualTheme, (typeof themeMeta)[VisualTheme]][]).map(([t, meta]) => {
+            // 跟随系统时不空着：当前系统落到哪张卡（浅色=清昼、深色=静夜），哪张就亮勾，
+            // 默认观感即「清昼 + 跟随系统」都成立。
+            const active = settings.theme === t || (settings.theme === "system" && t === systemTheme);
+            return (
             <button
               key={t}
               type="button"
-              className={`theme-preview theme-preview-${t} ${settings.theme === t ? "active" : ""}`}
+              className={`theme-preview theme-preview-${t} ${active ? "active" : ""}`}
               onClick={() => void setTheme(t)}
-              aria-pressed={settings.theme === t}
+              aria-pressed={active}
             >
               <span className="theme-preview-canvas" style={{ "--preview-bg": meta.preview[0], "--preview-card": meta.preview[1], "--preview-accent": meta.preview[2] } as React.CSSProperties}>
                 <i /><i /><i /><b />
               </span>
               <span className="theme-preview-copy"><strong>{meta.name}</strong><small>{meta.mood}</small><em>{meta.description}</em></span>
-              {settings.theme === t ? <span className="theme-preview-check" aria-hidden /> : null}
+              {active ? <span className="theme-preview-check" aria-hidden /> : null}
             </button>
-          ))}
+            );
+          })}
         </div>
         <label className="theme-system-toggle">
           <input type="checkbox" checked={settings.theme === "system"} onChange={(event) => void setTheme(event.target.checked ? "system" : "light")} />
-          <span><strong>跟随系统</strong><small>随系统在清昼与静夜之间自动切换</small></span>
+          <span><strong>跟随系统</strong><small>随系统在清昼与静夜之间自动切换（默认）</small></span>
         </label>
       </section>
 
