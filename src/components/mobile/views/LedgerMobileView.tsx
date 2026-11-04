@@ -68,6 +68,8 @@ export function LedgerMobileView() {
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState<null | { editing: LedgerTransaction | null }>(null);
   const [compExpanded, setCompExpanded] = useState(false);
+  // 「支出去向」点类别 → 明细按该类别筛（桌面同口径，仅支出类别）。
+  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
 
   const load = useCallback(() => {
     void Promise.all([
@@ -98,6 +100,13 @@ export function LedgerMobileView() {
     };
   }, [load]);
 
+  // 类别筛选只在当月该类别仍有账目时有效：换月或删空后自动复位（同桌面口径）。
+  useEffect(() => {
+    if (categoryFilter != null && !summary.some((item) => item.category_id === categoryFilter)) {
+      setCategoryFilter(null);
+    }
+  }, [summary, categoryFilter]);
+
   const expense = transactions.reduce(
     (sum, row) => (row.type === "expense" ? sum + row.amount_cents : sum),
     0,
@@ -113,15 +122,31 @@ export function LedgerMobileView() {
   const dayLabel = (date: string) =>
     date === today ? "今天" : date === yesterday ? "昨天" : monthDayLabel(date);
 
+  // 明细按选中的支出类别过滤；未选时即当月全量。日汇总按过滤后的行计，
+  // 让「看得见的行」与「日小计」同口径，切类别不会出现对不上的合计。
+  const detailRows = useMemo(
+    () =>
+      categoryFilter == null
+        ? transactions
+        : transactions.filter((tx) => tx.category_id === categoryFilter),
+    [transactions, categoryFilter],
+  );
+  const activeFilter =
+    categoryFilter == null
+      ? null
+      : summary.find((item) => item.category_id === categoryFilter) ?? null;
+  const toggleCategoryFilter = (id: number) =>
+    setCategoryFilter((current) => (current === id ? null : id));
+
   const grouped = useMemo(() => {
     const map = new Map<string, LedgerTransaction[]>();
-    transactions.forEach((tx) => {
+    detailRows.forEach((tx) => {
       const list = map.get(tx.date);
       if (list) list.push(tx);
       else map.set(tx.date, [tx]);
     });
     return [...map.entries()];
-  }, [transactions]);
+  }, [detailRows]);
 
   // 构成默认只列前 3 类，「展开全部 N 类」看全量（与计数、顶卡色条同口径）。
   const visibleCategories = compExpanded ? summary : summary.slice(0, 3);
@@ -197,7 +222,13 @@ export function LedgerMobileView() {
             visibleCategories.map((item) => {
               const pct = expense ? Math.round((item.amount_cents / expense) * 100) : 0;
               return (
-                <div className="mledger-comp" key={item.category_id}>
+                <button
+                  type="button"
+                  className="mledger-comp"
+                  key={item.category_id}
+                  aria-pressed={categoryFilter === item.category_id}
+                  onClick={() => toggleCategoryFilter(item.category_id)}
+                >
                   <div className="mledger-comp-line">
                     <i style={{ background: item.color }} aria-hidden="true" />
                     <span>{item.name}</span>
@@ -217,7 +248,7 @@ export function LedgerMobileView() {
                       }}
                     />
                   </div>
-                </div>
+                </button>
               );
             })
           ) : (
@@ -256,7 +287,17 @@ export function LedgerMobileView() {
         <section className="mtoday-card" aria-label="收支明细">
           <div className="mtoday-shead">
             <h3>明细</h3>
-            <span className="mledger-month-stat">{transactions.length} 笔</span>
+            {activeFilter ? (
+              <button
+                type="button"
+                className="mledger-month-stat mledger-filter-chip"
+                onClick={() => setCategoryFilter(null)}
+              >
+                {activeFilter.name} · {detailRows.length} 笔 · 清除
+              </button>
+            ) : (
+              <span className="mledger-month-stat">{transactions.length} 笔</span>
+            )}
           </div>
           {loading ? (
             <p className="mtoday-empty">正在汇总账目…</p>

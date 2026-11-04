@@ -5,6 +5,7 @@ import {
   fetchLedgerAccounts,
   fetchLedgerCategories,
   parseAmountToCents,
+  pickDefaultAccountId,
   softDeleteLedgerTransaction,
   updateLedgerTransaction,
   type LedgerAccount,
@@ -81,7 +82,7 @@ export function LedgerEntrySheet({
       if (!alive) return;
       setAccounts(accts);
       setCategories(cats);
-      setAccountId((current) => current || accts.find((a) => a.is_enabled)?.id || 0);
+      setAccountId((current) => current || pickDefaultAccountId(accts));
       setCategoryId((current) => current || cats.find((c) => c.is_enabled)?.id || 0);
     });
     return () => {

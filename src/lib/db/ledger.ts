@@ -146,6 +146,17 @@ export async function fetchLedgerAccounts(includeDisabled = false) {
   );
 }
 
+// 记一笔默认落在微信（用户定案）：按稳定的 kind 直接取微信账户，不受历史 id /
+// ledger_default_account_id（休眠设置）影响；没有微信时退回首个启用账户。
+// includeDisabled 载入的列表里要跳过已停用账户，故再判 is_enabled。
+export function pickDefaultAccountId(accounts: LedgerAccount[]): number {
+  return (
+    accounts.find((a) => a.kind === "wechat" && a.is_enabled)?.id ??
+    accounts.find((a) => a.is_enabled)?.id ??
+    0
+  );
+}
+
 export async function fetchLedgerTransactions(month: string) {
   const [start, end] = monthRange(month);
   const db = await getDb();

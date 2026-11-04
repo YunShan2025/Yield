@@ -1869,6 +1869,41 @@ html[data-shell="mobile"] .mledger-comp + .mledger-comp {
   margin-top: 3px;
 }
 
+/* 每类即「按类别筛明细」的开关：整行可点，再点复位；明细头部同名 chip 作清除
+   入口（见下方 .mledger-filter-chip）。行盒与原来的 div 完全一致（宽 100%、无
+   内边距），名称/金额的贴边位置分毫不动；选中底色改由 ::before 铺满整行并向外
+   出血 10px，底色再宽也不挤内容。 */
+html[data-shell="mobile"] .mledger-comp {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-shell="mobile"] .mledger-comp > * {
+  position: relative; /* 内容浮在 ::before 底色之上 */
+}
+html[data-shell="mobile"] .mledger-comp:active::before,
+html[data-shell="mobile"] .mledger-comp[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  inset: -3px -10px;
+  z-index: 0;
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+html[data-shell="mobile"] .mledger-comp[aria-pressed="true"] .mledger-comp-line span {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
 html[data-shell="mobile"] .mledger-comp-line {
   display: flex;
   align-items: baseline;
@@ -2011,6 +2046,17 @@ html[data-shell="mobile"] .mledger-month-stat {
   letter-spacing: 0.01em;
   color: var(--text-muted);
   font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* 明细头部的筛选 chip：覆盖 .mtoday-shead button 与 .mledger-month-stat 的素色，
+   落 accent 胶囊，点它清除筛选（选择器带 .mtoday-shead 抬特异度以压过按钮基态）。 */
+html[data-shell="mobile"] .mtoday-shead .mledger-filter-chip {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 @media (hover: hover) {

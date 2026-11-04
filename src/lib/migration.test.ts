@@ -11,7 +11,7 @@ describe("database migration declarations", () => {
       Number(match[1]),
     );
     expect(versions).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
     ]);
     expect(source).toContain("schema_contract");
     expect(source).toContain("ledger_transactions");
@@ -117,6 +117,22 @@ describe("database migration declarations", () => {
     // 本地流水表：不进同步表注册（同步层无 focus_logs）。
     const syncTables = readFileSync("src/lib/sync/tables.ts", "utf8");
     expect(syncTables).not.toContain("focus_logs");
+  });
+
+  it("账户更名：migration v34 储蓄卡→校园卡、信用卡→银行卡", () => {
+    const source = readFileSync("src-tauri/src/lib.rs", "utf8").replace(/\r\n/g, "\n");
+    const match = source.match(
+      /version:\s*34,\s*description:\s*"rename_accounts_campus_bank",[\s\S]*?sql:\s*r#"([\s\S]*?)"#,/,
+    );
+    expect(match).not.toBeNull();
+    const sql = match?.[1] ?? "";
+    // 按稳定 kind + 历史默认名定位内置账户，改名不新增账户、不动 kind/icon。
+    expect(sql).toContain("UPDATE ledger_accounts SET name = '校园卡' WHERE kind = 'card' AND name = '储蓄卡'");
+    expect(sql).toContain("UPDATE ledger_accounts SET name = '银行卡' WHERE kind = 'credit' AND name = '信用卡'");
+    // 明细经 account_id JOIN 取 account_name，更名后历史明细账户显示自动跟随，
+    // 因此不 ALTER 表、也不 UPDATE ledger_transactions。
+    expect(sql).not.toContain("ALTER TABLE");
+    expect(sql).not.toContain("ledger_transactions");
   });
 
   it("drops focus_sessions with its leftovers via migration v7", () => {

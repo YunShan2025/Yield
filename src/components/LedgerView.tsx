@@ -15,6 +15,7 @@ import {
   getLedgerBudget,
   getSetting,
   parseAmountToCents,
+  pickDefaultAccountId,
   pickTrendWindow,
   restoreLedgerTransaction,
   setLedgerBudget,
@@ -76,6 +77,8 @@ export function LedgerView() {
   const [categories, setCategories] = useState<LedgerCategory[]>([]);
   const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
   const [summary, setSummary] = useState<LedgerCategorySummary[]>([]);
+  // 「支出去向」点类别 → 明细按该类别筛（与桌面同一份口径，仅支出类别）。
+  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
   const [trend, setTrend] = useState<LedgerMonthSummary[]>([]);
   const [budget, setBudget] = useState(0);
   const [hidden, setHidden] = useState(false);
@@ -108,6 +111,13 @@ export function LedgerView() {
   }, [month]);
 
   useEffect(() => { void load(); }, [load]);
+  // 类别筛选只在当月该类别仍有账目时有效：换月或删空后自动复位——
+  // 否则明细头部的 chip 随汇总消失，列表却被一个已不可见的类别继续筛着，像坏了。
+  useEffect(() => {
+    if (categoryFilter != null && !summary.some((item) => item.category_id === categoryFilter)) {
+      setCategoryFilter(null);
+    }
+  }, [summary, categoryFilter]);
   // 同步拉回对端新账目后重载本页（账本数据为页内本地状态，不进全局 store）。
   useEffect(() => {
     const reload = () => void load();
@@ -213,7 +223,7 @@ export function LedgerView() {
     setDraft(item ? {
       kind, amount: (item.amount_cents / 100).toFixed(2), categoryId: item.category_id,
       accountId: item.account_id, date: item.date, note: item.note,
-    } : { kind, amount: "", categoryId: firstCategory, accountId: accounts.find((entry) => entry.is_enabled)?.id ?? 2, date: today(), note: "" });
+    } : { kind, amount: "", categoryId: firstCategory, accountId: pickDefaultAccountId(accounts) || 2, date: today(), note: "" });
     setDrawer(true);
     window.setTimeout(() => amountRef.current?.focus(), 50);
   }
@@ -275,7 +285,17 @@ export function LedgerView() {
     }
   }
 
-  const grouped = transactions.reduce<Record<string, LedgerTransaction[]>>((map, item) => {
+  // 明细按选中的支出类别过滤；未选时即当月全量（计数与日汇总随之只含所见的行）。
+  const detailRows = categoryFilter == null
+    ? transactions
+    : transactions.filter((item) => item.category_id === categoryFilter);
+  const activeFilterName = categoryFilter == null
+    ? null
+    : categories.find((item) => item.id === categoryFilter)?.name ?? null;
+  const toggleCategoryFilter = (id: number) =>
+    setCategoryFilter((current) => (current === id ? null : id));
+
+  const grouped = detailRows.reduce<Record<string, LedgerTransaction[]>>((map, item) => {
     (map[item.date] ??= []).push(item); return map;
   }, {});
   // 每日明细折叠状态：默认展开，点日期行收起/展开（跨月保留各日期的选择）。
@@ -344,12 +364,12 @@ export function LedgerView() {
       <div className="ledger-body">
       <>
           <section className="ledger-insight-grid">
-            <article className="ledger-card"><div className="ledger-card-title"><div><h3>支出去向</h3><p>本月分类构成</p></div></div><div className="ledger-donut-wrap"><div className="ledger-donut" style={{ background: composition }}><span>{hidden ? "••••" : `${summary.length} 类`}</span></div><div className="ledger-legend">{summary.slice(0, 6).map((item) => <div key={item.category_id}><i style={{ background: item.color }} /><span>{item.name}</span><strong>{expense ? Math.round(item.amount_cents / expense * 100) : 0}%</strong></div>)}{!summary.length && <p>记下第一笔支出后，这里会出现清晰的构成。</p>}</div></div></article>
+            <article className="ledger-card"><div className="ledger-card-title"><div><h3>支出去向</h3><p>本月分类构成</p></div></div><div className="ledger-donut-wrap"><div className="ledger-donut" style={{ background: composition }}><span>{hidden ? "••••" : `${summary.length} 类`}</span></div><div className="ledger-legend">{summary.slice(0, 6).map((item) => <button type="button" key={item.category_id} className={`ledger-legend-item${categoryFilter === item.category_id ? " active" : ""}`} aria-pressed={categoryFilter === item.category_id} onClick={() => toggleCategoryFilter(item.category_id)}><i style={{ background: item.color }} /><span>{item.name}</span><strong>{expense ? Math.round(item.amount_cents / expense * 100) : 0}%</strong><b>{hidden ? "••••" : formatLedgerMoney(item.amount_cents)}</b></button>)}{!summary.length && <p>记下第一笔支出后，这里会出现清晰的构成。</p>}</div></div></article>
             <article className="ledger-card"><div className="ledger-card-title"><div><h3>半年走向</h3><p>收入与支出的走势 · 点月份查看</p></div><div className="ledger-chart-key"><span>收入</span><span>支出</span></div></div>{trend.length ? <LedgerTrendPulse trend={trend} month={month} hidden={hidden} onPick={setMonth} /> : <p className="lt-empty">还没有趋势数据。</p>}</article>
           </section>
 
-          <section className="ledger-card ledger-list-card"><div className="ledger-card-title"><div><h3>明细</h3><p>{monthLabel(month)} · {transactions.length} 笔</p></div></div>
-            {loading ? <div className="empty-state">正在汇总账目…</div> : !transactions.length ? <div className="ledger-empty"><span>水面还很安静</span><p>记下第一笔，慢慢看清生活的流向。</p><button className="btn-primary" onClick={() => openDrawer()}>记第一笔</button></div> : Object.entries(grouped).map(([date, items]) => {
+          <section className="ledger-card ledger-list-card"><div className="ledger-card-title"><div><h3>明细</h3><p>{monthLabel(month)} · {detailRows.length} 笔</p></div>{activeFilterName ? <button type="button" className="ledger-filter-chip" onClick={() => setCategoryFilter(null)}>已筛选：{activeFilterName} · 清除</button> : null}</div>
+            {loading ? <div className="empty-state">正在汇总账目…</div> : !transactions.length ? <div className="ledger-empty"><span>水面还很安静</span><p>记下第一笔，慢慢看清生活的流向。</p><button className="btn-primary" onClick={() => openDrawer()}>记第一笔</button></div> : !detailRows.length ? <div className="empty-state">该类别本月暂无明细</div> : Object.entries(grouped).map(([date, items]) => {
               const collapsed = Boolean(collapsedDays[date]);
               const dayExpense = items.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + entry.amount_cents, 0);
               const dayIncome = items.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + entry.amount_cents, 0);

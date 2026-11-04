@@ -1647,6 +1647,19 @@ CREATE INDEX IF NOT EXISTS idx_focus_logs_ended_at ON focus_logs (ended_at);
 "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 34,
+            description: "rename_accounts_campus_bank",
+            // 内置账户更名：储蓄卡→校园卡、信用卡→银行卡。按稳定 kind 定位，且仅在
+            // 仍是历史默认名时才改（用户若已自行改名则不动，UNIQUE(kind,name) 也保证
+            // 同名至多一条）。明细按 account_id JOIN 取 account_name，账户更名后历史
+            // 明细的账户显示自动跟随，无需另迁 ledger_transactions。kind/icon 不动。
+            sql: r#"
+UPDATE ledger_accounts SET name = '校园卡' WHERE kind = 'card' AND name = '储蓄卡';
+UPDATE ledger_accounts SET name = '银行卡' WHERE kind = 'credit' AND name = '信用卡';
+"#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
