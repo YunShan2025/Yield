@@ -6,6 +6,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -31,6 +32,18 @@ import { orderTodayTasks } from "@/lib/today";
 /** 触摸屏长按行弹出操作面板的时长。移动端拖拽改由独立手柄启动,
  * 因此行内长按不会与拖拽冲突,只归操作面板。 */
 const LONG_PRESS_MS = 480;
+
+/**
+ * 拖拽排序只在纵轴移动：行不横向平移。
+ * 若放任行带着指针横移，拖近右缘时行的 transform 会把 .scope-board 撑出
+ * 横向溢出，dnd-kit 的自动滚动随即横向滚容器——内容左移、行又被拖回来，
+ * 循环往复即页面反复跳动。限制为纵轴后容器不再产生横向溢出，自动滚动
+ * 只剩纵向（长清单拖到上下缘自动滚，保持原行为）。
+ */
+const restrictToVerticalAxis: Modifier = ({ transform }) => ({
+  ...transform,
+  x: 0,
+});
 
 /** 布尔状态「刚刚」由假变真时为 true,用于只在用户操作的那一次播放落金动效。 */
 function useJustToggled(value: boolean, duration = 620): boolean {
@@ -473,7 +486,7 @@ export function TodayAgenda({
           {isInbox ? "待办箱是空的" : "这一天暂无事项"}
         </div>
       ) : (
-        <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} onDragEnd={onDragEnd} modifiers={[restrictToVerticalAxis]}>
           <SortableContext
             items={taskRows.map((task) => task.id)}
             strategy={verticalListSortingStrategy}
