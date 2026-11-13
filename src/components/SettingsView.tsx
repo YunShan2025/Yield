@@ -9,6 +9,7 @@ import { MobileTitleChars } from "@/components/mobile/MobilePageTitle";
 import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { themeMeta, type VisualTheme } from "@/lib/themes";
+import { DesktopGuideCard } from "@/components/DesktopGuideCard";
 import { AppIcon } from "./AppIcon";
 import { confirmAction } from "@/components/AppConfirm";
 import { syncService, useSyncStore } from "@/lib/sync/service";
@@ -218,15 +219,6 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* 与「今日」同款的引导框，仅桌面出：移动壳卡片流直接以「命名缘起」开场。 */}
-      {!isMobileShell() ? (
-        <section className="today-hero guide-hero">
-          <div className="today-hero-copy">
-            <p className="today-hero-note">界面外观、数据同步与备份、隐私，都在这里调整。</p>
-          </div>
-        </section>
-      ) : null}
-
       {/* 原挂在 main 上的 22px 内边距移到卡片流容器；移动壳与其余页统一 18px。 */}
       <div
         className="settings-body"
@@ -236,6 +228,18 @@ export function SettingsView() {
             : 22,
         }}
       >
+      {/* 引导框已升淡蓝数据顶卡（2026-11-13 与足迹页同构的紧凑档 DesktopGuideCard）：
+          仅桌面出，移动壳卡片流直接以「命名缘起」开场。settings-body 自带 22px
+          横留白，槽位按族规水平归零（components.css 设置页覆写）。读数取「当前
+          主题」——设置页自己的速览数据（跟随系统时落到具体主题名，与画廊高亮
+          同一判据）；引导句留左槽说明位（紧凑档 noteInRow，与足迹 hint 同行）。 */}
+      {!isMobileShell() ? (
+        <DesktopGuideCard
+          value={themeMeta[settings.theme === "system" ? systemTheme : settings.theme].name}
+          label="当前主题"
+          note="界面外观、数据同步与备份、隐私，都在这里调整。"
+        />
+      ) : null}
       <section className="settings-card brand-origin-card" style={{ marginTop: 16 }}>
         <div className="brand-origin-title">
           <AppIcon name="brand" size={20} />

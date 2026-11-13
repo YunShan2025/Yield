@@ -1080,9 +1080,11 @@ html:not([data-shell="mobile"]) .day-agenda .expand-delete.quiet-danger:hover:no
    的根滚动模型也依赖这条，见 views.css 状态栏让位策略）。e8f80ab 把 main 的
    内联样式改挂类时把 overflow:auto 一并丢了，两端内容被 .app-body 裁死。 */
 .settings-page { overflow: auto; }
-/* 设置页页头与其余页同构：桌面引导框与卡片流同用 22px 横留白。 */
-.settings-page .guide-hero {
-  margin: 0 22px;
+/* 设置页引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）：settings-body 自带
+   22px 横留白，槽位按族规「归零避免双份」水平归零；底部留 14px 与卡片流相接
+   （相邻 brand-origin-card 的 16px 上边距按外边距折叠取大，节奏不变）。 */
+html:not([data-shell="mobile"]) .settings-page .guide-stat-card {
+  margin: 0 0 14px;
 }
 /* 标签引导框已升淡蓝数据顶卡（见「桌面数据顶卡族」段）。 */
 
