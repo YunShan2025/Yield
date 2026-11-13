@@ -77,6 +77,22 @@ describe("FeishuClient", () => {
     expect(data.ok).toBe(1);
     expect(calls).toHaveLength(2);
   });
+
+  it("请求超时：底层挂死时中止并抛超时错误", async () => {
+    const client = new FeishuClient(
+      async () => ({ appId: "cli_a", appSecret: "s3cret" }),
+      (_url, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          // 模拟传输挂死：只在 abort 时以 AbortError 拒绝（与真实 fetch 一致）
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("The operation was aborted.", "AbortError")),
+          );
+        }),
+      "https://open.feishu.cn",
+      20,
+    );
+    await expect(client.callJson("/drive/v1/files")).rejects.toThrow("超时");
+  });
 });
 
 describe("buildMultipart", () => {

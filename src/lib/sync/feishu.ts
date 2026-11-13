@@ -43,6 +43,9 @@ interface FeishuEnvelope<T> {
 /** 频控/可重试错误码（upload_all 文档：1061045 可稍后重试）。 */
 const RETRYABLE_CODES = new Set([1061045]);
 
+/** 单请求超时：底层挂死（如 TCP 半开、网络切换黑洞）时中止，避免同步单飞锁被永久占用。 */
+export const FEISHU_REQUEST_TIMEOUT_MS = 30_000;
+
 /** 自建应用租户凭证，内存缓存，提前 5 分钟过期，不落盘。 */
 export class FeishuClient {
   private cached: { token: string; expiresAt: number } | null = null;
@@ -51,7 +54,23 @@ export class FeishuClient {
     private credentials: () => Promise<FeishuCredentials | null>,
     private fetchFn: FetchFn = tauriFetch as FetchFn,
     private baseUrl = "https://open.feishu.cn",
+    private timeoutMs = FEISHU_REQUEST_TIMEOUT_MS,
   ) {}
+
+  /** 带超时的底层请求；调用方已传 signal 时不干预。 */
+  private request(url: string, init: RequestInit): Promise<Response> {
+    if (this.timeoutMs <= 0 || init.signal) return this.fetchFn(url, init);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    return this.fetchFn(url, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer)).catch(
+      (err: unknown) => {
+        if (controller.signal.aborted) {
+          throw new FeishuApiError(-1, `请求超时（${Math.round(this.timeoutMs / 1000)} 秒无响应）`);
+        }
+        throw err;
+      },
+    );
+  }
 
   async getAccessToken(): Promise<string> {
     if (this.cached && Date.now() < this.cached.expiresAt) return this.cached.token;
@@ -59,7 +78,7 @@ export class FeishuClient {
     if (!creds?.appId || !creds?.appSecret) {
       throw new FeishuApiError(-1, "缺少飞书应用凭据（app_id / app_secret）");
     }
-    const res = await this.fetchFn(`${this.baseUrl}/open-apis/auth/v3/tenant_access_token/internal`, {
+    const res = await this.request(`${this.baseUrl}/open-apis/auth/v3/tenant_access_token/internal`, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify({ app_id: creds.appId, app_secret: creds.appSecret }),
@@ -83,7 +102,7 @@ export class FeishuClient {
     const token = await this.getAccessToken();
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${token}`);
-    return this.fetchFn(`${this.baseUrl}/open-apis${path}`, { ...init, headers });
+    return this.request(`${this.baseUrl}/open-apis${path}`, { ...init, headers });
   }
 
   /** 调 JSON 信封接口：HTTP 200 + code!==0 视为错误（频控 1061045 自动重试一次）。 */
