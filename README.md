@@ -132,7 +132,7 @@ npm run tauri android build -- --debug --apk --target aarch64   # 真机 arm64
 
 ## 下载与安装
 
-当前版本 **v2.4.0**（见 `package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`；本版含数据库迁移 v34（内置账户更名），无同步格式变更，v2.3.x 可直接覆盖升级、无需双端同批，条目见 `docs/CHANGES.md`；数据库迁移 v31–v33 与同步格式 v14 随 v2.3.0 引入，**桌面与 Android 需同批升级**）。本项目以本地构建分发为主：
+当前版本 **v2.4.1**（见 `package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml`；本版无数据库结构变更、无同步格式变更，v2.4.0 可直接覆盖升级，条目见 `docs/CHANGES.md`；数据库迁移 v31–v33 与同步格式 v14 随 v2.3.0 引入，**桌面与 Android 需同批升级**）。本项目以本地构建分发为主：
 
 ```bash
 npm run tauri build
