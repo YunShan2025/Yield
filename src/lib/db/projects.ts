@@ -96,7 +96,11 @@ export async function restoreDeletedProject(id: string): Promise<void> {
 
 /**
  * 永久删除项目：行删除后由 trg_projects_del 向对端发 delete 操作。
- * 任务与「项目自动计算」目标失去归属（project_id 置空），不连带删除。
+ * 任务失去归属（project_id 置空），不连带删除。goals 不再参与：v22 迁移
+ * （goal_habit_task_linkage_v2）删掉 goals.project_id，项目型目标已转数值
+ * 目标，这里曾遗留的 `UPDATE goals SET project_id = NULL` 会让整条删除事务
+ * 报 no such column 失败——回收站「清空/永久删除」静默无效即由此而来
+ * （2026-11-13 修）。
  */
 export async function purgeProject(id: string): Promise<void> {
   await withTransaction(async () => {
@@ -104,10 +108,6 @@ export async function purgeProject(id: string): Promise<void> {
     const stamp = nowIso();
     await db.execute(
       "UPDATE tasks SET project_id = NULL, updated_at = $1 WHERE project_id = $2 AND deleted_at IS NULL",
-      [stamp, id],
-    );
-    await db.execute(
-      "UPDATE goals SET project_id = NULL, updated_at = $1 WHERE project_id = $2",
       [stamp, id],
     );
     await db.execute("DELETE FROM projects WHERE id = $1", [id]);
